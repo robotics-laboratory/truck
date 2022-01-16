@@ -12,17 +12,21 @@ All prebuild base images are stored at registry ```cr.yandex/crp8hpfj5tuhlaodm4d
 So, you can easyly pull it.
 
 ```
-docker pull cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:dev-latest
+docker pull cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:amd64-latest
 ```
 
 Example of test run (nvidia runtime is enabled by default on jetson).
 ```
-docker run --it --rm cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:dev-latest /bin/bash
+docker run -it --rm cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:dev-latest /bin/bash
 ```
 
 ## Build and pull
 Example of build for dev image.
 ```
-docker build --pull -f docker/Dockerfile.amd64 . \
-    -t cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:amd64-$(date '+%y%m%d-%H%M')
+TAG=amd64-$(date '+%y%m%d-%H%M')
+
+docker build -f docker/Dockerfile.amd64 . \
+    -t cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:$TAG    
+    
+docker push cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:$TAG
 ```
