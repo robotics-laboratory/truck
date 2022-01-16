@@ -1,0 +1,44 @@
+{
+  "initial": {
+    "x": 0.0,
+    "y": 0.0,
+    "theta": 0.0
+  },
+  "target": {
+    "x": 10.0,
+    "y": -2.0,
+    "theta": -90.0
+  },
+  "tolerances": {
+    "x": 0.00001,
+    "y": 0.00001,
+    "theta": 0.1,
+    "distance": 0.00001
+  },
+  "primitives": [
+    {
+      "forward": 1.0,
+      "right": 0.0,
+      "angle": 0.0,
+      "distance": 1.0
+    },
+    {
+      "forward": 1.0,
+      "right": 1.0,
+      "angle": -90.0,
+      "distance": 1.41421356237
+    },
+    {
+      "forward": 1.0,
+      "right": -1.0,
+      "angle": 90.0,
+      "distance": 1.41421356237
+    },
+    {
+      "forward": 0.0,
+      "right": 0.0,
+      "angle": 90.0,
+      "distance": 1
+    }
+  ]
+}
