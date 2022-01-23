@@ -398,5 +398,4 @@ RUN apt-get update -q && \
 ### SETUP ENTRYPOINT
 COPY /ros_setup.bash /ros_setup.bash
 ENTRYPOINT ["/ros_setup.bash"]
-CMD ["bash"]
 WORKDIR /
