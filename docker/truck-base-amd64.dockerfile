@@ -7,28 +7,6 @@ SHELL ["/bin/bash", "-c"]
 
 WORKDIR /tmp
 
-### INSTALL DEV PKGS
-
-RUN apt-get update -q && \
-    apt-get install -yq --no-install-recommends \
-        build-essential \
-        gfortran \
-        curl \
-        make \
-        git \
-        gnupg2 \
-        file \
-        less \
-        python3 \
-        python3-pip \
-        python3-dev \
-        python3-distutils \
-        python3-setuptools \
-        tar \
-        vim \
-        wget \
-    && rm -rf /var/lib/apt/lists/* && apt-get clean
-
 ### INSTALL CMAKE
 
 RUN apt-get update -q && \
@@ -54,7 +32,6 @@ RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         build-essential \
         gfortran \
-        cmake \
         make \
         git \
         file \
@@ -179,7 +156,6 @@ RUN apt update -q \
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         build-essential \
-        cmake \
         git \
         make \
         libeigen3-dev \
@@ -261,7 +237,6 @@ RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o 
     && apt-get install -yq --no-install-recommends \
         apt-utils \
         build-essential \
-        cmake \
         git \
         make \
         libbullet-dev \
@@ -348,15 +323,36 @@ RUN apt-get update -q \
         --skip-keys "${SKIP_KEYS[*]}" \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-RUN echo "INSTALL ROS2 PKGS" \
-    && cd ${ROS_DISTRO}/src \
+RUN cd ${ROS_DISTRO}/src \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
     && echo 'source ${ROS_ROOT}/setup.bash' >> /root/.bashrc \
     && rm -rf /tmp/*
 
-# setup entrypoint
+### INSTALL DEV PKGS
+
+RUN apt-get update -q && \
+    apt-get install -yq --no-install-recommends \
+        build-essential \
+        gfortran \
+        curl \
+        make \
+        git \
+        gnupg2 \
+        file \
+        less \
+        python3 \
+        python3-pip \
+        python3-dev \
+        python3-distutils \
+        python3-setuptools \
+        tar \
+        vim \
+        wget \
+    && rm -rf /var/lib/apt/lists/* && apt-get clean
+
+### SETUP ENTRYPOINT
 COPY /ros_setup.bash /ros_setup.bash
 ENTRYPOINT ["/ros_setup.bash"]
 CMD ["bash"]

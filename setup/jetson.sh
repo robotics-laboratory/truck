@@ -33,15 +33,24 @@ apt install -qy -yq --no-install-recommends \
 
 python3 -m pip install -U jetson-stats
 
-
 # configure docker
 
-cp ./misc/docker_daemon.json /etc/docker/daemon.json
 usermod -aG docker ${USER}
 
 # setup jetpack
 
 apt install -yq --no-install-recommends nvidia-jetpack
+
+# realsense
+
+LIBRS_VERSION="2.50.0"
+
+cd /tmp
+wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/v${LIBRS_VERSION}.tar.gz | tar -xz\
+cd librealsense-${LIBRS_VERSION}
+bash scripts/patch-realsense-ubuntu-L4T.sh
+bash scripts/setup_udev_rules.sh
+rm -rf /tmp/*
 
 # clean
 apt autoremove
