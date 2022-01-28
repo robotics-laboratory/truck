@@ -1,5 +1,11 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
+new_local_repository(
+    name = "galactic",
+    path = "/opt/ros/galactic",
+    build_file = "dep/galactic.BUILD",
+)
+
 http_file(
   name = "nlohmann_json",
   downloaded_file_path = "json.hpp",

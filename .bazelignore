@@ -1,0 +1,9 @@
+build
+install
+log
+planning/build
+planning/install
+planning/log
+
+planning/planner
+# remove ^ this after gcc/clang version bump

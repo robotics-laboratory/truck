@@ -1,3 +1,5 @@
 .vscode
 bazel-*
-planning/external
+build
+install
+log
