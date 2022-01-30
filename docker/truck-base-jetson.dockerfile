@@ -373,6 +373,20 @@ RUN cd ${ROS_DISTRO}/src \
     && echo 'source ${ROS_ROOT}/setup.bash' >> /root/.bashrc \
     && rm -rf /tmp/*
 
+RUN pip3 install git+https://github.com/colcon/colcon-bazel#egg=colcon-bazel --upgrade
+
+RUN wget -qO /usr/local/bin/bazel https://github.com/bazelbuild/bazel/releases/download/4.2.2/bazel-4.2.2-linux-arm64 \
+    && [ "$(sha256sum bazel | awk '{print $1}')" = "de5ddfebe1a769f067c77e29c197fc9a5bc855a502316070f6bb0fbac9ac37f8" ] \
+    && chmod +x /usr/local/bin/bazel
+
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y \
+    && apt-get update \
+    && apt-get install gcc-9 g++-9 \
+    && update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-9 50 \
+    && update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-9 50 \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 50 \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 50
+
 ### INSTALL DEV PKGS
 
 RUN apt-get update -q && \
@@ -393,6 +407,7 @@ RUN apt-get update -q && \
         tar \
         vim \
         wget \
+        httpie \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### SETUP ENTRYPOINT
