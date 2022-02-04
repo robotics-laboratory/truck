@@ -31,28 +31,33 @@ Now you can start new container and attach.
 
 ```
 # dev/amd64
-docker-composer up -d truck-base-amd64
+docker-compose up -d truck-base-amd64
 
 # jetson
-docker-composer up -d truck-base-jetson
+docker-compose up -d truck-base-jetson
 
 # attach to running container
 # use ctrl+p+q to detach
 docker attach truck-base
+
+# run another shell
+# you can safely exit it
+# and it won't stop the container
+docker exec -it truck-base bash
 
 # stop container
 docker stop truck-base
 ```
 
 #### Build and Push
-If you need to build container, follow this steps. Up version in ```docker-composer.yaml``` if orresponding dockerfile is changed.
+If you need to build container, follow this steps. Up version in ```docker-compose.yaml``` if orresponding dockerfile is changed.
 
 ```
 # dev/amd64
-docker-composer build truck-base-amd64
-docker-composer push truck-base-amd64
+docker-compose build truck-base-amd64
+docker-compose push truck-base-amd64
 
 # jetson
-docker-composer build truck-base-jetson
-docker-composer push truck-base-jetson
+docker-compose build truck-base-jetson
+docker-compose push truck-base-jetson
 ```

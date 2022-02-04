@@ -3,7 +3,7 @@ version: "3.5"
 services:
   truck-base-jetson:
     container_name: truck-base
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:jetson-0.1.0
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:jetson-0.2.0
     runtime: nvidia
     stdin_open: true
     tty: true
@@ -17,7 +17,7 @@ services:
 
   truck-base-amd64:
     container_name: truck-base
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:amd64-0.1.0
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:amd64-0.2.0
     stdin_open: true
     tty: true
     build:

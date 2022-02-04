@@ -1,0 +1,2 @@
+bool exists
+Point[] trajectory
