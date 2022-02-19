@@ -331,6 +331,8 @@ RUN cd ${ROS_DISTRO}/src \
     && echo 'source ${ROS_ROOT}/setup.bash' >> /root/.bashrc \
     && rm -rf /tmp/*
 
+# INSTALL GCC-9
+
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y \
     && apt-get update \
     && apt-get install gcc-9 g++-9 \
@@ -364,6 +366,7 @@ RUN apt-get update -q && \
         httpie \
         tmux \
         htop \
+        nlohmann-json-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### SETUP ENTRYPOINT

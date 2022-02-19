@@ -407,6 +407,7 @@ RUN apt-get update -q && \
         httpie \
         tmux \
         htop \
+        nlohmann-json-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### SETUP ENTRYPOINT
