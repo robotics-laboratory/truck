@@ -263,7 +263,7 @@ RUN apt-get update -q \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 
-ENV LANG=en_US.UTF-8 
+ENV LANG=en_US.UTF-8
 ENV PYTHONIOENCODING=utf-8
 
 RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
@@ -357,6 +357,7 @@ RUN apt-get update -q \
         httpie \
         tmux \
         htop \
+        nlohmann-json-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### SETUP ENTRYPOINT
