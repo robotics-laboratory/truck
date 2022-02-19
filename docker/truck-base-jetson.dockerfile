@@ -327,7 +327,8 @@ RUN pip3 install --no-cache-dir -U \
         flake8-quotes \
         pytest-repeat \
         pytest-rerunfailures \
-        pytest
+        pytest \
+        ansible
 
 ENV ROS_DISTRO=galactic
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
@@ -401,6 +402,8 @@ RUN apt-get update -q \
         vim \
         wget \
         httpie \
+        tmux \
+        htop \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### SETUP ENTRYPOINT
