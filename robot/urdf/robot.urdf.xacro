@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<robot name="robot" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="./materials.xacro" />
+
+  <xacro:macro name="default_inertial" params="mass">
+    <inertial>
+      <mass value="${mass}">${mass}</mass>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0">
+          <ixx>1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1</iyy>
+          <iyz>0</iyz>
+          <izz>1</izz>
+      </inertia>
+    </inertial>
+  </xacro:macro>
+
+  
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.4" radius="0.4"/>
+      </geometry>
+      <!-- set visual origin in the coordinate frame of link -->
+      <origin xyz="0 0 0.2"/>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.4" radius="0.4"/>
+      </geometry>
+      <!-- set visual origin in the coordinate frame of link -->
+      <origin xyz="0 0 0.2"/>
+    </collision>
+    <xacro:default_inertial mass="1"/>
+  </link>
+  <link name="body_link">
+    <visual>
+      <geometry>
+        <box size="0.3 0.3 0.6"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.3 0.3 0.6"/>
+      </geometry>
+    </collision>
+    <xacro:default_inertial mass="1"/>
+  </link>
+  
+  <joint name="base_body_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="body_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0.5"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+</robot>
