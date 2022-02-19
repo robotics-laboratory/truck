@@ -61,3 +61,10 @@ docker-compose push truck-base-amd64
 docker-compose build truck-base-jetson
 docker-compose push truck-base-jetson
 ```
+
+#### Start simulation
+
+```
+# Build and source the setup files
+
+# Start the simulation with ros2 launch robot rviz.launch.py
