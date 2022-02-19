@@ -25,6 +25,15 @@ struct SingleSlotQueue {
         return res;
     }
 
+    std::optional<T> peek() {
+        std::unique_lock<std::mutex> lock{mu};
+        cv.wait(lock, [this](){ return slot.has_value() || stopped; });
+        if (stopped) {
+            return {};
+        }
+        return slot;
+    }
+
     void stop() {
         {
             std::lock_guard<std::mutex> lock{mu};
