@@ -3,9 +3,9 @@
 #include "float_comparison.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "nlohmann/json.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2/LinearMath/Quaternion.h"
-#include "nlohmann/json.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -114,7 +114,7 @@ struct State {
     }
 
     bool operator==(State o) const {
-        return very_close_equals(x, o.x, ComparisonTolerances::get("x")) && 
+        return very_close_equals(x, o.x, ComparisonTolerances::get("x")) &&
             very_close_equals(y, o.y, ComparisonTolerances::get("y")) &&
             very_close_equals(theta, o.theta, ComparisonTolerances::get("theta"));
     }
@@ -129,7 +129,12 @@ template <>
 struct std::hash<State> {
     std::size_t operator()(const State& s) const {
         size_t res = 0;
-        hash_combine(res, s.x, s.y, s.theta);
+        hash_combine(
+            res,
+            static_cast<int64_t>(s.x * 1000),  // FIXME: use better hash for floating point values
+            static_cast<int64_t>(s.y * 1000),
+            static_cast<int64_t>(s.theta * 360)
+        );
         return res;
     }
 };
@@ -194,10 +199,13 @@ struct CollisionTester {
     }
 
     bool test(State state) {
-        if (std::abs(state.x) > 9 || std::abs(state.y) > 9) {
+        if (std::abs(state.x) > 20 || std::abs(state.y) > 20) {
             return true;
         }
-        return false;
+
+        int grid_x = static_cast<int>(state.x - scene->occupancy_grid.info.origin.position.x - 0.5);
+        int grid_y = static_cast<int>(state.y - scene->occupancy_grid.info.origin.position.y - 0.5);
+        return scene->occupancy_grid.data[grid_y * scene->occupancy_grid.info.width + grid_x] > 0;
     }
 
 private:
@@ -235,7 +243,7 @@ struct StateSpace {
     bool empty() const {
         return open_set.empty();
     }
-    
+
     void insert(State state) {
         open_set.insert(state);
         open_set_checker.insert(state);
@@ -265,19 +273,19 @@ struct Planner {
       , target_queue(target_queue)
       , path_publisher(path_publisher)
       , logger(logger) {
-          if (config_path.empty()) {
-              config_path = "packages/planning_node/config.json";
-          }
+        if (config_path.empty()) {
+            config_path = "packages/planning_node/config.json";
+        }
 
-          std::ifstream config_stream(config_path);
-          json config = json::parse(config_stream);
-          
-          ComparisonTolerances::load_from_json(config["tolerances"]);
-          for (auto json_primitive : config["primitives"]) {
-              primitives.push_back(MotionPrimitive::from_json(json_primitive));
-          }
+        std::ifstream config_stream(config_path);
+        json config = json::parse(config_stream);
 
-          initial = State::from_json(config["initial"]);
+        ComparisonTolerances::load_from_json(config["tolerances"]);
+        for (auto json_primitive : config["primitives"]) {
+            primitives.push_back(MotionPrimitive::from_json(json_primitive));
+        }
+
+        initial = State::from_json(config["initial"]);
     }
 
     nav_msgs::msg::Path plan(CollisionTester tester, MotionPrimitives primitives, State initial, State target) {
@@ -298,11 +306,11 @@ struct Planner {
         nav_msgs::msg::Path result;
         if (found) {
             State current = target;
-            while (current != initial) {            
+            while (current != initial) {
                 result.poses.push_back(current.to_pose_stamped());
                 current = state_space.origin[current];
             }
-            
+
             result.poses.push_back(current.to_pose_stamped());
             std::reverse(result.poses.begin(), result.poses.end());
         } else {
@@ -340,7 +348,6 @@ private:
     rclcpp::Logger logger;
     MotionPrimitives primitives;
     State initial;
-    
 };
 
 std::thread start_planner(

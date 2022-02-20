@@ -38,7 +38,6 @@ add_executable(node
   src/planner.cpp
   src/planner.hpp
   src/single_slot_queue.hpp
-  thirdparty/json.hpp
 )
 target_include_directories(node PUBLIC ${float_comparison_SOURCE_DIR} ${PROJECT_SOURCE_DIR})
 # target_link_libraries(node nlohmann_json::nlohmann_json)

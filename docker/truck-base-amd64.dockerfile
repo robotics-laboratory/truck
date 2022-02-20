@@ -282,8 +282,7 @@ RUN pip3 install --no-cache-dir -U \
         flake8-quotes \
         pytest-repeat \
         pytest-rerunfailures \
-        pytest \
-        ansible
+        pytest
 
 ENV ROS_DISTRO=galactic
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
