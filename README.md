@@ -27,7 +27,7 @@ For jetson check that nvidia runtime is enbled by default in ```/etc/docker/daem
 }
 ```
 
-Now you can start new container and attach. 
+Now you can start new container and attach.
 
 ```
 # dev/amd64
@@ -64,29 +64,24 @@ docker-compose push truck-base-jetson
 
 ### Local container development
 
-We probably shouldn't use `ansible` here... Todo: rewrite to something simpler, like `make`.
-
-
-Look inside `local-playbook.yaml` for more info on commands
-
 #### Build packages
 ```bash
-ansible-playbook local-playbook.yaml --tags build
+make build
 ```
 
 #### Start nodes
 ```bash
-ansible-playbook local-playbook.yaml --tags start
+make start
 ```
 
 After starting nodes logs are written into `log` directory.
 
 #### Stop nodes
 ```bash
-ansible-playbook local-playbook.yaml --tags stop
+make stop
 ```
 
-Stopping active nodes requires pid files from `log` directory.
+Stopping active nodes requires `group.pid` file from `log` directory.
 
 
 ## Foxglove visualization

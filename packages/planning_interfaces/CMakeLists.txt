@@ -14,6 +14,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/MetaData.msg
   msg/Path.msg
   msg/Point.msg
+  msg/RandomSeed.msg
   msg/Scene.msg
   DEPENDENCIES
   geometry_msgs

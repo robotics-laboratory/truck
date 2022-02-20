@@ -1,7 +1,2 @@
-MetaData meta
-
-Point offset
-
-uint64 width
-uint64 height
-bool[] occupancy
+uint64 created_at
+nav_msgs/OccupancyGrid occupancy_grid

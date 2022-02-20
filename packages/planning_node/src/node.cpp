@@ -1,8 +1,9 @@
 #include "node.hpp"
 
 #include "planner.hpp"
-#include "planning_interfaces/msg/scene.hpp"
 #include "planning_interfaces/msg/path.hpp"
+#include "planning_interfaces/msg/point.hpp"
+#include "planning_interfaces/msg/scene.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "single_slot_queue.hpp"
 
@@ -19,8 +20,6 @@ using std::placeholders::_1;
 
 struct PlanningNode : public rclcpp::Node {
     PlanningNode(std::string config_path) : Node("PlanningNode") {
-
-
         scene_subscription = create_subscription<msg::Scene>(
             "scene", 10, std::bind(&PlanningNode::new_scene_callback, this, _1)
         );
@@ -44,14 +43,7 @@ struct PlanningNode : public rclcpp::Node {
 
 private:
     void new_scene_callback(const msg::Scene::SharedPtr message) const {
-        RCLCPP_INFO(get_logger(), "New scene: created_at=%ld", message->meta.created_at);
-        if (!message->meta.debug.empty()) {
-            RCLCPP_DEBUG(get_logger(), "New scene has %lu debug messages", message->meta.debug.size());
-            for (auto debug_message : message->meta.debug) {
-                RCLCPP_DEBUG(get_logger(), "%s", debug_message.c_str());
-            }
-        }
-
+        RCLCPP_INFO(get_logger(), "New scene: created_at=%ld", message->created_at);
         scene_queue->put(message);
     }
 
@@ -80,7 +72,7 @@ std::thread start_planning_node(int argc, char** argv) {
         }
 
         std::cout << "Starting planning node" << std::endl;
-        
+
         rclcpp::init(argc, argv);
         std::shared_ptr<PlanningNode> node = std::make_shared<PlanningNode>(config_path);
         rclcpp::on_shutdown([node]() {
