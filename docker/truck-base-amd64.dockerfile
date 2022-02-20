@@ -7,7 +7,7 @@ SHELL ["/bin/bash", "-c"]
 
 WORKDIR /tmp
 
-### INSTALL CMAKE
+### INSTALL CMAKE & GCC-9
 
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
@@ -17,6 +17,16 @@ RUN apt-get update -q && \
         gnupg \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
+
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y \
+    && apt-get update \
+    && apt-get install gcc-9 g++-9 -y \
+    && update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-9 50 \
+    && update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-9 50 \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 50 \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 50 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 RUN wget -qO - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key add - \
     && apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' \
