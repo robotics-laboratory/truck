@@ -11,7 +11,7 @@ struct SingleSlotQueue {
             std::lock_guard<std::mutex> lock{mu};
             slot = item;
         }
-        cv.notify_one();
+        cv.notify_all();
     }
 
     std::optional<T> take() {
@@ -39,7 +39,7 @@ struct SingleSlotQueue {
             std::lock_guard<std::mutex> lock{mu};
             stopped = true;
         }
-        cv.notify_one();
+        cv.notify_all();
     }
 
 private:

@@ -1,5 +1,6 @@
 #pragma once
 #include "planning_interfaces/msg/path.hpp"
+#include "planning_interfaces/msg/point.hpp"
 #include "planning_interfaces/msg/scene.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "single_slot_queue.hpp"

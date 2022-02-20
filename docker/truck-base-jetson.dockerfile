@@ -197,7 +197,7 @@ RUN wget -qO - https://github.com/pytorch/vision/archive/refs/tags/v${TORCHVISIO
     && cd vision-${TORCHVISION_VERSION} \
     && python3 setup.py install \
     && rm -rf /tmp/*
- 
+
 # INSTALL RTAB-MAP
 
 ARG G2O_VERSION="20201223_git"
@@ -308,7 +308,7 @@ RUN apt-get update -q \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV LANG=en_US.UTF-8 
+ENV LANG=en_US.UTF-8
 ENV PYTHONIOENCODING=utf-8
 
 RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
@@ -327,8 +327,7 @@ RUN pip3 install --no-cache-dir -U \
         flake8-quotes \
         pytest-repeat \
         pytest-rerunfailures \
-        pytest \
-        ansible
+        pytest
 
 ENV ROS_DISTRO=galactic
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
