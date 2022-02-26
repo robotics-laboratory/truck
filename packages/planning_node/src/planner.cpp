@@ -6,11 +6,14 @@
 #include "nlohmann/json.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2/LinearMath/Quaternion.h"
+#include "opencv2/core/mat.hpp"
+#include "opencv2/imgproc.hpp"
 
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <fstream>
+#include <iomanip>
 #include <memory>
 #include <set>
 #include <unordered_map>
@@ -35,6 +38,17 @@ inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
 
 double mod_interval(double x, double modulo) {
     return std::fmod(std::fmod(x, modulo) + modulo, modulo);
+}
+
+double deg_to_rad(double deg) {
+    return deg * M_PI / 180.0;
+}
+
+std::pair<double, double> angled_move(double dx, double dy, double theta) {
+    return {
+        dx * std::cos(deg_to_rad(theta)) - dy * std::sin(deg_to_rad(theta)),
+        dx * std::sin(deg_to_rad(theta)) + dy * std::cos(deg_to_rad(theta)),
+    };
 }
 
 struct ComparisonTolerances {
@@ -211,22 +225,85 @@ struct MotionPrimitive {
 
 using MotionPrimitives = std::vector<MotionPrimitive>;
 
+struct Vehicle {
+    struct Circle {
+        double x;
+        double y;
+        double r;
+    };
+
+    double width;
+    double height;
+    std::vector<Circle> circles;
+
+    static Vehicle from_json(json vehicle) {
+        Vehicle res;
+        res.width = vehicle["shape"]["width"];
+        res.height = vehicle["shape"]["height"];
+        res.circles.reserve(vehicle.size());
+        for (auto circle : vehicle["circles_approximation"]["circles"]) {
+            res.circles.push_back(Circle{
+                circle["center"]["x"].get<double>(),
+                circle["center"]["y"].get<double>(),
+                circle["radius"].get<double>()
+            });
+        }
+        return res;
+    }
+};
+
 struct CollisionTester {
-    CollisionTester(msg::Scene::SharedPtr scene) : scene(scene) {
+    CollisionTester(msg::Scene::SharedPtr scene, const Vehicle& vehicle)
+        : scene(scene)
+        , vehicle(vehicle) {
+        uint32_t width = scene->occupancy_grid.info.width;
+        uint32_t height = scene->occupancy_grid.info.height;
+        cv::Mat scene_mat(height, width, CV_8U);
+        for (uint32_t y = 0; y < height; ++y) {
+            for (uint32_t x = 0; x < width; ++x) {
+                scene_mat.at<uint8_t>(y, x) = !scene->occupancy_grid.data[y * width + x];
+            }
+        }
+        cv::distanceTransform(scene_mat, distances, cv::DIST_L2, cv::DIST_MASK_PRECISE, CV_32F);
+        std::cout << std::setprecision(3) << std::fixed;
+        for (uint32_t y = 0; y < height; ++y) {
+            for (uint32_t x = 0; x < width; ++x) {
+                std::cout << distances.at<float>(y, x) << ' ';
+            }
+            std::cout << std::endl;
+        }
     }
 
+    // returns true if given state collides with the scene
     bool test(State state) {
         if (std::abs(state.x) > 20 || std::abs(state.y) > 20) {
             return true;
         }
 
-        int grid_x = static_cast<int>(state.x - scene->occupancy_grid.info.origin.position.x - 0.5);
-        int grid_y = static_cast<int>(state.y - scene->occupancy_grid.info.origin.position.y - 0.5);
-        return scene->occupancy_grid.data[grid_y * scene->occupancy_grid.info.width + grid_x] > 0;
+        double inter_x = state.x - scene->occupancy_grid.info.origin.position.x - 0.5;
+        double inter_y = state.y - scene->occupancy_grid.info.origin.position.y - 0.5;
+
+        for (auto circle : vehicle.circles) {
+            std::pair<double, double> move_res = angled_move(
+                -vehicle.width / 2.0 + circle.x,
+                -vehicle.height / 2.0 + circle.y,
+                state.theta
+            );
+            size_t circle_center_x = static_cast<size_t>(inter_x + move_res.first);  // todo: add resolution support here
+            size_t circle_center_y = static_cast<size_t>(inter_y + move_res.second);
+
+            if (distances.at<float>(circle_center_y, circle_center_x) < circle.r) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 private:
     msg::Scene::SharedPtr scene;
+    const Vehicle& vehicle;
+    cv::Mat distances;
 };
 
 struct StateSpace {
@@ -301,6 +378,7 @@ struct Planner {
         }
 
         initial = State::from_json(config["initial"]);
+        vehicle = Vehicle::from_json(config["vehicle"]);
     }
 
     nav_msgs::msg::Path plan(CollisionTester tester, MotionPrimitives primitives, State initial, State target) {
@@ -337,7 +415,7 @@ struct Planner {
     void start() {
         std::optional<msg::Scene::SharedPtr> scene;
         while ((scene = scene_queue->take()).has_value()) {
-            CollisionTester tester{scene.value()};
+            CollisionTester tester{scene.value(), vehicle};
             std::optional<msg::Point::SharedPtr> target_point = target_queue->peek();
             if (!target_point.has_value()) {
                 RCLCPP_DEBUG(logger, "No target in the topic, skipping planning");
@@ -363,6 +441,7 @@ private:
     rclcpp::Logger logger;
     MotionPrimitives primitives;
     State initial;
+    Vehicle vehicle;
 };
 
 std::thread start_planner(

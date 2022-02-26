@@ -11,11 +11,11 @@ build_unwrapper:
 
 build: build_planner build_unwrapper
 
-start:
+start: stop
 	./scripts/start.sh
 
 pub:
 	./scripts/pub.sh
 
 stop:
-	kill -- -"$$(cat log/group.pid)"
+	kill -- -"$$(cat log/group.pid)" || true
