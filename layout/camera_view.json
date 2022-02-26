@@ -1,0 +1,37 @@
+{
+  "configById": {
+    "CameraView": {
+      "cameraTopic": "/truck/color/image_view",
+      "enabledMarkerTopics": [],
+      "customMarkerTopicOptions": [],
+      "transformMarkers": true,
+      "synchronize": false,
+      "mode": "fit",
+      "zoom": 1,
+      "pan": {
+        "x": 0,
+        "y": 0
+      },
+      "smooth": true
+    },
+    "RosOutLog": {
+      "searchTerms": [],
+      "minLogLevel": 1
+    }
+  },
+  "globalVariables": {
+    "track_id": 34
+  },
+  "userNodes": {},
+  "linkedGlobalVariables": [],
+  "playbackConfig": {
+    "speed": 1,
+    "messageOrder": "receiveTime"
+  },
+  "layout": {
+    "first": "CameraView",
+    "second": "RosOutLog",
+    "direction": "column",
+    "splitPercentage": 70.0
+  }
+}
