@@ -1,4 +1,4 @@
-.PHONY: all build start stop
+.PHONY: all build_planner build_unwrapper build start stop
 
 all:
 	echo "Please, use explicit targets"
