@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(unwrapping_node)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # find dependencies
@@ -16,10 +16,10 @@ add_executable(node
 target_include_directories(node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(node PUBLIC c_std_11 cxx_std_20)
+target_compile_features(node PUBLIC c_std_11 cxx_std_17)
 ament_target_dependencies(node nav_msgs planning_interfaces rclcpp)
 
-install(TARGETS 
+install(TARGETS
   node
   DESTINATION lib/${PROJECT_NAME}
 )
