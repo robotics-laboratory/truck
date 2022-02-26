@@ -1,0 +1,7 @@
+launch:
+- include:
+    file: $(dirname)/rosbridge.yaml
+- include:
+    file: $(dirname)/camera.yaml
+- include:
+    file: $(find-pkg-share camera_view)/launch/camera_view.yaml
