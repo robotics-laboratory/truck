@@ -77,19 +77,19 @@ struct State {
 
     static State from_json(json state) {
         return State{
-            .x = state["x"],
-            .y = state["y"],
-            .theta = mod_interval(state["theta"], 360.0),
-            .distance = 0.0,
+            state["x"],
+            state["y"],
+            mod_interval(state["theta"], 360.0),
+            0.0,
         };
     }
 
     static State from_point(msg::Point::SharedPtr point) {
         return State{
-            .x = point->x,
-            .y = point->y,
-            .theta = mod_interval(point->theta, 360.0),
-            .distance = 0.0,
+            point->x,
+            point->y,
+            mod_interval(point->theta, 360.0),
+            0.0,
         };
     }
 
@@ -175,19 +175,19 @@ struct MotionPrimitive {
 
     static MotionPrimitive from_json(json primitive) {
         return MotionPrimitive{
-            .dx = primitive["dx"],
-            .dy = primitive["dy"],
-            .dtheta = primitive["dtheta"],
-            .weight = primitive["weight"],
+            primitive["dx"],
+            primitive["dy"],
+            primitive["dtheta"],
+            primitive["weight"],
         };
     }
 
     State apply(State state) const {
         return State{
-            .x = state.x + std::cos(deg_to_rad(state.theta)) * dx - std::sin(deg_to_rad(state.theta)) * dy,
-            .y = state.y + std::sin(deg_to_rad(state.theta)) * dx + std::cos(deg_to_rad(state.theta)) * dy,
-            .theta = mod_interval(state.theta + dtheta, 360.0),
-            .distance = state.distance + weight,
+            state.x + std::cos(deg_to_rad(state.theta)) * dx - std::sin(deg_to_rad(state.theta)) * dy,
+            state.y + std::sin(deg_to_rad(state.theta)) * dx + std::cos(deg_to_rad(state.theta)) * dy,
+            mod_interval(state.theta + dtheta, 360.0),
+            state.distance + weight,
         };
     }
 };
@@ -231,7 +231,9 @@ struct StateSpace {
 
         for (MotionPrimitive primitive : primitives) {
             State next_state = primitive.apply(optimal);
-            if (closed_set.contains(next_state) || open_set_checker.contains(next_state) || tester.test(next_state)) {
+            if (closed_set.find(next_state) != closed_set.end() ||
+                open_set_checker.find(next_state) != closed_set.end() ||
+                tester.test(next_state)) {
                 continue;
             }
             open_set.insert(next_state);
