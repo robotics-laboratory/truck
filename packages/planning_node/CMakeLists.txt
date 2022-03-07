@@ -19,18 +19,6 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(float_comparison)
 
-# FetchContent_Declare(
-#   json
-#   URL https://github.com/nlohmann/json/releases/download/v3.10.5/json.tar.xz
-#   URL_HASH SHA256=344be97b757a36c5b180f1c8162f6c5f6ebd760b117f6e64b77866e97b217280
-# )
-
-# FetchContent_GetProperties(json)
-# if(NOT json_POPULATED)
-#   FetchContent_Populate(json)
-#   add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
-# endif()
-
 add_executable(node
   src/main.cpp
   src/node.cpp
@@ -40,7 +28,6 @@ add_executable(node
   src/single_slot_queue.hpp
 )
 target_include_directories(node PUBLIC ${float_comparison_SOURCE_DIR} ${PROJECT_SOURCE_DIR})
-# target_link_libraries(node nlohmann_json::nlohmann_json)
 target_compile_features(node PUBLIC c_std_11 cxx_std_17)
 ament_target_dependencies(node planning_interfaces rclcpp)
 

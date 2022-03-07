@@ -31,7 +31,7 @@ struct PlanningNode : public rclcpp::Node {
         target_queue = std::make_shared<SingleSlotQueue<msg::Point::SharedPtr>>();
 
         path_publisher = create_publisher<msg::Path>("path", 10);
-        
+
         planner_thread = start_planner(scene_queue, target_queue, path_publisher, config_path, get_logger());
     }
 
@@ -57,7 +57,7 @@ private:
     std::shared_ptr<SingleSlotQueue<msg::Scene::SharedPtr>> scene_queue;
     std::shared_ptr<SingleSlotQueue<msg::Point::SharedPtr>> target_queue;
     rclcpp::Publisher<msg::Path>::SharedPtr path_publisher;
-    
+
     std::thread planner_thread;
 };
 
@@ -66,6 +66,9 @@ std::thread start_planning_node(int argc, char** argv) {
         std::string config_path;
         if (argc > 1) {
             config_path = argv[1];
+            if (config_path.empty()) {
+                config_path = "packages/planning_node/config.json";
+            }
 
             --argc;
             ++argv;

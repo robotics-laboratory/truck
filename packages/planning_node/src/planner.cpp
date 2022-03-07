@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <memory>
 #include <set>
@@ -36,34 +37,50 @@ double mod_interval(double x, double modulo) {
     return std::fmod(std::fmod(x, modulo) + modulo, modulo);
 }
 
-double deg_to_rad(double deg) {
-    return deg * M_PI / 180.0;
-}
-
 struct ComparisonTolerances {
     static std::unique_ptr<ComparisonTolerances> instance;
 
-    static double get(std::string key) {
-        return instance->values[key];
+    static double get_x() {
+        return instance->x;
+    }
+    static double get_y() {
+        return instance->y;
+    }
+    static double get_theta() {
+        return instance->theta;
+    }
+    static double get_distance() {
+        return instance->distance;
     }
 
-    static void load_from_json(json tolerances) {
+    static void load_from_json(const json& tolerances) {
         instance = std::make_unique<ComparisonTolerances>();
         for (auto it = tolerances.begin(); it != tolerances.end(); ++it) {
-            instance->values[it.key()] = it.value();
+            if (it.key() == "x") {
+                instance->x = it.value();
+            } else if (it.key() == "y") {
+                instance->y = it.value();
+            } else if (it.key() == "theta") {
+                instance->theta = it.value();
+            } else if (it.key() == "distance") {
+                instance->distance = it.value();
+            }
         }
     }
 
     static void load_default() {
         instance = std::make_unique<ComparisonTolerances>();
-        instance->values["x"] = 0.00001;
-        instance->values["y"] = 0.00001;
-        instance->values["theta"] = 0.01;
-        instance->values["distance"] = 0.00001;
+        instance->x = 0.00001;
+        instance->y = 0.00001;
+        instance->theta = 0.01;
+        instance->distance = 0.00001;
     }
 
 private:
-    std::unordered_map<std::string, double> values;
+    double x;
+    double y;
+    double theta;
+    double distance;
 };
 
 std::unique_ptr<ComparisonTolerances> ComparisonTolerances::instance = nullptr;
@@ -75,11 +92,11 @@ struct State {
 
     double distance;
 
-    static State from_json(json state) {
+    static State from_json(const json& state) {
         return State{
             state["x"],
             state["y"],
-            mod_interval(state["theta"], 360.0),
+            mod_interval(state["theta"], 2 * M_PI),
             0.0,
         };
     }
@@ -88,7 +105,7 @@ struct State {
         return State{
             point->x,
             point->y,
-            mod_interval(point->theta, 360.0),
+            mod_interval(point->theta, 2 * M_PI),
             0.0,
         };
     }
@@ -107,16 +124,16 @@ struct State {
         res.pose.position.y = y;
 
         tf2::Quaternion quart;
-        quart.setRPY(0.0, 0.0, deg_to_rad(theta));
+        quart.setRPY(0.0, 0.0, theta);
         res.pose.orientation = tf2::toMsg(quart);
 
         return res;
     }
 
     bool operator==(State o) const {
-        return very_close_equals(x, o.x, ComparisonTolerances::get("x")) &&
-            very_close_equals(y, o.y, ComparisonTolerances::get("y")) &&
-            very_close_equals(theta, o.theta, ComparisonTolerances::get("theta"));
+        return very_close_equals(x, o.x, ComparisonTolerances::get_x()) &&
+            very_close_equals(y, o.y, ComparisonTolerances::get_y()) &&
+            very_close_equals(theta, o.theta, ComparisonTolerances::get_theta());
     }
     bool operator!=(State o) const {
         return !(*this == o);
@@ -149,16 +166,16 @@ struct StateComparator {
         }
 
         // todo: this looks ugly, maybe rewrite it with macros
-        if (very_close_less(a.distance, b.distance, ComparisonTolerances::get("distance"))) {
+        if (very_close_less(a.distance, b.distance, ComparisonTolerances::get_distance())) {
             return true;
-        } else if (very_close_equals(a.distance, b.distance, ComparisonTolerances::get("distance"))) {
-            if (very_close_less(a.x, b.x, ComparisonTolerances::get("x"))) {
+        } else if (very_close_equals(a.distance, b.distance, ComparisonTolerances::get_distance())) {
+            if (very_close_less(a.x, b.x, ComparisonTolerances::get_x())) {
                 return true;
-            } else if (very_close_equals(a.x, b.x, ComparisonTolerances::get("x"))) {
-                if (very_close_less(a.y, b.y, ComparisonTolerances::get("y"))) {
+            } else if (very_close_equals(a.x, b.x, ComparisonTolerances::get_x())) {
+                if (very_close_less(a.y, b.y, ComparisonTolerances::get_y())) {
                     return true;
-                } else if (very_close_equals(a.y, b.y, ComparisonTolerances::get("y"))) {
-                    return very_close_less(a.theta, b.theta, ComparisonTolerances::get("theta"));
+                } else if (very_close_equals(a.y, b.y, ComparisonTolerances::get_y())) {
+                    return very_close_less(a.theta, b.theta, ComparisonTolerances::get_theta());
                 }
             }
         }
@@ -173,20 +190,20 @@ struct MotionPrimitive {
 
     double weight;
 
-    static MotionPrimitive from_json(json primitive) {
+    static MotionPrimitive from_json(const json& primitive) {
         return MotionPrimitive{
             primitive["dx"],
             primitive["dy"],
-            primitive["dtheta"],
+            mod_interval(primitive["dtheta"], 2 * M_PI),
             primitive["weight"],
         };
     }
 
     State apply(State state) const {
         return State{
-            state.x + std::cos(deg_to_rad(state.theta)) * dx - std::sin(deg_to_rad(state.theta)) * dy,
-            state.y + std::sin(deg_to_rad(state.theta)) * dx + std::cos(deg_to_rad(state.theta)) * dy,
-            mod_interval(state.theta + dtheta, 360.0),
+            state.x + std::cos(state.theta) * dx - std::sin(state.theta) * dy,
+            state.y + std::sin(state.theta) * dx + std::cos(state.theta) * dy,
+            mod_interval(state.theta + dtheta, 2 * M_PI),
             state.distance + weight,
         };
     }
@@ -275,10 +292,6 @@ struct Planner {
       , target_queue(target_queue)
       , path_publisher(path_publisher)
       , logger(logger) {
-        if (config_path.empty()) {
-            config_path = "packages/planning_node/config.json";
-        }
-
         std::ifstream config_stream(config_path);
         json config = json::parse(config_stream);
 
