@@ -25,7 +25,7 @@ For jetson check that nvidia runtime is enbled by default in ```/etc/docker/daem
 }
 ```
 
-Now you can start a new container and attach it. 
+Now you can start new container and attach.
 
 ```
 # dev/amd64

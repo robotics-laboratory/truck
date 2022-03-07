@@ -197,7 +197,7 @@ RUN wget -qO - https://github.com/pytorch/vision/archive/refs/tags/v${TORCHVISIO
     && cd vision-${TORCHVISION_VERSION} \
     && python3 setup.py install \
     && rm -rf /tmp/*
- 
+
 # INSTALL RTAB-MAP
 
 ARG G2O_VERSION="20201223_git"
@@ -308,7 +308,7 @@ RUN apt-get update -q \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV LANG=en_US.UTF-8 
+ENV LANG=en_US.UTF-8
 ENV PYTHONIOENCODING=utf-8
 
 RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
@@ -382,25 +382,26 @@ RUN cd ${ROS_DISTRO}/src \
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         build-essential \
-        gfortran \
         clang-format \
         curl \
-        make \
+        file \
+        gfortran \
         git \
         gnupg2 \
-        file \
+        htop \
+        httpie \
         less \
+        make \
         nlohmann-json-dev \
         python3 \
-        python3-pip \
         python3-dev \
         python3-distutils \
+        python3-pip \
         python3-setuptools \
         tar \
         tmux \
         vim \
         wget \
-        httpie \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### SETUP ENTRYPOINT
