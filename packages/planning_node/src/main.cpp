@@ -2,7 +2,7 @@
 
 
 int main(int argc, char** argv) {
-    std::thread subThread = planning_node::start_planning_node(argc, argv);
-    subThread.join();
+    std::thread sub_thread = planning_node::start_planning_node(argc, argv);
+    sub_thread.join();
     return 0;
 }
