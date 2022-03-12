@@ -33,10 +33,10 @@ struct Vector {
         a -= b;
         return a;
     }
-    friend double operator*(const Vector &a, const Vector &b) {
+    friend double dot(const Vector &a, const Vector &b) {
         return a.x * b.x + a.y * b.y;
     }
-    friend double operator^(const Vector &a, const Vector &b) {
+    friend double cross(const Vector &a, const Vector &b) {
         return a.x * b.y - a.y * b.x;
     }
     Vector rotate(double angle) const {
@@ -75,7 +75,7 @@ std::optional<Command> Controller::get_motion(
         p.x = -p.x;
         sign = 1;
     }
-    double r = p * p / (2 * p.x);
+    double r = dot(p, p) / (2 * p.x);
     double dist;
     if (r < 1e4)
         dist = r * (p - Vector{r, 0}).angle();
