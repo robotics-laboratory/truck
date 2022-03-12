@@ -3,10 +3,10 @@
 #include <algorithm>
 #include <cmath>
 
-namespace pursuit {
+namespace pure_pursuit {
 
 using planning_interfaces::msg::Point;
-using pursuit_interfaces::msg::Command;
+using pure_pursuit_msgs::msg::Command;
 
 template<class P1, class P2>
 double distance(const P1 &a, const P2 &b) {
@@ -53,7 +53,7 @@ struct Vector {
 };
 
 std::optional<Command> Controller::get_motion(
-      const pursuit_interfaces::msg::State &state
+      const pure_pursuit_msgs::msg::State &state
     , const std::vector<Point> &path
 ) {
     auto &position = state.position;

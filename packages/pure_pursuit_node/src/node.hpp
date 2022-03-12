@@ -1,8 +1,8 @@
 #pragma once
 
 #include "planning_interfaces/msg/path.hpp"
-#include "pursuit_interfaces/msg/state.hpp"
-#include "pursuit_interfaces/msg/command.hpp"
+#include "pure_pursuit_msgs/msg/state.hpp"
+#include "pure_pursuit_msgs/msg/command.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -11,7 +11,7 @@
 #include <optional>
 #include <memory>
 
-namespace pursuit {
+namespace pure_pursuit {
 
 class PursuitNode : public rclcpp::Node {
 public:
@@ -31,10 +31,10 @@ public:
                     trajectory = std::move(path->trajectory);
             }
         );
-        state_subscribtion = Node::create_subscription<pursuit_interfaces::msg::State>(
+        state_subscribtion = Node::create_subscription<pure_pursuit_msgs::msg::State>(
             "current_state",
             1,
-            [this](pursuit_interfaces::msg::State::UniquePtr state) {
+            [this](pure_pursuit_msgs::msg::State::UniquePtr state) {
                 if (trajectory) {
                     auto cmd = controller.get_motion(*state, *trajectory);
                     if (cmd)
@@ -46,8 +46,8 @@ public:
 
 private:
     rclcpp::Subscription<planning_interfaces::msg::Path>::SharedPtr path_subscription;
-    rclcpp::Subscription<pursuit_interfaces::msg::State>::SharedPtr state_subscribtion;
-    rclcpp::Publisher<pursuit_interfaces::msg::Command>::SharedPtr cmd_publisher;
+    rclcpp::Subscription<pure_pursuit_msgs::msg::State>::SharedPtr state_subscribtion;
+    rclcpp::Publisher<pure_pursuit_msgs::msg::Command>::SharedPtr cmd_publisher;
     std::optional<std::vector<planning_interfaces::msg::Point>> trajectory;
 
     Controller controller;

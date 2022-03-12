@@ -1,28 +1,18 @@
 cmake_minimum_required(VERSION 3.8)
-project(pursuit_node)
+project(pure_pursuit_msgs)
 
-set(CMAKE_CXX_STANDARD 20)
 add_compile_options(-Wall -Wextra -Werror)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(pursuit_interfaces REQUIRED)
-find_package(planning_interfaces REQUIRED)
 
-file(GLOB SRC
-  src/*.cpp
-)
+find_package(rosidl_default_generators REQUIRED)
 
-add_executable(node
-   ${SRC}
-)
+find_package(geometry_msgs REQUIRED)
 
-ament_target_dependencies(node rclcpp pursuit_interfaces planning_interfaces)
-
-install(TARGETS
-  node
-  DESTINATION lib/${PROJECT_NAME}
+rosidl_generate_interfaces(${PROJECT_NAME} 
+  msg/State.msg
+  msg/Command.msg
 )
 
 if(BUILD_TESTING)
@@ -36,4 +26,5 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+ament_export_dependencies(rosidl_default_runtime)
 ament_package()
