@@ -23,7 +23,7 @@ public:
             , Node::get_parameter("lookahead_distance").get_value<double>()
         })
     {
-        path_subscription = this->create_subscription<planning_interfaces::msg::Path>(
+        slot_path = this->create_subscription<planning_interfaces::msg::Path>(
             "planned_path",
             1,
             [this](planning_interfaces::msg::Path::UniquePtr path) {
@@ -31,7 +31,7 @@ public:
                     trajectory = std::move(path->trajectory);
             }
         );
-        state_subscribtion = Node::create_subscription<pure_pursuit_msgs::msg::State>(
+        slot_state = Node::create_subscription<pure_pursuit_msgs::msg::State>(
             "current_state",
             1,
             [this](pure_pursuit_msgs::msg::State::UniquePtr state) {
@@ -45,8 +45,8 @@ public:
     }
 
 private:
-    rclcpp::Subscription<planning_interfaces::msg::Path>::SharedPtr path_subscription;
-    rclcpp::Subscription<pure_pursuit_msgs::msg::State>::SharedPtr state_subscribtion;
+    rclcpp::Subscription<planning_interfaces::msg::Path>::SharedPtr slot_path;
+    rclcpp::Subscription<pure_pursuit_msgs::msg::State>::SharedPtr slot_state;
     rclcpp::Publisher<pure_pursuit_msgs::msg::Command>::SharedPtr cmd_publisher;
     std::optional<std::vector<planning_interfaces::msg::Point>> trajectory;
 
