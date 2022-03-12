@@ -17,11 +17,7 @@ class PursuitNode : public rclcpp::Node {
 public:
     PursuitNode()
         : Node("PursuitNode")
-        , controller(Parameters{
-              Node::get_parameter("max_velocity").get_value<double>()
-            , Node::get_parameter("max_accel").get_value<double>()
-            , Node::get_parameter("lookahead_distance").get_value<double>()
-        })
+        , controller(Parameters(*this))
     {
         slot_path = this->create_subscription<planning_interfaces::msg::Path>(
             "planned_path",

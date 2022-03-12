@@ -4,12 +4,20 @@
 #include "pure_pursuit_msgs/msg/state.hpp"
 #include "pure_pursuit_msgs/msg/command.hpp"
 
+#include "rclcpp/rclcpp.hpp"
+
 #include <vector>
 #include <optional>
 
 namespace pure_pursuit {
 
 struct Parameters {
+    Parameters(const rclcpp::Node &node)
+    : max_velocity(node.get_parameter("max_velocity").get_value<double>())
+    , max_accel(node.get_parameter("max_accel").get_value<double>())
+    , lookahead_distance(node.get_parameter("lookahead_distance").get_value<double>())
+    {}
+
     double max_velocity;
     double max_accel;
     double lookahead_distance;
