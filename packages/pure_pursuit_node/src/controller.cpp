@@ -5,8 +5,8 @@
 
 namespace pure_pursuit {
 
-using planning_interfaces::msg::Point;
 using pure_pursuit_msgs::msg::Command;
+using namespace geometry_msgs::msg;
 
 template<class P1, class P2>
 double distance(const P1 &a, const P2 &b) {
@@ -54,16 +54,16 @@ struct Vector {
 
 std::optional<Command> Controller::get_motion(
       const pure_pursuit_msgs::msg::State &state
-    , const std::vector<Point> &path
+    , const std::vector<PoseStamped> &path
 ) {
     auto &position = state.position;
-    auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const Point &p) {
-        return distance(p, position) <= params.lookahead_distance;
+    auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const PoseStamped &p) {
+        return distance(p.pose.position, position) <= params.lookahead_distance;
     });
     if (it == path.rend())
         return std::nullopt;
     Vector p0{position.x, position.y};
-    Vector p{it->x, it->y};
+    Vector p{it->pose.position.x, it->pose.position.y};
     // Vector intersection;
     // if () {
 

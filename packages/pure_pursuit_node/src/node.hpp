@@ -23,8 +23,7 @@ public:
             "planned_path",
             1,
             [this](planning_interfaces::msg::Path::UniquePtr path) {
-                if (path->exists)
-                    trajectory = std::move(path->trajectory);
+                trajectory = std::move(path->path.poses);
             }
         );
         slot_state = Node::create_subscription<pure_pursuit_msgs::msg::State>(
@@ -44,7 +43,7 @@ private:
     rclcpp::Subscription<planning_interfaces::msg::Path>::SharedPtr slot_path;
     rclcpp::Subscription<pure_pursuit_msgs::msg::State>::SharedPtr slot_state;
     rclcpp::Publisher<pure_pursuit_msgs::msg::Command>::SharedPtr cmd_publisher;
-    std::optional<std::vector<planning_interfaces::msg::Point>> trajectory;
+    std::optional<std::vector<geometry_msgs::msg::PoseStamped>> trajectory;
 
     Controller controller;
 };

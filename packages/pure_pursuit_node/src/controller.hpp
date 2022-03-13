@@ -1,6 +1,6 @@
 #pragma once
 
-#include "planning_interfaces/msg/point.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "pure_pursuit_msgs/msg/state.hpp"
 #include "pure_pursuit_msgs/msg/command.hpp"
 
@@ -30,7 +30,7 @@ public:
     Controller(const Parameters &params): params{params} {}
     std::optional<pure_pursuit_msgs::msg::Command> get_motion(
           const pure_pursuit_msgs::msg::State &state
-        , const std::vector<planning_interfaces::msg::Point> &path
+        , const std::vector<geometry_msgs::msg::PoseStamped> &path
     );
 };
 
