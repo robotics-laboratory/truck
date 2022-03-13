@@ -1,7 +1,7 @@
 launch:
 - node:
-    pkg: "pure_pursuit"
-    exec: "pure_pursuit"
-    name: "pure_pursuit"
+    pkg: "pure_pursuit_node"
+    exec: "pure_pursuit_node"
+    name: "pure_pursuit_node"
     namespace: "truck"
     output: "log"
