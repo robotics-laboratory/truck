@@ -1,7 +1,5 @@
 # Truck
 
-
-
 ## Getting started
 ### Docker
 We use docker for two purposes:
@@ -27,7 +25,7 @@ For jetson check that nvidia runtime is enbled by default in ```/etc/docker/daem
 }
 ```
 
-Now you can start new container and attach. 
+Now you can start new container and attach.
 
 ```
 # dev/amd64
@@ -40,9 +38,8 @@ docker-compose up -d truck-base-jetson
 # use ctrl+p+q to detach
 docker attach truck-base
 
-# run another shell
-# you can safely exit it
-# and it won't stop the container
+# or just run another shell
+# exit doesn't stop the container
 docker exec -it truck-base bash
 
 # stop container

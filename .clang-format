@@ -1,0 +1,9 @@
+BasedOnStyle: Google
+
+IndentAccessModifiers: false
+AccessModifierOffset: -4
+SpaceBeforeInheritanceColon: false
+
+InsertTrailingCommas: true
+IndentWidth: 4
+ColumnLimit: 100

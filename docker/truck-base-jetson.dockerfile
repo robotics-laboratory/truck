@@ -27,7 +27,8 @@ RUN wget -qO - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key
     && apt-get install -yq --no-install-recommends cmake \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-# INSTALL OPENCV
+### INSTALL OPENCV
+
 ARG OPENCV_VERSION="4.5.0"
 
 RUN apt-get update -yq && \
@@ -85,7 +86,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && cd opencv-${OPENCV_VERSION} && mkdir -p build && cd build \
     && OPENCV_MODULES=(core calib3d features2d flann highgui imgcodecs photo python stitching video videoio \
-        aruco bgsegm ccalib cudaarithm cudabgsegm cudacodec cudafeatures2d cudafilters cudaimgproc \
+        aruco bgsegm ccalib cudev cudaarithm cudabgsegm cudacodec cudafeatures2d cudafilters cudaimgproc \
         cudaoptflow cudastereo cudawarping cudev optflow rgbd sfm stereo surface_matching \
         xfeatures2d ximgproc xphoto) \
     && cmake .. \
@@ -122,7 +123,8 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
         -DBUILD_TESTS=OFF \
     && make -j$(nproc) install && rm -rf /tmp/*
 
-# INSTALL LIBREALSENSE
+### INSTALL LIBREALSENSE
+
 ARG LIBRS_VERSION="2.50.0"
 
 RUN apt-get update -yq \
@@ -155,7 +157,8 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
     && make -j$(($(nproc)-1)) install \
     && rm -rf /tmp/*
 
-# INSTALL PYTORCH
+### INSTALL PYTORCH
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         python3-pip \
@@ -194,7 +197,7 @@ RUN wget -qO - https://github.com/pytorch/vision/archive/refs/tags/v${TORCHVISIO
     && cd vision-${TORCHVISION_VERSION} \
     && python3 setup.py install \
     && rm -rf /tmp/*
- 
+
 # INSTALL RTAB-MAP
 
 ARG G2O_VERSION="20201223_git"
@@ -273,6 +276,7 @@ RUN apt-get update -q \
     && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
+
 ENV GAZEBO_VERSION="gazebo9"
 
 RUN apt-get update -q \
@@ -304,7 +308,7 @@ RUN apt-get update -q \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV LANG=en_US.UTF-8 
+ENV LANG=en_US.UTF-8
 ENV PYTHONIOENCODING=utf-8
 
 RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
@@ -373,40 +377,35 @@ RUN cd ${ROS_DISTRO}/src \
     && echo 'source ${ROS_ROOT}/setup.bash' >> /root/.bashrc \
     && rm -rf /tmp/*
 
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y \
-    && apt-get update \
-    && apt-get install gcc-9 g++-9 \
-    && update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-9 50 \
-    && update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-9 50 \
-    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 50 \
-    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 50 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
 ### INSTALL DEV PKGS
 
-RUN apt-get update -q && \
-    apt-get install -yq --no-install-recommends \
+RUN apt-get update -q \
+    && apt-get install -yq --no-install-recommends \
         build-essential \
-        gfortran \
+        clang-format \
         curl \
-        make \
+        file \
+        gfortran \
         git \
         gnupg2 \
-        file \
+        htop \
+        httpie \
         less \
+        make \
+        nlohmann-json-dev \
         python3 \
-        python3-pip \
         python3-dev \
         python3-distutils \
+        python3-pip \
         python3-setuptools \
         tar \
+        tmux \
         vim \
         wget \
-        httpie \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### SETUP ENTRYPOINT
-COPY /ros_setup.bash /ros_setup.bash
-ENTRYPOINT ["/ros_setup.bash"]
+
+COPY /entrypoint.bash /entrypoint.bash
+ENTRYPOINT ["/entrypoint.bash"]
 WORKDIR /

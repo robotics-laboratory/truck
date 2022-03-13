@@ -140,9 +140,6 @@ ARG PYTORCH_VERSION="1.10.0"
 ARG TORCHVISION_VERSION="0.11.1"
 ARG PILLOW_VERSION="pillow<7"
 
-# ENV PYTORCH_PATH="/usr/local/lib/python3.6/dist-packages/torch"
-# ENV LD_LIBRARY_PATH="${PYTORCH_PATH}/lib:${LD_LIBRARY_PATH}"
-
 RUN apt update -q \
     && apt-get install -yq --no-install-recommends \
         python3-pip \
@@ -151,7 +148,7 @@ RUN apt update -q \
         torch==${PYTORCH_VERSION}+cpu \
         torchvision==${TORCHVISION_VERSION}+cpu
 
-# ### INSTALL RTAB-MAP
+### INSTALL RTAB-MAP
 
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
@@ -229,11 +226,16 @@ RUN wget -qO - https://github.com/introlab/rtabmap/archive/refs/tags/${RTAB_MAP_
 
 ### INSTALL ROS2
 
+RUN apt-get update -q \
+    && apt-get install -yq --no-install-recommends \
+        curl \
+    && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
+    && rm -rf /var/lib/apt/lists/* && apt-get clean
+
 ENV GAZEBO_VERSION="gazebo9"
 
-RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
-    && apt-get update -q \
+RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         apt-utils \
         build-essential \
@@ -261,7 +263,7 @@ RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o 
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 
-ENV LANG=en_US.UTF-8 
+ENV LANG=en_US.UTF-8
 ENV PYTHONIOENCODING=utf-8
 
 RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
@@ -330,41 +332,34 @@ RUN cd ${ROS_DISTRO}/src \
     && echo 'source ${ROS_ROOT}/setup.bash' >> /root/.bashrc \
     && rm -rf /tmp/*
 
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y \
-    && apt-get update \
-    && apt-get install gcc-9 g++-9 \
-    && update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-9 50 \
-    && update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-9 50 \
-    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 50 \
-    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 50 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
 ### INSTALL DEV PKGS
 
-RUN apt-get update -q && \
-    apt-get install -yq --no-install-recommends \
+RUN apt-get update -q \
+    && apt-get install -yq --no-install-recommends \
         build-essential \
-        gfortran \
         curl \
-        make \
+        file \
+        gfortran \
         git \
         gnupg2 \
-        file \
+        htop \
+        httpie \
         less \
+        make \
+        nlohmann-json-dev \
         python3 \
-        python3-pip \
         python3-dev \
         python3-distutils \
+        python3-pip \
         python3-setuptools \
         tar \
+        tmux \
         vim \
         wget \
-        httpie \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### SETUP ENTRYPOINT
-COPY /ros_setup.bash /ros_setup.bash
-ENTRYPOINT ["/ros_setup.bash"]
-CMD ["bash"]
+
+COPY /entrypoint.bash /entrypoint.bash
+ENTRYPOINT ["/entrypoint.bash"]
 WORKDIR /

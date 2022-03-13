@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
 project(planning_node)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(planning_interfaces REQUIRED)
+find_package(rclcpp REQUIRED)
 
 include(FetchContent)
 
@@ -27,8 +27,9 @@ add_executable(node
   src/planner.hpp
   src/single_slot_queue.hpp
 )
-target_include_directories(node PUBLIC ${float_comparison_SOURCE_DIR})
-ament_target_dependencies(node rclcpp planning_interfaces)
+target_include_directories(node PUBLIC ${float_comparison_SOURCE_DIR} ${PROJECT_SOURCE_DIR})
+target_compile_features(node PUBLIC c_std_11 cxx_std_17)
+ament_target_dependencies(node planning_interfaces rclcpp)
 
 install(TARGETS
   node
