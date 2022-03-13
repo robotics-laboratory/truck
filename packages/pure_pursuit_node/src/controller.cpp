@@ -3,10 +3,18 @@
 #include <algorithm>
 #include <cmath>
 
-namespace pure_pursuit {
-
 using pure_pursuit_msgs::msg::Command;
 using namespace geometry_msgs::msg;
+
+namespace {
+
+double quaternoin_to_flat_angle(const Quaternion &q) {
+    return std::copysign(2 * std::acos(q.w), q.z);
+}
+
+};
+
+namespace pure_pursuit {
 
 template<class P1, class P2>
 double distance(const P1 &a, const P2 &b) {
@@ -53,10 +61,10 @@ struct Vector {
 };
 
 std::optional<Command> Controller::get_motion(
-      const pure_pursuit_msgs::msg::State &state
+      const nav_msgs::msg::Odometry &odometry
     , const std::vector<PoseStamped> &path
 ) {
-    auto &position = state.position;
+    auto &position = odometry.pose.pose.position;
     auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const PoseStamped &p) {
         return distance(p.pose.position, position) <= params.lookahead_distance;
     });
@@ -64,12 +72,8 @@ std::optional<Command> Controller::get_motion(
         return std::nullopt;
     Vector p0{position.x, position.y};
     Vector p{it->pose.position.x, it->pose.position.y};
-    // Vector intersection;
-    // if () {
-
-    // }
     p -= p0;
-    p = p.rotate(-state.yaw + M_PI / 2);
+    p = p.rotate(-quaternoin_to_flat_angle(odometry.pose.pose.orientation) + M_PI / 2);
     bool sign = 0;
     if (p.x < 0) {
         p.x = -p.x;
@@ -91,8 +95,8 @@ std::optional<Command> Controller::get_motion(
 
     Command result;
 
-    result.velocity = state.velocity;
-    double norm = Vector{state.velocity.linear.x, state.velocity.linear.y}.len();
+    result.velocity = odometry.twist.twist;
+    double norm = Vector{odometry.twist.twist.linear.x, odometry.twist.twist.linear.y}.len();
     result.velocity.linear.x *= new_velocity / norm;
     result.velocity.linear.y *= new_velocity / norm;
     result.velocity.angular.z = angular_delta * time;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "pure_pursuit_msgs/msg/state.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "pure_pursuit_msgs/msg/command.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -29,7 +29,7 @@ private:
 public:
     Controller(const Parameters &params): params{params} {}
     std::optional<pure_pursuit_msgs::msg::Command> get_motion(
-          const pure_pursuit_msgs::msg::State &state
+          const nav_msgs::msg::Odometry &odometry
         , const std::vector<geometry_msgs::msg::PoseStamped> &path
     );
 };

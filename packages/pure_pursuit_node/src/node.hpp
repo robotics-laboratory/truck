@@ -1,7 +1,7 @@
 #pragma once
 
 #include "planning_interfaces/msg/path.hpp"
-#include "pure_pursuit_msgs/msg/state.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "pure_pursuit_msgs/msg/command.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -26,12 +26,12 @@ public:
                 trajectory = std::move(path->path.poses);
             }
         );
-        slot_state = Node::create_subscription<pure_pursuit_msgs::msg::State>(
+        slot_state = Node::create_subscription<nav_msgs::msg::Odometry>(
             "current_state",
             1,
-            [this](pure_pursuit_msgs::msg::State::UniquePtr state) {
+            [this](nav_msgs::msg::Odometry::UniquePtr odometry) {
                 if (trajectory) {
-                    auto cmd = controller.get_motion(*state, *trajectory);
+                    auto cmd = controller.get_motion(*odometry, *trajectory);
                     if (cmd)
                         cmd_publisher->publish(*cmd);
                 }
@@ -41,7 +41,7 @@ public:
 
 private:
     rclcpp::Subscription<planning_interfaces::msg::Path>::SharedPtr slot_path;
-    rclcpp::Subscription<pure_pursuit_msgs::msg::State>::SharedPtr slot_state;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr slot_state;
     rclcpp::Publisher<pure_pursuit_msgs::msg::Command>::SharedPtr cmd_publisher;
     std::optional<std::vector<geometry_msgs::msg::PoseStamped>> trajectory;
 
