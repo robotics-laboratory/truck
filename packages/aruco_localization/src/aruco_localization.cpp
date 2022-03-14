@@ -41,9 +41,9 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
   if (!rvecs.empty()) {
     auto message = nav_msgs::msg::Odometry();
 
-    message.pose.pose.position.set__x(-tvecs[0][0]);
-    message.pose.pose.position.set__y(-tvecs[0][1]);
-    message.pose.pose.position.set__z(-tvecs[0][2]);
+    message.pose.pose.position.set__x(tvecs[0][0]);
+    message.pose.pose.position.set__y(tvecs[0][1]);
+    message.pose.pose.position.set__z(tvecs[0][2]);
 
     publisher_odometry_->publish(message);
   }
