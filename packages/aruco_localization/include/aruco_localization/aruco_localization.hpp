@@ -3,19 +3,26 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <cv_bridge/cv_bridge.h>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 
-//this node deal with two topics:
-// /camera/color/camera_info [sensor_msgs/msg/CameraInfo]
-// /camera/color/image_raw [sensor_msgs/msg/Image]
+/**
+ * this node deal with three topics:
+ * /camera/color/camera_info [sensor_msgs/msg/CameraInfo]
+ * /camera/color/image_raw [sensor_msgs/msg/Image]
+ * /truck/aruco_odometry [nav_msgs/msg/Odometry]
+ */
 
 const static std::string kImageRawTopic = "/camera/color/image_raw";
 const static std::string kCameraInfoTopic = "/camera/color/camera_info";
 const static std::string kArucoLocalizationNodeName = "aruco_localization";
+const static std::string kArucoOdometryTopic = "/truck/aruco_odometry";
+
+const static int kCameraMatrixSize = 3;
+const static int kDistCoeffsCount = 5;
 
 class ArucoLocalization : public rclcpp::Node
 {
@@ -28,11 +35,13 @@ private:
 
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_image_raw_;
   rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr subscription_camera_info_;
+  
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher_odometry_;
 
-  std::vector<int> markerIds;
-  std::vector<std::vector<cv::Point2f>> markerCorners, rejectedCandidates;
-  cv::Ptr<cv::aruco::DetectorParameters> parameters = cv::aruco::DetectorParameters::create();
-  cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+  cv::Mat camera_matrix_, tmp_camera_matrix_, dist_coeffs_, tmp_dist_coeffs_;
 
-  std::shared_ptr<cv::Mat> camera_matrix, dist_coeffs;
+  std::vector<int> marker_ids_;
+  std::vector<std::vector<cv::Point2f>> marker_corners_, rejected_candidates_;
+  cv::Ptr<cv::aruco::DetectorParameters> parameters_;
+  cv::Ptr<cv::aruco::Dictionary> dictionary_;
 };
