@@ -38,15 +38,20 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
   std::vector<cv::Vec3d> rvecs, tvecs;
   cv::aruco::estimatePoseSingleMarkers(marker_corners_, 0.05, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
-  if (!rvecs.empty()) {
+  auto it = find(marker_ids_.begin(), marker_ids_.end(), 0);
+
+  if (it != marker_ids_.end()) {
+    size_t indx = it - marker_ids_.begin();
+
     auto message = nav_msgs::msg::Odometry();
 
-    message.pose.pose.position.set__x(tvecs[0][0]);
-    message.pose.pose.position.set__y(tvecs[0][1]);
-    message.pose.pose.position.set__z(tvecs[0][2]);
+    message.pose.pose.position.set__x(tvecs[indx][0]);
+    message.pose.pose.position.set__y(tvecs[indx][1]);
+    message.pose.pose.position.set__z(tvecs[indx][2]);
 
     publisher_odometry_->publish(message);
   }
+
   
   // static int ct = 0;
   // ct++;

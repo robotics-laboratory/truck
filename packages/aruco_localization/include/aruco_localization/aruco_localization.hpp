@@ -10,9 +10,13 @@
 
 
 /**
- * this node deal with three topics:
+ * node gets messages from two topics:
+ * 
  * /camera/color/camera_info [sensor_msgs/msg/CameraInfo]
  * /camera/color/image_raw [sensor_msgs/msg/Image]
+ * 
+ * and publishes first marker coordinates to third topic:
+ * 
  * /truck/aruco_odometry [nav_msgs/msg/Odometry]
  */
 
