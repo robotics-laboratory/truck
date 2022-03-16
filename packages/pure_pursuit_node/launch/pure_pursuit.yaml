@@ -5,3 +5,7 @@ launch:
     name: "pure_pursuit_node"
     namespace: "truck"
     output: "log"
+  param:
+  - {name: "lookahead_distance", value: 2}
+  - {name: "max_velocity", value: 10}
+  - {name: "max_accel", value: 1}
