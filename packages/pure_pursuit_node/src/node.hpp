@@ -32,8 +32,7 @@ public:
             [this](nav_msgs::msg::Odometry::UniquePtr odometry) {
                 if (trajectory) {
                     auto cmd = controller.get_motion(*odometry, *trajectory);
-                    if (cmd)
-                        cmd_publisher->publish(*cmd);
+                    cmd_publisher->publish(cmd);
                 }
             }
         );

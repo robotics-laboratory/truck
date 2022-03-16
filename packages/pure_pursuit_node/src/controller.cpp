@@ -82,7 +82,7 @@ inline double ros_time_to_seconds(const rclcpp::Time &t) {
 
 namespace pure_pursuit {
 
-std::optional<Command> Controller::get_motion(
+Command Controller::get_motion(
       const nav_msgs::msg::Odometry &odometry
     , const std::vector<PoseStamped> &path
 ) {
@@ -91,7 +91,7 @@ std::optional<Command> Controller::get_motion(
         return distance(p.pose.position, position) <= params.lookahead_distance;
     });
     if (it == path.rend())
-        return std::nullopt;
+        return Command{};
     Vector p0{position.x, position.y};
     Vector p{it->pose.position.x, it->pose.position.y};
     p -= p0;
@@ -106,7 +106,7 @@ std::optional<Command> Controller::get_motion(
         dist = r * target_angle;
     } else {
         if (p.x < 0) {
-            return std::nullopt;
+            return Command{};
         }
         dist = p.x;
     }

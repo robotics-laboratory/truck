@@ -7,7 +7,6 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include <vector>
-#include <optional>
 
 namespace pure_pursuit {
 
@@ -28,7 +27,7 @@ private:
     Parameters params;
 public:
     Controller(const Parameters &params): params{params} {}
-    std::optional<pure_pursuit_msgs::msg::Command> get_motion(
+    pure_pursuit_msgs::msg::Command get_motion(
           const nav_msgs::msg::Odometry &odometry
         , const std::vector<geometry_msgs::msg::PoseStamped> &path
     );
