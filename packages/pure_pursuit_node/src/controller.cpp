@@ -34,6 +34,11 @@ struct Vector {
         y *= s;
         return *this;
     }
+    Vector &operator/=(double s) {
+        x /= s;
+        y /= s;
+        return *this;
+    }
     friend Vector operator+(Vector a, const Vector &b) {
         a += b;
         return a;
@@ -44,6 +49,10 @@ struct Vector {
     }
     friend Vector operator*(Vector v, double s) {
         v *= s;
+        return v;
+    }
+    friend Vector operator/(Vector v, double s) {
+        v /= s;
         return v;
     }
     friend double dot(const Vector &a, const Vector &b) {
@@ -64,6 +73,10 @@ struct Vector {
         return std::sqrt(x * x + y * y);
     }
 };
+
+inline double ros_time_to_seconds(const rclcpp::Time &t) {
+    return t.seconds() + t.nanoseconds() * 1e-9;
+}
 
 };
 
@@ -97,13 +110,62 @@ std::optional<Command> Controller::get_motion(
         }
         dist = p.x;
     }
-    auto new_velocity = params.max_velocity;
-    double time = dist / new_velocity;
+
+    Vector velocity_vector{odometry.twist.twist.linear.x, odometry.twist.twist.linear.y};
+    double current_velocity = velocity_vector.len();
+    auto path_time_by_accel = [&current_velocity, &dist](double final_velocity, double accel) {
+        double accel_time = (final_velocity - current_velocity) / accel;
+        double accel_path = accel * std::pow(accel_time, 2) / 2 + current_velocity * accel_time;
+        if (accel_path > dist) {
+            double d = std::pow(current_velocity, 2) + 2 * accel * dist;
+            return (copysign(sqrt(d), -accel) - current_velocity) / accel;
+        } else {
+            return accel_time + (dist - accel_path) / final_velocity;
+        }
+    };
+
+    double accel, target_velocity;
+
+    double required_time = ros_time_to_seconds(it->header.stamp) - ros_time_to_seconds(odometry.header.stamp);
+    double min_posible_time = path_time_by_accel(params.max_velocity, params.max_accel);
+    if (required_time < min_posible_time) {
+        target_velocity = params.max_velocity;
+        accel = params.max_accel;
+    } else {
+        double required_velocity = 0;
+        if (it != path.rbegin()) {
+            required_velocity = distance(it->pose.position, prev(it)->pose.position) /
+                (ros_time_to_seconds(prev(it)->header.stamp) - ros_time_to_seconds(it->header.stamp));
+        }
+        required_velocity = std::min(required_velocity, params.max_velocity);
+        double accel_constraint = copysign(params.max_accel, required_velocity - current_velocity);
+        if (path_time_by_accel(required_velocity, accel_constraint) < required_time) {
+            target_velocity = required_velocity;
+            double l = 0, r = accel_constraint;
+            if (accel_constraint < 0) {
+                std::swap(l, r);
+            }
+            for (int i = 0; i < 20; ++i) { // More robust than epsilon-based binary search
+                double m = (l + r) / 2;
+                if (path_time_by_accel(required_velocity, m) > required_time)
+                    l = m;
+                else
+                    r = m;
+            }
+            accel = r;
+        } else {
+            accel = accel_constraint;
+            target_velocity = accel < 0 ? 0 : params.max_accel;
+        }
+    }
+
+    double time = dist / target_velocity;
 
     Command result;
 
-    Vector direction{odometry.twist.twist.linear.x, odometry.twist.twist.linear.y};
-    direction *= new_velocity / direction.len();
+    result.acceleration = accel;
+
+    auto direction = velocity_vector * target_velocity / velocity_vector.len();
 
     result.velocity.linear.x = direction.x;
     result.velocity.linear.y = direction.y;
