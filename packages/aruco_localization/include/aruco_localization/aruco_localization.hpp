@@ -27,6 +27,7 @@ const static std::string kArucoOdometryTopic = "/truck/aruco_odometry";
 
 const static int kCameraMatrixSize = 3;
 const static int kDistCoeffsCount = 5;
+const static int CV_64F_SIZE = 8;
 
 class ArucoLocalization : public rclcpp::Node
 {
@@ -42,10 +43,10 @@ private:
   
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher_odometry_;
 
-  cv::Mat camera_matrix_, tmp_camera_matrix_, dist_coeffs_, tmp_dist_coeffs_;
+  cv::Mat camera_matrix_, dist_coeffs_;
 
   std::vector<int> marker_ids_;
   std::vector<std::vector<cv::Point2f>> marker_corners_, rejected_candidates_;
-  cv::Ptr<cv::aruco::DetectorParameters> parameters_;
-  cv::Ptr<cv::aruco::Dictionary> dictionary_;
+  cv::Ptr<cv::aruco::DetectorParameters> detector_parameters_;
+  cv::Ptr<cv::aruco::Dictionary> marker_dictionary_;
 };
