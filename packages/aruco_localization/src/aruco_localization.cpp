@@ -31,6 +31,12 @@ ArucoLocalization::ArucoLocalization()
   publisher_odometry_ = this->create_publisher<nav_msgs::msg::Odometry>(
     kArucoOdometryTopic, qos
   );
+  publisher_pose_stamped_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
+    kArucoPoseTopic, qos
+  );
+  publisher_marker_array_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
+    kArucoMarkersTopic, qos
+  );
 }
 
 void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg) {
@@ -48,17 +54,45 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
 
     std::vector<std::vector<cv::Point2f>> zero_id_marker_corners = {marker_corners_[ind]};
     cv::aruco::estimatePoseSingleMarkers(zero_id_marker_corners, 0.05, camera_matrix_, dist_coeffs_, rvecs, tvecs);
-    auto message = nav_msgs::msg::Odometry();
 
     auto rot_quat = MathHelpers::RotationVectorToQuaternion(rvecs[0]);
     auto camera_position = MathHelpers::RotateUsingQuaternion(-tvecs[0], rot_quat.inverse());
 
-    message.pose.pose.position.set__x(camera_position[0]);
-    message.pose.pose.position.set__y(camera_position[1]);
-    message.pose.pose.position.set__z(camera_position[2]);
-    message.pose.pose.set__orientation(tf2::toMsg(rot_quat));
+    geometry_msgs::msg::Pose pose_msg;
+    pose_msg.position
+      .set__x(camera_position[0])
+      .set__y(camera_position[1])
+      .set__z(camera_position[2]);
+    pose_msg.set__orientation(tf2::toMsg(rot_quat));
 
-    publisher_odometry_->publish(message);
+    geometry_msgs::msg::PoseStamped pose_stamped_msg;
+    pose_stamped_msg.set__pose(pose_msg);
+    pose_stamped_msg.header.set__stamp(rclcpp::Clock().now());
+    publisher_pose_stamped_->publish(pose_stamped_msg);
+
+    nav_msgs::msg::Odometry odometry_msg;
+    odometry_msg.pose.set__pose(pose_msg);
+    odometry_msg.header.set__stamp(rclcpp::Clock().now());
+    publisher_odometry_->publish(odometry_msg);
+
+    visualization_msgs::msg::Marker marker_msg;
+    marker_msg.header.stamp = rclcpp::Clock().now();
+    marker_msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    marker_msg.action = visualization_msgs::msg::Marker::ADD;
+    marker_msg.points = {
+      geometry_msgs::msg::Point().set__x(-0.5).set__y(-0.5),
+      geometry_msgs::msg::Point().set__x(-0.5).set__y(0.5),
+      geometry_msgs::msg::Point().set__x(0.5).set__y(0.5),
+      geometry_msgs::msg::Point().set__x(0.5).set__y(-0.5),
+      geometry_msgs::msg::Point().set__x(-0.5).set__y(-0.5),
+    };
+    marker_msg.color.a = 1.0;
+    marker_msg.color.g = 1.0;
+    marker_msg.scale.x = 1.0;
+
+    visualization_msgs::msg::MarkerArray marker_array_msg;
+    marker_array_msg.markers.push_back(marker_msg);
+    publisher_marker_array_->publish(marker_array_msg);
   }
 }
 

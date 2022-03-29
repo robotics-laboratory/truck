@@ -12,10 +12,11 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 add_executable(aruco_localization src/aruco_localization.cpp src/math_helpers.cpp)
 target_include_directories(aruco_localization PRIVATE include/aruco_localization)
-ament_target_dependencies(aruco_localization rclcpp nav_msgs sensor_msgs OpenCV cv_bridge)
+ament_target_dependencies(aruco_localization rclcpp nav_msgs sensor_msgs OpenCV cv_bridge visualization_msgs)
 
 install(TARGETS
     aruco_localization

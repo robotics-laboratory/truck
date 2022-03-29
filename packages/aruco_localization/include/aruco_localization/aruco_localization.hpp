@@ -7,6 +7,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 
 /**
@@ -23,7 +25,9 @@
 const static std::string kImageRawTopic = "/camera/color/image_raw";
 const static std::string kCameraInfoTopic = "/camera/color/camera_info";
 const static std::string kArucoLocalizationNodeName = "aruco_localization";
-const static std::string kArucoOdometryTopic = "/truck/aruco_odometry";
+const static std::string kArucoOdometryTopic = "/truck/aruco/odometry";
+const static std::string kArucoPoseTopic = "/truck/aruco/pose";
+const static std::string kArucoMarkersTopic = "/truck/aruco/vis/markers";
 
 const static int kCameraMatrixSize = 3;
 const static int kDistCoeffsCount = 5;
@@ -42,6 +46,8 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr subscription_camera_info_;
   
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher_odometry_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_pose_stamped_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher_marker_array_;
 
   cv::Mat camera_matrix_, dist_coeffs_;
 
