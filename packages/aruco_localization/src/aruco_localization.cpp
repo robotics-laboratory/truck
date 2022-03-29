@@ -27,7 +27,6 @@ ArucoLocalization::ArucoLocalization()
   );
   subscription_camera_info_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
     kCameraInfoTopic, qos, std::bind(&ArucoLocalization::UpdateCameraInfo, this, _1)
-
   );
   publisher_odometry_ = this->create_publisher<nav_msgs::msg::Odometry>(
     kArucoOdometryTopic, qos
