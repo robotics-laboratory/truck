@@ -9,5 +9,5 @@ tf2::Quaternion MathHelpers::RotationVectorToQuaternion(const cv::Vec3d& rot_vec
 cv::Vec3d MathHelpers::RotateUsingQuaternion(const cv::Vec3d& p, const tf2::Quaternion& rot_quat) {
     tf2::Quaternion p_quat = tf2::Quaternion(p[0], p[1], p[2], 0),
         res_quat = rot_quat * p_quat * rot_quat.inverse();
-    return cv::Vec3d(res_quat[0], res_quat[1], res_quat[2]);
+    return cv::Vec3d(res_quat.x(), res_quat.y(), res_quat.z());
 }

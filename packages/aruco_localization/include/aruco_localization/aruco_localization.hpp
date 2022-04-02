@@ -28,6 +28,7 @@ const static std::string kArucoLocalizationNodeName = "aruco_localization";
 const static std::string kArucoOdometryTopic = "/truck/aruco/odometry";
 const static std::string kArucoPoseTopic = "/truck/aruco/pose";
 const static std::string kArucoMarkersTopic = "/truck/aruco/vis/markers";
+const static std::string kArucoResizedImageTopic = "/truck/aruco/resized_image";
 
 const static int kCameraMatrixSize = 3;
 const static int kDistCoeffsCount = 5;
@@ -48,6 +49,7 @@ private:
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher_odometry_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_pose_stamped_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher_marker_array_;
+  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher_resized_image_;
 
   cv::Mat camera_matrix_, dist_coeffs_;
 

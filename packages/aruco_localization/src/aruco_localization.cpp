@@ -1,6 +1,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Transform.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <opencv2/calib3d.hpp>
 
 #include "aruco_localization.hpp"
 #include "math_helpers.hpp"
@@ -37,6 +39,9 @@ ArucoLocalization::ArucoLocalization()
   publisher_marker_array_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
     kArucoMarkersTopic, qos
   );
+  publisher_resized_image_ = this->create_publisher<sensor_msgs::msg::Image>(
+    kArucoResizedImageTopic, qos
+  );
 }
 
 void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg) {
@@ -53,17 +58,29 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     std::vector<cv::Vec3d> rvecs, tvecs;
 
     std::vector<std::vector<cv::Point2f>> zero_id_marker_corners = {marker_corners_[ind]};
-    cv::aruco::estimatePoseSingleMarkers(zero_id_marker_corners, 0.05, camera_matrix_, dist_coeffs_, rvecs, tvecs);
+    cv::aruco::estimatePoseSingleMarkers(zero_id_marker_corners, 1, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
     auto rot_quat = MathHelpers::RotationVectorToQuaternion(rvecs[0]);
     auto camera_position = MathHelpers::RotateUsingQuaternion(-tvecs[0], rot_quat.inverse());
 
+    // (void)camera_position;
+
+    // cv::Mat rot_mat(3, 3, CV_64F), rot_mat_t(3, 3, CV_64F);
+    // cv::Rodrigues(rvecs[0], rot_mat);
+    // cv::transpose(rot_mat, rot_mat_t);
+    // cv::Mat true_camera_position = rot_mat_t * -tvecs[0];
+
     geometry_msgs::msg::Pose pose_msg;
+    // pose_msg.position
+    //   .set__x(true_camera_position.at<double>(0))
+    //   .set__y(true_camera_position.at<double>(1))
+    //   .set__z(true_camera_position.at<double>(2));
+    
     pose_msg.position
       .set__x(camera_position[0])
       .set__y(camera_position[1])
       .set__z(camera_position[2]);
-    pose_msg.set__orientation(tf2::toMsg(rot_quat));
+    pose_msg.set__orientation(tf2::toMsg(rot_quat.inverse() * tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2)));
 
     geometry_msgs::msg::PoseStamped pose_stamped_msg;
     pose_stamped_msg.set__pose(pose_msg);
@@ -80,18 +97,171 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     marker_msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
     marker_msg.action = visualization_msgs::msg::Marker::ADD;
     marker_msg.points = {
-      geometry_msgs::msg::Point().set__x(-0.5).set__y(-0.5),
-      geometry_msgs::msg::Point().set__x(-0.5).set__y(0.5),
-      geometry_msgs::msg::Point().set__x(0.5).set__y(0.5),
-      geometry_msgs::msg::Point().set__x(0.5).set__y(-0.5),
-      geometry_msgs::msg::Point().set__x(-0.5).set__y(-0.5),
+      geometry_msgs::msg::Point().set__x(0).set__y(0),
+      geometry_msgs::msg::Point().set__x(0).set__y(1),
+      geometry_msgs::msg::Point().set__x(1).set__y(1),
+      geometry_msgs::msg::Point().set__x(1).set__y(0),
+      geometry_msgs::msg::Point().set__x(0).set__y(0),
     };
     marker_msg.color.a = 1.0;
     marker_msg.color.g = 1.0;
-    marker_msg.scale.x = 1.0;
+    marker_msg.scale.x = 0.1;
+
+    
+
+
+    // visualization_msgs::msg::Marker marker_z_msg;
+    // marker_z_msg.header.stamp = rclcpp::Clock().now();
+    // marker_z_msg.id = 1;
+    // marker_z_msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    // marker_z_msg.action = visualization_msgs::msg::Marker::ADD;
+    // marker_z_msg.points = {
+    //   geometry_msgs::msg::Point().set__x(0).set__y(0).set__z(0),
+    //   geometry_msgs::msg::Point().set__x(0).set__y(0).set__z(1),
+    // };
+    // marker_z_msg.color.a = 1.0;
+    // marker_z_msg.color.r = 1.0;
+    // marker_z_msg.scale.x = 0.1;
+
+    // cv::Mat cam_dir_cam_frame(3, 1, CV_64F);
+    // cam_dir_cam_frame.at<double>(0) = 0;
+    // cam_dir_cam_frame.at<double>(1) = 0;
+    // cam_dir_cam_frame.at<double>(2) = 1;
+
+    // cv::Mat cam_dir_end_marker_frame(3, 1, CV_64F);
+    // // cam_dir_end_marker_frame = rot_mat_t * (cam_dir_cam_frame - tvecs[0]);
+    // cv::Mat tmp = (cam_dir_cam_frame - tvecs[0]);
+    // cam_dir_end_marker_frame = MathHelpers::RotateUsingQuaternion(
+    //   cv::Vec3d(tmp.at<double>(0), tmp.at<double>(1), tmp.at<double>(2)),
+    //   rot_quat.inverse());
+
+    // cv::Mat cam_dir_marker_frame = (cam_dir_end_marker_frame - true_camera_position);
+
+    // double t = -true_camera_position.at<double>(2) / cam_dir_marker_frame.at<double>(2);
+
+    // RCLCPP_INFO(this->get_logger(), "HandleImage: t = %lf, z0 = %lf, zv = %lf", 
+    //   t,
+    //   -true_camera_position.at<double>(2),
+    //   cam_dir_marker_frame.at<double>(2));
+
+    // cv::Mat cam_dir_intersection_with_XY = true_camera_position + cam_dir_marker_frame * t;
+
+    // visualization_msgs::msg::Marker marker_cam_dir_msg;
+    // marker_cam_dir_msg.header.stamp = rclcpp::Clock().now();
+    // marker_cam_dir_msg.id = 2;
+    // marker_cam_dir_msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    // marker_cam_dir_msg.action = visualization_msgs::msg::Marker::ADD;
+    // marker_cam_dir_msg.points = {
+    //   geometry_msgs::msg::Point()
+    //     .set__x(true_camera_position.at<double>(0))
+    //     .set__y(true_camera_position.at<double>(1))
+    //     .set__z(true_camera_position.at<double>(2)),
+    //   geometry_msgs::msg::Point()
+    //     .set__x(cam_dir_intersection_with_XY.at<double>(0))
+    //     .set__y(cam_dir_intersection_with_XY.at<double>(1))
+    //     .set__z(cam_dir_intersection_with_XY.at<double>(2)),
+    // };
+    // marker_cam_dir_msg.color.a = 1.0;
+    // marker_cam_dir_msg.color.b = 1.0;
+    // marker_cam_dir_msg.scale.x = 0.1;
+
+
+    // rot_quat.inverse() * tf2::Quaternion(tf2::Vector3(0, 1, 0), PI / 2)
+    // tf2::Transform from_marker_to_cam_frame(rot_quat, tf2::Vector3(tvecs[0][0], tvecs[0][1], tvecs[0][2]));
+    // tf2::Transform from_marker_to_cam_frame(rot_quat, tf2::Vector3(tvecs[0][0], tvecs[0][1], tvecs[0][2]));
+    // tf2::Transform from_cam_to_marker_frame = from_marker_to_cam_frame.inverse();
 
     visualization_msgs::msg::MarkerArray marker_array_msg;
+
+    // for (int i = 0; i < 3; i++) {
+    //     visualization_msgs::msg::Marker axis_msg;
+    //     axis_msg.header.stamp = rclcpp::Clock().now();
+    //     axis_msg.id = 10 + i;
+    //     axis_msg.type = visualization_msgs::msg::Marker::LINE_LIST;
+    //     axis_msg.color.set__a(1.0);
+
+    //     if (i == 0) {
+    //       axis_msg.color.set__g(1.0);
+    //     } else if (i == 1) {
+    //       axis_msg.color.set__b(1.0);
+    //     } else {
+    //       axis_msg.color.set__r(1.0);
+    //     }
+        
+    //     // cam_frame_msg.colors = {
+    //     //   std_msgs::msg::ColorRGBA().set__a(1.0).set__g(1.0),
+    //     //   std_msgs::msg::ColorRGBA().set__a(1.0).set__b(1.0),
+    //     //   std_msgs::msg::ColorRGBA().set__a(1.0).set__r(1.0),
+    //     // };
+    //     axis_msg.action = visualization_msgs::msg::Marker::ADD;
+    //     axis_msg.scale.x = 0.1;
+
+    //     geometry_msgs::msg::Point origin;
+    //     origin.set__x(camera_position[0])
+    //       .set__y(camera_position[1])
+    //       .set__z(camera_position[2]);
+    //     tf2::Vector3 vec;
+    //     for (int j = 0; j < 3; j++) {
+    //       vec[j] = 0;
+    //     }
+    //     vec[i] = 1;
+    //     tf2::Vector3 tf_vec = from_cam_to_marker_frame(vec);
+    //     geometry_msgs::msg::Point end_point;
+    //     end_point.set__x(tf_vec[0])
+    //       .set__y(tf_vec[1])
+    //       .set__z(tf_vec[2]);
+    //     axis_msg.points.push_back(origin);
+    //     axis_msg.points.push_back(end_point);
+
+    //     marker_array_msg.markers.push_back(axis_msg);
+    // }
+    
+    // for (int i = 0; i < 3; i++) {
+    //     visualization_msgs::msg::Marker axis_msg;
+    //     axis_msg.header.stamp = rclcpp::Clock().now();
+    //     axis_msg.id = 20 + i;
+    //     axis_msg.type = visualization_msgs::msg::Marker::LINE_LIST;
+    //     axis_msg.color.set__a(1.0);
+
+    //     if (i == 0) {
+    //       axis_msg.color.set__g(1.0);
+    //     } else if (i == 1) {
+    //       axis_msg.color.set__b(1.0);
+    //     } else {
+    //       axis_msg.color.set__r(1.0);
+    //     }
+        
+    //     // cam_frame_msg.colors = {
+    //     //   std_msgs::msg::ColorRGBA().set__a(1.0).set__g(1.0),
+    //     //   std_msgs::msg::ColorRGBA().set__a(1.0).set__b(1.0),
+    //     //   std_msgs::msg::ColorRGBA().set__a(1.0).set__r(1.0),
+    //     // };
+    //     axis_msg.action = visualization_msgs::msg::Marker::ADD;
+    //     axis_msg.scale.x = 0.1;
+
+    //     geometry_msgs::msg::Point origin;
+    //     origin.set__x(0)
+    //       .set__y(0)
+    //       .set__z(0);
+    //     tf2::Vector3 vec;
+    //     for (int j = 0; j < 3; j++) {
+    //       vec[j] = 0;
+    //     }
+    //     vec[i] = 2;
+    //     geometry_msgs::msg::Point end_point;
+    //     end_point.set__x(vec[0])
+    //       .set__y(vec[1])
+    //       .set__z(vec[2]);
+    //     axis_msg.points.push_back(origin);
+    //     axis_msg.points.push_back(end_point);
+    //     marker_array_msg.markers.push_back(axis_msg);
+    // }
+
+    
     marker_array_msg.markers.push_back(marker_msg);
+    // marker_array_msg.markers.push_back(cam_frame_msg);
+    // marker_array_msg.markers.push_back(marker_cam_dir_msg);
+    // marker_array_msg.markers.push_back(marker_z_msg);
     publisher_marker_array_->publish(marker_array_msg);
   }
 }
