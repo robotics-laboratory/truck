@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 using pure_pursuit_msgs::msg::Command;
 using namespace geometry_msgs::msg;
@@ -9,42 +10,42 @@ using visualization_msgs::msg::Marker;
 
 namespace {
 
-double quaternoin_to_flat_angle(const Quaternion &q) {
+double quaternoin_to_flat_angle(const Quaternion& q) {
     return std::copysign(2 * std::acos(q.w), q.z);
 }
 
 template<class P1, class P2>
-double distance(const P1 &a, const P2 &b) {
+double distance(const P1& a, const P2& b) {
     return std::sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
 struct Vector {
     double x, y;
-    Vector &operator+=(const Vector& other) {
+    Vector& operator+=(const Vector& other) {
         x += other.x;
         y += other.y;
         return *this;
     }
-    Vector &operator-=(const Vector& other) {
+    Vector& operator-=(const Vector& other) {
         x -= other.x;
         y -= other.y;
         return *this;
     }
-    Vector &operator*=(double s) {
+    Vector& operator*=(double s) {
         x *= s;
         y *= s;
         return *this;
     }
-    Vector &operator/=(double s) {
+    Vector& operator/=(double s) {
         x /= s;
         y /= s;
         return *this;
     }
-    friend Vector operator+(Vector a, const Vector &b) {
+    friend Vector operator+(Vector a, const Vector& b) {
         a += b;
         return a;
     }
-    friend Vector operator-(Vector a, const Vector &b) {
+    friend Vector operator-(Vector a, const Vector& b) {
         a -= b;
         return a;
     }
@@ -56,10 +57,10 @@ struct Vector {
         v /= s;
         return v;
     }
-    friend double dot(const Vector &a, const Vector &b) {
+    friend double dot(const Vector& a, const Vector& b) {
         return a.x * b.x + a.y * b.y;
     }
-    friend double cross(const Vector &a, const Vector &b) {
+    friend double cross(const Vector& a, const Vector& b) {
         return a.x * b.y - a.y * b.x;
     }
     Vector rotate(double angle) const {
@@ -75,7 +76,7 @@ struct Vector {
     }
 };
 
-inline double ros_time_to_seconds(const rclcpp::Time &t) {
+inline double ros_time_to_seconds(const rclcpp::Time& t) {
     return t.seconds() + t.nanoseconds() * 1e-9;
 }
 
@@ -84,8 +85,8 @@ inline double ros_time_to_seconds(const rclcpp::Time &t) {
 namespace pure_pursuit {
 
 Command Controller::get_motion(
-      const nav_msgs::msg::Odometry &odometry
-    , const std::vector<PoseStamped> &path
+      const nav_msgs::msg::Odometry& odometry
+    , const std::vector<PoseStamped>& path
     , VisualInfo *visual_info
 ) {
     if (visual_info) {
@@ -100,8 +101,8 @@ Command Controller::get_motion(
         start.id = visual_info->arc.markers.size();
         visual_info->arc.markers.emplace_back(start);
     }
-    auto &position = odometry.pose.pose.position;
-    auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const PoseStamped &p) {
+    auto& position = odometry.pose.pose.position;
+    auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const PoseStamped& p) {
         return distance(p.pose.position, position) <= params.lookahead_distance;
     });
     if (it == path.rend())
@@ -124,24 +125,35 @@ Command Controller::get_motion(
     p = p.rotate(-quaternoin_to_flat_angle(odometry.pose.pose.orientation));
     bool sign = std::signbit(p.y);
     p.y = std::abs(p.y);
-    double r = dot(p, p) / (2 * p.y);
-    Vector center{0, r};
-    auto target_angle = M_PI / 2 + (p - center).angle();
-    if (target_angle < 0)
-        target_angle += M_PI * 2;
+
+    double y_tolerance = std::max(abs(p.x), 1.0) * 0.01;
+    bool stright_trajectory = (p.y < y_tolerance);
+    
+    Vector center;
+    double target_angle;
+    auto &r = center.y;
+    if (stright_trajectory) {
+        r = std::numeric_limits<double>::infinity();
+        target_angle = 0;
+    } else {
+        r = dot(p, p) / (2 * p.y);
+        target_angle = M_PI / 2 + (p - center).angle();
+        if (target_angle < 0)
+            target_angle += M_PI * 2;
+    }
 
     if (visual_info) {
         constexpr int points = 50;
         double original_yaw = quaternoin_to_flat_angle(odometry.pose.pose.orientation);
         for (int i = 1; i < points; ++i) {
             Vector pos;
-            if (r < 1e4) {
+            if (stright_trajectory) {
+                pos = p * i / points;
+            } else {
                 double angle = -M_PI / 2 + target_angle / points * i;
                 if (sign)
                     angle = -angle;
                 pos = center + Vector{cos(angle) * r, sin(angle) * r};
-            } else {
-                pos = p * i / points;
             }
             pos = pos.rotate(original_yaw);
             pos += p0;
@@ -160,13 +172,13 @@ Command Controller::get_motion(
     }
 
     double dist;
-    if (r < 1e4) {
-        dist = r * target_angle;
-    } else {
+    if (stright_trajectory) {
         if (p.x < 0) {
             return Command{};
         }
         dist = p.x;
+    } else {
+        dist = r * target_angle;
     }
 
     Vector velocity_vector{odometry.twist.twist.linear.x, odometry.twist.twist.linear.y};
