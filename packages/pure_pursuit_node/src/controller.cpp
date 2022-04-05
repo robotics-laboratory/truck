@@ -80,6 +80,10 @@ inline double ros_time_to_seconds(const rclcpp::Time& t) {
     return t.seconds();
 }
 
+inline get_arc_length(double r, double angle) {
+    return r * angle;
+}
+
 };
 
 namespace pure_pursuit {
@@ -178,7 +182,7 @@ Command Controller::get_motion(
         }
         dist = p.x;
     } else {
-        dist = r * target_angle;
+        dist = get_arc_length(r, target_angle);
     }
 
     Vector velocity_vector{odometry.twist.twist.linear.x, odometry.twist.twist.linear.y};
