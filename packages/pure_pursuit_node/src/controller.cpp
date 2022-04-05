@@ -77,7 +77,7 @@ struct Vector {
 };
 
 inline double ros_time_to_seconds(const rclcpp::Time& t) {
-    return t.seconds() + t.nanoseconds() * 1e-9;
+    return t.seconds();
 }
 
 };
