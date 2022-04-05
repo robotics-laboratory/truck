@@ -20,12 +20,12 @@ double distance(const P1 &a, const P2 &b) {
 
 struct Vector {
     double x, y;
-    Vector &operator+=(const Vector &other) {
+    Vector &operator+=(const Vector& other) {
         x += other.x;
         y += other.y;
         return *this;
     }
-    Vector &operator-=(const Vector &other) {
+    Vector &operator-=(const Vector& other) {
         x -= other.x;
         y -= other.y;
         return *this;
