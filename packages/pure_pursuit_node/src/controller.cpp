@@ -80,7 +80,7 @@ inline double ros_time_to_seconds(const rclcpp::Time& t) {
     return t.seconds();
 }
 
-inline get_arc_length(double r, double angle) {
+inline double get_arc_length(double r, double angle) {
     return r * angle;
 }
 
