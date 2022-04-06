@@ -5,7 +5,7 @@ from geometry_msgs.msg import PoseStamped, Point
 from nav_msgs.msg import Odometry
 from pure_pursuit_msgs.msg import Command
 
-from math import sin, cos
+from math import sin, cos, pi
 from time import sleep
 from random import random
 
@@ -18,15 +18,17 @@ path = Path()
 yaw = 0.0
 x = 0.0
 y = 0.0
-for i in range(20):
+for i in range(200):
     pose = PoseStamped()
     pose.pose.position.x = x
     pose.pose.position.y = y
     pose.pose.position.z = 0.0
     path.path.poses.append(pose)
-    yaw += (random() * 2 - 1) / 10
-    x += sin(yaw)
-    y += cos(yaw)
+    x += 0.1
+    y = sin(x)
+    # yaw += (random() * 2 - 1)
+    # x += sin(yaw)
+    # y += cos(yaw)
 
 path_pub.publish(path)
 
@@ -43,13 +45,17 @@ yaw = 0
 
 def callback(cmd):
     global yaw
-    print(cmd)
+    print(cmd, yaw)
     odm.pose.pose.position.x += cmd.velocity.linear.x * dt
     odm.pose.pose.position.y += cmd.velocity.linear.y * dt
     yaw += cmd.velocity.angular.z * dt
+    if yaw < 0:
+        yaw += pi * 2
+    elif yaw > pi * 2:
+        yaw -= pi * 2
     odm.pose.pose.orientation.w = cos(yaw / 2)
     odm_pub.publish(odm)
-    sleep(0.1)
+    sleep(dt * 2)
 
 replay_slot = node.create_subscription(Command, "/truck/pure_pursuit_command", callback, 0)
 

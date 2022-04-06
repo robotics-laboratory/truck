@@ -112,16 +112,18 @@ Command Controller::get_motion(
     if (it == path.rend())
         return Command{};
     if (visual_info) {
-        Marker target;
-        target.type = Marker::SPHERE;
-        target.pose = it->pose;
-        target.color.a = 1;
-        target.color.b = 1;
-        target.scale.x = 0.1;
-        target.scale.y = 0.1;
-        target.scale.z = 0.1;
-        target.id = visual_info->arc.markers.size();
-        visual_info->arc.markers.emplace_back(target);
+        for (auto &x : path) {
+            Marker target;
+            target.type = Marker::SPHERE;
+            target.pose = x.pose;
+            target.color.a = 1;
+            target.color.b = 1;
+            target.scale.x = 0.1;
+            target.scale.y = 0.1;
+            target.scale.z = 0.1;
+            target.id = visual_info->arc.markers.size();
+            visual_info->arc.markers.emplace_back(target);
+        }
     }
     Vector p0{position.x, position.y};
     Vector p{it->pose.position.x, it->pose.position.y};
@@ -155,10 +157,10 @@ Command Controller::get_motion(
                 pos = p * i / points;
             } else {
                 double angle = -M_PI / 2 + target_angle / points * i;
-                if (sign)
-                    angle = -angle;
                 pos = center + Vector{cos(angle) * r, sin(angle) * r};
             }
+            if (sign)
+                pos.y = -pos.y;
             pos = pos.rotate(original_yaw);
             pos += p0;
             Marker mark;
@@ -188,11 +190,11 @@ Command Controller::get_motion(
     Vector velocity_vector{odometry.twist.twist.linear.x, odometry.twist.twist.linear.y};
     double current_velocity = velocity_vector.len();
     auto path_time_by_accel = [&current_velocity, &dist](double final_velocity, double accel) {
-        double accel_time = (final_velocity - current_velocity) / accel;
+        double accel_time = std::max((final_velocity - current_velocity) / accel, 0.0);
         double accel_path = accel * std::pow(accel_time, 2) / 2 + current_velocity * accel_time;
         if (accel_path > dist) {
             double d = std::pow(current_velocity, 2) + 2 * accel * dist;
-            return (copysign(sqrt(d), -accel) - current_velocity) / accel;
+            return (copysign(sqrt(d), accel) - current_velocity) / accel;
         } else {
             return accel_time + (dist - accel_path) / final_velocity;
         }
@@ -233,7 +235,7 @@ Command Controller::get_motion(
         }
     }
 
-    double time = dist / target_velocity;
+    double time = path_time_by_accel(target_velocity, accel);
 
     Command result;
 
@@ -241,6 +243,8 @@ Command Controller::get_motion(
 
     double yaw = quaternoin_to_flat_angle(odometry.pose.pose.orientation);
     Vector direction{cos(yaw), sin(yaw)};
+    direction *= target_velocity;
+    assert(target_velocity >= 0);
 
     result.velocity.linear.x = direction.x;
     result.velocity.linear.y = direction.y;
@@ -248,7 +252,7 @@ Command Controller::get_motion(
 
     result.velocity.angular.x = 0;
     result.velocity.angular.y = 0;
-    result.velocity.angular.z = -target_angle / time;
+    result.velocity.angular.z = target_angle / time;
 
     if (sign)
         result.velocity.angular.z *= -1;
