@@ -1,40 +1,41 @@
-# test realsense run
-
 launch:
 
 - node:
     pkg: "realsense2_camera"
     exec: "realsense2_camera_node"
     name: "camera"
-    namespace: "truck"
+    namespace: "camera"
     output: "log"
 
     param:
+    - {name: "initial_reset", value: True}
+    - {name: "enable_sync", value: True}
+    - {name: "publish_tf", value: True}
+    - {name: "publish_odom_tf", value: True}
+    - {name: "tf_publish_rate", value: 1.0}
+
     - {name: "enable_color", value: True}
-    - {name: "color_fps", value: 30.0}
-    - {name: "color_qos", value: "SENSOR_DATA"}
-    - {name: "enable_width", value: 640}
-    - {name: "enable_height", value: 480}
+    - {name: "rgb_camera.profile", value: "848x480x30"}
 
     - {name: "enable_depth", value: True}
-    - {name: "depth_fps", value: 30.0}
-    - {name: "depth_qos", value: "SENSOR_DATA"}
-    - {name: "depth_width", value: 848}
-    - {name: "depth_height", value: 480}
+    - {name: "depth_moduel.profile", value: "848x480x30"}
+
+    - {name: "align_depth", value: True}
+    - {name: "align__cuda_.enable", value: True}
 
     - {name: "enable_accel", value: True}
-    - {name: "accel_fps", value: 250.0}
+    - {name: "accel_fps", value: 63}
 
     - {name: "enable_gyro", value: True}
-    - {name: "gyro_fps", value: 200.0}
+    - {name: "gyro_fps", value: 200}
 
-    - {name: "enable_infra", value: False}
-    - {name: "enable_infra1", value: False}
-    - {name: "enable_infra2", value: False}
+    - {name: "unite_imu_method", value: 1}
+    - {name: "hold_back_imu_for_frames", value: False}
 
     - {name: "enable_fisheye", value: False}
     - {name: "enable_fisheye1", value: False}
     - {name: "enable_fisheye2", value: False}
-    - {name: "enable_pose", value: False}
-    - {name: "enable_confidence", value: False}
+    - {name: "enable_infra", value: False}
+    - {name: "enable_infra1", value: False}
+    - {name: "enable_infra2", value: False}
 

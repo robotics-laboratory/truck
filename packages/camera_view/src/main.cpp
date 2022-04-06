@@ -11,8 +11,8 @@
 
 class CameraView: public rclcpp::Node {
 public:
-    const std::string camera_topic = "/truck/color/image_raw";
-    const std::string camera_view_topic = "/truck/color/image_view";
+    const std::string camera_topic = "/camera/color/image_raw";
+    const std::string camera_view_topic = "/camera/color/image_view";
 
     CameraView() : Node("CameraView") {
         const auto qos = rclcpp::QoS(

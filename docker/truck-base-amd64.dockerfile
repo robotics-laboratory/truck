@@ -287,18 +287,21 @@ RUN pip3 install --no-cache-dir -U \
 ENV ROS_DISTRO=galactic
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 
-RUN mkdir -p ${ROS_DISTRO}/src && cd ${ROS_DISTRO} \
-    && rosinstall_generator --deps --rosdistro ${ROS_DISTRO} \
+ENV ROS_DISTRO=galactic
+ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+
+RUN mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT} \
+    && EXCLUDE=(librealsense2) \
+    && rosinstall_generator \
+            --exclude "${EXCLUDE[*]}" \
+            --deps --rosdistro ${ROS_DISTRO} \
         ros_base \
         image_geometry \
         image_pipeline \
         image_transport \
-        camera_calibration_parsers \
-        camera_info_manager \
         compressed_image_transport \
         compressed_depth_image_transport \
         cv_bridge \
-        diagnostic_updater \
         launch_xml \
         launch_yaml \
         nav2_common \
@@ -306,8 +309,7 @@ RUN mkdir -p ${ROS_DISTRO}/src && cd ${ROS_DISTRO} \
         realsense2_camera \
         realsense2_description \
         rosbridge_suite \
-        rtabmap_ros\
-        v4l2_camera \
+        rtabmap_ros \
         vision_opencv \
         vision_msgs \
     > ros2.${ROS_DISTRO}.rosinstall \
@@ -337,11 +339,14 @@ RUN cd ${ROS_DISTRO}/src \
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         build-essential \
+        gfortran \
+        clang-format \
         curl \
         file \
         gfortran \
         git \
         gnupg2 \
+        file \
         htop \
         httpie \
         less \
@@ -362,4 +367,4 @@ RUN apt-get update -q \
 
 COPY /entrypoint.bash /entrypoint.bash
 ENTRYPOINT ["/entrypoint.bash"]
-WORKDIR /
+WORKDIR /truck

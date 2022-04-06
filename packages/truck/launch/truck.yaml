@@ -1,0 +1,8 @@
+launch:
+# for future
+# - include:
+#     file: $(dirname)/rosbridge.yaml
+- include:
+    file: $(dirname)/camera.yaml
+- include:
+    file: $(dirname)/slam.yaml
