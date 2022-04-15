@@ -14,6 +14,7 @@ services:
     - "9090:9090"
     volumes:
     - "${HOME}/truck:/truck"
+    - /dev:/dev
 
   truck-base-amd64:
     container_name: truck-base
