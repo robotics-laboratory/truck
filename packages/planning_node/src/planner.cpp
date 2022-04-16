@@ -228,11 +228,7 @@ struct Vehicle {
         res.height = vehicle["shape"]["height"];
         res.circles.reserve(vehicle.size());
         for (auto circle : vehicle["circles_approximation"]["circles"]) {
-            res.circles.push_back(Circle{
-                circle["center"]["x"].get<double>(),
-                circle["center"]["y"].get<double>(),
-                circle["radius"].get<double>()
-            });
+            res.circles.push_back(Circle::from_json(circle));
         }
         return res;
     }
