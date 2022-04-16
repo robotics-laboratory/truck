@@ -7,6 +7,8 @@
   <maintainer email="email@example.com">root</maintainer>
   <license>MIT</license>
 
+  <exec_depend>ros2launch</exec_depend>
+
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>

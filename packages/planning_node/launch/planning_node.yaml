@@ -1,0 +1,7 @@
+launch:
+  - node:
+      pkg: planning_node
+      exec: planning_node
+      name: planning_node
+      namespace: truck
+      output: screen

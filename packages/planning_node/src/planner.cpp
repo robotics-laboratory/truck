@@ -3,11 +3,14 @@
 #include "float_comparison.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "geometry.hpp"
 #include "nlohmann/json.hpp"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
-#include "tf2/LinearMath/Quaternion.h"
 #include "opencv2/core/mat.hpp"
 #include "opencv2/imgproc.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "tf2/LinearMath/Quaternion.h"
+#include "visualization_msgs/msg/marker_array.hpp"
+#include "visualization_msgs/msg/marker.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -38,17 +41,6 @@ inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
 
 double mod_interval(double x, double modulo) {
     return std::fmod(std::fmod(x, modulo) + modulo, modulo);
-}
-
-double deg_to_rad(double deg) {
-    return deg * M_PI / 180.0;
-}
-
-std::pair<double, double> angled_move(double dx, double dy, double theta) {
-    return {
-        dx * std::cos(deg_to_rad(theta)) - dy * std::sin(deg_to_rad(theta)),
-        dx * std::sin(deg_to_rad(theta)) + dy * std::cos(deg_to_rad(theta)),
-    };
 }
 
 struct ComparisonTolerances {
@@ -164,7 +156,7 @@ struct std::hash<State> {
             res,
             static_cast<int64_t>(s.x * 1000),  // FIXME: use better hash for floating point values
             static_cast<int64_t>(s.y * 1000),
-            static_cast<int64_t>(s.theta * 360)
+            static_cast<int64_t>(s.theta / (2 * M_PI) * 360)
         );
         return res;
     }
@@ -226,12 +218,6 @@ struct MotionPrimitive {
 using MotionPrimitives = std::vector<MotionPrimitive>;
 
 struct Vehicle {
-    struct Circle {
-        double x;
-        double y;
-        double r;
-    };
-
     double width;
     double height;
     std::vector<Circle> circles;
@@ -265,23 +251,17 @@ struct CollisionTester {
             }
         }
         cv::distanceTransform(scene_mat, distances, cv::DIST_L2, cv::DIST_MASK_PRECISE, CV_32F);
-        std::cout << std::setprecision(3) << std::fixed;
-        for (uint32_t y = 0; y < height; ++y) {
-            for (uint32_t x = 0; x < width; ++x) {
-                std::cout << distances.at<float>(y, x) << ' ';
-            }
-            std::cout << std::endl;
-        }
     }
 
-    // returns true if given state collides with the scene
-    bool test(State state) {
-        if (std::abs(state.x) > 20 || std::abs(state.y) > 20) {
-            return true;
-        }
+    // returns distance to closest obstacle
+    double test(State state) {
+        // grid orientation is intentionally ignored for now. will be fixed in the future
+        double resolution = scene->occupancy_grid.info.resolution;
 
-        double inter_x = state.x - scene->occupancy_grid.info.origin.position.x - 0.5;
-        double inter_y = state.y - scene->occupancy_grid.info.origin.position.y - 0.5;
+        double inter_x = state.x - scene->occupancy_grid.info.origin.position.x - 0.5 * resolution;
+        double inter_y = state.y - scene->occupancy_grid.info.origin.position.y - 0.5 * resolution;
+
+        double min_delta = 1e100;
 
         for (auto circle : vehicle.circles) {
             std::pair<double, double> move_res = angled_move(
@@ -289,27 +269,26 @@ struct CollisionTester {
                 -vehicle.height / 2.0 + circle.y,
                 state.theta
             );
-            size_t circle_center_x = static_cast<size_t>(inter_x + move_res.first);  // todo: add resolution support here
-            size_t circle_center_y = static_cast<size_t>(inter_y + move_res.second);
+            size_t circle_center_x = static_cast<size_t>((inter_x + move_res.first) / resolution);
+            size_t circle_center_y = static_cast<size_t>((inter_y + move_res.second) / resolution);
 
-            if (distances.at<float>(circle_center_y, circle_center_x) < circle.r) {
-                return true;
-            }
+            min_delta = std::min(min_delta, distances.at<float>(circle_center_y, circle_center_x) - circle.r);
         }
 
-        return false;
+        return min_delta;
     }
 
 private:
     msg::Scene::SharedPtr scene;
-    const Vehicle& vehicle;
+    Vehicle vehicle;
     cv::Mat distances;
 };
 
 struct StateSpace {
-    StateSpace(CollisionTester tester, MotionPrimitives primitives)
+    StateSpace(CollisionTester tester, MotionPrimitives primitives, double threshold_distance)
         : tester{tester}
         , primitives{primitives}
+        , threshold_distance{threshold_distance}
         , open_set{StateComparator{}} {
     }
 
@@ -327,7 +306,7 @@ struct StateSpace {
             State next_state = primitive.apply(optimal);
             if (closed_set.find(next_state) != closed_set.end() ||
                 open_set_checker.find(next_state) != closed_set.end() ||
-                tester.test(next_state)) {
+                tester.test(next_state) < threshold_distance) {
                 continue;
             }
             open_set.insert(next_state);
@@ -347,6 +326,7 @@ struct StateSpace {
 
     CollisionTester tester;
     MotionPrimitives primitives;
+    double threshold_distance;
     std::set<State, StateComparator> open_set;
     std::unordered_set<State> open_set_checker;
     std::unordered_set<State> closed_set;
@@ -359,18 +339,21 @@ struct StateSpace {
 namespace planning_node {
 
 struct Planner {
+    static constexpr size_t MAX_ITERATIONS = 10000;
+
     Planner(
-        std::shared_ptr<SingleSlotQueue<msg::Scene::SharedPtr>> scene_queue,
-        std::shared_ptr<SingleSlotQueue<msg::Point::SharedPtr>> target_queue,
-        rclcpp::Publisher<msg::Path>::SharedPtr path_publisher,
+        rclcpp::Node* node,
+        SharedState::SharedPtr shared_state,
         std::string config_path,
         rclcpp::Logger logger
-    ) : scene_queue(scene_queue)
-      , target_queue(target_queue)
-      , path_publisher(path_publisher)
+    ) : shared_state(shared_state)
       , logger(logger) {
         std::ifstream config_stream(config_path);
         json config = json::parse(config_stream);
+
+        path_publisher = node->create_publisher<msg::Path>("path", 10);
+        raw_path_publisher = node->create_publisher<nav_msgs::msg::Path>("raw_path", 10);
+        path_arrows_publisher = node->create_publisher<visualization_msgs::msg::MarkerArray>("path_arrows", 10);
 
         ComparisonTolerances::load_from_json(config["tolerances"]);
         for (auto json_primitive : config["primitives"]) {
@@ -382,11 +365,14 @@ struct Planner {
     }
 
     nav_msgs::msg::Path plan(CollisionTester tester, MotionPrimitives primitives, State initial, State target) {
-        StateSpace state_space(tester, primitives);
+        StateSpace state_space(tester, primitives, vehicle.circles[0].r);
         state_space.insert(initial);
 
         bool found = false;
-        while (!state_space.empty()) {
+        size_t iteration = 0;
+        while (iteration < MAX_ITERATIONS && !state_space.empty()) {
+            iteration += 1;
+
             State optimal = state_space.get_optimal();
             if (optimal == target) {
                 found = true;
@@ -413,15 +399,11 @@ struct Planner {
     }
 
     void start() {
-        std::optional<msg::Scene::SharedPtr> scene;
-        while ((scene = scene_queue->take()).has_value()) {
-            CollisionTester tester{scene.value(), vehicle};
-            std::optional<msg::Point::SharedPtr> target_point = target_queue->peek();
-            if (!target_point.has_value()) {
-                RCLCPP_DEBUG(logger, "No target in the topic, skipping planning");
-                continue;
-            }
-            State target = State::from_point(target_point.value());
+        SharedState::Value state;
+        while ((state = shared_state->take()).first != nullptr) {
+            msg::Scene::SharedPtr scene = state.first;
+            State target = State::from_point(state.second);
+            CollisionTester tester{scene, vehicle};
 
             msg::Path path;
 
@@ -430,14 +412,35 @@ struct Planner {
                 std::chrono::system_clock::now().time_since_epoch()
             ).count();
 
+            for (size_t i = 0; i < path.path.poses.size(); ++i) {
+                geometry_msgs::msg::PoseStamped pose = path.path.poses[i];
+                visualization_msgs::msg::Marker arrow;
+                arrow.id = i;
+                arrow.pose = pose.pose;
+                arrow.scale.x = 0.5;
+                arrow.scale.y = 0.1;
+                arrow.scale.z = 0.1;
+                
+                arrow.color.r = 1.0;
+                arrow.color.g = 0.0;
+                arrow.color.b = 0.0;
+                arrow.color.a = 1.0;
+
+                path.arrows.markers.push_back(arrow);
+            }
+
             path_publisher->publish(path);
+            raw_path_publisher->publish(path.path);
+            path_arrows_publisher->publish(path.arrows);
         }
+        RCLCPP_INFO(logger, "Finished planner loop -- no more states available");
     }
 
 private:
-    std::shared_ptr<SingleSlotQueue<msg::Scene::SharedPtr>> scene_queue;
-    std::shared_ptr<SingleSlotQueue<msg::Point::SharedPtr>> target_queue;
+    SharedState::SharedPtr shared_state;
     rclcpp::Publisher<msg::Path>::SharedPtr path_publisher;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr raw_path_publisher;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr path_arrows_publisher;
     rclcpp::Logger logger;
     MotionPrimitives primitives;
     State initial;
@@ -445,14 +448,13 @@ private:
 };
 
 std::thread start_planner(
-    std::shared_ptr<SingleSlotQueue<msg::Scene::SharedPtr>> scene_queue,
-    std::shared_ptr<SingleSlotQueue<msg::Point::SharedPtr>> target_queue,
-    rclcpp::Publisher<msg::Path>::SharedPtr path_publisher,
+    rclcpp::Node* node,
+    SharedState::SharedPtr shared_state,
     std::string config_path,
     rclcpp::Logger logger
 ) {
     auto planner_func = [=]() {
-        Planner planner{scene_queue, target_queue, path_publisher, config_path, logger};
+        Planner planner{node, shared_state, config_path, logger};
         planner.start();
     };
     return std::thread{planner_func};
