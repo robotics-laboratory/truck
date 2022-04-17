@@ -8,6 +8,7 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 find_package(ament_cmake REQUIRED)
 find_package(planning_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(OpenCV REQUIRED)
 
 include(FetchContent)
 
@@ -19,21 +20,38 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(float_comparison)
 
-add_executable(node
+add_executable(
+  planning_node
   src/main.cpp
   src/node.cpp
   src/node.hpp
   src/planner.cpp
   src/planner.hpp
-  src/single_slot_queue.hpp
+  src/shared_state.hpp
+  src/geometry.hpp
 )
-target_include_directories(node PUBLIC ${float_comparison_SOURCE_DIR} ${PROJECT_SOURCE_DIR})
-target_compile_features(node PUBLIC c_std_11 cxx_std_17)
-ament_target_dependencies(node planning_interfaces rclcpp)
+target_include_directories(
+  planning_node
+  PUBLIC
+  ${float_comparison_SOURCE_DIR}
+  ${OpenCV_INCLUDE_DIRS}
+  ${PROJECT_SOURCE_DIR}
+)
+target_link_libraries(planning_node ${OpenCV_LIBS})
+target_compile_features(planning_node PUBLIC c_std_11 cxx_std_17)
+ament_target_dependencies(planning_node planning_interfaces rclcpp)
 
-install(TARGETS
-  node
+install(
+  TARGETS
+  planning_node
   DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY
+  launch
+  DESTINATION
+  share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

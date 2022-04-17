@@ -25,9 +25,35 @@
         "theta": 0.0
     },
     "tolerances": {
-        "x": 1e-6,
-        "y": 1e-6,
-        "theta": 1e-1,
-        "distance": 1e-6
+        "x": 1e-06,
+        "y": 1e-06,
+        "theta": 0.1,
+        "distance": 1e-06
+    },
+    "vehicle": {
+        "shape": {
+            "width": 4,
+            "height": 2
+        },
+        "circles_approximation": {
+            "margin": 0.2,
+            "circle_spacing": 1.0,
+            "circles": [
+                {
+                    "center": {
+                        "x": 1.0,
+                        "y": 1.0
+                    },
+                    "radius": 1.697056274847714
+                },
+                {
+                    "center": {
+                        "x": 3.0,
+                        "y": 1.0
+                    },
+                    "radius": 1.697056274847714
+                }
+            ]
+        }
     }
 }

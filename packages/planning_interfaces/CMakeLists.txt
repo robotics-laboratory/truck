@@ -7,6 +7,7 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 find_package(ament_cmake REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 find_package(rosidl_default_generators REQUIRED)
 
@@ -19,6 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   DEPENDENCIES
   geometry_msgs
   nav_msgs
+  visualization_msgs
 )
 
 if(BUILD_TESTING)
