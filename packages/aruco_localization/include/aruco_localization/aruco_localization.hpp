@@ -8,6 +8,7 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <tf2_msgs/msg/tf_message.hpp>
 
 /**
  * node gets messages from two topics:
@@ -19,18 +20,6 @@
  *
  * /truck/aruco_odometry [nav_msgs/msg/Odometry]
  */
-
-const static std::string kImageRawTopic = "/camera/color/image_raw";
-const static std::string kCameraInfoTopic = "/camera/color/camera_info";
-const static std::string kArucoLocalizationNodeName = "aruco_localization";
-const static std::string kArucoOdometryTopic = "/truck/aruco/odometry";
-const static std::string kArucoPoseTopic = "/truck/aruco/pose";
-const static std::string kArucoMarkersTopic = "/truck/aruco/vis/markers";
-const static std::string kArucoResizedImageTopic = "/truck/aruco/resized_image";
-
-const static int kCameraMatrixSize = 3;
-const static int kDistCoeffsCount = 5;
-const static int CV_64F_SIZE = 8;
 
 class ArucoLocalization : public rclcpp::Node {
    public:
@@ -46,11 +35,9 @@ class ArucoLocalization : public rclcpp::Node {
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher_odometry_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_pose_stamped_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher_marker_array_;
+    rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr publisher_tf2_transform_;
 
     cv::Mat camera_matrix_, dist_coeffs_;
-
-    std::vector<int> marker_ids_;
-    std::vector<std::vector<cv::Point2f>> marker_corners_, rejected_candidates_;
     cv::Ptr<cv::aruco::DetectorParameters> detector_parameters_;
     cv::Ptr<cv::aruco::Dictionary> marker_dictionary_;
 };

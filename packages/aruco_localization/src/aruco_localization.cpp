@@ -13,6 +13,20 @@
 
 using std::placeholders::_1;
 
+const static std::string kImageRawTopic = "/camera/color/image_raw";
+const static std::string kCameraInfoTopic = "/camera/color/camera_info";
+const static std::string kArucoLocalizationNodeName = "aruco_localization";
+const static std::string kArucoOdometryTopic = "/truck/aruco/odometry";
+const static std::string kArucoPoseTopic = "/truck/aruco/pose";
+const static std::string kArucoMarkersTopic = "/truck/aruco/vis/markers";
+const static std::string kArucoTransformsTopic = "/truck/aruco/vis/transforms";
+
+const static std::string kCameraFrameId = "camera";
+
+const static int kCameraMatrixSize = 3;
+const static int kDistCoeffsCount = 5;
+const static int kCV_64FSize = 8;
+
 ArucoLocalization::ArucoLocalization()
     : rclcpp::Node(kArucoLocalizationNodeName),
       camera_matrix_(kCameraMatrixSize, kCameraMatrixSize, CV_64F),
@@ -32,73 +46,109 @@ ArucoLocalization::ArucoLocalization()
         this->create_publisher<geometry_msgs::msg::PoseStamped>(kArucoPoseTopic, qos);
     publisher_marker_array_ =
         this->create_publisher<visualization_msgs::msg::MarkerArray>(kArucoMarkersTopic, qos);
+    publisher_tf2_transform_ =
+        this->create_publisher<tf2_msgs::msg::TFMessage>(kArucoTransformsTopic, qos);
 }
 
 void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg) {
     RCLCPP_INFO(this->get_logger(), "HandleImage got message");
     auto cv_image = cv_bridge::toCvShare(msg);
+
+    std::vector<int> marker_ids_;
+    std::vector<std::vector<cv::Point2f>> marker_corners_, rejected_candidates_;
+    
     cv::aruco::detectMarkers(cv_image->image, marker_dictionary_, marker_corners_, marker_ids_,
                              detector_parameters_, rejected_candidates_);
     RCLCPP_INFO(this->get_logger(), "HandleImage detected %d markers", marker_ids_.size());
 
     auto it = find(marker_ids_.begin(), marker_ids_.end(), 0);
 
-    if (it != marker_ids_.end()) {
-        size_t ind = it - marker_ids_.begin();
+    if (it == marker_ids_.end()) {
+        return ;
+    }
+    size_t idx = it - marker_ids_.begin();
 
-        std::vector<cv::Vec3d> rvecs, tvecs;
+    std::vector<cv::Vec3d> rvecs, tvecs;
 
-        std::vector<std::vector<cv::Point2f>> zero_id_marker_corners = {marker_corners_[ind]};
-        cv::aruco::estimatePoseSingleMarkers(zero_id_marker_corners, 1, camera_matrix_,
-                                             dist_coeffs_, rvecs, tvecs);
+    std::vector<std::vector<cv::Point2f>> zero_id_marker_corners = {marker_corners_[idx]};
+    cv::aruco::estimatePoseSingleMarkers(zero_id_marker_corners, 1, camera_matrix_,
+                                            dist_coeffs_, rvecs, tvecs);
 
-        auto rot_quat = MathHelpers::RotationVectorToQuaternion(rvecs[0]);
-        auto camera_position = MathHelpers::RotateUsingQuaternion(-tvecs[0], rot_quat.inverse());
+    auto rot_quat = math_helpers::RotationVectorToQuaternion(rvecs[0]);
+    auto camera_position = math_helpers::RotateUsingQuaternion(-tvecs[0], rot_quat.inverse());
 
-        geometry_msgs::msg::Pose pose_msg;
-        pose_msg.position.set__x(camera_position[0])
-            .set__y(camera_position[1])
-            .set__z(camera_position[2]);
+    geometry_msgs::msg::Pose pose_msg;
+    pose_msg.position.x = camera_position[0];
+    pose_msg.position.y = camera_position[1];
+    pose_msg.position.z = camera_position[2];
 
-        /*
-        added rotation around OY for PI/2 because opencv estimatePoseSingleMarkers() returns
-        transformation where camera direction is OZ whereas default direction for odometry is OX
-        */
-        pose_msg.set__orientation(
-            tf2::toMsg(rot_quat.inverse() * tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2)));
+    /*
+    added rotation around OY for PI/2 because opencv estimatePoseSingleMarkers() returns
+    transformation where camera direction is OZ whereas default direction for odometry is OX
 
-        if (publisher_pose_stamped_->get_subscription_count()) {
-            geometry_msgs::msg::PoseStamped pose_stamped_msg;
-            pose_stamped_msg.set__pose(pose_msg);
-            pose_stamped_msg.header.set__stamp(rclcpp::Clock().now());
-            publisher_pose_stamped_->publish(pose_stamped_msg);
-        }
+    added rotation around OY for PI/2 because Z axis must point up
+    */
 
-        nav_msgs::msg::Odometry odometry_msg;
-        odometry_msg.pose.set__pose(pose_msg);
-        odometry_msg.header.set__stamp(rclcpp::Clock().now());
-        publisher_odometry_->publish(odometry_msg);
+    auto orientation_msg = tf2::toMsg(
+        rot_quat.inverse() 
+        * tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2) 
+        * tf2::Quaternion(tf2::Vector3(1, 0, 0), M_PI / 2)
+    );
 
-        if (publisher_marker_array_->get_subscription_count()) {
-            visualization_msgs::msg::Marker marker_msg;
-            marker_msg.header.stamp = rclcpp::Clock().now();
-            marker_msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
-            marker_msg.action = visualization_msgs::msg::Marker::ADD;
-            marker_msg.points = {
-                geometry_msgs::msg::Point().set__x(0).set__y(0),
-                geometry_msgs::msg::Point().set__x(0).set__y(1),
-                geometry_msgs::msg::Point().set__x(1).set__y(1),
-                geometry_msgs::msg::Point().set__x(1).set__y(0),
-                geometry_msgs::msg::Point().set__x(0).set__y(0),
-            };
-            marker_msg.color.a = 1.0;
-            marker_msg.color.g = 1.0;
-            marker_msg.scale.x = 0.1;
+    pose_msg.orientation = orientation_msg;
 
-            visualization_msgs::msg::MarkerArray marker_array_msg;
-            marker_array_msg.markers.push_back(marker_msg);
-            publisher_marker_array_->publish(marker_array_msg);
-        }
+    if (publisher_pose_stamped_->get_subscription_count()) {
+        geometry_msgs::msg::PoseStamped pose_stamped_msg;
+        pose_stamped_msg.pose = pose_msg;
+        pose_stamped_msg.header.stamp = msg->header.stamp;
+        publisher_pose_stamped_->publish(pose_stamped_msg);
+    }
+
+    if (publisher_tf2_transform_->get_subscription_count()) {
+        geometry_msgs::msg::TransformStamped transform_msg;
+
+        transform_msg.header.stamp = msg->header.stamp;
+        transform_msg.header.frame_id = "";
+        transform_msg.child_frame_id = kCameraFrameId;
+
+        geometry_msgs::msg::Vector3 translation_msg;
+        translation_msg.x = camera_position[0];
+        translation_msg.y = camera_position[1];
+        translation_msg.z = camera_position[2];
+
+        transform_msg.transform.rotation = orientation_msg;
+        transform_msg.transform.translation = translation_msg;
+
+        tf2_msgs::msg::TFMessage tf_msg;
+        tf_msg.transforms.push_back(transform_msg);
+
+        publisher_tf2_transform_->publish(tf_msg);
+    }
+
+    nav_msgs::msg::Odometry odometry_msg;
+    odometry_msg.pose.pose = pose_msg;
+    odometry_msg.header.stamp = msg->header.stamp;
+    publisher_odometry_->publish(odometry_msg);
+
+    if (publisher_marker_array_->get_subscription_count()) {
+        visualization_msgs::msg::Marker marker_msg;
+        marker_msg.header.stamp = msg->header.stamp;
+        marker_msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
+        marker_msg.action = visualization_msgs::msg::Marker::ADD;
+        marker_msg.points = {
+            geometry_msgs::msg::Point().set__x(0).set__y(0),
+            geometry_msgs::msg::Point().set__x(0).set__y(1),
+            geometry_msgs::msg::Point().set__x(1).set__y(1),
+            geometry_msgs::msg::Point().set__x(1).set__y(0),
+            geometry_msgs::msg::Point().set__x(0).set__y(0),
+        };
+        marker_msg.color.a = 1.0;
+        marker_msg.color.g = 1.0;
+        marker_msg.scale.x = 0.1;
+
+        visualization_msgs::msg::MarkerArray marker_array_msg;
+        marker_array_msg.markers.push_back(marker_msg);
+        publisher_marker_array_->publish(marker_array_msg);
     }
 }
 
@@ -107,13 +157,13 @@ void ArucoLocalization::UpdateCameraInfo(sensor_msgs::msg::CameraInfo::ConstShar
 
     static_assert(std::tuple_size<decltype(msg->k)>::value ==
                   kCameraMatrixSize * kCameraMatrixSize);
-    static_assert(sizeof(decltype(msg->k)::value_type) == CV_64F_SIZE);
+    static_assert(sizeof(decltype(msg->k)::value_type) == kCV_64FSize);
     std::memcpy(camera_matrix_.data, msg->k.data(),
-                kCameraMatrixSize * kCameraMatrixSize * CV_64F_SIZE);
+                kCameraMatrixSize * kCameraMatrixSize * kCV_64FSize);
 
-    static_assert(sizeof(decltype(msg->d)::value_type) == CV_64F_SIZE);
+    static_assert(sizeof(decltype(msg->d)::value_type) == kCV_64FSize);
     assert(msg->d.size() == kDistCoeffsCount);
-    std::memcpy(dist_coeffs_.data, msg->d.data(), kDistCoeffsCount * CV_64F_SIZE);
+    std::memcpy(dist_coeffs_.data, msg->d.data(), kDistCoeffsCount * kCV_64FSize);
 }
 
 int main(int argc, char* argv[]) {
