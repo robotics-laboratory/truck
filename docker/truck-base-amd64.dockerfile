@@ -378,7 +378,6 @@ RUN apt-get update -q \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
-    && service ssh restart \
     && echo 'root:root' | chpasswd
 
 ### SETUP ENTRYPOINT
