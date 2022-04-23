@@ -374,7 +374,12 @@ RUN apt-get update -q \
         tmux \
         vim \
         wget \
+        ssh \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
+
+RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
+    && service ssh restart \
+    && echo 'root:root' | chpasswd
 
 ### SETUP ENTRYPOINT
 
