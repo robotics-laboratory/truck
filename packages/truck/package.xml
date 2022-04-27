@@ -15,6 +15,7 @@
 
   <exec_depend>camera_view</exec_depend>
   <exec_depend>planning_node</exec_depend>
+  <exec_depend>pure_pursuit_node</exec_depend>
 
   <build_depend>ros_environment</build_depend>
 

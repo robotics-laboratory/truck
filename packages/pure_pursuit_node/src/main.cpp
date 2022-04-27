@@ -1,5 +1,4 @@
 #include "node.hpp"
-
 #include "rclcpp/rclcpp.hpp"
 
 int main(int argc, char **argv) {
