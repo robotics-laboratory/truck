@@ -48,6 +48,8 @@ public:
                         cmd = controller.get_motion(*odometry, *trajectory, nullptr);
                     }
                     cmd_publisher->publish(cmd);
+                } else {
+                    cmd_publisher->publish(pure_pursuit_msgs::msg::Command());
                 }
             }
         );
