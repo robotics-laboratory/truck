@@ -5,6 +5,7 @@
 
 using pure_pursuit_msgs::msg::Command;
 using namespace geometry_msgs::msg;
+using visualization_msgs::msg::Marker;
 
 namespace {
 
@@ -85,13 +86,38 @@ namespace pure_pursuit {
 Command Controller::get_motion(
       const nav_msgs::msg::Odometry &odometry
     , const std::vector<PoseStamped> &path
+    , VisualInfo *visual_info
 ) {
+    if (visual_info) {
+        Marker start;
+        start.type = Marker::SPHERE;
+        start.pose = odometry.pose.pose;
+        start.color.a = 1;
+        start.color.r = 1;
+        start.scale.x = 0.1;
+        start.scale.y = 0.1;
+        start.scale.z = 0.1;
+        start.id = visual_info->arc.markers.size();
+        visual_info->arc.markers.emplace_back(start);
+    }
     auto &position = odometry.pose.pose.position;
     auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const PoseStamped &p) {
         return distance(p.pose.position, position) <= params.lookahead_distance;
     });
     if (it == path.rend())
         return Command{};
+    if (visual_info) {
+        Marker target;
+        target.type = Marker::SPHERE;
+        target.pose = it->pose;
+        target.color.a = 1;
+        target.color.b = 1;
+        target.scale.x = 0.1;
+        target.scale.y = 0.1;
+        target.scale.z = 0.1;
+        target.id = visual_info->arc.markers.size();
+        visual_info->arc.markers.emplace_back(target);
+    }
     Vector p0{position.x, position.y};
     Vector p{it->pose.position.x, it->pose.position.y};
     p -= p0;
@@ -100,7 +126,39 @@ Command Controller::get_motion(
     p.y = std::abs(p.y);
     double r = dot(p, p) / (2 * p.y);
     Vector center{0, r};
-    auto target_angle = (p - center).angle();
+    auto target_angle = M_PI / 2 + (p - center).angle();
+    if (target_angle < 0)
+        target_angle += M_PI * 2;
+
+    if (visual_info) {
+        constexpr int points = 50;
+        double original_yaw = quaternoin_to_flat_angle(odometry.pose.pose.orientation);
+        for (int i = 1; i < points; ++i) {
+            Vector pos;
+            if (r < 1e4) {
+                double angle = -M_PI / 2 + target_angle / points * i;
+                if (sign)
+                    angle = -angle;
+                pos = center + Vector{cos(angle) * r, sin(angle) * r};
+            } else {
+                pos = p * i / points;
+            }
+            pos = pos.rotate(original_yaw);
+            pos += p0;
+            Marker mark;
+            mark.type = Marker::SPHERE;
+            mark.pose.position.x = pos.x;
+            mark.pose.position.y = pos.y;
+            mark.color.a = 1;
+            mark.color.g = 1;
+            mark.scale.x = 0.05;
+            mark.scale.y = 0.05;
+            mark.scale.z = 0.05;
+            mark.id = visual_info->arc.markers.size();
+            visual_info->arc.markers.emplace_back(mark);
+        }
+    }
+
     double dist;
     if (r < 1e4) {
         dist = r * target_angle;
@@ -165,7 +223,8 @@ Command Controller::get_motion(
 
     result.acceleration = accel;
 
-    auto direction = velocity_vector * target_velocity / velocity_vector.len();
+    double yaw = quaternoin_to_flat_angle(odometry.pose.pose.orientation);
+    Vector direction{cos(yaw), sin(yaw)};
 
     result.velocity.linear.x = direction.x;
     result.velocity.linear.y = direction.y;

@@ -1,0 +1,75 @@
+{
+  "configById": {
+    "3D Panel!18i6zy7": {
+      "pinTopics": true,
+      "autoSyncCameraState": false,
+      "autoTextBackgroundColor": true,
+      "cameraState": {
+        "distance": 39.6997145415689,
+        "perspective": true,
+        "phi": 0.23946214557147033,
+        "targetOffset": [
+          0.9138481787871218,
+          -2.377090134379407,
+          0
+        ],
+        "thetaOffset": -12.614283442859584,
+        "fovy": 0.7853981633974483,
+        "near": 0.01,
+        "far": 5000
+      },
+      "checkedKeys": [
+        "name:Topics",
+        "t:/foxglove/grid",
+        "t:/truck/marker_test",
+        "t:/truck/pure_pursuit_arc"
+      ],
+      "clickToPublishPoseTopic": "/move_base_simple/goal",
+      "clickToPublishPointTopic": "/clicked_point",
+      "clickToPublishPoseEstimateTopic": "/initialpose",
+      "clickToPublishPoseEstimateXDeviation": 0.5,
+      "clickToPublishPoseEstimateYDeviation": 0.5,
+      "clickToPublishPoseEstimateThetaDeviation": 0.2617993877991494,
+      "customBackgroundColor": "#000000",
+      "diffModeEnabled": true,
+      "expandedKeys": [
+        "name:root",
+        "t:/foxglove/grid",
+        "t:/robot_description",
+        "t:/tf",
+        "name:Topics",
+        "t:/truck/pure_pursuit_arc"
+      ],
+      "followMode": "follow",
+      "modifiedNamespaceTopics": [],
+      "settingsByKey": {},
+      "useThemeBackgroundColor": true
+    },
+    "ImageViewPanel!3mnp456": {
+      "cameraTopic": "",
+      "enabledMarkerTopics": [],
+      "mode": "fit",
+      "pan": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "synchronize": false,
+      "transformMarkers": false,
+      "zoom": 1
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "linkedGlobalVariables": [],
+  "playbackConfig": {
+    "speed": 1,
+    "messageOrder": "receiveTime"
+  },
+  "layout": {
+    "first": "3D Panel!18i6zy7",
+    "second": "ImageViewPanel!3mnp456",
+    "direction": "row",
+    "splitPercentage": 98
+  }
+}
