@@ -12,6 +12,7 @@ find_package(truck_interfaces REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(model REQUIRED)
 
 file(GLOB SRC
   src/*.cpp

@@ -186,10 +186,10 @@ Command Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
 
     double required_time =
         ros_time_to_seconds(it->header.stamp) - ros_time_to_seconds(odometry.header.stamp);
-    double min_posible_time = path_time_by_accel(params.max_velocity, params.max_accel);
+    double min_posible_time = path_time_by_accel(params.max_velocity, params.max_acceleration);
     if (required_time < min_posible_time) {
         target_velocity = params.max_velocity;
-        accel = params.max_accel;
+        accel = params.max_acceleration;
     } else {
         double required_velocity = 0;
         if (it != path.rbegin()) {
@@ -198,7 +198,7 @@ Command Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
                                  ros_time_to_seconds(it->header.stamp));
         }
         required_velocity = std::min(required_velocity, params.max_velocity);
-        double accel_constraint = copysign(params.max_accel, required_velocity - current_velocity);
+        double accel_constraint = copysign(params.max_acceleration, required_velocity - current_velocity);
         if (path_time_by_accel(required_velocity, accel_constraint) < required_time) {
             target_velocity = required_velocity;
             double l = 0, r = accel_constraint;
@@ -215,7 +215,7 @@ Command Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
             accel = r;
         } else {
             accel = accel_constraint;
-            target_velocity = accel < 0 ? 0 : params.max_accel;
+            target_velocity = accel < 0 ? 0 : params.max_acceleration;
         }
     }
 

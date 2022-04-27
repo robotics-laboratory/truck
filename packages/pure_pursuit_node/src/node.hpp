@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 
 #include "controller.hpp"
 #include "nav_msgs/msg/odometry.hpp"
@@ -9,12 +10,13 @@
 #include "pure_pursuit_msgs/msg/command.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "visual_info.hpp"
+#include "model.hpp"
 
 namespace pure_pursuit {
 
 class PursuitNode: public rclcpp::Node {
 public:
-    PursuitNode() : Node("PursuitNode"), controller(Parameters(*this)) {
+    PursuitNode() : Node("PursuitNode"), controller(model::Model(Node::declare_parameter<std::string>("model_config_path"))) {
         bool publish_debug_info = this->declare_parameter<bool>("publish_debug_info", true);
 
         cmd_publisher =
