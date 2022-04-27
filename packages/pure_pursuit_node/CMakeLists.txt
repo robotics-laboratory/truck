@@ -17,14 +17,14 @@ file(GLOB SRC
   src/*.cpp
 )
 
-add_executable(node
+add_executable(${PROJECT_NAME}
    ${SRC}
 )
 
-ament_target_dependencies(node rclcpp pure_pursuit_msgs planning_interfaces visualization_msgs nav_msgs geometry_msgs)
+ament_target_dependencies(${PROJECT_NAME} rclcpp pure_pursuit_msgs planning_interfaces visualization_msgs nav_msgs geometry_msgs)
 
 install(TARGETS
-  node
+  ${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME}
 )
 
