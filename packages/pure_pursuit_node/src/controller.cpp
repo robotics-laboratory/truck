@@ -14,7 +14,7 @@ double quaternoin_to_flat_angle(const Quaternion& q) {
     return std::copysign(2 * std::acos(q.w), q.z);
 }
 
-template<class P1, class P2>
+template <class P1, class P2>
 double distance(const P1& a, const P2& b) {
     return std::sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
@@ -57,42 +57,27 @@ struct Vector {
         v /= s;
         return v;
     }
-    friend double dot(const Vector& a, const Vector& b) {
-        return a.x * b.x + a.y * b.y;
-    }
-    friend double cross(const Vector& a, const Vector& b) {
-        return a.x * b.y - a.y * b.x;
-    }
+    friend double dot(const Vector& a, const Vector& b) { return a.x * b.x + a.y * b.y; }
+    friend double cross(const Vector& a, const Vector& b) { return a.x * b.y - a.y * b.x; }
     Vector rotate(double angle) const {
         double sn = std::sin(angle);
         double cs = std::cos(angle);
         return {x * cs - y * sn, x * sn + y * cs};
     }
-    double angle() const {
-        return std::atan2(y, x);
-    }
-    double len() const {
-        return std::sqrt(x * x + y * y);
-    }
+    double angle() const { return std::atan2(y, x); }
+    double len() const { return std::sqrt(x * x + y * y); }
 };
 
-inline double ros_time_to_seconds(const rclcpp::Time& t) {
-    return t.seconds();
-}
+inline double ros_time_to_seconds(const rclcpp::Time& t) { return t.seconds(); }
 
-inline double get_arc_length(double r, double angle) {
-    return r * angle;
-}
+inline double get_arc_length(double r, double angle) { return r * angle; }
 
-};
+};  // namespace
 
 namespace pure_pursuit {
 
-Command Controller::get_motion(
-      const nav_msgs::msg::Odometry& odometry
-    , const std::vector<PoseStamped>& path
-    , VisualInfo *visual_info
-) {
+Command Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
+                               const std::vector<PoseStamped>& path, VisualInfo* visual_info) {
     if (visual_info) {
         Marker start;
         start.type = Marker::SPHERE;
@@ -109,10 +94,9 @@ Command Controller::get_motion(
     auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const PoseStamped& p) {
         return distance(p.pose.position, position) <= params.lookahead_distance;
     });
-    if (it == path.rend())
-        return Command{};
+    if (it == path.rend()) return Command{};
     if (visual_info) {
-        for (auto &x : path) {
+        for (auto& x : path) {
             Marker target;
             target.type = Marker::SPHERE;
             target.pose = x.pose;
@@ -134,18 +118,17 @@ Command Controller::get_motion(
 
     double y_tolerance = std::max(abs(p.x), 1.0) * 0.01;
     bool stright_trajectory = (p.y < y_tolerance);
-    
+
     Vector center;
     double target_angle;
-    auto &r = center.y;
+    auto& r = center.y;
     if (stright_trajectory) {
         r = std::numeric_limits<double>::infinity();
         target_angle = 0;
     } else {
         r = dot(p, p) / (2 * p.y);
         target_angle = M_PI / 2 + (p - center).angle();
-        if (target_angle < 0)
-            target_angle += M_PI * 2;
+        if (target_angle < 0) target_angle += M_PI * 2;
     }
 
     if (visual_info) {
@@ -159,8 +142,7 @@ Command Controller::get_motion(
                 double angle = -M_PI / 2 + target_angle / points * i;
                 pos = center + Vector{cos(angle) * r, sin(angle) * r};
             }
-            if (sign)
-                pos.y = -pos.y;
+            if (sign) pos.y = -pos.y;
             pos = pos.rotate(original_yaw);
             pos += p0;
             Marker mark;
@@ -202,7 +184,8 @@ Command Controller::get_motion(
 
     double accel, target_velocity;
 
-    double required_time = ros_time_to_seconds(it->header.stamp) - ros_time_to_seconds(odometry.header.stamp);
+    double required_time =
+        ros_time_to_seconds(it->header.stamp) - ros_time_to_seconds(odometry.header.stamp);
     double min_posible_time = path_time_by_accel(params.max_velocity, params.max_accel);
     if (required_time < min_posible_time) {
         target_velocity = params.max_velocity;
@@ -211,7 +194,8 @@ Command Controller::get_motion(
         double required_velocity = 0;
         if (it != path.rbegin()) {
             required_velocity = distance(it->pose.position, prev(it)->pose.position) /
-                (ros_time_to_seconds(prev(it)->header.stamp) - ros_time_to_seconds(it->header.stamp));
+                                (ros_time_to_seconds(prev(it)->header.stamp) -
+                                 ros_time_to_seconds(it->header.stamp));
         }
         required_velocity = std::min(required_velocity, params.max_velocity);
         double accel_constraint = copysign(params.max_accel, required_velocity - current_velocity);
@@ -221,7 +205,7 @@ Command Controller::get_motion(
             if (accel_constraint < 0) {
                 std::swap(l, r);
             }
-            for (int i = 0; i < 20; ++i) { // More robust than epsilon-based binary search
+            for (int i = 0; i < 20; ++i) {  // More robust than epsilon-based binary search
                 double m = (l + r) / 2;
                 if (path_time_by_accel(required_velocity, m) > required_time)
                     l = m;
@@ -254,10 +238,9 @@ Command Controller::get_motion(
     result.velocity.angular.y = 0;
     result.velocity.angular.z = target_angle / time;
 
-    if (sign)
-        result.velocity.angular.z *= -1;
+    if (sign) result.velocity.angular.z *= -1;
 
     return result;
 }
 
-};
+};  // namespace pure_pursuit
