@@ -219,26 +219,13 @@ Command Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
         }
     }
 
-    double time = path_time_by_accel(target_velocity, accel);
-
     Command result;
 
     result.acceleration = accel;
+    result.velocity = target_velocity;
+    result.curvature = 1 / r;
 
-    double yaw = quaternoin_to_flat_angle(odometry.pose.pose.orientation);
-    Vector direction{cos(yaw), sin(yaw)};
-    direction *= target_velocity;
-    assert(target_velocity >= 0);
-
-    result.velocity.linear.x = direction.x;
-    result.velocity.linear.y = direction.y;
-    result.velocity.linear.z = 0;
-
-    result.velocity.angular.x = 0;
-    result.velocity.angular.y = 0;
-    result.velocity.angular.z = target_angle / time;
-
-    if (sign) result.velocity.angular.z *= -1;
+    if (sign) result.curvature *= -1;
 
     return result;
 }
