@@ -13,13 +13,11 @@ find_package(visualization_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(model REQUIRED)
-
-file(GLOB SRC
-  src/*.cpp
-)
+find_package(tf2 REQUIRED)
 
 add_executable(${PROJECT_NAME}
-   ${SRC}
+  src/main.cpp
+  src/controller.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME} rclcpp pure_pursuit_msgs truck_interfaces visualization_msgs nav_msgs geometry_msgs)
@@ -32,5 +30,11 @@ install(TARGETS
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME})
+
+add_library(${PROJECT_NAME}_simulator
+  src/simulator.cpp
+)
+
+ament_target_dependencies(${PROJECT_NAME}_simulator rclcpp pure_pursuit_msgs visualization_msgs nav_msgs geometry_msgs model tf2)
 
 ament_package()
