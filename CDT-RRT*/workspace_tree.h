@@ -1,5 +1,5 @@
 //
-//  wstree.h
+//  workspace_tree.h
 //  Workspace Tree
 //  2D RRT
 //  CDT-RRT*
