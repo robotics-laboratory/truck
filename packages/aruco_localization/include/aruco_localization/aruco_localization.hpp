@@ -10,6 +10,8 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
+#include "coordinator.hpp"
+
 /**
  * node gets messages from two topics:
  *
@@ -20,6 +22,10 @@
  *
  * /truck/aruco_odometry [nav_msgs/msg/Odometry]
  */
+
+namespace robolab {
+namespace aruco  {
+
 
 class ArucoLocalization : public rclcpp::Node {
    public:
@@ -40,4 +46,9 @@ class ArucoLocalization : public rclcpp::Node {
     cv::Mat camera_matrix_, dist_coeffs_;
     cv::Ptr<cv::aruco::DetectorParameters> detector_parameters_;
     cv::Ptr<cv::aruco::Dictionary> marker_dictionary_;
+
+    Coordinator coordinator_;
 };
+
+}
+}

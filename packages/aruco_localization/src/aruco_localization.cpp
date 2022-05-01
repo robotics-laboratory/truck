@@ -26,13 +26,19 @@ const static std::string kCameraFrameId = "camera";
 const static int kCameraMatrixSize = 3;
 const static int kDistCoeffsCount = 5;
 const static int kCV_64FSize = 8;
+const static int kMarkerCount = 250;
+
+namespace robolab {
+namespace aruco {
 
 ArucoLocalization::ArucoLocalization()
     : rclcpp::Node(kArucoLocalizationNodeName),
       camera_matrix_(kCameraMatrixSize, kCameraMatrixSize, CV_64F),
       dist_coeffs_(1, kDistCoeffsCount, CV_64F),
       detector_parameters_(cv::aruco::DetectorParameters::create()),
-      marker_dictionary_(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250)) {
+      marker_dictionary_(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250)),
+      coordinator_(kMarkerCount) {
+
     rclcpp::QoS qos(1);
     qos.reliable();
     qos.durability_volatile();
@@ -59,28 +65,22 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     
     cv::aruco::detectMarkers(cv_image->image, marker_dictionary_, marker_corners_, marker_ids_,
                              detector_parameters_, rejected_candidates_);
+
     RCLCPP_INFO(this->get_logger(), "HandleImage detected %d markers", marker_ids_.size());
-
-    auto it = find(marker_ids_.begin(), marker_ids_.end(), 0);
-
-    if (it == marker_ids_.end()) {
-        return ;
-    }
-    size_t idx = it - marker_ids_.begin();
 
     std::vector<cv::Vec3d> rvecs, tvecs;
 
-    std::vector<std::vector<cv::Point2f>> zero_id_marker_corners = {marker_corners_[idx]};
-    cv::aruco::estimatePoseSingleMarkers(zero_id_marker_corners, 1, camera_matrix_,
+    cv::aruco::estimatePoseSingleMarkers(marker_corners_, 1, camera_matrix_,
                                             dist_coeffs_, rvecs, tvecs);
+    
+    coordinator_.update(marker_ids_, rvecs, tvecs);
 
-    auto rot_quat = math_helpers::RotationVectorToQuaternion(rvecs[0]);
-    auto camera_position = math_helpers::RotateUsingQuaternion(-tvecs[0], rot_quat.inverse());
+    auto pose = coordinator_.get_pose();
 
     geometry_msgs::msg::Pose pose_msg;
-    pose_msg.position.x = camera_position[0];
-    pose_msg.position.y = camera_position[1];
-    pose_msg.position.z = camera_position[2];
+    pose_msg.position.x = pose.point[0];
+    pose_msg.position.y = pose.point[1];
+    pose_msg.position.z = pose.point[2];
 
     /*
     added rotation around OY for PI/2 because opencv estimatePoseSingleMarkers() returns
@@ -89,11 +89,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     added rotation around OY for PI/2 because Z axis must point up
     */
 
-    auto orientation_msg = tf2::toMsg(
-        rot_quat.inverse() 
-        * tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2) 
-        * tf2::Quaternion(tf2::Vector3(1, 0, 0), M_PI / 2)
-    );
+    auto orientation_msg = tf2::toMsg(pose.orientation);
 
     pose_msg.orientation = orientation_msg;
 
@@ -112,9 +108,9 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
         transform_msg.child_frame_id = kCameraFrameId;
 
         geometry_msgs::msg::Vector3 translation_msg;
-        translation_msg.x = camera_position[0];
-        translation_msg.y = camera_position[1];
-        translation_msg.z = camera_position[2];
+        translation_msg.x = pose.point[0];
+        translation_msg.y = pose.point[1];
+        translation_msg.z = pose.point[2];
 
         transform_msg.transform.rotation = orientation_msg;
         transform_msg.transform.translation = translation_msg;
@@ -166,9 +162,12 @@ void ArucoLocalization::UpdateCameraInfo(sensor_msgs::msg::CameraInfo::ConstShar
     std::memcpy(dist_coeffs_.data, msg->d.data(), kDistCoeffsCount * kCV_64FSize);
 }
 
+}
+}
+
 int main(int argc, char* argv[]) {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<ArucoLocalization>());
+    rclcpp::spin(std::make_shared<robolab::aruco::ArucoLocalization>());
     rclcpp::shutdown();
     return 0;
 }
