@@ -18,6 +18,13 @@ inline auto odometry_to_pose_stamped(const nav_msgs::msg::Odometry &odm) {
     return pose;
 }
 
+template<class F, class T>
+inline void convert_vector(const F& from, T& to) {
+    to.setX(from.x);
+    to.setY(from.y);
+    to.setZ(from.z);
+}
+
 std::vector<nav_msgs::msg::Odometry> pure_pursuit::simulate(nav_msgs::msg::Odometry start,
                                               nav_msgs::msg::Odometry finish, uint64_t sim_dt_ns, uint64_t controller_period,
                                               const model::Model &params)
@@ -33,7 +40,9 @@ std::vector<nav_msgs::msg::Odometry> pure_pursuit::simulate(nav_msgs::msg::Odome
         ans.emplace_back(current_odometry);
         auto cmd = controller.get_motion(current_odometry, trajectory, nullptr);
         tf2::Vector3 current_direction;
-        tf2::convert(current_odometry.twist.twist.linear, current_direction);
+        // tf2::convert(current_odometry.twist.twist.linear, current_direction);
+        convert_vector(current_odometry.twist.twist.linear, current_direction);
+
         double current_velocity = sqrt(tf2::tf2Dot(current_direction, current_direction));
         current_direction /= current_velocity;
 

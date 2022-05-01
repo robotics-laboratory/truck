@@ -27,14 +27,52 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME})
 
 add_library(${PROJECT_NAME}_simulator
   src/simulator.cpp
+  src/controller.cpp
 )
 
-ament_target_dependencies(${PROJECT_NAME}_simulator rclcpp pure_pursuit_msgs visualization_msgs nav_msgs geometry_msgs model tf2)
+set_target_properties(${PROJECT_NAME}_simulator PROPERTIES PUBLIC_HEADER include/simulator.hpp)
+
+target_include_directories(${PROJECT_NAME}_simulator PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+
+set(SIMULATOR_DEPENDENCIES rclcpp tf2 pure_pursuit_msgs visualization_msgs nav_msgs geometry_msgs model)
+
+ament_target_dependencies(${PROJECT_NAME}_simulator ${SIMULATOR_DEPENDENCIES})
+ament_export_dependencies(${SIMULATOR_DEPENDENCIES})
+
+# Export old-style CMake variables
+ament_export_include_directories("include/${PROJECT_NAME}_simulator")
+ament_export_libraries(${PROJECT_NAME}_simulator)
+
+# Export modern CMake targets
+ament_export_targets(${PROJECT_NAME}_simulator)
+
+install(
+  TARGETS ${PROJECT_NAME}_simulator EXPORT ${PROJECT_NAME}_simulator
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}_simulator
+)
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  # Add a gtest named ${PROJECT_NAME}_my_test
+  add_subdirectory("test")
+endif()
 
 ament_package()
