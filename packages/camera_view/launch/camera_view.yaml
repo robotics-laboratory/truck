@@ -1,7 +1,0 @@
-launch:
-- node:
-    pkg: "camera_view"
-    exec: "camera_view"
-    name: "camera_view"
-    namespace: "truck"
-    output: "log"
