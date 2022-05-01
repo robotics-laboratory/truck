@@ -8,6 +8,9 @@ ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"]
 
+ENV ROS_DISTRO=galactic
+ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+
 WORKDIR /tmp
 
 ### INSTALL CMAKE
@@ -209,27 +212,36 @@ RUN wget -qO - https://github.com/pytorch/vision/archive/refs/tags/v${TORCHVISIO
     && cd vision-${TORCHVISION_VERSION} \
     && python3 setup.py install \
     && rm -rf /tmp/*
+
+ENV PYTORCH_PATH="/usr/local/lib/python3.6/dist-packages/torch"
+ENV LD_LIBRARY_PATH="${PYTORCH_PATH}/lib:${LD_LIBRARY_PATH}"
  
 ### INSTALL RTAB-MAP
 
-ARG G2O_VERSION="20201223_git"
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN apt-get update -q && \
+    apt-get install -yq --no-install-recommends \
         build-essential \
         git \
         make \
         libeigen3-dev \
-        libpcl-dev \
         libpython3-dev \
         python3-dev \
         libyaml-cpp-dev \
         libboost-all-dev \
         libtbb-dev \
-    && rm -rf /var/lib/apt/lists/* apt-get clean
+        libsqlite3-dev \
+        libpcl-dev \
+        libproj-dev \
+        libqt5svg5-dev \
+        libsuitesparse-dev \
+        tar \
+    && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-RUN wget -qO - https://github.com/RainerKuemmerle/g2o/archive/refs/tags/${G2O_VERSION}.tar.gz | tar -xz \
-    && cd g2o-${G2O_VERSION} && mkdir -p build && cd build \
+ARG G2O_HASH="b1ba729aa569267e179fa2e237db0b3ad5169e2e"
+
+RUN git clone https://github.com/RainerKuemmerle/g2o.git \
+    && cd g2o && git checkout ${G2O_HASH} \
+    && mkdir -p build && cd build \
     && cmake .. \
         -DBUILD_WITH_MARCH_NATIVE=OFF \
         -DG2O_BUILD_APPS=OFF \
@@ -269,37 +281,45 @@ RUN wget -qO - https://github.com/ethz-asl/libpointmatcher/archive/refs/tags/${L
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
-ARG RTAB_MAP_VERSION="0.20.8"
+# Use ROS release repo, version is not fixed!
+ARG RTAB_MAP_BRANCH="release/${ROS_DISTRO}/rtabmap"
 
-RUN wget -qO - https://github.com/introlab/rtabmap/archive/refs/tags/${RTAB_MAP_VERSION}.tar.gz | tar -xz \
-    && cd rtabmap-${RTAB_MAP_VERSION} && mkdir -p build && cd build \
+RUN git clone https://github.com/introlab/rtabmap-release.git \
+    && cd rtabmap-release && git checkout ${RTAB_MAP_BRANCH} \
+    && mkdir -p build && cd build \
     && cmake .. \
-        -DWITH_PYTHON=ON \
-        -DWITH_TORCH=ON \
-        -DTorch_DIR=${PYTORCH_PATH}/share/cmake/Torch \
+        -DBUILD_APP=OFF \
+        -DBUILD_TOOLS=ON \
+        -DBUILD_EXAMPLES=OFF \
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
 ### INSTALL ROS2
 
-RUN apt-get update -q \
-    && apt-get install -yq --no-install-recommends \
-        curl \
-    && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
-    && rm -rf /var/lib/apt/lists/* && apt-get clean
+    && wget -qO - https://packages.osrfoundation.org/gazebo.key | apt-key add - \
+    && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
 
-ENV GAZEBO_VERSION="gazebo9"
+ENV GAZEBO="gazebo11"
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         apt-utils \
         build-essential \
-        curl \
+        ${GAZEBO} \
+        ${GAZEBO}-common \
+        ${GAZEBO}-plugin-base \
         git \
+        imagemagick \
+        libjansson-dev \
         make \
+        libasio-dev \
+        libboost-dev \
         libbullet-dev \
+        lib${GAZEBO}-dev \
         libpython3-dev \
+        libtinyxml-dev \
         locales \
         python3-bson \
         python3-colcon-common-extensions \
@@ -310,14 +330,8 @@ RUN apt-get update -q \
         python3-setuptools \
         python3-vcstool \
         python3-rosinstall-generator \
-        libasio-dev \
         libtinyxml2-dev \
         libcunit1-dev \
-        lib${GAZEBO_VERSION}-dev \
-        ${GAZEBO_VERSION} \
-        ${GAZEBO_VERSION}-common \
-        ${GAZEBO_VERSION}-plugin-base \
-        wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ENV LANG=en_US.UTF-8
@@ -341,52 +355,76 @@ RUN pip3 install --no-cache-dir -U \
         pytest-rerunfailures \
         pytest
 
-ENV ROS_DISTRO=galactic
-ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
-
 RUN mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT} \
-    && EXCLUDE=(librealsense2) \
     && rosinstall_generator \
-            --exclude "${EXCLUDE[*]}" \
-            --deps --rosdistro ${ROS_DISTRO} \
-        ros_base \
+            --rosdistro ${ROS_DISTRO} \
+            --exclude librealsense2 rtabmap libg2o \
+            --deps \
         image_geometry \
         image_pipeline \
         image_transport \
         compressed_image_transport \
         compressed_depth_image_transport \
         cv_bridge \
+        gazebo_ros_pkgs \
+        gazebo_ros2_control \
         launch_xml \
         launch_yaml \
         nav2_common \
         pcl_conversions \
         realsense2_camera \
         realsense2_description \
+        ros_base \
+        ros2_control \
+        ros2_controllers \
         rosbridge_suite \
         rtabmap_ros \
         vision_opencv \
         vision_msgs \
     > ros2.${ROS_DISTRO}.rosinstall \
-    && cat ros2.${ROS_DISTRO}.rosinstall \
-    && vcs import src < ros2.${ROS_DISTRO}.rosinstall
+    && vcs import src < ros2.${ROS_DISTRO}.rosinstall > /dev/null
 
 RUN apt-get update -q \
-    && cd ${ROS_ROOT}/src \
     && rosdep init \
     && rosdep update \
-    && SKIP_KEYS=(fastcdr rti-connext-dds-5.3.1 urdfdom_headers librealsense2 \
-            libopencv-dev libopencv-contrib-dev libopencv-imgproc-dev python3-opencv) \
-    && rosdep install -qy --ignore-src --from-paths . \
+    && rosdep install -qy --ignore-src  \
         --rosdistro ${ROS_DISTRO} \
-        --skip-keys "${SKIP_KEYS[*]}" \
+        --from-paths ${ROS_ROOT}/src \
+        --skip-keys fastcdr \
+        --skip-keys gazebo11 \
+        --skip-keys libg2o \
+        --skip-keys libgazebo11-dev \
+        --skip-keys librealsense2 \
+        --skip-keys libopencv-dev \
+        --skip-keys libopencv-contrib-dev \
+        --skip-keys libopencv-imgproc-dev \
+        --skip-keys python3-opencv \
+        --skip-keys python3-opencv \
+        --skip-keys rti-connext-dds-5.3.1 \
+        --skip-keys rtabmap \
+        --skip-keys urdfdom_headers \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN cd ${ROS_ROOT}/src \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
+        --cmake-args -DBUILD_TESTING=OFF \ 
+        --catkin-skip-building-tests \
     && echo 'source ${ROS_ROOT}/setup.bash' >> /root/.bashrc \
     && rm -rf /tmp/*
+
+ENV GZWEB_VERSION="1.4.1"
+ENV GZWEB_PATH=/opt/gzweb
+
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
+    && source ${HOME}/.nvm/nvm.sh \
+    && nvm install 9 \
+    && mkdir -p ${GZWEB_PATH} \
+    && wget -qO - https://github.com/osrf/gzweb/archive/refs/tags/gzweb_${GZWEB_VERSION}.tar.gz | tar -xz -C ${GZWEB_PATH} --strip-components 1 \
+    && cd ${GZWEB_PATH} \
+    && source /usr/share/gazebo/setup.sh \
+    && npm run deploy --- -m -t
 
 ### INSTALL DEV PKGS
 

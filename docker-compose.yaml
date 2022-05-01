@@ -18,7 +18,7 @@ services:
 
   truck-base-amd64:
     container_name: truck-base
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:amd64-0.3.1
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:amd64-0.4.0
     stdin_open: true
     tty: true
     build:
