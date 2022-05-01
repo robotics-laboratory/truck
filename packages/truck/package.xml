@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>truck</name>
   <version>0.1.0</version>
@@ -13,7 +12,6 @@
   <exec_depend>realsense2_camera</exec_depend>
   <exec_depend>realsense2_description</exec_depend>
 
-  <exec_depend>camera_view</exec_depend>
   <exec_depend>planning_node</exec_depend>
   <exec_depend>pure_pursuit_node</exec_depend>
 
