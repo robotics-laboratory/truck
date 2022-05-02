@@ -9,7 +9,7 @@ namespace aruco {
 
 Coordinator::Coordinator(int marker_count) {
     to_anchor_transform_.resize(marker_count);
-    to_anchor_transform_[0] = math::Transform(tf2::Quaternion(0, 0, 0, 1), {0, 0, 0});
+    to_anchor_transform_[anchor_id_] = math::Transform(tf2::Quaternion(0, 0, 0, 1), {0, 0, 0});
 }
 
 void Coordinator::update(const std::vector<int> &ids, const std::vector<cv::Vec3d> &rvecs, const std::vector<cv::Vec3d> &tvecs) {
@@ -33,16 +33,25 @@ void Coordinator::update(const std::vector<int> &ids, const std::vector<math::Tr
         }
     }
 
+    Pose new_pose{tf2::Quaternion(0, 0, 0, 0), tf2::Vector3(0, 0, 0)};
+    int anchored_count = 0;
+
     for (size_t i = 0; i < ids.size(); i++) {
         if (to_anchor_transform_[ids[i]]) {
+            anchored_count++;
             auto from_cam_to_anchor = transforms[i].inverse() * *to_anchor_transform_[ids[i]];
-            current_pose_.point = from_cam_to_anchor({0, 0, 0});
-            current_pose_.orientation = from_cam_to_anchor.getRotation()
-                * tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2) 
-                * tf2::Quaternion(tf2::Vector3(1, 0, 0), M_PI / 2);
-            break;
+            new_pose.point += from_cam_to_anchor({0, 0, 0});
+            new_pose.orientation += from_cam_to_anchor.getRotation();
         }
     }
+
+    new_pose.orientation *= tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2) 
+                * tf2::Quaternion(tf2::Vector3(1, 0, 0), M_PI / 2);
+    
+    new_pose.point /= anchored_count;
+    new_pose.orientation /= anchored_count;
+
+    current_pose_ = new_pose;
 }
 
 Pose Coordinator::get_pose() {
