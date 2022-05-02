@@ -1,0 +1,18 @@
+launch:
+- arg: {name: "world", default: "simple.world"}
+
+- executable:
+    name: "gzserver"
+    cmd: "gzserver --verbose $(find-pkg-share truck_gazebo)/worlds/$(var world)"
+    output: "log"
+    shell: True
+    # TODO(dasimagin) fix this duty hack
+    env: 
+    - {name: 'GAZEBO_MODEL_PATH', value: "/truck/packages/install/share"}
+
+- executable:
+    name: "gzweb"
+    cwd: "/opt/gzweb"
+    cmd: "npm start"
+    output: "log"
+    shell: True

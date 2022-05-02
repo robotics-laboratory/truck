@@ -1,16 +1,23 @@
 # ROS2 Packages
+Home of all our packages!
 
 ## Build
 
-To build a single package with dependencies run
+To build all packages
 
 ```bash
-colcon build --packages-up-to <package name>
+colcon build --merge-install
+```
+
+To build you some single package
+
+```bash
+colcon build --merge-install --packages-up-to package_name
 ```
 
 ## Install
 
-To install and use built packages run
+Current installation dir is ```/truck/packages/install```. To run setup do
 
 ```bash
 . install/setup.bash
