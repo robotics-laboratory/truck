@@ -1,3 +1,5 @@
+#pragma once
+
 #include <optional>
 #include <vector>
 
@@ -15,12 +17,12 @@ public:
 
     void update(const std::vector<int> &ids, const std::vector<cv::Vec3d> &rvecs, const std::vector<cv::Vec3d> &tvecs);
 
-    void update(const std::vector<int> &ids, const std::vector<tf2::Transform> &transforms);
+    void update(const std::vector<int> &ids, const std::vector<math::Transform> &transforms);
 
     Pose get_pose();
 
 private:
-    std::vector<std::optional<tf2::Transform>> to_anchor_transform_;
+    std::vector<std::optional<math::Transform>> to_anchor_transform_;
 
     Pose current_pose_;
 

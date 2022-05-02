@@ -17,7 +17,7 @@ find_package(OpenCV REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
 
-add_executable(aruco_localization src/aruco_localization.cpp src/math_helpers.cpp src/coordinator.cpp)
+add_executable(aruco_localization src/aruco_localization.cpp src/math_helpers.cpp src/coordinator.cpp src/transform.cpp)
 target_include_directories(aruco_localization PRIVATE include/aruco_localization)
 ament_target_dependencies(aruco_localization rclcpp nav_msgs sensor_msgs OpenCV cv_bridge visualization_msgs tf2_msgs)
 

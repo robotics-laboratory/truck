@@ -1,3 +1,5 @@
+#pragma once
+
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <memory>
 #include <nav_msgs/msg/odometry.hpp>

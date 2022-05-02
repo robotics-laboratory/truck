@@ -4,29 +4,27 @@
 #include <iostream>
 #include <rclcpp/rclcpp.hpp>
 
-
 namespace robolab {
 namespace aruco {
 
 Coordinator::Coordinator(int marker_count) {
     to_anchor_transform_.resize(marker_count);
-    to_anchor_transform_[0] = tf2::Transform(tf2::Quaternion(0, 0, 0, 1), {0, 0, 0});
+    to_anchor_transform_[0] = math::Transform(tf2::Quaternion(0, 0, 0, 1), {0, 0, 0});
 }
 
 void Coordinator::update(const std::vector<int> &ids, const std::vector<cv::Vec3d> &rvecs, const std::vector<cv::Vec3d> &tvecs) {
-    std::vector<tf2::Transform> transforms;
+    std::vector<math::Transform> transforms;
     transforms.reserve(rvecs.size());
 
     for (size_t i = 0; i < ids.size(); i++) {
-        transforms.push_back(math_helpers::GetTransform(rvecs[i], tvecs[i]));
+        transforms.push_back(math::GetTransform(rvecs[i], tvecs[i]));
     }
 
     update(ids, transforms);
 }
 
 
-void Coordinator::update(const std::vector<int> &ids, const std::vector<tf2::Transform> &transforms) {
-
+void Coordinator::update(const std::vector<int> &ids, const std::vector<math::Transform> &transforms) {
     for (size_t i = 0; i < ids.size(); i++) {
         for (size_t j = 0; j < ids.size(); j++) {
             if (!to_anchor_transform_[ids[i]] && to_anchor_transform_[ids[j]]) {
