@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 inline auto odometry_to_pose_stamped(const nav_msgs::msg::Odometry &odm) {
     geometry_msgs::msg::PoseStamped pose;
@@ -20,13 +21,13 @@ inline auto odometry_to_pose_stamped(const nav_msgs::msg::Odometry &odm) {
 
 template<class F, class T>
 inline void convert_vector(const F& from, T& to) {
-    to.setX(from.x);
-    to.setY(from.y);
-    to.setZ(from.z);
+    to.setValue(from.x, from.y, from.z);
 }
 
-std::vector<nav_msgs::msg::Odometry> pure_pursuit::simulate(nav_msgs::msg::Odometry start,
-                                              nav_msgs::msg::Odometry finish, uint64_t sim_dt_ns, uint64_t controller_period,
+namespace pure_pursuit {
+
+SimulationResult simulate(nav_msgs::msg::Odometry start,
+                                              nav_msgs::msg::Odometry finish, uint64_t sim_timeout_ns, uint64_t sim_dt_ns, uint64_t controller_period,
                                               const model::Model &params)
 {
     const double eps = 1e-6, PI2_INV = 1 / (M_PI * 2);
@@ -36,31 +37,45 @@ std::vector<nav_msgs::msg::Odometry> pure_pursuit::simulate(nav_msgs::msg::Odome
     auto current_odometry = start;
     std::vector trajectory = {odometry_to_pose_stamped(start), odometry_to_pose_stamped(finish)};
     std::vector<nav_msgs::msg::Odometry> ans;
-    while (1) {
+    uint64_t current_time = 0;
+    while (current_time < sim_timeout_ns) {
+        // std::cerr << current_odometry.pose.pose.position.x << " " << current_odometry.pose.pose.position.y << "\n";
         ans.emplace_back(current_odometry);
         auto cmd = controller.get_motion(current_odometry, trajectory, nullptr);
-        tf2::Vector3 current_direction;
-        // tf2::convert(current_odometry.twist.twist.linear, current_direction);
-        convert_vector(current_odometry.twist.twist.linear, current_direction);
-
-        double current_velocity = sqrt(tf2::tf2Dot(current_direction, current_direction));
-        current_direction /= current_velocity;
+        if (!cmd)
+            return SimulationResult::fail(std::string("Controller failed. Reason: ") + cmd.get_error());
 
         tf2::Quaternion current_orientation;
         tf2::convert(current_odometry.pose.pose.orientation, current_orientation);
         double current_yaw = current_orientation.getAngle();
 
-        if (cmd.velocity < eps && current_velocity < eps)
-            break;
+        tf2::Vector3 current_position;
+        convert_vector(current_odometry.pose.pose.position, current_position);
 
-        for (uint64_t i = 0; i < controller_period; ++i) {
-            double angular_velocity = current_velocity * cmd.curvature * PI2_INV;
+        tf2::Vector3 current_direction;
+        // tf2::convert(current_odometry.twist.twist.linear, current_direction);
+        convert_vector(current_odometry.twist.twist.linear, current_direction);
+
+        double current_velocity = sqrt(tf2::tf2Dot(current_direction, current_direction));
+        if (current_velocity > eps) {
+            current_direction /= current_velocity;
+        } else {
+            current_direction = tf2::Matrix3x3(current_orientation) * tf2::Vector3(1, 0, 0);
+        }
+
+        if (cmd->velocity < eps && current_velocity < eps)
+            return ans;
+
+        for (uint64_t i = 0; i < controller_period && current_time < sim_timeout_ns; ++i) {
+            double angular_velocity = current_velocity * cmd->curvature * PI2_INV;
             double angular_delta = angular_velocity * dt;
             current_yaw += angular_delta;
             tf2::Matrix3x3 rm;
             rm.setRPY(0, 0, angular_delta);
+            current_position += current_direction * current_velocity;
             current_direction = rm * current_direction;
-            current_velocity += std::min(cmd.acceleration * dt, cmd.velocity - current_velocity);
+            current_velocity += std::min(cmd->acceleration * dt, cmd->velocity - current_velocity);
+            current_time += sim_dt_ns;
         }
         current_direction *= current_velocity;
         current_odometry.twist.twist.linear.x = current_direction.x();
@@ -69,5 +84,7 @@ std::vector<nav_msgs::msg::Odometry> pure_pursuit::simulate(nav_msgs::msg::Odome
         tf2::convert(current_orientation, current_odometry.pose.pose.orientation);
         current_odometry.header.stamp = rclcpp::Time(current_odometry.header.stamp.nanosec + sim_dt_ns * controller_period);
     }
-    return ans;
+    return SimulationResult::fail("Finish point is not arrived in time");
 }
+
+};

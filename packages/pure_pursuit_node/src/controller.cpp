@@ -76,7 +76,7 @@ inline double get_arc_length(double r, double angle) { return r * angle; }
 
 namespace pure_pursuit {
 
-Command Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
+ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
                                const std::vector<PoseStamped>& path, VisualInfo* visual_info) {
     if (visual_info) {
         Marker start;
@@ -94,7 +94,7 @@ Command Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
     auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const PoseStamped& p) {
         return distance(p.pose.position, position) <= params.lookahead_distance;
     });
-    if (it == path.rend()) return Command{};
+    if (it == path.rend()) return ControllerResult::fail("Can not find the target point");
     if (visual_info) {
         for (auto& x : path) {
             Marker target;
@@ -162,7 +162,7 @@ Command Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
     double dist;
     if (stright_trajectory) {
         if (p.x < 0) {
-            return Command{};
+            return ControllerResult::fail("Can not build the arc");
         }
         dist = p.x;
     } else {
