@@ -3,7 +3,7 @@ version: "3.5"
 services:
   truck-base-jetson:
     container_name: truck-base
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:jetson-0.3.1
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:jetson-0.4.1
     stdin_open: true
     privileged: true
     tty: true
@@ -12,13 +12,14 @@ services:
       context: .
     ports:
     - "9090:9090"
+    - "2222:2222"
     volumes:
     - "${HOME}/truck:/truck"
     - /dev:/dev
 
   truck-base-amd64:
     container_name: truck-base
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:amd64-0.4.0
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:amd64-0.4.1
     stdin_open: true
     tty: true
     build:
@@ -26,5 +27,6 @@ services:
       context: .
     ports:
     - "9090:9090"
+    - "2222:2222"
     volumes:
     - "${HOME}/truck:/truck"

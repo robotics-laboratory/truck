@@ -411,8 +411,9 @@ RUN cd ${ROS_ROOT}/src \
         --install-base ${ROS_ROOT} \
         --cmake-args -DBUILD_TESTING=OFF \ 
         --catkin-skip-building-tests \
-    && echo 'source ${ROS_ROOT}/setup.bash' >> /root/.bashrc \
     && rm -rf /tmp/*
+
+RUN printf "export ROS_ROOT=${ROS_ROOT}\nexport ROS_DISTRO=${ROS_DISTRO}\nsource \${ROS_ROOT}/setup.bash" >> /root/.bashrc
 
 ENV GZWEB_VERSION="1.4.1"
 ENV GZWEB_PATH=/opt/gzweb
@@ -453,7 +454,11 @@ RUN apt-get update -q \
         tmux \
         vim \
         wget \
+        ssh \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
+
+RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
+    && echo 'root:root' | chpasswd
 
 ### SETUP ENTRYPOINT
 
