@@ -1,0 +1,7 @@
+launch:
+  - node:
+      pkg: control
+      exec: control
+      name: control
+      namespace: truck
+      output: screen
