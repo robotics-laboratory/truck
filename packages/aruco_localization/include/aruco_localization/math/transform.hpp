@@ -3,9 +3,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Vector3.h>
 
-namespace robolab {
-namespace aruco {
-namespace math {
+namespace rosaruco {
 
 class Transform {
 public:
@@ -25,6 +23,4 @@ public:
     Transform inverse() const;
 };
 
-}
-}
 }

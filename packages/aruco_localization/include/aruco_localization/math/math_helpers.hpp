@@ -7,13 +7,9 @@
 
 #include "transform.hpp"
 
-namespace robolab {
-namespace aruco {
-namespace math {
+namespace rosaruco {
 
     tf2::Quaternion RotationVectorToQuaternion(const cv::Vec3d& rot_vec);
     Transform GetTransform(const cv::Vec3d& rvec, const cv::Vec3d& tvec);
 
-}
-}
 }

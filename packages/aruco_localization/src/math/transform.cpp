@@ -1,10 +1,8 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
-#include "transform.hpp"
+#include "math/transform.hpp"
 
-namespace robolab {
-namespace aruco {
-namespace math {
+namespace rosaruco {
 
 Transform::Transform(const tf2::Quaternion &rotation, const tf2::Vector3 &translation)
     : rotation(rotation), translation(translation) {}
@@ -32,6 +30,4 @@ const tf2::Quaternion& Transform::getRotation() const {
     return rotation;
 }
 
-}
-}
 }

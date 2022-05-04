@@ -25,8 +25,7 @@
  * /truck/aruco_odometry [nav_msgs/msg/Odometry]
  */
 
-namespace robolab {
-namespace aruco  {
+namespace rosaruco {
 
 
 class ArucoLocalization : public rclcpp::Node {
@@ -52,5 +51,4 @@ class ArucoLocalization : public rclcpp::Node {
     Coordinator coordinator_;
 };
 
-}
 }

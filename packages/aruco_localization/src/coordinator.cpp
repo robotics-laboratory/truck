@@ -1,30 +1,29 @@
 #include "coordinator.hpp"
-#include "math_helpers.hpp"
+#include "math/math_helpers.hpp"
 
 #include <iostream>
 #include <rclcpp/rclcpp.hpp>
 
-namespace robolab {
-namespace aruco {
+namespace rosaruco {
 
 Coordinator::Coordinator(int marker_count) {
     to_anchor_transform_.resize(marker_count);
-    to_anchor_transform_[anchor_id_] = math::Transform(tf2::Quaternion(0, 0, 0, 1), {0, 0, 0});
+    to_anchor_transform_[anchor_id_] = Transform(tf2::Quaternion(0, 0, 0, 1), {0, 0, 0});
 }
 
 void Coordinator::update(const std::vector<int> &ids, const std::vector<cv::Vec3d> &rvecs, const std::vector<cv::Vec3d> &tvecs) {
-    std::vector<math::Transform> transforms;
+    std::vector<Transform> transforms;
     transforms.reserve(rvecs.size());
 
     for (size_t i = 0; i < ids.size(); i++) {
-        transforms.push_back(math::GetTransform(rvecs[i], tvecs[i]));
+        transforms.push_back(GetTransform(rvecs[i], tvecs[i]));
     }
 
     update(ids, transforms);
 }
 
 
-void Coordinator::update(const std::vector<int> &ids, const std::vector<math::Transform> &transforms) {
+void Coordinator::update(const std::vector<int> &ids, const std::vector<Transform> &transforms) {
     for (size_t i = 0; i < ids.size(); i++) {
         for (size_t j = 0; j < ids.size(); j++) {
             if (!to_anchor_transform_[ids[i]] && to_anchor_transform_[ids[j]]) {
@@ -54,9 +53,12 @@ void Coordinator::update(const std::vector<int> &ids, const std::vector<math::Tr
     current_pose_ = new_pose;
 }
 
+const std::optional<Transform>& Coordinator::get_transform_to_anchor(int from_id) const {
+    return to_anchor_transform_[from_id];
+}
+
 Pose Coordinator::get_pose() {
     return current_pose_;
 }
 
-}
 }

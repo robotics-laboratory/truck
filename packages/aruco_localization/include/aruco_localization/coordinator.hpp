@@ -6,10 +6,9 @@
 #include <opencv2/core.hpp>
 
 #include "pose.hpp"
-#include "math_helpers.hpp"
+#include "math/math_helpers.hpp"
 
-namespace robolab {
-namespace aruco {
+namespace rosaruco {
 
 class Coordinator {
 public:
@@ -17,18 +16,19 @@ public:
 
     void update(const std::vector<int> &ids, const std::vector<cv::Vec3d> &rvecs, const std::vector<cv::Vec3d> &tvecs);
 
-    void update(const std::vector<int> &ids, const std::vector<math::Transform> &transforms);
+    void update(const std::vector<int> &ids, const std::vector<Transform> &transforms);
+
+    const std::optional<Transform>& get_transform_to_anchor(int from_id) const;
 
     Pose get_pose();
 
 private:
-    std::vector<std::optional<math::Transform>> to_anchor_transform_;
+    std::vector<std::optional<Transform>> to_anchor_transform_;
 
     Pose current_pose_;
 
     int anchor_id_ = 0;
 };
 
-}
 }
 

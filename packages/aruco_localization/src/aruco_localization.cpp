@@ -9,7 +9,9 @@
 #include <opencv2/calib3d.hpp>
 #include <thread>
 
-#include "math_helpers.hpp"
+#include "vis/vis_helpers.hpp"
+#include "math/math_helpers.hpp"
+#include "msgs/msgs_helpers.hpp"
 
 using std::placeholders::_1;
 
@@ -28,8 +30,7 @@ const static int kDistCoeffsCount = 5;
 const static int kCV_64FSize = 8;
 const static int kMarkerCount = 250;
 
-namespace robolab {
-namespace aruco {
+namespace rosaruco {
 
 ArucoLocalization::ArucoLocalization()
     : rclcpp::Node(kArucoLocalizationNodeName),
@@ -60,27 +61,26 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     RCLCPP_INFO(this->get_logger(), "HandleImage got message");
     auto cv_image = cv_bridge::toCvShare(msg);
 
-    std::vector<int> marker_ids_;
-    std::vector<std::vector<cv::Point2f>> marker_corners_, rejected_candidates_;
+    std::vector<int> marker_ids;
+    std::vector<std::vector<cv::Point2f>> marker_corners, rejected_candidates;
     
-    cv::aruco::detectMarkers(cv_image->image, marker_dictionary_, marker_corners_, marker_ids_,
-                             detector_parameters_, rejected_candidates_);
+    cv::aruco::detectMarkers(cv_image->image, marker_dictionary_, marker_corners, marker_ids,
+                             detector_parameters_, rejected_candidates);
 
-    RCLCPP_INFO(this->get_logger(), "HandleImage detected %d markers", marker_ids_.size());
+    RCLCPP_INFO(this->get_logger(), "HandleImage detected %d markers", marker_ids.size());
 
     std::vector<cv::Vec3d> rvecs, tvecs;
 
-    cv::aruco::estimatePoseSingleMarkers(marker_corners_, 1, camera_matrix_,
+    cv::aruco::estimatePoseSingleMarkers(marker_corners, 1, camera_matrix_,
                                             dist_coeffs_, rvecs, tvecs);
     
-    coordinator_.update(marker_ids_, rvecs, tvecs);
+    coordinator_.update(marker_ids, rvecs, tvecs);
 
     auto pose = coordinator_.get_pose();
 
     geometry_msgs::msg::Pose pose_msg;
-    pose_msg.position.x = pose.point[0];
-    pose_msg.position.y = pose.point[1];
-    pose_msg.position.z = pose.point[2];
+
+    toMsg(pose.point, pose_msg.position);
 
     /*
     added rotation around OY for PI/2 because opencv estimatePoseSingleMarkers() returns
@@ -94,10 +94,10 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     pose_msg.orientation = orientation_msg;
 
     if (publisher_pose_stamped_->get_subscription_count()) {
-        geometry_msgs::msg::PoseStamped pose_stamped_msg;
-        pose_stamped_msg.pose = pose_msg;
-        pose_stamped_msg.header.stamp = msg->header.stamp;
-        publisher_pose_stamped_->publish(pose_stamped_msg);
+        geometry_msgs::msg::PoseStamped pose_stamped;
+        pose_stamped.pose = pose_msg;
+        pose_stamped.header.stamp = msg->header.stamp;
+        publisher_pose_stamped_->publish(pose_stamped);
     }
 
     if (publisher_tf2_transform_->get_subscription_count()) {
@@ -108,9 +108,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
         transform_msg.child_frame_id = kCameraFrameId;
 
         geometry_msgs::msg::Vector3 translation_msg;
-        translation_msg.x = pose.point[0];
-        translation_msg.y = pose.point[1];
-        translation_msg.z = pose.point[2];
+        toMsg(pose.point, translation_msg);
 
         transform_msg.transform.rotation = orientation_msg;
         transform_msg.transform.translation = translation_msg;
@@ -127,24 +125,20 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     publisher_odometry_->publish(odometry_msg);
 
     if (publisher_marker_array_->get_subscription_count()) {
-        visualization_msgs::msg::Marker marker_msg;
-        marker_msg.header.stamp = msg->header.stamp;
-        marker_msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
-        marker_msg.action = visualization_msgs::msg::Marker::ADD;
-        marker_msg.points = {
-            geometry_msgs::msg::Point().set__x(0).set__y(0),
-            geometry_msgs::msg::Point().set__x(0).set__y(1),
-            geometry_msgs::msg::Point().set__x(1).set__y(1),
-            geometry_msgs::msg::Point().set__x(1).set__y(0),
-            geometry_msgs::msg::Point().set__x(0).set__y(0),
-        };
-        marker_msg.color.a = 1.0;
-        marker_msg.color.g = 1.0;
-        marker_msg.scale.x = 0.1;
+        visualization_msgs::msg::MarkerArray marker_array;
 
-        visualization_msgs::msg::MarkerArray marker_array_msg;
-        marker_array_msg.markers.push_back(marker_msg);
-        publisher_marker_array_->publish(marker_array_msg);
+        for (size_t i = 0; i < marker_ids.size(); i++) {
+            auto to_anchor = coordinator_.get_transform_to_anchor(marker_ids[i]);
+            if (to_anchor) {
+                add_labeled_marker(marker_array.markers, *to_anchor, marker_ids[i], 1.0);
+            }
+        }
+
+        for (auto &marker : marker_array.markers) {
+            marker.header.stamp = msg->header.stamp;
+        }
+
+        publisher_marker_array_->publish(marker_array);
     }
 }
 
@@ -163,11 +157,10 @@ void ArucoLocalization::UpdateCameraInfo(sensor_msgs::msg::CameraInfo::ConstShar
 }
 
 }
-}
 
 int main(int argc, char* argv[]) {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<robolab::aruco::ArucoLocalization>());
+    rclcpp::spin(std::make_shared<rosaruco::ArucoLocalization>());
     rclcpp::shutdown();
     return 0;
 }
