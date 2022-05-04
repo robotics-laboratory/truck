@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <limits>
 
 #include "controller.hpp"
 #include "nav_msgs/msg/odometry.hpp"
@@ -15,6 +16,15 @@
 namespace pure_pursuit {
 
 class PursuitNode: public rclcpp::Node {
+private:
+    static inline auto get_stop_command() {
+        pure_pursuit_msgs::msg::Command stop;
+        stop.velocity = 0;
+        stop.acceleration = std::numeric_limits<double>::infinity();
+        stop.curvature = 0;
+        return stop;
+    }
+
 public:
     PursuitNode() : Node("PursuitNode"), controller(model::Model(Node::declare_parameter<std::string>("model_config_path"))) {
         bool publish_debug_info = this->declare_parameter<bool>("publish_debug_info", true);
@@ -32,6 +42,7 @@ public:
         slot_state = Node::create_subscription<nav_msgs::msg::Odometry>(
             "current_state", 1,
             [this, publish_debug_info](nav_msgs::msg::Odometry::UniquePtr odometry) {
+                const auto STOP = get_stop_command();
                 if (trajectory) {
                     std::optional<ControllerResult> cmd;
                     if (publish_debug_info) {
@@ -45,10 +56,10 @@ public:
                         cmd_publisher->publish(**cmd);
                     } else {
                         RCLCPP_ERROR(get_logger(), cmd->get_error());
-                        cmd_publisher->publish(pure_pursuit_msgs::msg::Command());
+                        cmd_publisher->publish(STOP);
                     }
                 } else {
-                    cmd_publisher->publish(pure_pursuit_msgs::msg::Command());
+                    cmd_publisher->publish(STOP);
                 }
             });
     }
