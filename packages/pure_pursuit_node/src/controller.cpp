@@ -77,7 +77,8 @@ inline double get_arc_length(double r, double angle) { return r * angle; }
 namespace pure_pursuit {
 
 ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
-                               const std::vector<PoseStamped>& path, VisualInfo* visual_info) {
+                                        const std::vector<PoseStamped>& path,
+                                        VisualInfo* visual_info) {
     if (visual_info) {
         Marker start;
         start.type = Marker::SPHERE;
@@ -186,36 +187,130 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
 
     double required_time =
         ros_time_to_seconds(it->header.stamp) - ros_time_to_seconds(odometry.header.stamp);
-    double min_posible_time = path_time_by_accel(params.max_velocity, params.max_acceleration);
-    if (required_time < min_posible_time) {
-        target_velocity = params.max_velocity;
-        accel = params.max_acceleration;
-    } else {
-        double required_velocity = 0;
-        if (it != path.rbegin()) {
-            required_velocity = distance(it->pose.position, prev(it)->pose.position) /
-                                (ros_time_to_seconds(prev(it)->header.stamp) -
-                                 ros_time_to_seconds(it->header.stamp));
-        }
-        required_velocity = std::min(required_velocity, params.max_velocity);
-        double accel_constraint = copysign(params.max_acceleration, required_velocity - current_velocity);
-        if (path_time_by_accel(required_velocity, accel_constraint) < required_time) {
-            target_velocity = required_velocity;
-            double l = 0, r = accel_constraint;
-            if (accel_constraint < 0) {
-                std::swap(l, r);
-            }
-            for (int i = 0; i < 20; ++i) {  // More robust than epsilon-based binary search
-                double m = (l + r) / 2;
-                if (path_time_by_accel(required_velocity, m) > required_time)
-                    l = m;
-                else
-                    r = m;
-            }
-            accel = r;
+    if (required_time < 0) required_time = 0;
+    double required_velocity = 0;
+    if (it != path.rbegin()) {
+        required_velocity =
+            distance(it->pose.position, prev(it)->pose.position) /
+            (ros_time_to_seconds(prev(it)->header.stamp) - ros_time_to_seconds(it->header.stamp));
+    }
+    required_velocity = std::min(required_velocity, params.max_velocity);
+
+    if (it != path.rbegin()) {  // Optimize time firstly
+        double min_posible_time = path_time_by_accel(params.max_velocity, params.max_acceleration);
+        if (required_time < min_posible_time) {
+            target_velocity = params.max_velocity;
+            accel = params.max_acceleration;
         } else {
-            accel = accel_constraint;
-            target_velocity = accel < 0 ? 0 : params.max_acceleration;
+            double accel_constraint = required_velocity >= current_velocity
+                                          ? params.max_acceleration
+                                          : -params.max_decceleration;
+            if (path_time_by_accel(required_velocity, accel_constraint) < required_time) {
+                target_velocity = required_velocity;
+                double l = 0, r = accel_constraint;
+                if (accel_constraint < 0) {
+                    std::swap(l, r);
+                }
+                for (int i = 0; i < 20; ++i) {  // More robust than epsilon-based binary search
+                    double m = (l + r) / 2;
+                    if (path_time_by_accel(required_velocity, m) > required_time)
+                        l = m;
+                    else
+                        r = m;
+                }
+                accel = r;
+            } else {
+                accel = accel_constraint;
+                target_velocity = accel < 0 ? 0 : params.max_velocity;
+            }
+        }
+    } else {  // Optimize velocity firstly
+        double velocity_delta = (required_velocity - current_velocity);
+        double min_time = velocity_delta / (velocity_delta < 0 ? -params.max_decceleration
+                                                               : params.max_acceleration);
+        double min_dist = (required_velocity + current_velocity) * min_time / 2;
+
+        if (min_dist > dist) {  // Could not arrive rquired velocity
+            target_velocity = required_velocity;
+            accel = (velocity_delta < 0 ? -params.max_decceleration : params.max_acceleration);
+        } else {
+            /*
+                Current velocity = V1.
+                Will move with constant acceleration a until velocity = Vm, then with constant
+               decceleration d until velocity = V2.
+
+                S = (Vm + V1) * (Vm - V1) / (2 * a) + (Vm + V2) * (Vm - V2) / (2 * d)
+                S - (Vm + V1) * (Vm - V1) / (2 * a) = (Vm + V2) * (Vm - V2) / (2 * d)
+                (2 * S * a - (Vm + V1) * (Vm - V1)) / (2 * a) = (Vm + V2) * (Vm - V2) / (2 * d)
+                2d = (Vm + V2) * (Vm - V2) * (2 * a) / (2 * S * a - (Vm + V1) * (Vm - V1))
+                d = (Vm + V2) * (Vm - V2) * (2 * a) / 2(2 * S * a - (Vm + V1) * (Vm - V1))
+
+                t = (Vm - V1) / a + (Vm - V2) / d
+                t = (Vm - V1) / a + 2 * (2 * S * a - (Vm + V1) * (Vm - V1)) * (Vm - V2) / ((Vm + V2)
+                    * (Vm - V2) * (2 * a))
+
+                t = (Vm - V1) / a + 2 * (2 * S * a - (Vm + V1) * (Vm - V1)) / ((Vm + V2) * (2 * a))
+
+                t = (Vm - V1) / a + 2 * (2 * S * a) / ((Vm + V2) * (2 * a)) - 2 * ((Vm + V1) * (Vm -
+               V1)) / ((Vm + V2) * (2 * a))
+
+                t = (Vm - V1) / a + 2 * S / (Vm + V2) - ((Vm + V1) * (Vm - V1)) / ((Vm + V2) * a)
+
+                t - 2S / (Vm + V2) = (Vm - V1) / a - ((Vm + V1) * (Vm - V1)) / ((Vm + V2) * a)
+
+                t - 2S / (Vm + V2) = ((Vm - V1) - (Vm + V1) * (Vm - V1) / (Vm + V2)) / a
+
+                a = ((Vm - V1) - (Vm + V1) * (Vm - V1) / (Vm + V2)) / (t - 2S / (Vm + V2))
+            */
+            auto d_by_a = [dist](double V1, double V2, double Vm, double a) {
+                return (Vm + V2) * (Vm - V2) * (2 * a) /
+                       (2 * (2 * dist * a - (Vm + V1) * (Vm - V1)));
+            };
+            auto a_by_t = [dist](double V1, double V2, double Vm, double t) {
+                return ((Vm - V1) - (Vm + V1) * (Vm - V1) / (Vm + V2)) / (t - 2 * dist / (Vm + V2));
+            };
+            double Vl = 0;
+            double Vr = params.max_velocity;
+            double Vm, t1, t2;
+            for (int i = 0; i < 20; ++i) {  // More robust than epsilon-based binary search
+                Vm = (Vl + Vr) / 2;
+                double max_abs_a =
+                    (Vm < current_velocity ? -params.max_decceleration : params.max_acceleration);
+                double max_abs_d =
+                    (Vm < required_velocity ? -params.max_acceleration : params.max_decceleration);
+                double d_for_max_a = d_by_a(current_velocity, required_velocity, Vm, max_abs_a);
+                double a_for_max_d = d_by_a(required_velocity, current_velocity, Vm, max_abs_d);
+                if (!std::isfinite(a_for_max_d) || a_for_max_d < -params.max_decceleration ||
+                    a_for_max_d > params.max_acceleration || !std::isfinite(d_for_max_a) ||
+                    d_for_max_a < -params.max_decceleration ||
+                    d_for_max_a > params.max_acceleration) {
+                    if (Vm < current_velocity)
+                        Vl = Vm;
+                    else
+                        Vr = Vm;
+                    continue;
+                }
+                t1 = (Vm - current_velocity) / max_abs_a + (Vm - required_velocity) / d_for_max_a;
+                t2 = (Vm - current_velocity) / a_for_max_d + (Vm - required_velocity) / max_abs_d;
+                if (required_time < (t1 + t2) / 2)
+                    Vl = Vm;
+                else
+                    Vr = Vm;
+            }
+            target_velocity = Vm;
+            if (std::abs(current_velocity - required_velocity) < 1e-3) {
+                accel = params.max_acceleration;
+            } else {
+                accel = a_by_t(current_velocity, required_velocity, target_velocity, std::max(required_time, std::min(t1, t2)));
+                if (!std::isfinite(accel) || accel < -params.max_decceleration - 1e-3 ||
+                    accel > params.max_acceleration + 1e-3 ||
+                    (accel < 0 && target_velocity > current_velocity) ||
+                    (accel > 0 && target_velocity < current_velocity)) {
+                    return ControllerResult::fail("Broken formula for acceleration");
+                }
+            }
+            if (std::abs(target_velocity - current_velocity) < 1e-3)
+                accel = -d_by_a(current_velocity, required_velocity, current_velocity, accel);
         }
     }
 

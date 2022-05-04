@@ -15,18 +15,18 @@ TEST(simulator, just_works) {
 
     start.pose.pose.orientation.z = 0;
     start.pose.pose.orientation.y = 0;
-    start.pose.pose.orientation.z = 1;
-    start.pose.pose.orientation.w = 0;
+    start.pose.pose.orientation.z = 0;
+    start.pose.pose.orientation.w = 1;
 
     finish.pose.pose.position.x = model.lookahead_distance / 2;
     finish.pose.pose.position.y = 0;
 
     finish.pose.pose.orientation.z = 0;
     finish.pose.pose.orientation.y = 0;
-    finish.pose.pose.orientation.z = 1;
-    finish.pose.pose.orientation.w = 0;
+    finish.pose.pose.orientation.z = 0;
+    finish.pose.pose.orientation.w = 1;
 
-    auto path = pure_pursuit::simulate(start, finish, 1'000'000'000, 1'000'000, 100, model);
+    auto path = pure_pursuit::simulate(start, finish, 10'000'000'000, 1'000'000, 100, model);
     ASSERT_TRUE(path) << path.get_error();
     // ASSERT_LT(std::abs(v.back().pose.pose.x - finish.pose.pose.x));
 }
