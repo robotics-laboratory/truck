@@ -8,7 +8,7 @@
 #include "workspace_tree.h"
 
 //  Samples a pseudorandom integer in a given range
-double genRand(const Bounds& bounds)
+double WorkSpaceAuxillary::genRand(const Bounds& bounds)
 {
     std::random_device device;
     std::mt19937 generator(device());
@@ -19,13 +19,13 @@ double genRand(const Bounds& bounds)
 //  Samples a random point in the workspace using a uniform distribution
 Point WorkSpaceTree::sampleCoords()
 {
-    double x = genRand(_xBounds);
-    double y = genRand(_yBounds);
+    double x = WorkSpaceAuxillary::genRand(_xBounds);
+    double y = WorkSpaceAuxillary::genRand(_yBounds);
     return Point(x, y);
 }
 
 //  Returns squared Euclidean distance between two points
-double findSqDistance(const Point& first, const Point& second)
+double WorkSpaceAuxillary::findSqDistance(const Point& first, const Point& second)
 {
     double xdisp = first.x - second.x;
     double ydisp = first.y - second.y;
@@ -36,8 +36,8 @@ double findSqDistance(const Point& first, const Point& second)
 std::shared_ptr<WorkSpaceTree::Node> WorkSpaceTree::chooseNearest(const std::shared_ptr<Node>& target, std::shared_ptr<Node>& alt1, std::shared_ptr<Node>& alt2)
 {
 //      Squared distances to vertices
-    double dist1 = findSqDistance(target->pos, alt1->pos);
-    double dist2 = findSqDistance(target->pos, alt2->pos);
+    double dist1 = WorkSpaceAuxillary::findSqDistance(target->pos, alt1->pos);
+    double dist2 = WorkSpaceAuxillary::findSqDistance(target->pos, alt2->pos);
 //      Compares distances
     if(dist1 > dist2)
     {
@@ -76,7 +76,7 @@ double WorkSpaceTree::moveToNear(std::shared_ptr<Node> newnode, const std::share
         newnode->pos.x = near->pos.x + _maxExtend * xdisp / rootsqd;
         newnode->pos.y = near->pos.y + _maxExtend * ydisp / rootsqd;
     }
-    return sqrt(findSqDistance(newnode->pos, near->pos));
+    return sqrt(WorkSpaceAuxillary::findSqDistance(newnode->pos, near->pos));
 }
 
 //  Expands the tree by 1 vertice
@@ -107,13 +107,13 @@ std::shared_ptr<WorkSpaceTree::Node> WorkSpaceTree::grow()
 {
     std::shared_ptr<Node> cur = _root;
 //      Finds distance to the goal
-    double dist = findSqDistance(cur->pos, _goal);
+    double dist = WorkSpaceAuxillary::findSqDistance(cur->pos, _goal);
 //      While current node is not in the goal region
     while(dist > _r*_r)
     {
 //          Expand the tree by 1 node and recalculate the distance
         cur = expand();
-        dist = findSqDistance(cur->pos, _goal);
+        dist = WorkSpaceAuxillary::findSqDistance(cur->pos, _goal);
         
     }
 //      Returns the tree node in the goal region
