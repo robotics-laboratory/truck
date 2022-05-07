@@ -88,7 +88,7 @@ private:
         // if (rclcpp::spin_until_future_complete(shared_from_this(), goal_future_handle) != rclcpp::FutureReturnCode::SUCCESS) {
         //     throw std::runtime_error{"failed to send steering goal"};
         // }
-        // RCLCPP_INFO(get_logger(), "Successfully sent steering goal");
+        RCLCPP_INFO(get_logger(), "Successfully sent steering goal");
 
         // rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::SharedPtr goal_handle = goal_future_handle.get();
         // if (!goal_handle) {

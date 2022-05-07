@@ -14,6 +14,7 @@
 
   <exec_depend>planning_node</exec_depend>
   <exec_depend>pure_pursuit_node</exec_depend>
+  <exec_depend>control_node</exec_depend>
 
   <build_depend>ros_environment</build_depend>
 
