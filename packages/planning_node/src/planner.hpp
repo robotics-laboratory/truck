@@ -1,7 +1,7 @@
 #pragma once
-#include "planning_interfaces/msg/path.hpp"
-#include "planning_interfaces/msg/point.hpp"
-#include "planning_interfaces/msg/scene.hpp"
+#include "truck_interfaces/msg/path.hpp"
+#include "truck_interfaces/msg/point.hpp"
+#include "truck_interfaces/msg/scene.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "shared_state.hpp"
@@ -12,7 +12,7 @@
 
 namespace planning_node {
 
-using namespace planning_interfaces;
+using namespace truck_interfaces;
 
 std::thread start_planner(
     rclcpp::Node* node,

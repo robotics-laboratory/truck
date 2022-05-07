@@ -51,7 +51,13 @@ def generate_launch_description():
     load_joint_trajectory_controller = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'start',
              'joint_trajectory_controller'],
-        output='screen'
+        output='screen',
+    )
+
+    load_velocity_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start',
+             'velocity_controller'],
+        output='screen',
     )
 
     gzweb = ExecuteProcess(
@@ -72,6 +78,12 @@ def generate_launch_description():
             event_handler=OnProcessExit(
                 target_action=load_joint_state_controller,
                 on_exit=[load_joint_trajectory_controller],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_trajectory_controller,
+                on_exit=[load_velocity_controller],
             )
         ),
         gazebo,

@@ -105,19 +105,23 @@ int main(int argc, char * argv[])
   }
   std::cout << "Created action server" << std::endl;
 
-  std::vector<std::string> joint_names = {"left_steering_joint"};
+  std::vector<std::string> joint_names = {"left_steering_joint", "right_steering_joint"};
 
   std::vector<trajectory_msgs::msg::JointTrajectoryPoint> points;
   trajectory_msgs::msg::JointTrajectoryPoint point;
   point.time_from_start = rclcpp::Duration::from_seconds(0.0);  // start asap
-  point.velocities.resize(joint_names.size());
+  point.positions.resize(joint_names.size());
 
-  point.velocities[0] = 0.0;
+  point.positions[0] = 1.0;
+  point.positions[1] = 1.0;
+  // point.velocities[0] = 0.0;
 
-  trajectory_msgs::msg::JointTrajectoryPoint point2;
-  point2.time_from_start = rclcpp::Duration::from_seconds(1.0);
-  point2.velocities.resize(joint_names.size());
-  point2.velocities[0] = 1.0;
+  // trajectory_msgs::msg::JointTrajectoryPoint point2;
+  // point2.time_from_start = rclcpp::Duration::from_seconds(10.0);
+  // point2.positions.resize(joint_names.size());
+  
+  // point2.positions[0] = .0;
+  // point.velocities[0] = 1.0;
 
   // trajectory_msgs::msg::JointTrajectoryPoint point3;
   // point3.time_from_start = rclcpp::Duration::from_seconds(2.0);
@@ -130,7 +134,7 @@ int main(int argc, char * argv[])
   // point4.positions[0] = 0.0;
 
   points.push_back(point);
-  points.push_back(point2);
+  // points.push_back(point2);
   // points.push_back(point3);
   // points.push_back(point4);
 

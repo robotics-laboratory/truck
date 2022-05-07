@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(planning_interfaces)
+project(truck_interfaces)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
@@ -12,6 +12,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME} 
+  msg/Control.msg
   msg/MetaData.msg
   msg/Path.msg
   msg/Point.msg

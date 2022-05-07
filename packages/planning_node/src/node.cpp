@@ -1,10 +1,10 @@
 #include "node.hpp"
 
 #include "planner.hpp"
-#include "planning_interfaces/msg/path.hpp"
-#include "planning_interfaces/msg/point.hpp"
-#include "planning_interfaces/msg/random_seed.hpp"
-#include "planning_interfaces/msg/scene.hpp"
+#include "truck_interfaces/msg/path.hpp"
+#include "truck_interfaces/msg/point.hpp"
+#include "truck_interfaces/msg/random_seed.hpp"
+#include "truck_interfaces/msg/scene.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "shared_state.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
@@ -17,7 +17,7 @@
 
 namespace planning_node {
 
-using namespace planning_interfaces;
+using namespace truck_interfaces;
 
 using std::placeholders::_1;
 
@@ -103,7 +103,7 @@ private:
     rclcpp::Subscription<msg::Point>::SharedPtr target_subscription;
     rclcpp::Subscription<msg::RandomSeed>::SharedPtr random_scene_subscription;    
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr raw_occupancy_grid_publisher;
-    rclcpp::Publisher<planning_interfaces::msg::Scene>::SharedPtr scene_publisher;
+    rclcpp::Publisher<truck_interfaces::msg::Scene>::SharedPtr scene_publisher;
 
     SharedState::SharedPtr shared_state;
     std::thread planner_thread;

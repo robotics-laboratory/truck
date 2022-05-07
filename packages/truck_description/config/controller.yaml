@@ -2,14 +2,30 @@ controller_manager:
   ros__parameters:
     update_rate: 100  # Hz
 
+    velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+velocity_controller:
+  ros__parameters:
+    joints:
+      - left_rear_axle
+      - right_rear_axle
+    interface_name: velocity
+    command_interfaces:
+      - velocity
+    state_interfaces:
+      - position
+      - velocity
+
 joint_trajectory_controller:
   ros__parameters:
+    allow_partial_joints_goal: true
     joints:
       - left_steering_joint
       - right_steering_joint

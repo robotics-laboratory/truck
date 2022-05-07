@@ -1,6 +1,6 @@
 #pragma once
-#include "planning_interfaces/msg/scene.hpp"
-#include "planning_interfaces/msg/point.hpp"
+#include "truck_interfaces/msg/scene.hpp"
+#include "truck_interfaces/msg/point.hpp"
 
 #include <condition_variable>
 #include <mutex>
@@ -8,7 +8,7 @@
 
 namespace planning_node {
 
-using namespace planning_interfaces;
+using namespace truck_interfaces;
 
 struct SharedState {
     using SharedPtr = std::shared_ptr<SharedState>;

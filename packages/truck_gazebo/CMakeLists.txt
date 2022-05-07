@@ -14,11 +14,18 @@ ament_target_dependencies(example_position
   control_msgs
 )
 
+add_executable(example_velocity examples/example_velocity.cpp)
+ament_target_dependencies(example_velocity
+  rclcpp
+  rclcpp_action
+  control_msgs
+)
+
 install(
     DIRECTORY worlds launch
     DESTINATION share/${PROJECT_NAME})
 
-install(TARGETS example_position
+install(TARGETS example_position example_velocity
     DESTINATION lib/${PROJECT_NAME}
 )  
 
