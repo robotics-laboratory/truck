@@ -10,8 +10,9 @@ template<class Value, class Error>
 class Result {
     static_assert(!std::is_same_v<Value, Error>, "Value type can not match error type");
 private:
-    std::variant<Value, Error> state;
+    std::variant<Value, Error, std::monostate> state;
 public:
+    Result(): state(std::in_place_index_t<2>{}) {}
     Result(Value value): state(std::move(value)) {}
     Result(Error error): state(std::move(error)) {}
 
@@ -19,25 +20,29 @@ public:
         return state.index() == 0;
     }
 
-    const auto& get_value() const& {
+    bool empty() const {
+        return state.index() == 2;
+    }
+
+    const auto& get() const& {
         return std::get<0>(state);
     }
-    auto get_value() && {
+    auto get() && {
         return std::move(std::get<0>(state));
     }
 
     const auto& operator*() const {
-        return get_value();
+        return get();
     }
     const auto *operator->() const {
-        return &get_value();
+        return &get();
     }
 
-    const auto& get_error() const& {
+    const auto& error() const& {
         return std::get<1>(state);
     }
 
-    auto get_error() && {
+    auto error() && {
         return std::move(std::get<1>(state));
     }
 

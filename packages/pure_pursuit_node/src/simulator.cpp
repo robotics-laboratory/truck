@@ -40,7 +40,7 @@ SimulationResult simulate(nav_msgs::msg::Odometry start, nav_msgs::msg::Odometry
         auto cmd = controller.get_motion(current_odometry, trajectory, nullptr);
         if (!cmd)
             return SimulationResult::fail("Controller failed at " + std::to_string(current_time) +
-                                          "ns. Reason: " + cmd.get_error());
+                                          "ns. Reason: " + cmd.error());
         tf2::Quaternion current_orientation;
         tf2::convert(current_odometry.pose.pose.orientation, current_orientation);
         double current_yaw = current_orientation.getAngle();

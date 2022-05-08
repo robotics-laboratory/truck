@@ -44,7 +44,7 @@ public:
             [this, publish_debug_info](nav_msgs::msg::Odometry::UniquePtr odometry) {
                 const auto STOP = get_stop_command();
                 if (trajectory) {
-                    std::optional<ControllerResult> cmd;
+                    ControllerResult cmd;
                     if (publish_debug_info) {
                         VisualInfo info;
                         cmd = controller.get_motion(*odometry, *trajectory, &info);
@@ -53,9 +53,9 @@ public:
                         cmd = controller.get_motion(*odometry, *trajectory, nullptr);
                     }
                     if (cmd) {
-                        cmd_publisher->publish(**cmd);
+                        cmd_publisher->publish(*cmd);
                     } else {
-                        RCLCPP_ERROR(get_logger(), cmd->get_error());
+                        RCLCPP_ERROR(get_logger(), cmd.error());
                         cmd_publisher->publish(STOP);
                     }
                 } else {

@@ -27,7 +27,7 @@ TEST(simulator, just_works) {
     finish.pose.pose.orientation.w = 1;
 
     auto path = pure_pursuit::simulate(start, finish, 10'000'000'000, 1'000'000, 100, model);
-    ASSERT_TRUE(path) << path.get_error();
+    ASSERT_TRUE(path) << path.error();
     // ASSERT_LT(std::abs(v.back().pose.pose.x - finish.pose.pose.x));
 }
 
