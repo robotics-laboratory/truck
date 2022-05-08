@@ -20,7 +20,7 @@ private:
     static inline auto get_stop_command() {
         pure_pursuit_msgs::msg::Command stop;
         stop.velocity = 0;
-        stop.acceleration = std::numeric_limits<double>::infinity();
+        stop.acceleration = -std::numeric_limits<double>::infinity();
         stop.curvature = 0;
         return stop;
     }
