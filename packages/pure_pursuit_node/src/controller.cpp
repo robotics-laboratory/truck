@@ -93,7 +93,7 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
     }
     auto& position = odometry.pose.pose.position;
     auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const PoseStamped& p) {
-        return distance(p.pose.position, position) <= params.lookahead_distance;
+        return distance(p.pose.position, position) <= model.lookahead_distance;
     });
     if (it == path.rend()) return ControllerResult::fail("Can not find the target point");
     if (visual_info) {
@@ -194,17 +194,17 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
             distance(it->pose.position, prev(it)->pose.position) /
             (ros_time_to_seconds(prev(it)->header.stamp) - ros_time_to_seconds(it->header.stamp));
     }
-    required_velocity = std::min(required_velocity, params.max_velocity);
+    required_velocity = std::min(required_velocity, model.max_velocity);
 
     if (it != path.rbegin()) {  // Optimize time firstly
-        double min_posible_time = path_time_by_accel(params.max_velocity, params.max_acceleration);
+        double min_posible_time = path_time_by_accel(model.max_velocity, model.max_acceleration);
         if (required_time < min_posible_time) {
-            target_velocity = params.max_velocity;
-            accel = params.max_acceleration;
+            target_velocity = model.max_velocity;
+            accel = model.max_acceleration;
         } else {
             double accel_constraint = required_velocity >= current_velocity
-                                          ? params.max_acceleration
-                                          : -params.max_decceleration;
+                                          ? model.max_acceleration
+                                          : -model.max_decceleration;
             if (path_time_by_accel(required_velocity, accel_constraint) < required_time) {
                 target_velocity = required_velocity;
                 double l = 0, r = accel_constraint;
@@ -221,18 +221,18 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
                 accel = r;
             } else {
                 accel = accel_constraint;
-                target_velocity = accel < 0 ? 0 : params.max_velocity;
+                target_velocity = accel < 0 ? 0 : model.max_velocity;
             }
         }
     } else {  // Optimize velocity firstly
         double velocity_delta = (required_velocity - current_velocity);
-        double min_time = velocity_delta / (velocity_delta < 0 ? -params.max_decceleration
-                                                               : params.max_acceleration);
+        double min_time = velocity_delta / (velocity_delta < 0 ? -model.max_decceleration
+                                                               : model.max_acceleration);
         double min_dist = (required_velocity + current_velocity) * min_time / 2;
 
         if (min_dist > dist) {  // Could not arrive rquired velocity
             target_velocity = required_velocity;
-            accel = (velocity_delta < 0 ? -params.max_decceleration : params.max_acceleration);
+            accel = (velocity_delta < 0 ? -model.max_decceleration : model.max_acceleration);
         } else {
             /*
                 Current velocity = V1.
@@ -270,20 +270,20 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
                 return ((Vm - V1) - (Vm + V1) * (Vm - V1) / (Vm + V2)) / (t - 2 * dist / (Vm + V2));
             };
             double Vl = 0;
-            double Vr = params.max_velocity;
+            double Vr = model.max_velocity;
             double Vm, t1, t2;
             for (int i = 0; i < 20; ++i) {  // More robust than epsilon-based binary search
                 Vm = (Vl + Vr) / 2;
                 double max_abs_a =
-                    (Vm < current_velocity ? -params.max_decceleration : params.max_acceleration);
+                    (Vm < current_velocity ? -model.max_decceleration : model.max_acceleration);
                 double max_abs_d =
-                    (Vm < required_velocity ? -params.max_acceleration : params.max_decceleration);
+                    (Vm < required_velocity ? -model.max_acceleration : model.max_decceleration);
                 double d_for_max_a = d_by_a(current_velocity, required_velocity, Vm, max_abs_a);
                 double a_for_max_d = d_by_a(required_velocity, current_velocity, Vm, max_abs_d);
-                if (!std::isfinite(a_for_max_d) || a_for_max_d < -params.max_decceleration ||
-                    a_for_max_d > params.max_acceleration || !std::isfinite(d_for_max_a) ||
-                    d_for_max_a < -params.max_decceleration ||
-                    d_for_max_a > params.max_acceleration) {
+                if (!std::isfinite(a_for_max_d) || a_for_max_d < -model.max_decceleration ||
+                    a_for_max_d > model.max_acceleration || !std::isfinite(d_for_max_a) ||
+                    d_for_max_a < -model.max_decceleration ||
+                    d_for_max_a > model.max_acceleration) {
                     if (Vm < current_velocity)
                         Vl = Vm;
                     else
@@ -299,11 +299,11 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
             }
             target_velocity = Vm;
             if (std::abs(current_velocity - required_velocity) < 1e-3) {
-                accel = params.max_acceleration;
+                accel = model.max_acceleration;
             } else {
                 accel = a_by_t(current_velocity, required_velocity, target_velocity, std::max(required_time, std::min(t1, t2)));
-                if (!std::isfinite(accel) || accel < -params.max_decceleration - 1e-3 ||
-                    accel > params.max_acceleration + 1e-3 ||
+                if (!std::isfinite(accel) || accel < -model.max_decceleration - 1e-3 ||
+                    accel > model.max_acceleration + 1e-3 ||
                     (accel < 0 && target_velocity > current_velocity) ||
                     (accel > 0 && target_velocity < current_velocity)) {
                     return ControllerResult::fail("Broken formula for acceleration");

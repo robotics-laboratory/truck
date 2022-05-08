@@ -17,10 +17,10 @@ using ControllerResult = Result<pure_pursuit_msgs::msg::Command, const char *>;
 
 class Controller {
 private:
-    model::Model params;
+    model::Model model;
 
 public:
-    Controller(const model::Model &params) : params{params} {}
+    Controller(const model::Model &model) : model{model} {}
     ControllerResult get_motion(
         const nav_msgs::msg::Odometry &odometry,
         const std::vector<geometry_msgs::msg::PoseStamped> &path,
