@@ -6,7 +6,7 @@
 #include <utility>
 #include <string>
 
-#include "model.hpp"
+#include "model/model.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "controller.hpp"
 #include "result.hpp"

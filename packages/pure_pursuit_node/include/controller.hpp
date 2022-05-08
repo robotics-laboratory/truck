@@ -8,7 +8,7 @@
 #include "pure_pursuit_msgs/msg/command.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "visual_info.hpp"
-#include "model.hpp"
+#include "model/model.hpp"
 #include "result.hpp"
 
 namespace pure_pursuit {
