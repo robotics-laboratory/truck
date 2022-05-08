@@ -39,8 +39,7 @@ SimulationResult simulate(nav_msgs::msg::Odometry start, nav_msgs::msg::Odometry
         ans.emplace_back(current_odometry);
         auto cmd = controller.get_motion(current_odometry, trajectory, nullptr);
         if (!cmd)
-            return SimulationResult::fail("Controller failed at " + std::to_string(current_time) +
-                                          "ns. Reason: " + cmd.error());
+            return SimulationError{static_cast<int>(SimulationError::CONTROLLER_FAILED) | static_cast<int>(cmd.error()) << 1};
         tf2::Quaternion current_orientation;
         tf2::convert(current_odometry.pose.pose.orientation, current_orientation);
         double current_yaw = current_orientation.getAngle();
@@ -86,7 +85,7 @@ SimulationResult simulate(nav_msgs::msg::Odometry start, nav_msgs::msg::Odometry
         current_odometry.header.stamp =
             rclcpp::Time(current_odometry.header.stamp.nanosec + sim_dt_ns * controller_period);
     }
-    return SimulationResult::fail("Finish point is not arrived in time");
+    return SimulationError::FINISH_POINT_IS_NOT_ARRIVED;
 }
 
 };  // namespace pure_pursuit

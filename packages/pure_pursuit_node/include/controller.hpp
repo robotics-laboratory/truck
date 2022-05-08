@@ -13,7 +13,26 @@
 
 namespace pure_pursuit {
 
-using ControllerResult = Result<pure_pursuit_msgs::msg::Command, const char *>;
+enum class ControllerError {
+    UNREACHEABLE_TRAJECTORY,
+    IMPOSSIBLE_ARC,
+    BROKEN_FORMULA_FOR_ACCELERATION
+};
+
+inline std::string error_to_string(ControllerError e) {
+    switch (e) {
+    case ControllerError::UNREACHEABLE_TRAJECTORY:
+        return "Can not find the target point";
+    case ControllerError::IMPOSSIBLE_ARC:
+        return "Can not build the arc";
+    case ControllerError::BROKEN_FORMULA_FOR_ACCELERATION:
+        return "Broken formula for acceleration";
+    default:
+        return "Unknown error";
+    }
+}
+
+using ControllerResult = Result<pure_pursuit_msgs::msg::Command, ControllerError>;
 
 class Controller {
 private:

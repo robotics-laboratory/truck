@@ -55,7 +55,7 @@ public:
                     if (cmd) {
                         cmd_publisher->publish(*cmd);
                     } else {
-                        RCLCPP_ERROR(get_logger(), cmd.error());
+                        RCLCPP_ERROR(get_logger(), error_to_string(cmd.error()).c_str());
                         cmd_publisher->publish(STOP);
                     }
                 } else {

@@ -95,7 +95,7 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
     auto it = std::find_if(path.rbegin(), path.rend(), [&position, this](const PoseStamped& p) {
         return distance(p.pose.position, position) <= model.lookahead_distance;
     });
-    if (it == path.rend()) return ControllerResult::fail("Can not find the target point");
+    if (it == path.rend()) return ControllerError::UNREACHEABLE_TRAJECTORY;
     if (visual_info) {
         for (auto& x : path) {
             Marker target;
@@ -163,7 +163,7 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
     double dist;
     if (stright_trajectory) {
         if (p.x < 0) {
-            return ControllerResult::fail("Can not build the arc");
+            return ControllerError::IMPOSSIBLE_ARC;
         }
         dist = p.x;
     } else {
@@ -306,7 +306,7 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
                     accel > model.max_acceleration + 1e-3 ||
                     (accel < 0 && target_velocity > current_velocity) ||
                     (accel > 0 && target_velocity < current_velocity)) {
-                    return ControllerResult::fail("Broken formula for acceleration");
+                    return ControllerError::BROKEN_FORMULA_FOR_ACCELERATION;
                 }
             }
             if (std::abs(target_velocity - current_velocity) < 1e-3)
