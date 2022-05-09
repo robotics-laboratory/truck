@@ -8,7 +8,7 @@ if(NOT CMAKE_C_STANDARD)
 endif()
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
@@ -41,5 +41,12 @@ install(
   DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  # Add a gtest named ${PROJECT_NAME}_my_test
+  add_subdirectory("test")
+endif()
 
 ament_package()

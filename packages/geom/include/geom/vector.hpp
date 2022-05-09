@@ -3,6 +3,7 @@
 #include <cmath>
 #include <type_traits>
 #include <cinttypes>
+#include <iostream>
 
 #include "geom/common.hpp"
 
@@ -13,7 +14,7 @@ struct Vec2 {
     T x, y;
     template<class U>
     [[gnu::always_inline]] operator Vec2<U>() const noexcept {
-        return Vec2<U>(x, y);
+        return Vec2<U>{static_cast<U>(x), static_cast<U>(y)};
     }
     [[gnu::always_inline]] Vec2 &operator+=(const Vec2& other) {
         x += other.x;
@@ -36,7 +37,7 @@ struct Vec2 {
     [[gnu::always_inline, nodiscard, gnu::pure]] T sqr_len() const noexcept {
         return x * x + y * y;
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] T len() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] double len() const noexcept {
         return std::sqrt(sqr_len());
     }
     [[gnu::always_inline, nodiscard, gnu::pure]] Vec2 operator-() const noexcept {
@@ -52,13 +53,22 @@ struct Vec2 {
         y /= c;
         return *this;
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] Vec2<std::common_type_t<T, U>> operator*(T c) const noexcept {
-        return {x * c, y * c};
-    }
-    [[gnu::always_inline, nodiscard, gnu::pure]] Vec2<std::common_type_t<T, U>> operator*(T c) const noexcept {
-        return {x / c, y / c};
-    }
 };
+
+template<class T1, class T2>
+[[gnu::always_inline, nodiscard, gnu::pure]] inline Vec2<std::common_type_t<T1, T2>> operator*(const Vec2<T1> &v, T2 c) noexcept {
+    return {v.x * c, v.y * c};
+}
+
+template<class T1, class T2>
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto operator*(T2 c, const Vec2<T1> &v) noexcept {
+    return v * c;
+}
+
+template<class T1, class T2>
+[[gnu::always_inline, nodiscard, gnu::pure]] inline Vec2<std::common_type_t<T1, T2>> operator/(const Vec2<T1> &v, T2 c) noexcept {
+    return {v.x / c, v.y / c};
+}
 
 template<class T1, class T2>
 [[gnu::always_inline, nodiscard, gnu::pure]] inline bool eq(const Vec2<T1>& a, const Vec2<T2>& b, double eps = 0) noexcept {
@@ -73,6 +83,11 @@ template<class T1, class T2>
 template<class T1, class T2>
 [[gnu::always_inline, nodiscard, gnu::pure]] inline auto cross(const Vec2<T1> &a, const Vec2<T2> &b) noexcept {
     return a.x * b.y - a.y * b.x;
+}
+
+template<class T>
+inline std::ostream &operator<<(std::ostream &out, const Vec2<T> &v) {
+    return out << "Vec2{" << v.x << ", " << v.y << "}";
 }
 
 using Vec2f = Vec2<float>;
