@@ -13,12 +13,10 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-file(GLOB SRCS src/*.cpp)
-
-add_library(${PROJECT_NAME} SHARED ${SRCS})
+add_library(${PROJECT_NAME} INTERFACE)
 
 target_include_directories(geom
-  PUBLIC
+  INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
