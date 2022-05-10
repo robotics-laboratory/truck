@@ -360,6 +360,7 @@ RUN mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT} \
             --rosdistro ${ROS_DISTRO} \
             --exclude librealsense2 rtabmap libg2o \
             --deps \
+        ament_lint \
         image_geometry \
         image_pipeline \
         image_transport \
@@ -433,7 +434,6 @@ RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         build-essential \
         gfortran \
-        clang-format \
         curl \
         file \
         gfortran \

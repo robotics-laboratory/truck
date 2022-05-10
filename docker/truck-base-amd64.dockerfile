@@ -281,6 +281,7 @@ RUN mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT} \
             --rosdistro ${ROS_DISTRO} \
             --exclude librealsense2 rtabmap libg2o \
             --deps \
+        ament_lint \
         image_geometry \
         image_pipeline \
         image_transport \
