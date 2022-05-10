@@ -113,6 +113,12 @@ TEST(Vector, rotate) {
     ASSERT_GEOM_NEAR(v.rotate(M_PI * 4), v, 1e-9);
 }
 
+TEST(Vector, radians) {
+    ASSERT_GEOM_NEAR(Vec2d{1, 1}.radians(), M_PI / 4, 1e-9);
+    ASSERT_GEOM_NEAR(Vec2d{-10, 0}.radians(), M_PI, 1e-9);
+    ASSERT_GEOM_NEAR(Vec2d{0, -0.5}.radians(), -M_PI / 2, 1e-9);
+}
+
 TEST(Line, make) {
     Line<int> l(1, 1, -2);
 
