@@ -80,6 +80,14 @@ TEST(Vector, cast) {
     ASSERT_GEOM_NEAR(a.y, 1);
 }
 
+TEST(Vector, operators_with_cast) {
+    Vec2i a{1, 2};
+    Vec2d b{0.5, 0.5};
+    auto c = a + b;
+    auto d = b + a;
+    static_assert(std::is_same_v<decltype(c), Vec2d> && std::is_same_v<decltype(d), Vec2d>);
+}
+
 TEST(Vector, compare) {
     Vec2<int> a{1, 3};
     Vec2<double> b{1.001, 2.999};
