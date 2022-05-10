@@ -105,6 +105,14 @@ TEST(Vector, len) {
     ASSERT_GEOM_NEAR(a.len(), std::sqrt(2), 1e-9);
 }
 
+TEST(Vector, rotate) {
+    Vec2d v{1, 1};
+    ASSERT_GEOM_NEAR(v.rotate(M_PI / 2), Vec2d{-1, 1}, 1e-9);
+    ASSERT_GEOM_NEAR(v.rotate(-M_PI / 2), Vec2d{1, -1}, 1e-9);
+    ASSERT_GEOM_NEAR(v.rotate(M_PI), -v, 1e-9);
+    ASSERT_GEOM_NEAR(v.rotate(M_PI * 4), v, 1e-9);
+}
+
 TEST(Line, make) {
     Line<int> l(1, 1, -2);
 
