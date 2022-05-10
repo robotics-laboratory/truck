@@ -12,7 +12,11 @@ namespace geom {
 template <class T>
 struct Vec2 {
     T x, y;
-    template <class U>
+    template <class U, std::enable_if_t<!std::is_same_v<U, std::common_type_t<T, U>>, bool> = true>
+    [[gnu::always_inline]] explicit operator Vec2<U>() const noexcept {
+        return Vec2<U>{static_cast<U>(x), static_cast<U>(y)};
+    }
+    template <class U, std::enable_if_t<std::is_same_v<U, std::common_type_t<T, U>>, bool> = true>
     [[gnu::always_inline]] operator Vec2<U>() const noexcept {
         return Vec2<U>{static_cast<U>(x), static_cast<U>(y)};
     }
@@ -39,7 +43,7 @@ struct Vec2 {
     [[gnu::always_inline, nodiscard, gnu::pure]] T sqr_len() const noexcept {
         return x * x + y * y;
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] double len() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] auto len() const noexcept {
         return std::sqrt(sqr_len());
     }
     [[gnu::always_inline, nodiscard, gnu::pure]] Vec2 operator-() const noexcept {
@@ -70,9 +74,9 @@ template <class T1, class T2>
 }
 
 template <class T1, class T2>
-[[gnu::always_inline, nodiscard, gnu::pure]] inline Vec2<std::common_type_t<T1, T2>> operator/(
-    const Vec2<T1> &v, T2 c) noexcept {
-    return {v.x / c, v.y / c};
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto operator/(const Vec2<T1> &v, T2 c) noexcept {
+    using Ret = std::conditional_t<std::is_integral_v<T1> && std::is_integral_v<T2>, double, std::common_type_t<T1, T2>>;
+    return Vec2<Ret>{static_cast<Ret>(v.x) / c, static_cast<Ret>(v.y) / c};
 }
 
 template <class T1, class T2>
