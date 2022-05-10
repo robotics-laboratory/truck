@@ -1,12 +1,12 @@
 #pragma once
 
-#include <cmath>
 #include <climits>
+#include <cmath>
 #include <utility>
 
-#include "geom/vector.hpp"
 #include "geom/common.hpp"
 #include "geom/distance.hpp"
+#include "geom/vector.hpp"
 
 namespace geom {
 
@@ -15,10 +15,12 @@ private:
     Vec2d start, finish;
     double dist_to_other_side;
 
-    Arc(Vec2d start, Vec2d finish, double dist_to_other_side): start(start), finish(finish), dist_to_other_side(dist_to_other_side) {}
-public:
+    Arc(Vec2d start, Vec2d finish, double dist_to_other_side)
+        : start(start), finish(finish), dist_to_other_side(dist_to_other_side) {}
 
-    [[gnu::always_inline, nodiscard, gnu::pure]] static inline Arc fromTwoPointsAndTangentalVector(Vec2d start, Vec2d finish, Vec2d tangental, double eps = 1e-9) {
+public:
+    [[gnu::always_inline, nodiscard, gnu::pure]] static inline Arc fromTwoPointsAndTangentalVector(
+        Vec2d start, Vec2d finish, Vec2d tangental, double eps = 1e-9) {
         Vec2d norm = tangental;
         std::swap(norm.x, norm.y);
         norm.x = -norm.x;
@@ -36,8 +38,7 @@ public:
             dist_to_other_side = radius + mid_dist;
         else
             dist_to_other_side = radius - mid_dist;
-        if (cross(finish - start, tangental) < 0)
-            dist_to_other_side = -dist_to_other_side;
+        if (cross(finish - start, tangental) < 0) dist_to_other_side = -dist_to_other_side;
         return Arc(start, finish, dist_to_other_side);
     }
 
@@ -48,21 +49,18 @@ public:
         return finish;
     }
     [[gnu::always_inline, nodiscard, gnu::pure]] inline double getRadius() const noexcept {
-        if (dist_to_other_side == 0)
-            return std::numeric_limits<double>::infinity();
+        if (dist_to_other_side == 0) return std::numeric_limits<double>::infinity();
         double l = dist(start, finish) / 2;
         double d = std::abs(dist_to_other_side);
         return (l * l + d * d) / (2 * d);
     }
     [[gnu::always_inline, nodiscard, gnu::pure]] inline double getAngle() const noexcept {
-        if (dist_to_other_side == 0)
-            return 0;
+        if (dist_to_other_side == 0) return 0;
         double l = dist(start, finish) / 2;
         return asin(l / getRadius()) * 2;
     }
     [[gnu::always_inline, nodiscard, gnu::pure]] inline double getLength() {
-        if (dist_to_other_side == 0)
-            return dist(start, finish);
+        if (dist_to_other_side == 0) return dist(start, finish);
         return getRadius() * getAngle();
     }
     [[gnu::always_inline, nodiscard, gnu::pure]] inline Vec2d getCenter() {
@@ -90,15 +88,16 @@ public:
         return center + (start - center).rotate(angular_delta);
     }
 
-    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Arc &other) const noexcept {
-        return start == other.start && finish == other.finish && dist_to_other_side == other.dist_to_other_side;
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Arc& other) const noexcept {
+        return start == other.start && finish == other.finish &&
+               dist_to_other_side == other.dist_to_other_side;
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Arc &other) const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Arc& other) const noexcept {
         return !(*this == other);
     }
 
     [[gnu::always_inline, nodiscard, gnu::pure]] friend inline bool near(const Arc& a, const Arc& b,
-                                                            double eps = 0) noexcept {
+                                                                         double eps = 0) noexcept {
         return near(a.start, b.start, eps) && near(a.finish, b.finish, eps) &&
                near(a.dist_to_other_side, b.dist_to_other_side, eps);
     }

@@ -57,7 +57,7 @@ struct Vec2 {
         y /= c;
         return *this;
     }
-    template<class U>
+    template <class U>
     [[gnu::always_inline, nodiscard, gnu::pure]] auto rotate(U radians) const {
         using Ret = std::conditional_t<std::is_floating_point_v<T>, T, double>;
         using Ang = std::common_type_t<Ret, U>;
@@ -65,9 +65,7 @@ struct Vec2 {
         auto cs = std::cos(static_cast<Ang>(radians));
         return Vec2<Ret>{x * cs - y * sn, x * sn + y * cs};
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] auto radians() const {
-        return std::atan2(y, x);
-    } 
+    [[gnu::always_inline, nodiscard, gnu::pure]] auto radians() const { return std::atan2(y, x); }
     [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Vec2 &other) const noexcept {
         return x == other.x && y == other.y;
     }
