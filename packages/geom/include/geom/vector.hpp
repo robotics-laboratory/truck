@@ -95,7 +95,7 @@ template <class T1, class T2>
 
 template <class T>
 inline std::ostream &operator<<(std::ostream &out, const Vec2<T> &v) {
-    return out << "Vec2{" << v.x << ", " << v.y << "}";
+    return out << "(" << v.x << ", " << v.y << ")";
 }
 
 using Vec2f = Vec2<float>;
