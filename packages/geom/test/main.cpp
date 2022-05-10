@@ -56,7 +56,7 @@ TEST(Vector, division) {
     auto b = a / c;
     static_assert(std::is_same_v<decltype(b), Vec2d>);
     ASSERT_GEOM_NEAR(b.x, (double) a.x / c);
-    ASSERT_GEOM_NEAR(b.y, (double) a.y * c);
+    ASSERT_GEOM_NEAR(b.y, (double) a.y / c);
 }
 
 template<class T1, class T2>
