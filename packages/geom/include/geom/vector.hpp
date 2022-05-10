@@ -59,6 +59,12 @@ struct Vec2 {
         y /= c;
         return *this;
     }
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Vec2& other) const noexcept {
+        return x == other.x && y == other.y;
+    }
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Vec2& other) const noexcept {
+        return !(*this == other);
+    }
 };
 
 template <class T1, class T2>
