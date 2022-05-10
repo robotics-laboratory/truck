@@ -12,7 +12,7 @@ template <class T1, class T2>
 }
 
 template <class T1, class T2>
-[[gnu::always_inline, nodiscard, gnu::pure]] inline double dist(const T1 &a, const T2 &b) {
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto dist(const T1 &a, const T2 &b) {
     return std::sqrt(distSq(a, b));
 }
 
@@ -29,13 +29,13 @@ template <class T1, class T2>
 }
 
 template <class T1, class T2>
-[[gnu::always_inline, nodiscard, gnu::pure]] inline double dist(const Line<T1> &l,
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto dist(const Line<T1> &l,
                                                                 const Vec2<T2> &p) {
     return std::abs(denormalizedDist(l, p) / l.normal().len());
 }
 
 template <class T1, class T2>
-[[gnu::always_inline, nodiscard, gnu::pure]] inline double dist(const Vec2<T2> &p,
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto dist(const Vec2<T2> &p,
                                                                 const Line<T1> &l) {
     return dist(l, p);
 }
