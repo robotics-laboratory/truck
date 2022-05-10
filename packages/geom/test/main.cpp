@@ -45,22 +45,37 @@ TEST(Vector, multiplication) {
     auto b = a * c;
     ASSERT_GEOM_NEAR(b.x, a.x * c);
     ASSERT_GEOM_NEAR(b.y, a.y * c);
-    b = a / c;
-    ASSERT_GEOM_NEAR(b.x, a.x / c);
-    ASSERT_GEOM_NEAR(b.y, a.y / c);
     b = c * a;
     ASSERT_GEOM_NEAR(b.x, a.x * c);
     ASSERT_GEOM_NEAR(b.y, a.y * c);
 }
 
+TEST(Vector, division) {
+    Vec2<int> a{1, 2};
+    int c = 42;
+    auto b = a / c;
+    static_assert(std::is_same_v<decltype(b), Vec2d>);
+    ASSERT_GEOM_NEAR(b.x, (double) a.x / c);
+    ASSERT_GEOM_NEAR(b.y, (double) a.y * c);
+}
+
+template<class T1, class T2>
+constexpr void checkExplicitCast() {
+    static_assert(std::is_convertible_v<T1, T2> && !std::is_convertible_v<T2, T1>);
+}
+
 TEST(Vector, cast) {
+    checkExplicitCast<Vec2i, Vec2f>();
+    checkExplicitCast<Vec2i, Vec2d>();
+    checkExplicitCast<Vec2f, Vec2d>();
+    checkExplicitCast<Vec2i32, Vec2i64>();
     Vec2<int> a{1, 3};
     Vec2<double> b = a;
     ASSERT_GEOM_NEAR(b.x, 1.0);
     ASSERT_GEOM_NEAR(b.y, 3.0);
     b.x = 0.3;
     b.y = 1.2;
-    a = b;
+    a = static_cast<Vec2i>(b);
     ASSERT_GEOM_NEAR(a.x, 0);
     ASSERT_GEOM_NEAR(a.y, 1);
 }
@@ -85,9 +100,9 @@ TEST(Vector, len) {
 TEST(Line, make) {
     Line<int> l(1, 1, -2);
 
-    auto l1 = Line<int>::from_two_points({0, 2}, {1, 1});
-    auto l2 = Line<int>::from_point_and_normal({-1, 3}, {1, 1});
-    auto l3 = Line<int>::from_point_and_collinear({4, -2}, {-1, 1});
+    auto l1 = Line<int>::fromTwoPoints({0, 2}, {1, 1});
+    auto l2 = Line<int>::fromPointAndNormal({-1, 3}, {1, 1});
+    auto l3 = Line<int>::fromPointAndCollinear({4, -2}, {-1, 1});
 
     ASSERT_GEOM_NEAR(l, l1);
     ASSERT_GEOM_NEAR(l, l2);
@@ -98,7 +113,7 @@ TEST(Distance, point_point) {
     Vec2i a{1, 1};
     Vec2i b{0, 2};
 
-    ASSERT_EQ(sqr_dist(a, b), 2);
+    ASSERT_EQ(distSq(a, b), 2);
     ASSERT_GEOM_NEAR(dist(a, b), std::sqrt(2.0), 1e-9);
 }
 
@@ -107,9 +122,9 @@ TEST(Distance, line_point) {
     Vec2i a{1, 1};
     Vec2i b{-1, -1};
 
-    ASSERT_GEOM_NEAR(denormalized_dist(l, a), denormalized_dist(a, l));
+    ASSERT_GEOM_NEAR(denormalizedDist(l, a), denormalizedDist(a, l));
     ASSERT_GEOM_NEAR(dist(l, a), dist(a, l));
-    ASSERT_LT(denormalized_dist(l, a) * denormalized_dist(l, b), 0); // a and b on different sides of the line
+    ASSERT_LT(denormalizedDist(l, a) * denormalizedDist(l, b), 0); // a and b on different sides of the line
     ASSERT_GEOM_NEAR(dist(a, l), std::sqrt(2.0), 1e-9);
     ASSERT_GEOM_NEAR(dist(b, l), std::sqrt(2.0), 1e-9);
 }

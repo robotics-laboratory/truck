@@ -40,11 +40,11 @@ struct Vec2 {
         const Vec2<U> &other) const noexcept {
         return {x - other.x, y - other.y};
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] T sqr_len() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] T lenSq() const noexcept {
         return x * x + y * y;
     }
     [[gnu::always_inline, nodiscard, gnu::pure]] auto len() const noexcept {
-        return std::sqrt(sqr_len());
+        return std::sqrt(lenSq());
     }
     [[gnu::always_inline, nodiscard, gnu::pure]] Vec2 operator-() const noexcept {
         return Vec2(-x, -y);

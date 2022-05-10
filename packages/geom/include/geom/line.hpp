@@ -15,18 +15,18 @@ struct Line {
     Line(T a = 1, T b = 0, T c = 0) : a(a), b(b), c(c) {}
     Line(Vec2<T> norm, T c) : a(norm.x), b(norm.y), c(c) {}
 
-    [[gnu::always_inline, nodiscard, gnu::pure]] static Line from_two_points(
+    [[gnu::always_inline, nodiscard, gnu::pure]] static Line fromTwoPoints(
         const Vec2<T> &p1, const Vec2<T> &p2) noexcept {
         Vec2<T> norm{p2.y - p1.y, p1.x - p2.x};
         return Line(norm, -dot(p1, norm));
     }
 
-    [[gnu::always_inline, nodiscard, gnu::pure]] static Line from_point_and_normal(
+    [[gnu::always_inline, nodiscard, gnu::pure]] static Line fromPointAndNormal(
         const Vec2<T> &p1, const Vec2<T> &norm) noexcept {
         return Line(norm, -dot(p1, norm));
     }
 
-    [[gnu::always_inline, nodiscard, gnu::pure]] static Line from_point_and_collinear(
+    [[gnu::always_inline, nodiscard, gnu::pure]] static Line fromPointAndCollinear(
         const Vec2<T> &p1, const Vec2<T> &coll) noexcept {
         Vec2<T> norm{coll.y, -coll.x};
         return Line(norm, -dot(p1, norm));
