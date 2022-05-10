@@ -34,9 +34,9 @@ struct Line {
 };
 
 template <class T1, class T2>
-[[gnu::always_inline, nodiscard, gnu::pure]] inline bool eq(const Line<T1> &a, const Line<T2> &b,
+[[gnu::always_inline, nodiscard, gnu::pure]] inline bool near(const Line<T1> &a, const Line<T2> &b,
                                                             double eps = 0) noexcept {
-    return eq(a.normal() * b.c, b.normal() * a.c, eps);
+    return near(a.normal() * b.c, b.normal() * a.c, eps);
 }
 
 template <class T>

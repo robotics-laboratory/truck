@@ -76,9 +76,9 @@ template <class T1, class T2>
 }
 
 template <class T1, class T2>
-[[gnu::always_inline, nodiscard, gnu::pure]] inline bool eq(const Vec2<T1> &a, const Vec2<T2> &b,
+[[gnu::always_inline, nodiscard, gnu::pure]] inline bool near(const Vec2<T1> &a, const Vec2<T2> &b,
                                                             double eps = 0) noexcept {
-    return eq(a.x, b.x, eps) && eq(a.y, b.y, eps);
+    return near(a.x, b.x, eps) && near(a.y, b.y, eps);
 }
 
 template <class T1, class T2>
