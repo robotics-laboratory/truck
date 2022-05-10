@@ -40,9 +40,7 @@ struct Vec2 {
         const Vec2<U> &other) const noexcept {
         return {x - other.x, y - other.y};
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] T lenSq() const noexcept {
-        return x * x + y * y;
-    }
+    [[gnu::always_inline, nodiscard, gnu::pure]] T lenSq() const noexcept { return x * x + y * y; }
     [[gnu::always_inline, nodiscard, gnu::pure]] auto len() const noexcept {
         return std::sqrt(lenSq());
     }
@@ -59,10 +57,10 @@ struct Vec2 {
         y /= c;
         return *this;
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Vec2& other) const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Vec2 &other) const noexcept {
         return x == other.x && y == other.y;
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Vec2& other) const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Vec2 &other) const noexcept {
         return !(*this == other);
     }
 };
@@ -80,14 +78,16 @@ template <class T1, class T2>
 }
 
 template <class T1, class T2>
-[[gnu::always_inline, nodiscard, gnu::pure]] inline auto operator/(const Vec2<T1> &v, T2 c) noexcept {
-    using Ret = std::conditional_t<std::is_integral_v<T1> && std::is_integral_v<T2>, double, std::common_type_t<T1, T2>>;
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto operator/(const Vec2<T1> &v,
+                                                                   T2 c) noexcept {
+    using Ret = std::conditional_t<std::is_integral_v<T1> && std::is_integral_v<T2>, double,
+                                   std::common_type_t<T1, T2>>;
     return Vec2<Ret>{static_cast<Ret>(v.x) / c, static_cast<Ret>(v.y) / c};
 }
 
 template <class T1, class T2>
 [[gnu::always_inline, nodiscard, gnu::pure]] inline bool near(const Vec2<T1> &a, const Vec2<T2> &b,
-                                                            double eps = 0) noexcept {
+                                                              double eps = 0) noexcept {
     return near(a.x, b.x, eps) && near(a.y, b.y, eps);
 }
 

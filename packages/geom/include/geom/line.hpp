@@ -32,17 +32,17 @@ struct Line {
         return Line(norm, -dot(p1, norm));
     }
 
-    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Line& other) const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Line &other) const noexcept {
         return a.normal() * b.c == b.normal() * a.c;
     }
-    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Line& other) const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Line &other) const noexcept {
         return !(*this == other);
     }
 };
 
 template <class T1, class T2>
 [[gnu::always_inline, nodiscard, gnu::pure]] inline bool near(const Line<T1> &a, const Line<T2> &b,
-                                                            double eps = 0) noexcept {
+                                                              double eps = 0) noexcept {
     return near(a.normal() * b.c, b.normal() * a.c, eps);
 }
 
