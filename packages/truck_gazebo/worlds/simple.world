@@ -15,5 +15,6 @@
     <include>
       <uri>model://truck_description</uri>
     </include>
+    <plugin name="OccupancyGridPlugin" filename="libtruck_gazebo_plugins.so"/>
   </world>
 </sdf>

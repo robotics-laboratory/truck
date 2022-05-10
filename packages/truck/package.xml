@@ -8,14 +8,14 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <exec_depend>launch_ros</exec_depend>
-  <exec_depend>realsense2_camera</exec_depend>
-  <exec_depend>realsense2_description</exec_depend>
+  <depend>launch_ros</depend>
+  <depend>realsense2_camera</depend>
+  <depend>realsense2_description</depend>
+  <depend>ros_environment</depend>
 
-  <exec_depend>planning_node</exec_depend>
-  <exec_depend>pure_pursuit_node</exec_depend>
-
-  <build_depend>ros_environment</build_depend>
+  <depend>planning_node</depend>
+  <depend>pure_pursuit_node</depend>
+  <depend>truck_gazebo_plugins</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

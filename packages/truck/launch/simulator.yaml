@@ -1,0 +1,10 @@
+launch:
+- arg: {name: "world", default: "simple.world"}
+
+- include:
+    file: $(dirname)/rosbridge.yaml
+
+- include:
+    file: $(find-pkg-share truck_gazebo)/launch/simulation.yaml
+#     arg:
+#     - {name: "world", value: "$(var world)"}

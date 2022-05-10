@@ -361,6 +361,7 @@ RUN mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT} \
             --exclude librealsense2 rtabmap libg2o \
             --deps \
         ament_lint \
+        ament_cmake_clang_format \
         image_geometry \
         image_pipeline \
         image_transport \
@@ -426,7 +427,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | b
     && wget -qO - https://github.com/osrf/gzweb/archive/refs/tags/gzweb_${GZWEB_VERSION}.tar.gz | tar -xz -C ${GZWEB_PATH} --strip-components 1 \
     && cd ${GZWEB_PATH} \
     && source /usr/share/gazebo/setup.sh \
-    && npm run deploy --- -m -t
+    && npm run deploy --- -m
 
 ### INSTALL DEV PKGS
 
