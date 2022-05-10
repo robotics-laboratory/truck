@@ -4,6 +4,7 @@
 #include "geom/vector.hpp"
 #include "geom/line.hpp"
 #include "geom/distance.hpp"
+#include "geom/arc.hpp"
 
 using namespace geom;
 
@@ -149,6 +150,31 @@ TEST(Distance, line_point) {
     ASSERT_LT(denormalizedDist(l, a) * denormalizedDist(l, b), 0); // a and b on different sides of the line
     ASSERT_GEOM_NEAR(dist(a, l), std::sqrt(2.0), 1e-9);
     ASSERT_GEOM_NEAR(dist(b, l), std::sqrt(2.0), 1e-9);
+}
+
+TEST(Arc, make) {
+    Vec2d start{0, 2}, finish{4, 2};
+    Arc arc = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{1, 0});
+    ASSERT_EQ(arc.getRadius(), std::numeric_limits<double>::infinity());
+    ASSERT_GEOM_NEAR(arc.getLength(), 4, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getAngle(), 0, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getStart(), start, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getFinish(), finish, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getPoint(0), start, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getPoint(1), finish, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getPoint(0.5), Vec2d{2, 2}, 1e-9);
+    arc = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{0, 1});
+    ASSERT_GEOM_NEAR(arc.getRadius(), 2, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getLength(), 2 * M_PI, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getCenter(), Vec2d{2, 2}, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getAngle(), M_PI, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getPoint(0.5), Vec2d{2, 4}, 1e-9);
+    arc = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{1, 1});
+    ASSERT_GEOM_NEAR(arc.getRadius(), std::sqrt(8), 1e-9);
+    ASSERT_GEOM_NEAR(arc.getLength(), std::sqrt(2) * M_PI, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getCenter(), Vec2d{2, 0}, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getAngle(), M_PI / 2, 1e-9);
+    ASSERT_GEOM_NEAR(arc.getPoint(0.5), Vec2d{2, std::sqrt(8)}, 1e-9);
 }
 
 int main(int argc, char *argv[]) {
