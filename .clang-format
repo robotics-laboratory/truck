@@ -1,8 +1,30 @@
 BasedOnStyle: Google
 
-IndentAccessModifiers: false
-AccessModifierOffset: -4
-SpaceBeforeInheritanceColon: false
-
 IndentWidth: 4
+UseTab: Never
+
+AlignTrailingComments: True
+SpacesBeforeTrailingComments: 2
+
+---
+Language: Cpp
+Standard: c++17
+
+AccessModifierOffset: -2
+AlignAfterOpenBracket: Align
+
+AllowShortEnumsOnASingleLine: True
+AllowShortFunctionsOnASingleLine: All
+
+BinPackArguments: False
+BreakBeforeBraces: Attach
+BreakConstructorInitializers: BeforeComma
 ColumnLimit: 100
+CompactNamespaces: False
+
+NamespaceIndentation: None
+PointerAlignment: Left
+
+SpaceInEmptyParentheses: False
+SpaceBeforeAssignmentOperators: True
+SpaceBeforeParens: ControlStatements
