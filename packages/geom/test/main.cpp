@@ -163,18 +163,21 @@ TEST(Arc, make) {
     ASSERT_GEOM_NEAR(arc.getPoint(0), start, 1e-9);
     ASSERT_GEOM_NEAR(arc.getPoint(1), finish, 1e-9);
     ASSERT_GEOM_NEAR(arc.getPoint(0.5), Vec2d{2, 2}, 1e-9);
+    ASSERT_EQ(arc.getDirection(), Arc::Direction::STRIGHT);
     arc = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{0, 1});
     ASSERT_GEOM_NEAR(arc.getRadius(), 2, 1e-9);
     ASSERT_GEOM_NEAR(arc.getLength(), 2 * M_PI, 1e-9);
     ASSERT_GEOM_NEAR(arc.getCenter(), Vec2d{2, 2}, 1e-9);
     ASSERT_GEOM_NEAR(arc.getAngle(), M_PI, 1e-9);
     ASSERT_GEOM_NEAR(arc.getPoint(0.5), Vec2d{2, 4}, 1e-9);
+    ASSERT_EQ(arc.getDirection(), Arc::Direction::LEFT);
     arc = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{1, 1});
     ASSERT_GEOM_NEAR(arc.getRadius(), std::sqrt(8), 1e-9);
     ASSERT_GEOM_NEAR(arc.getLength(), std::sqrt(2) * M_PI, 1e-9);
     ASSERT_GEOM_NEAR(arc.getCenter(), Vec2d{2, 0}, 1e-9);
     ASSERT_GEOM_NEAR(arc.getAngle(), M_PI / 2, 1e-9);
     ASSERT_GEOM_NEAR(arc.getPoint(0.5), Vec2d{2, std::sqrt(8)}, 1e-9);
+    ASSERT_EQ(arc.getDirection(), Arc::Direction::LEFT);
 }
 
 int main(int argc, char *argv[]) {

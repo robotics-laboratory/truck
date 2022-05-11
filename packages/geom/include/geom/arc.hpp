@@ -17,6 +17,10 @@ private:
 
     Arc(Vec2d start, Vec2d finish, double dist_to_other_side)
         : start(start), finish(finish), dist_to_other_side(dist_to_other_side) {}
+public:
+    enum class Direction {
+        LEFT = -1, STRIGHT = 0, RIGHT = 1
+    };
 
 public:
     [[gnu::always_inline, nodiscard, gnu::pure]] static inline Arc fromTwoPointsAndTangentalVector(
@@ -70,6 +74,14 @@ public:
         offset.x = -offset.x;
         offset /= offset.len();
         return mid + offset * (dist_to_other_side - getRadius());
+    }
+    [[gnu::always_inline, nodiscard, gnu::pure]] inline Direction getDirection() {
+        if (dist_to_other_side > 0)
+            return Direction::LEFT;
+        else if (dist_to_other_side < 0)
+            return Direction::RIGHT;
+        else
+            return Direction::STRIGHT;
     }
 
     Vec2d getPoint(double ratio) {
