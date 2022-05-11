@@ -1,13 +1,7 @@
 launch:
 - arg:
-    name: "lookahead_distance"
-    default: "2.0"
-- arg:
-    name: "max_velocity"
-    default: "10.0"
-- arg:
-    name: "max_accel"
-    default: "1.0"
+    name: "model_config_path"
+    default: "model/config/model.yaml"
 - node:
     pkg: "pure_pursuit_node"
     exec: "pure_pursuit_node"
@@ -15,6 +9,4 @@ launch:
     namespace: "truck"
     output: "log"
     param:
-    - {name: "lookahead_distance", value: "$(var lookahead_distance)"}
-    - {name: "max_velocity", value: "$(var max_velocity)"}
-    - {name: "max_accel", value: "$(var max_accel)"}
+    - {name: "model_config_path", value: "$(var model_config_path)"}
