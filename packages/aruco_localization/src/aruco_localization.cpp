@@ -74,9 +74,9 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     cv::aruco::estimatePoseSingleMarkers(marker_corners, 1, camera_matrix_,
                                             dist_coeffs_, rvecs, tvecs);
     
-    coordinator_.update(marker_ids, rvecs, tvecs);
+    coordinator_.Update(marker_ids, rvecs, tvecs);
 
-    auto pose = coordinator_.get_pose();
+    auto pose = coordinator_.GetPose();
 
     geometry_msgs::msg::Pose pose_msg;
 
@@ -128,7 +128,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
         visualization_msgs::msg::MarkerArray marker_array;
 
         for (size_t i = 0; i < marker_ids.size(); i++) {
-            auto to_anchor = coordinator_.get_transform_to_anchor(marker_ids[i]);
+            auto to_anchor = coordinator_.GetTransformToAnchor(marker_ids[i]);
             if (to_anchor) {
                 add_labeled_marker(marker_array.markers, *to_anchor, marker_ids[i], 1.0);
             }
