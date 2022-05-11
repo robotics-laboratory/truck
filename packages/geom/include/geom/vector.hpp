@@ -20,6 +20,10 @@ struct Vec2 {
     [[gnu::always_inline]] operator Vec2<U>() const noexcept {
         return Vec2<U>{static_cast<U>(x), static_cast<U>(y)};
     }
+    template<class V>
+    [[gnu::always_inline, nodiscard, gnu::pure]] static inline Vec2 fromFromOtherVector(const V& v) const noexcept {
+        return {v.x, v.y};
+    }
     [[gnu::always_inline]] Vec2 &operator+=(const Vec2 &other) {
         x += other.x;
         y += other.y;
