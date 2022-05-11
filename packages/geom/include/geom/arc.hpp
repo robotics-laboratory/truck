@@ -3,6 +3,7 @@
 #include <climits>
 #include <cmath>
 #include <utility>
+#include <optional>
 
 #include "geom/common.hpp"
 #include "geom/distance.hpp"
@@ -23,7 +24,7 @@ public:
     };
 
 public:
-    [[gnu::always_inline, nodiscard, gnu::pure]] static inline Arc fromTwoPointsAndTangentalVector(
+    [[gnu::always_inline, nodiscard, gnu::pure]] static inline std::optional<Arc> fromTwoPointsAndTangentalVector(
         Vec2d start, Vec2d finish, Vec2d tangental, double eps = 1e-9) {
         Vec2d norm = tangental;
         std::swap(norm.x, norm.y);
@@ -31,7 +32,11 @@ public:
         Vec2d delta = finish - start;
         double proj = dot(norm, delta) / delta.len();
         if (near(proj, 0, eps)) {
-            return Arc(start, finish, 0);
+            if (dot(tangental, delta) < 0) {
+                return std::nullopt;
+            } else {
+                return Arc(start, finish, 0);
+            }
         }
         Vec2d center = start + norm * delta.len() * proj / 2;
         Vec2d mid = (start + finish) / 2;
