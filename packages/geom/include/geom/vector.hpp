@@ -55,6 +55,7 @@ struct Vec2 {
         y *= c;
         return *this;
     }
+    template<class Dummy = T, std::enable_if_t<std::is_floating_point_v<Dummy>, bool> = true>
     [[gnu::always_inline]] Vec2 &operator/=(T c) {
         x /= c;
         y /= c;
