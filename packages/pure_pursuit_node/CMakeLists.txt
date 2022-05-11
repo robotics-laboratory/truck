@@ -14,6 +14,7 @@ find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(model REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(geom REQUIRED)
 
 add_executable(${PROJECT_NAME}
   src/main.cpp
@@ -48,7 +49,7 @@ target_include_directories(${PROJECT_NAME}_simulator PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-set(SIMULATOR_DEPENDENCIES rclcpp tf2 pure_pursuit_msgs visualization_msgs nav_msgs geometry_msgs model)
+set(SIMULATOR_DEPENDENCIES rclcpp tf2 pure_pursuit_msgs visualization_msgs nav_msgs geometry_msgs model geom)
 
 ament_target_dependencies(${PROJECT_NAME}_simulator ${SIMULATOR_DEPENDENCIES})
 ament_export_dependencies(${SIMULATOR_DEPENDENCIES})

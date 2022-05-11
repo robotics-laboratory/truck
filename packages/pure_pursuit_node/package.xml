@@ -14,6 +14,7 @@
   <depend>truck_interfaces</depend>
   <depend>model</depend>
   <depend>tf2</depend>
+  <depend>geom</depend>
   
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
