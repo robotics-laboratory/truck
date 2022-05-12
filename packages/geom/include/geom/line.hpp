@@ -48,7 +48,7 @@ template <class T1, class T2>
 
 template <class T>
 inline std::ostream &operator<<(std::ostream &out, const Line<T> &l) {
-    return out << "Line(" << l.a << " * x + " << l.b << " * y + " << l.c << ")";
+    return out << "Line(" << l.a << ", " << l.b << ", " << l.c << ")";
 }
 
 using Linef = Line<float>;
