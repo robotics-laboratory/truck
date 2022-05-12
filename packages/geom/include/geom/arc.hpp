@@ -4,6 +4,7 @@
 #include <cmath>
 #include <utility>
 #include <optional>
+#include <iostream>
 
 #include "geom/common.hpp"
 #include "geom/distance.hpp"
@@ -26,9 +27,7 @@ public:
 public:
     [[gnu::always_inline, nodiscard, gnu::pure]] static inline std::optional<Arc> fromTwoPointsAndTangentalVector(
         Vec2d start, Vec2d finish, Vec2d tangental, double eps = 1e-9) {
-        Vec2d norm = tangental;
-        std::swap(norm.x, norm.y);
-        norm.x = -norm.x;
+        Vec2d norm = tangental.left();
         Vec2d delta = finish - start;
         double proj = dot(norm, delta) / delta.len();
         if (near(proj, 0, eps)) {
@@ -38,7 +37,7 @@ public:
                 return Arc(start, finish, 0);
             }
         }
-        Vec2d center = start + norm * delta.len() * proj / 2;
+        Vec2d center = start + norm * delta.len() / proj / 2;
         Vec2d mid = (start + finish) / 2;
         double mid_dist = dist(mid, center);
         double radius = dist(start, center);
@@ -74,9 +73,7 @@ public:
     }
     [[gnu::always_inline, nodiscard, gnu::pure]] inline Vec2d getCenter() {
         Vec2d mid = (start + finish) / 2;
-        Vec2d offset = (finish - start);
-        std::swap(offset.x, offset.y);
-        offset.x = -offset.x;
+        Vec2d offset = (finish - start).left();
         offset /= offset.len();
         return mid + offset * (dist_to_other_side - getRadius());
     }
@@ -118,6 +115,12 @@ public:
         return near(a.start, b.start, eps) && near(a.finish, b.finish, eps) &&
                near(a.dist_to_other_side, b.dist_to_other_side, eps);
     }
+
+    friend inline std::ostream& operator<<(std::ostream&, const Arc&);
 };
+
+inline std::ostream& operator<<(std::ostream& out, const Arc& arc) {
+    return out << "Arc(" << arc.start << ", " << arc.finish << ", " << arc.dist_to_other_side << ")";
+}
 
 }  // namespace geom
