@@ -69,6 +69,18 @@ struct Vec2 {
         auto cs = std::cos(static_cast<Ang>(radians));
         return Vec2<Ret>{x * cs - y * sn, x * sn + y * cs};
     }
+    [[gnu::always_inline, nodiscard, gnu::pure]] Vec2 left() const noexcept {
+        Vec2 ans = *this;
+        std::swap(ans.x, ans.y);
+        ans.x = -ans.x;
+        return ans;
+    }
+    [[gnu::always_inline, nodiscard, gnu::pure]] Vec2 right() const noexcept {
+        Vec2 ans = *this;
+        std::swap(ans.x, ans.y);
+        ans.y = -ans.y;
+        return ans;
+    }
     [[gnu::always_inline, nodiscard, gnu::pure]] auto radians() const { return std::atan2(y, x); }
     [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Vec2 &other) const noexcept {
         return x == other.x && y == other.y;
