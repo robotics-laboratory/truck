@@ -45,7 +45,10 @@ class Arc {
             dist_to_other_side = radius + mid_dist;
         else
             dist_to_other_side = radius - mid_dist;
-        if (cross(finish - start, tangental) < 0) dist_to_other_side = -dist_to_other_side;
+        if (near(dist_to_other_side, 0, eps))
+            dist_to_other_side = 0;
+        else if (cross(finish - start, tangental) < 0)
+            dist_to_other_side = -dist_to_other_side;
         return Arc(start, finish, dist_to_other_side);
     }
 
