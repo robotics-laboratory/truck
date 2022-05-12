@@ -31,10 +31,11 @@ struct Line {
         Vec2<T> norm{coll.y, -coll.x};
         return Line(norm, -dot(p1, norm));
     }
-
+    template<class Dummy = T, std::enable_if_t<std::is_integral_v<Dummy>, bool> = true>
     [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Line &other) const noexcept {
         return a.normal() * b.c == b.normal() * a.c;
     }
+    template<class Dummy = T, std::enable_if_t<std::is_integral_v<Dummy>, bool> = true>
     [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Line &other) const noexcept {
         return !(*this == other);
     }
