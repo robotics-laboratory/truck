@@ -185,6 +185,21 @@ TEST(Arc, make) {
     ASSERT_FALSE(arc);
 }
 
+TEST(Arc, unnormalized_tangental) {
+    Vec2d start{0, 10}, finish{5, 12};
+    auto arc1 = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{1, 1});
+    auto arc2 = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{10, 10});
+    auto arc3 = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{0.5, 0.5});
+    auto arc4 = Arc::fromTwoPointsAndTangentalVector(start, finish, -Vec2d{1, 1});
+    ASSERT_TRUE(arc1);
+    ASSERT_TRUE(arc2);
+    ASSERT_TRUE(arc3);
+    ASSERT_TRUE(arc4);
+    ASSERT_GEOM_NEAR(*arc1, *arc2, 1e-9);
+    ASSERT_GEOM_NEAR(*arc1, *arc3, 1e-9);
+    ASSERT_GEOM_NOT_NEAR(*arc1, *arc4, 1e-2);
+}
+
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
