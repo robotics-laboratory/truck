@@ -16,39 +16,39 @@ struct Line {
     Line(Vec2<T> norm, T c) : a(norm.x), b(norm.y), c(c) {}
 
     [[gnu::always_inline, nodiscard, gnu::pure]] static Line fromTwoPoints(
-        const Vec2<T> &p1, const Vec2<T> &p2) noexcept {
+        const Vec2<T>& p1, const Vec2<T>& p2) noexcept {
         Vec2<T> norm{p2.y - p1.y, p1.x - p2.x};
         return Line(norm, -dot(p1, norm));
     }
 
     [[gnu::always_inline, nodiscard, gnu::pure]] static Line fromPointAndNormal(
-        const Vec2<T> &p1, const Vec2<T> &norm) noexcept {
+        const Vec2<T>& p1, const Vec2<T>& norm) noexcept {
         return Line(norm, -dot(p1, norm));
     }
 
     [[gnu::always_inline, nodiscard, gnu::pure]] static Line fromPointAndCollinear(
-        const Vec2<T> &p1, const Vec2<T> &coll) noexcept {
+        const Vec2<T>& p1, const Vec2<T>& coll) noexcept {
         Vec2<T> norm{coll.y, -coll.x};
         return Line(norm, -dot(p1, norm));
     }
     template <class Dummy = T, std::enable_if_t<std::is_integral_v<Dummy>, bool> = true>
-    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Line &other) const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Line& other) const noexcept {
         return a.normal() * b.c == b.normal() * a.c;
     }
     template <class Dummy = T, std::enable_if_t<std::is_integral_v<Dummy>, bool> = true>
-    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Line &other) const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Line& other) const noexcept {
         return !(*this == other);
     }
 };
 
 template <class T1, class T2>
-[[gnu::always_inline, nodiscard, gnu::pure]] inline bool near(const Line<T1> &a, const Line<T2> &b,
+[[gnu::always_inline, nodiscard, gnu::pure]] inline bool near(const Line<T1>& a, const Line<T2>& b,
                                                               double eps = 0) noexcept {
     return near(a.normal() * b.c, b.normal() * a.c, eps);
 }
 
 template <class T>
-inline std::ostream &operator<<(std::ostream &out, const Line<T> &l) {
+inline std::ostream& operator<<(std::ostream& out, const Line<T>& l) {
     return out << "Line(" << l.a << ", " << l.b << ", " << l.c << ")";
 }
 
