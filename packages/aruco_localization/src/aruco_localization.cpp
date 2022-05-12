@@ -9,9 +9,9 @@
 #include <opencv2/calib3d.hpp>
 #include <thread>
 
-#include "vis/vis_helpers.hpp"
-#include "math/math_helpers.hpp"
-#include "msgs/msgs_helpers.hpp"
+#include "visualization_helpers.hpp"
+#include "math_helpers.hpp"
+#include "msgs_helpers.hpp"
 
 using std::placeholders::_1;
 
@@ -73,22 +73,22 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
 
     cv::aruco::estimatePoseSingleMarkers(marker_corners, 1, camera_matrix_,
                                             dist_coeffs_, rvecs, tvecs);
-    
-    coordinator_.Update(marker_ids, rvecs, tvecs);
+
+    std::vector<Transform> from_cam_to_marker;
+    from_cam_to_marker.reserve(rvecs.size());
+
+    for (size_t i = 0; i < rvecs.size(); i++) {
+        from_cam_to_marker.push_back(GetTransform(rvecs[i], tvecs[i]));
+    }
+
+    coordinator_.Update(marker_ids, from_cam_to_marker);
 
     auto pose = coordinator_.GetPose();
 
     geometry_msgs::msg::Pose pose_msg;
 
-    toMsg(pose.point, pose_msg.position);
-
-    /*
-    added rotation around OY for PI/2 because opencv estimatePoseSingleMarkers() returns
-    transformation where camera direction is OZ whereas default direction for odometry is OX
-
-    added rotation around OY for PI/2 because Z axis must point up
-    */
-
+    SetPoint(pose.point, pose_msg.position);
+    
     auto orientation_msg = tf2::toMsg(pose.orientation);
 
     pose_msg.orientation = orientation_msg;
@@ -108,7 +108,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
         transform_msg.child_frame_id = kCameraFrameId;
 
         geometry_msgs::msg::Vector3 translation_msg;
-        toMsg(pose.point, translation_msg);
+        SetPoint(pose.point, translation_msg);
 
         transform_msg.transform.rotation = orientation_msg;
         transform_msg.transform.translation = translation_msg;
@@ -163,4 +163,4 @@ int main(int argc, char* argv[]) {
     rclcpp::spin(std::make_shared<rosaruco::ArucoLocalization>());
     rclcpp::shutdown();
     return 0;
-}
+} // namespace rosaruco

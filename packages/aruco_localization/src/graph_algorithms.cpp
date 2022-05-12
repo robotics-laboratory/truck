@@ -1,4 +1,4 @@
-#include "graph.hpp"
+#include "graph_algorithms.hpp"
 
 namespace rosaruco {
 
@@ -7,21 +7,23 @@ void Dijkstra(int nodes_count, int start_node, std::vector<double> &distance,
 
     distance.resize(nodes_count);
     fill(distance.begin(), distance.end(), std::numeric_limits<double>::infinity());
-    distance[start_node] = 0;
+
+    last_node.resize(nodes_count);
 
     std::priority_queue<
         std::pair<double, int>, 
         std::vector<std::pair<double, int>>, 
         std::greater<std::pair<double, int>>
     > q;
-    
+
+    distance[start_node] = 0;
     q.push({distance[start_node], start_node});
 
     while (!q.empty()) {
-        const auto& [current_distance, node] = q.top();
+        auto [current_distance, node] = q.top();
         q.pop();
 
-        if (current_distance > distance[node]) {
+        if (current_distance != distance[node]) {
             continue;
         }
 
@@ -29,6 +31,7 @@ void Dijkstra(int nodes_count, int start_node, std::vector<double> &distance,
             double new_distance = distance[node] + get_weight(node, to);
             if (distance[to] > new_distance) {
                 distance[to] = new_distance;
+                last_node[to] = node;
                 q.push({distance[to], to});
             }
         }

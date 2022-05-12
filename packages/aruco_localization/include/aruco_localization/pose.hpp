@@ -10,4 +10,4 @@ struct Pose {
     tf2::Vector3 point;
 };
 
-}
+} // namespace rosaruco

@@ -12,7 +12,7 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
-#include "coordinator.hpp"
+#include "camera_tracker.hpp"
 
 /**
  * node gets messages from two topics:
@@ -48,7 +48,7 @@ class ArucoLocalization : public rclcpp::Node {
     cv::Ptr<cv::aruco::DetectorParameters> detector_parameters_;
     cv::Ptr<cv::aruco::Dictionary> marker_dictionary_;
 
-    Coordinator coordinator_;
+    CameraTracker coordinator_;
 };
 
-}
+} // namespace rosaruco
