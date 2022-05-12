@@ -24,7 +24,7 @@ class Arc {
     enum class Direction { LEFT = -1, STRIGHT = 0, RIGHT = 1 };
 
   public:
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] static inline std::optional<Arc>
+    [[gnu::always_inline, nodiscard, gnu::pure]] static inline std::optional<Arc>
     fromTwoPointsAndTangentalVector(Vec2d start, Vec2d finish, Vec2d tangental, double eps = 1e-9) {
         Vec2d norm = tangental.left();
         Vec2d delta = finish - start;
@@ -52,34 +52,34 @@ class Arc {
         return Arc(start, finish, dist_to_other_side);
     }
 
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] inline auto getStart() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] inline auto getStart() const noexcept {
         return start;
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] inline auto getFinish() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] inline auto getFinish() const noexcept {
         return finish;
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] inline double getRadius() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] inline double getRadius() const noexcept {
         if (dist_to_other_side == 0) return std::numeric_limits<double>::infinity();
         double l = dist(start, finish) / 2;
         double d = std::abs(dist_to_other_side);
         return (l * l + d * d) / (2 * d);
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] inline double getAngle() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] inline double getAngle() const noexcept {
         if (dist_to_other_side == 0) return 0;
         double l = dist(start, finish) / 2;
         return asin(l / getRadius()) * 2;
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] inline double getLength() {
+    [[gnu::always_inline, nodiscard, gnu::pure]] inline double getLength() {
         if (dist_to_other_side == 0) return dist(start, finish);
         return getRadius() * getAngle();
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] inline Vec2d getCenter() {
+    [[gnu::always_inline, nodiscard, gnu::pure]] inline Vec2d getCenter() {
         Vec2d mid = (start + finish) / 2;
         Vec2d offset = (finish - start).left();
         offset /= offset.len();
         return mid + offset * (dist_to_other_side - getRadius());
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] inline Direction getDirection() {
+    [[gnu::always_inline, nodiscard, gnu::pure]] inline Direction getDirection() {
         if (dist_to_other_side > 0)
             return Direction::LEFT;
         else if (dist_to_other_side < 0)
@@ -104,18 +104,16 @@ class Arc {
         return center + (start - center).rotate(angular_delta);
     }
 
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] bool operator==(const Arc& other) const
-        noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Arc& other) const noexcept {
         return start == other.start && finish == other.finish &&
                dist_to_other_side == other.dist_to_other_side;
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] bool operator!=(const Arc& other) const
-        noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Arc& other) const noexcept {
         return !(*this == other);
     }
 
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] friend inline bool near(
-        const Arc& a, const Arc& b, double eps = 0) noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] friend inline bool near(const Arc& a, const Arc& b,
+                                                                         double eps = 0) noexcept {
         return near(a.start, b.start, eps) && near(a.finish, b.finish, eps) &&
                near(a.dist_to_other_side, b.dist_to_other_side, eps);
     }

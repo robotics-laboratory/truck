@@ -10,20 +10,18 @@ struct Circle {
     Vec2<T> center;
     T radius;
 
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] bool operator==(const Line &other) const
-        noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Line &other) const noexcept {
         return center == other.center && radius == other.radius;
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] bool operator!=(const Line &other) const
-        noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Line &other) const noexcept {
         return !(*this == other);
     }
 };
 
 template <class T1, class T2>
-[[ gnu::always_inline, nodiscard, gnu::pure ]] inline bool near(const Circle<T1> &a,
-                                                                const Circle<T2> &b,
-                                                                double eps = 0) noexcept {
+[[gnu::always_inline, nodiscard, gnu::pure]] inline bool near(const Circle<T1> &a,
+                                                              const Circle<T2> &b,
+                                                              double eps = 0) noexcept {
     return near(a.radius, b.radius, eps) && near(a.center, b.center, eps);
 }
 

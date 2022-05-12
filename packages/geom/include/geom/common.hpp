@@ -6,8 +6,7 @@
 namespace geom {
 
 template <class T1, class T2>
-[[ gnu::always_inline, nodiscard, gnu::pure ]] inline bool near(T1 a, T2 b,
-                                                                double eps = 0) noexcept {
+[[gnu::always_inline, nodiscard, gnu::pure]] inline bool near(T1 a, T2 b, double eps = 0) noexcept {
     if constexpr (std::is_floating_point_v<std::common_type_t<T1, T2>>) {
         return std::abs(a - b) <= eps;
     } else {

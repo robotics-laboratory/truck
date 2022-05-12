@@ -22,8 +22,8 @@ struct Vec2 {
     }
     [[gnu::always_inline]] Vec2(T x = 0, T y = 0) : x(x), y(y) {}
     template <class V>
-    [[gnu::always_inline]] explicit Vec2(const V &v) noexcept
-        : x(v.x), y(v.y){}[[gnu::always_inline]] Vec2 & operator+=(const Vec2 &other) {
+    [[gnu::always_inline]] explicit Vec2(const V &v) noexcept : x(v.x), y(v.y) {}
+    [[gnu::always_inline]] Vec2 &operator+=(const Vec2 &other) {
         x += other.x;
         y += other.y;
         return *this;
@@ -34,22 +34,20 @@ struct Vec2 {
         return *this;
     }
     template <class U>
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] Vec2<std::common_type_t<T, U>> operator+(
+    [[gnu::always_inline, nodiscard, gnu::pure]] Vec2<std::common_type_t<T, U>> operator+(
         const Vec2<U> &other) const noexcept {
         return {x + other.x, y + other.y};
     }
     template <class U>
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] Vec2<std::common_type_t<T, U>> operator-(
+    [[gnu::always_inline, nodiscard, gnu::pure]] Vec2<std::common_type_t<T, U>> operator-(
         const Vec2<U> &other) const noexcept {
         return {x - other.x, y - other.y};
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] T lenSq() const noexcept {
-        return x * x + y * y;
-    }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] auto len() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] T lenSq() const noexcept { return x * x + y * y; }
+    [[gnu::always_inline, nodiscard, gnu::pure]] auto len() const noexcept {
         return std::sqrt(lenSq());
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] Vec2 operator-() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] Vec2 operator-() const noexcept {
         return Vec2{-x, -y};
     }
     [[gnu::always_inline]] Vec2 &operator*=(T c) {
@@ -64,51 +62,49 @@ struct Vec2 {
         return *this;
     }
     template <class U>
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] auto rotate(U radians) const {
+    [[gnu::always_inline, nodiscard, gnu::pure]] auto rotate(U radians) const {
         using Ret = std::conditional_t<std::is_floating_point_v<T>, T, double>;
         using Ang = std::common_type_t<Ret, U>;
         auto sn = std::sin(static_cast<Ang>(radians));
         auto cs = std::cos(static_cast<Ang>(radians));
         return Vec2<Ret>{x * cs - y * sn, x * sn + y * cs};
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] Vec2 left() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] Vec2 left() const noexcept {
         Vec2 ans = *this;
         std::swap(ans.x, ans.y);
         ans.x = -ans.x;
         return ans;
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] Vec2 right() const noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] Vec2 right() const noexcept {
         Vec2 ans = *this;
         std::swap(ans.x, ans.y);
         ans.y = -ans.y;
         return ans;
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] auto radians() const { return std::atan2(y, x); }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] bool operator==(const Vec2 &other) const
-        noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] auto radians() const { return std::atan2(y, x); }
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator==(const Vec2 &other) const noexcept {
         return x == other.x && y == other.y;
     }
-    [[ gnu::always_inline, nodiscard, gnu::pure ]] bool operator!=(const Vec2 &other) const
-        noexcept {
+    [[gnu::always_inline, nodiscard, gnu::pure]] bool operator!=(const Vec2 &other) const noexcept {
         return !(*this == other);
     }
 };
 
 template <class T1, class T2>
-[[ gnu::always_inline, nodiscard, gnu::pure ]] inline Vec2<std::common_type_t<T1, T2>> operator*(
+[[gnu::always_inline, nodiscard, gnu::pure]] inline Vec2<std::common_type_t<T1, T2>> operator*(
     const Vec2<T1> &v, T2 c) noexcept {
     return {v.x * c, v.y * c};
 }
 
 template <class T1, class T2>
-[[ gnu::always_inline, nodiscard, gnu::pure ]] inline auto operator*(T2 c,
-                                                                     const Vec2<T1> &v) noexcept {
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto operator*(T2 c,
+                                                                   const Vec2<T1> &v) noexcept {
     return v * c;
 }
 
 template <class T1, class T2>
-[[ gnu::always_inline, nodiscard, gnu::pure ]] inline auto operator/(const Vec2<T1> &v,
-                                                                     T2 c) noexcept {
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto operator/(const Vec2<T1> &v,
+                                                                   T2 c) noexcept {
     using Ret = std::conditional_t<std::is_integral_v<T1> && std::is_integral_v<T2>,
                                    double,
                                    std::common_type_t<T1, T2>>;
@@ -116,21 +112,20 @@ template <class T1, class T2>
 }
 
 template <class T1, class T2>
-[[ gnu::always_inline, nodiscard, gnu::pure ]] inline bool near(const Vec2<T1> &a,
-                                                                const Vec2<T2> &b,
-                                                                double eps = 0) noexcept {
+[[gnu::always_inline, nodiscard, gnu::pure]] inline bool near(const Vec2<T1> &a, const Vec2<T2> &b,
+                                                              double eps = 0) noexcept {
     return near(a.x, b.x, eps) && near(a.y, b.y, eps);
 }
 
 template <class T1, class T2>
-[[ gnu::always_inline, nodiscard, gnu::pure ]] inline auto dot(const Vec2<T1> &a,
-                                                               const Vec2<T2> &b) noexcept {
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto dot(const Vec2<T1> &a,
+                                                             const Vec2<T2> &b) noexcept {
     return a.x * b.x + a.y * b.y;
 }
 
 template <class T1, class T2>
-[[ gnu::always_inline, nodiscard, gnu::pure ]] inline auto cross(const Vec2<T1> &a,
-                                                                 const Vec2<T2> &b) noexcept {
+[[gnu::always_inline, nodiscard, gnu::pure]] inline auto cross(const Vec2<T1> &a,
+                                                               const Vec2<T2> &b) noexcept {
     return a.x * b.y - a.y * b.x;
 }
 
