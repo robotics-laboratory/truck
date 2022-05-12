@@ -1,19 +1,19 @@
 BasedOnStyle: Google
 Language: Cpp
 
-AlignTrailingComments: True
+AlignTrailingComments: true
 AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
 AllowShortFunctionsOnASingleLine: All
-BinPackArguments: False
+BinPackArguments: false
 BreakBeforeBraces: Attach
 BreakConstructorInitializers: BeforeComma
 ColumnLimit: 100
-CompactNamespaces: False
+CompactNamespaces: false
 IndentWidth: 4
 NamespaceIndentation: None
 PointerAlignment: Left
-SortIncludes: False
-SpaceInEmptyParentheses: False
-SpaceBeforeAssignmentOperators: True
+SortIncludes: false
+SpaceInEmptyParentheses: false
+SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements
