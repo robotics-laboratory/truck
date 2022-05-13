@@ -28,20 +28,20 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
                                         const std::vector<PoseStamped>& path,
                                         VisualInfo* visual_info) {
     if (visual_info) {
-        visual_info->addPoint(Vec2d::fromOtherVector(odometry.pose.pose.position), 0.1, 1, 0, 0);
+        visual_info->addPoint(Vec2d(odometry.pose.pose.position), 0.1, 1, 0, 0);
     }
     auto& position = odometry.pose.pose.position;
-    auto it = std::find_if(path.rbegin(), path.rend(), [position = Vec2d::fromOtherVector(position), this](const PoseStamped& p) {
-        return geom::dist(Vec2d::fromOtherVector(p.pose.position), position) <= model.lookahead_distance;
+    auto it = std::find_if(path.rbegin(), path.rend(), [position = Vec2d(position), this](const PoseStamped& p) {
+        return geom::dist(Vec2d(p.pose.position), position) <= model.lookahead_distance;
     });
     if (it == path.rend()) return ControllerError::UNREACHEABLE_TRAJECTORY;
     if (visual_info) {
         for (auto& x : path) {
-            visual_info->addPoint(Vec2d::fromOtherVector(x.pose.position), 0.1, 0, 0, 1);
+            visual_info->addPoint(Vec2d(x.pose.position), 0.1, 0, 0, 1);
         }
     }
-    Vec2d p0{position.x, position.y};
-    Vec2d p{it->pose.position.x, it->pose.position.y};
+    Vec2d p0(position);
+    Vec2d p(it->pose.position);
     Vec2d direction{1, 0};
     direction = direction.rotate(quaternoin_to_flat_angle(odometry.pose.pose.orientation));
 
@@ -81,7 +81,7 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
     double required_velocity = 0;
     if (it != path.rbegin()) {
         required_velocity =
-            geom::dist(Vec2d::fromOtherVector(it->pose.position), Vec2d::fromOtherVector(prev(it)->pose.position)) /
+            geom::dist(Vec2d(it->pose.position), Vec2d(prev(it)->pose.position)) /
             (ros_time_to_seconds(prev(it)->header.stamp) - ros_time_to_seconds(it->header.stamp));
     }
     required_velocity = std::min(required_velocity, model.max_velocity);
