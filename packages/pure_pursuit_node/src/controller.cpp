@@ -45,7 +45,7 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
     Vec2d direction{1, 0};
     direction = direction.rotate(quaternoin_to_flat_angle(odometry.pose.pose.orientation));
 
-    auto trajectory = geom::Arc::fromTwoPointsAndTangentalVector(p0, p, direction);
+    auto trajectory = geom::Arc::fromTwoPointsAndTangentalVector(p0, p, direction, 1e-3);
 
     if (!trajectory) {
         return ControllerError::IMPOSSIBLE_ARC;
