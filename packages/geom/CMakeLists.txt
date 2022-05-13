@@ -8,17 +8,15 @@ if(NOT CMAKE_C_STANDARD)
 endif()
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-file(GLOB SRCS src/*.cpp)
-
-add_library(${PROJECT_NAME} SHARED ${SRCS})
+add_library(${PROJECT_NAME} INTERFACE)
 
 target_include_directories(geom
-  PUBLIC
+  INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
@@ -41,5 +39,12 @@ install(
   DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  # Add a gtest named ${PROJECT_NAME}_my_test
+  add_subdirectory("test")
+endif()
 
 ament_package()
