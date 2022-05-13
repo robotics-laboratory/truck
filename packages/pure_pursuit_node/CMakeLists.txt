@@ -16,9 +16,11 @@ find_package(model REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(geom REQUIRED)
 
+set(COMMON_SRC src/controller.cpp src/speed_planner.cpp)
+
 add_executable(${PROJECT_NAME}
   src/main.cpp
-  src/controller.cpp
+  ${COMMON_SRC}
 )
 
 ament_target_dependencies(${PROJECT_NAME} rclcpp pure_pursuit_msgs truck_interfaces visualization_msgs nav_msgs geometry_msgs)
@@ -39,7 +41,7 @@ install(DIRECTORY
 
 add_library(${PROJECT_NAME}_simulator
   src/simulator.cpp
-  src/controller.cpp
+  ${COMMON_SRC}
 )
 
 set_target_properties(${PROJECT_NAME}_simulator PROPERTIES PUBLIC_HEADER include/simulator.hpp)

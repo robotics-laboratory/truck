@@ -15,8 +15,7 @@ namespace pure_pursuit {
 
 enum class ControllerError {
     UNREACHEABLE_TRAJECTORY,
-    IMPOSSIBLE_ARC,
-    BROKEN_FORMULA_FOR_ACCELERATION
+    IMPOSSIBLE_ARC
 };
 
 inline std::string error_to_string(ControllerError e) {
@@ -25,8 +24,6 @@ inline std::string error_to_string(ControllerError e) {
         return "Can not find the target point";
     case ControllerError::IMPOSSIBLE_ARC:
         return "Can not build the arc";
-    case ControllerError::BROKEN_FORMULA_FOR_ACCELERATION:
-        return "Broken formula for acceleration";
     default:
         return "Unknown error";
     }
