@@ -37,9 +37,9 @@ SimulationResult simulate(nav_msgs::msg::Odometry start, nav_msgs::msg::Odometry
     uint64_t current_time = 0;
     while (current_time < sim_timeout_ns) {
         ans.emplace_back(current_odometry);
-        auto cmd = controller.get_motion(current_odometry, trajectory, nullptr);
-        if (!cmd)
-            return SimulationError{static_cast<int>(SimulationError::CONTROLLER_FAILED) | static_cast<int>(cmd.error()) << 1};
+        auto controller_result = controller.get_motion(current_odometry, trajectory);
+        if (!controller_result)
+            return SimulationError{static_cast<int>(SimulationError::CONTROLLER_FAILED) | static_cast<int>(controller_result.error()) << 1};
         tf2::Quaternion current_orientation;
         tf2::convert(current_odometry.pose.pose.orientation, current_orientation);
         double current_yaw = current_orientation.getAngle();
@@ -59,13 +59,13 @@ SimulationResult simulate(nav_msgs::msg::Odometry start, nav_msgs::msg::Odometry
         }
 
         for (uint64_t i = 0; i < controller_period && current_time < sim_timeout_ns; ++i) {
-            double angular_velocity = current_velocity * cmd->curvature * PI2_INV;
+            double angular_velocity = current_velocity * controller_result->cmd.curvature * PI2_INV;
             double angular_delta = angular_velocity * dt;
             current_yaw += angular_delta;
             tf2::Matrix3x3 rm;
             rm.setRPY(0, 0, angular_delta);
             auto new_velocity = current_velocity +
-                                std::min(cmd->acceleration * dt, cmd->velocity - current_velocity,
+                                std::min(controller_result->cmd.acceleration * dt, controller_result->cmd.velocity - current_velocity,
                                          [](auto a, auto b) { return std::abs(a) < std::abs(b); });
             current_position += current_direction * (current_velocity + new_velocity) / 2 * dt;
             current_direction = rm * current_direction;
@@ -73,7 +73,7 @@ SimulationResult simulate(nav_msgs::msg::Odometry start, nav_msgs::msg::Odometry
             if (current_velocity < 0) current_velocity = 0;
             current_time += sim_dt_ns;
         }
-        if (cmd->velocity < eps && current_velocity < eps) return ans;
+        if (controller_result->cmd.velocity < eps && current_velocity < eps) return ans;
 
         current_direction *= current_velocity;
         current_odometry.twist.twist.linear.x = current_direction.x();

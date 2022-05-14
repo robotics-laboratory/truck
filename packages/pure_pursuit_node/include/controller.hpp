@@ -29,7 +29,12 @@ inline std::string error_to_string(ControllerError e) {
     }
 }
 
-using ControllerResult = Result<pure_pursuit_msgs::msg::Command, ControllerError>;
+struct ControllerResultData {
+    pure_pursuit_msgs::msg::Command cmd;
+    std::optional<VisualInfo> visual_info;
+};
+
+using ControllerResult = Result<ControllerResultData, ControllerError>;
 
 class Controller {
 private:
@@ -40,7 +45,7 @@ public:
     ControllerResult get_motion(
         const nav_msgs::msg::Odometry &odometry,
         const std::vector<geometry_msgs::msg::PoseStamped> &path,
-        VisualInfo *visual_info = nullptr);
+        bool visual_info_required = 0);
 };
 
 };  // namespace pure_pursuit

@@ -17,7 +17,7 @@ namespace pure_pursuit {
 
 class PursuitNode: public rclcpp::Node {
 private:
-    static inline auto get_stop_command() {
+    static inline pure_pursuit_msgs::msg::Command getStopCommand() {
         pure_pursuit_msgs::msg::Command stop;
         stop.velocity = 0;
         stop.acceleration = -std::numeric_limits<double>::infinity();
@@ -42,24 +42,20 @@ public:
         slot_state = Node::create_subscription<nav_msgs::msg::Odometry>(
             "current_state", 1,
             [this, publish_debug_info](nav_msgs::msg::Odometry::UniquePtr odometry) {
-                const auto STOP = get_stop_command();
-                if (trajectory) {
-                    ControllerResult cmd;
-                    if (publish_debug_info) {
-                        VisualInfo info;
-                        cmd = controller.get_motion(*odometry, *trajectory, &info);
-                        arc_publisher->publish(info.arc);
-                    } else {
-                        cmd = controller.get_motion(*odometry, *trajectory, nullptr);
-                    }
-                    if (cmd) {
-                        cmd_publisher->publish(*cmd);
-                    } else {
-                        RCLCPP_ERROR(get_logger(), error_to_string(cmd.error()).c_str());
-                        cmd_publisher->publish(STOP);
-                    }
-                } else {
+                const auto STOP = getStopCommand();
+                if (!trajectory) {
                     cmd_publisher->publish(STOP);
+                    return;
+                }
+                ControllerResult res = controller.get_motion(*odometry, *trajectory, publish_debug_info);
+                if (!res) {
+                    RCLCPP_ERROR(get_logger(), error_to_string(res.error()).c_str());
+                    cmd_publisher->publish(STOP);
+                    return;
+                }
+                cmd_publisher->publish(res->cmd);
+                if (publish_debug_info) {
+                    arc_publisher->publish(res->visual_info->arc);
                 }
             });
     }

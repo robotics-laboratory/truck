@@ -27,8 +27,10 @@ namespace pure_pursuit {
 
 ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
                                         const std::vector<PoseStamped>& path,
-                                        VisualInfo* visual_info) {
-    if (visual_info) {
+                                        bool visual_info_required) {
+    std::optional<VisualInfo> visual_info;
+    if (visual_info_required) {
+        visual_info.emplace();
         visual_info->addPoint(Vec2d(odometry.pose.pose.position), 0.1, 1, 0, 0);
     }
     auto& position = odometry.pose.pose.position;
@@ -36,7 +38,7 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
         return geom::dist(Vec2d(p.pose.position), position) <= model.lookahead_distance;
     });
     if (it == path.rend()) return ControllerError::UNREACHEABLE_TRAJECTORY;
-    if (visual_info) {
+    if (visual_info_required) {
         for (auto& x : path) {
             visual_info->addPoint(Vec2d(x.pose.position), 0.1, 0, 0, 1);
         }
@@ -52,7 +54,7 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
         return ControllerError::IMPOSSIBLE_ARC;
     }
 
-    if (visual_info) {
+    if (visual_info_required) {
         constexpr int points = 50;
         for (int i = 1; i < points; ++i) {
             visual_info->addPoint(trajectory->getPoint(static_cast<double>(i) / points), 0.05, 0, 1, 0);
@@ -83,15 +85,15 @@ ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
         plan = getPlanWithVelocityPrior(dist, required_time, required_velocity, current_velocity, model);
     }
 
-    Command result;
+    Command command;
 
-    result.acceleration = plan.acceleration;
-    result.velocity = plan.velocity;
-    result.curvature = 1 / trajectory->getRadius();
+    command.acceleration = plan.acceleration;
+    command.velocity = plan.velocity;
+    command.curvature = 1 / trajectory->getRadius();
 
-    if (trajectory->getDirection() == geom::Arc::Direction::RIGHT) result.curvature *= -1;
+    if (trajectory->getDirection() == geom::Arc::Direction::RIGHT) command.curvature *= -1;
 
-    return result;
+    return ControllerResultData{command, visual_info};
 }
 
 };  // namespace pure_pursuit
