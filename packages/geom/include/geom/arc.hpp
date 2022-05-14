@@ -87,6 +87,13 @@ class Arc {
         else
             return Direction::STRIGHT;
     }
+    [[gnu::always_inline, nodiscard, gnu::pure]] inline double getSignedCurvature() const {
+        if (dist_to_other_side == 0)
+            return 0;
+        double l = dist(start, finish) / 2;
+        double d = std::abs(dist_to_other_side);
+        return std::copysign((2 * d) / (l * l + d * d), -dist_to_other_side);
+    }
 
     Vec2d getPoint(double ratio) {
         if (dist_to_other_side == 0) {

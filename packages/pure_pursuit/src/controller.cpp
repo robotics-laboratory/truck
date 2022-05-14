@@ -86,9 +86,7 @@ ControllerResult Controller::getMotion(const nav_msgs::msg::Odometry& odometry,
 
     command.acceleration = plan.acceleration;
     command.velocity = plan.velocity;
-    command.curvature = 1 / arc->getRadius();
-
-    if (arc->getDirection() == geom::Arc::Direction::RIGHT) command.curvature *= -1;
+    command.curvature = arc->getSignedCurvature();
 
     return ControllerResultData{command, visual_info};
 }
