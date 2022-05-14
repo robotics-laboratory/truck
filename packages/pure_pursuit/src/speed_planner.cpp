@@ -13,6 +13,22 @@ inline double pathTimeByAccel(double required_dist, double current_velocity, dou
     }
 };
 
+// Acceleration for first phase of tho-phase movement
+inline double accelerationByVelocityAndTime(double accel_constraint, double required_dist, double current_velocity, double required_velocity, double required_time) {
+    double l = 0, r = accel_constraint;
+    if (accel_constraint < 0) {
+        std::swap(l, r);
+    }
+    for (int i = 0; i < 20; ++i) {  // More robust than epsilon-based binary search
+        double m = (l + r) / 2;
+        if (pathTimeByAccel(required_dist, current_velocity, required_velocity, m) > required_time)
+            l = m;
+        else
+            r = m;
+    }
+    return r;
+}
+
 namespace pure_pursuit {
 
 SpeedPlan getPlanWithTimePrior(double required_dist, double required_time, double required_velocity, double current_velocity, const model::Model& model) {
@@ -32,18 +48,7 @@ SpeedPlan getPlanWithTimePrior(double required_dist, double required_time, doubl
         return result;
     }
     result.velocity = required_velocity;
-    double l = 0, r = accel_constraint;
-    if (accel_constraint < 0) {
-        std::swap(l, r);
-    }
-    for (int i = 0; i < 20; ++i) {  // More robust than epsilon-based binary search
-        double m = (l + r) / 2;
-        if (pathTimeByAccel(required_dist, current_velocity, required_velocity, m) > required_time)
-            l = m;
-        else
-            r = m;
-    }
-    result.acceleration = r;
+    result.acceleration = accelerationByVelocityAndTime(accel_constraint, required_dist, current_velocity, required_velocity, required_time);
     return result;
 }
 
