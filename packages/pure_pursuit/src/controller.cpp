@@ -66,7 +66,7 @@ ControllerResult Controller::getMotion(const nav_msgs::msg::Odometry& odometry,
     Vec2d velocity_vector{odometry.twist.twist.linear.x, odometry.twist.twist.linear.y};
     double current_velocity = velocity_vector.len();
 
-    MovingPlan plan;
+    SpeedPlan plan;
 
     double required_time =
         ros_time_to_seconds(it->header.stamp) - ros_time_to_seconds(odometry.header.stamp);

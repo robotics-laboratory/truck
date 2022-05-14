@@ -4,13 +4,13 @@
 
 namespace pure_pursuit {
 
-struct MovingPlan {
+struct SpeedPlan {
     double velocity;
     double acceleration;
 };
 
-MovingPlan getPlanWithTimePrior(double required_dist, double required_time, double required_velocity, double current_velocity, const model::Model& model);
+SpeedPlan getPlanWithTimePrior(double required_dist, double required_time, double required_velocity, double current_velocity, const model::Model& model);
 
-MovingPlan getPlanWithVelocityPrior(double required_dist, double required_time, double required_velocity, double current_velocity, const model::Model& model);
+SpeedPlan getPlanWithVelocityPrior(double required_dist, double required_time, double required_velocity, double current_velocity, const model::Model& model);
 
 }

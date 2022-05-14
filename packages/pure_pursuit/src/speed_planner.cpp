@@ -15,8 +15,8 @@ inline double pathTimeByAccel(double required_dist, double current_velocity, dou
 
 namespace pure_pursuit {
 
-MovingPlan getPlanWithTimePrior(double required_dist, double required_time, double required_velocity, double current_velocity, const model::Model& model) {
-    MovingPlan result;
+SpeedPlan getPlanWithTimePrior(double required_dist, double required_time, double required_velocity, double current_velocity, const model::Model& model) {
+    SpeedPlan result;
     double min_posible_time = pathTimeByAccel(required_dist, current_velocity, model.max_velocity, model.max_acceleration);
     if (required_time < min_posible_time) {
         result.velocity = model.max_velocity;
@@ -47,8 +47,8 @@ MovingPlan getPlanWithTimePrior(double required_dist, double required_time, doub
     return result;
 }
 
-MovingPlan getPlanWithVelocityPrior(double required_dist, double required_time, double required_velocity, double current_velocity, const model::Model& model) {
-    MovingPlan result;
+SpeedPlan getPlanWithVelocityPrior(double required_dist, double required_time, double required_velocity, double current_velocity, const model::Model& model) {
+    SpeedPlan result;
     double velocity_delta = (required_velocity - current_velocity);
     double min_time = velocity_delta / (velocity_delta < 0 ? -model.max_decceleration
                                                            : model.max_acceleration);
