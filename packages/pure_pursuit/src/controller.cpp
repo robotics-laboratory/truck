@@ -43,25 +43,23 @@ ControllerResult Controller::getMotion(const nav_msgs::msg::Odometry& odometry,
             visual_info->addPoint(Vec2d(x.pose.position), 0.1, 0, 0, 1);
         }
     }
-    Vec2d p0(position);
-    Vec2d p(it->pose.position);
     Vec2d direction{1, 0};
     direction = direction.rotate(quaternoin_to_flat_angle(odometry.pose.pose.orientation));
 
-    auto trajectory = geom::Arc::fromTwoPointsAndTangentalVector(p0, p, direction, 1e-3);
+    auto arc = geom::Arc::fromTwoPointsAndTangentalVector(Vec2d(position), Vec2d(it->pose.position), direction, 1e-3);
 
-    if (!trajectory) {
+    if (!arc) {
         return ControllerError::IMPOSSIBLE_ARC;
     }
 
     if (visual_info_required) {
         constexpr int points = 50;
         for (int i = 1; i < points; ++i) {
-            visual_info->addPoint(trajectory->getPoint(static_cast<double>(i) / points), 0.05, 0, 1, 0);
+            visual_info->addPoint(arc->getPoint(static_cast<double>(i) / points), 0.05, 0, 1, 0);
         }
     }
 
-    double dist = trajectory->getLength();
+    double dist = arc->getLength();
 
     Vec2d velocity_vector{odometry.twist.twist.linear.x, odometry.twist.twist.linear.y};
     double current_velocity = velocity_vector.len();
@@ -89,9 +87,9 @@ ControllerResult Controller::getMotion(const nav_msgs::msg::Odometry& odometry,
 
     command.acceleration = plan.acceleration;
     command.velocity = plan.velocity;
-    command.curvature = 1 / trajectory->getRadius();
+    command.curvature = 1 / arc->getRadius();
 
-    if (trajectory->getDirection() == geom::Arc::Direction::RIGHT) command.curvature *= -1;
+    if (arc->getDirection() == geom::Arc::Direction::RIGHT) command.curvature *= -1;
 
     return ControllerResultData{command, visual_info};
 }
