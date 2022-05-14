@@ -20,7 +20,9 @@ struct Vec2 {
     [[gnu::always_inline]] operator Vec2<U>() const noexcept {
         return Vec2<U>{static_cast<U>(x), static_cast<U>(y)};
     }
-    [[gnu::always_inline]] Vec2(T x = 0, T y = 0) : x(x), y(y) {}
+    [[gnu::always_inline]] Vec2() = default;
+    [[gnu::always_inline]] Vec2(T x, T y) : x(x), y(y) {}
+    [[gnu::always_inline]] explicit Vec2(double radians): x(std::cos(radians)), y(std::sin(radians)) {}
     template <class V>
     [[gnu::always_inline]] explicit Vec2(const V& v) noexcept : x(v.x), y(v.y) {}
     [[gnu::always_inline]] Vec2& operator+=(const Vec2& other) {

@@ -43,8 +43,7 @@ ControllerResult Controller::getMotion(const nav_msgs::msg::Odometry& odometry,
             visual_info->addPoint(Vec2d(x.pose.position), 0.1, 0, 0, 1);
         }
     }
-    Vec2d direction{1, 0};
-    direction = direction.rotate(quaternoin_to_flat_angle(odometry.pose.pose.orientation));
+    Vec2d direction(quaternoin_to_flat_angle(odometry.pose.pose.orientation));
 
     auto arc = geom::Arc::fromTwoPointsAndTangentalVector(Vec2d(position), Vec2d(it->pose.position), direction, 1e-3);
 
