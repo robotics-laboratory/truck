@@ -1,0 +1,15 @@
+{
+    "editor": {
+        "rulers": [
+            80,
+            100
+        ],
+        "formatOnPaste": true,
+        "formatOnSaveMode": "modifications",
+        "formatOnType": true,
+    },
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "C_Cpp.clang_format_fallbackStyle": "Google",
+}

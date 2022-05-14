@@ -1,5 +1,4 @@
-.vscode
-bazel-*
-build
-install
-log
+*.DS_Store
+packages/build
+packages/install
+packages/log
