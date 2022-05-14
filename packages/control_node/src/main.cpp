@@ -15,8 +15,7 @@ using std::placeholders::_1;
 struct ControlNode : rclcpp::Node {
     ControlNode(model::Model model) 
         : Node("ControlNode")
-        , model(std::move(model))
-        , velocity_joints_count(2) {
+        , model(std::move(model)) {
         control_command_subscription = create_subscription<msg::Control>(
             "control_command", 10, std::bind(&ControlNode::new_control_command_callback, this, _1)
         );
@@ -42,18 +41,33 @@ private:
             message->acceleration
         );
 
+        double r = 1.0 / std::abs(message->curvature);
+        bool sign = message->curvature < 0;
+
         // default velocity controller ignores acceleration
         // to use acceleration, we need to build custom controller
         std_msgs::msg::Float64MultiArray velocity_command;
-        for (size_t i = 0; i < velocity_joints_count; ++i) {
-            velocity_command.data.push_back(message->velocity);
+        double angular_velocity = message->velocity / model.wheel_radius;
+        double left_wheel_velocity = angular_velocity * (r - model.truck_width / 2.0) / r;
+        double right_wheel_velocity = angular_velocity * (r + model.truck_width / 2.0) / r;
+        if (sign) {
+            std::swap(left_wheel_velocity, right_wheel_velocity);
         }
+        
+        RCLCPP_INFO(
+            get_logger(),
+            "Calculated wheel velocity from curvature %.6f: left=%.6f right=%.6f",
+            message->curvature,
+            left_wheel_velocity,
+            right_wheel_velocity
+        );
+
+        velocity_command.data.push_back(left_wheel_velocity);
+        velocity_command.data.push_back(right_wheel_velocity);
         velocity_publisher->publish(velocity_command);
 
-        auto sign = message->curvature < 0 ? true : false;
-
-        double left_wheel_angle = std::atan2(model.truck_length, 1.0 / std::abs(message->curvature) - model.truck_width / 2.0);
-        double right_wheel_angle = std::atan2(model.truck_length, 1.0 / std::abs(message->curvature) + model.truck_width /  2.0);
+        double left_wheel_angle = std::atan2(model.truck_length, r - model.truck_width / 2.0);
+        double right_wheel_angle = std::atan2(model.truck_length, r + model.truck_width / 2.0);
         if (sign) {
             left_wheel_angle = -left_wheel_angle;
             right_wheel_angle = -right_wheel_angle;
@@ -75,7 +89,6 @@ private:
     
     rclcpp::Subscription<msg::Control>::SharedPtr control_command_subscription;
     model::Model model;
-    size_t velocity_joints_count;
 
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr velocity_publisher;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr steering_publisher;
