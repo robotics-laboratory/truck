@@ -24,7 +24,7 @@ inline void convert_vector(const F& from, T& to) {
 
 namespace pure_pursuit {
 
-SimulationResult simulate(nav_msgs::msg::Odometry start, nav_msgs::msg::Odometry finish,
+SimulationResult simulate(const nav_msgs::msg::Odometry& start, const nav_msgs::msg::Odometry& finish,
                           uint64_t sim_timeout_ns, uint64_t sim_dt_ns, uint64_t controller_period,
                           const model::Model& params) {
     const double eps = 1e-3, PI2_INV = 1 / (M_PI * 2);

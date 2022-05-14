@@ -31,8 +31,8 @@ inline std::string errorToString(SimulationError e) {
 
 using SimulationResult = Result<std::vector<nav_msgs::msg::Odometry>, SimulationError>;
 
-SimulationResult simulate(nav_msgs::msg::Odometry start,
-                                              nav_msgs::msg::Odometry finish, uint64_t sim_timeout_ns, uint64_t sim_dt_ns, uint64_t controller_period,
+SimulationResult simulate(const nav_msgs::msg::Odometry& start,
+                                              const nav_msgs::msg::Odometry& finish, uint64_t sim_timeout_ns, uint64_t sim_dt_ns, uint64_t controller_period,
                                               const model::Model &params);
 
 };
