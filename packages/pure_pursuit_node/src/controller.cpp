@@ -25,7 +25,7 @@ inline double ros_time_to_seconds(const rclcpp::Time& t) { return t.seconds(); }
 
 namespace pure_pursuit {
 
-ControllerResult Controller::get_motion(const nav_msgs::msg::Odometry& odometry,
+ControllerResult Controller::getMotion(const nav_msgs::msg::Odometry& odometry,
                                         const std::vector<PoseStamped>& path,
                                         bool visual_info_required) {
     std::optional<VisualInfo> visual_info;

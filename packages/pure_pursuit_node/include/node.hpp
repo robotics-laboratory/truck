@@ -47,9 +47,9 @@ public:
                     cmd_publisher->publish(STOP);
                     return;
                 }
-                ControllerResult res = controller.get_motion(*odometry, *trajectory, publish_debug_info);
+                ControllerResult res = controller.getMotion(*odometry, *trajectory, publish_debug_info);
                 if (!res) {
-                    RCLCPP_ERROR(get_logger(), error_to_string(res.error()).c_str());
+                    RCLCPP_ERROR(get_logger(), errorToString(res.error()).c_str());
                     cmd_publisher->publish(STOP);
                     return;
                 }

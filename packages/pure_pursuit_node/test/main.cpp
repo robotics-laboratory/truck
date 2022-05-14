@@ -32,7 +32,7 @@ TEST(simulator, just_works) {
     finish.pose.pose.orientation.w = 1;
 
     auto path = simulate(start, finish, 10'000'000'000, 1'000'000, 100, model);
-    ASSERT_TRUE(path) << error_to_string(path.error());
+    ASSERT_TRUE(path) << errorToString(path.error());
     geom::Vec2d required_finish(finish.pose.pose.position), real_finish(path->back().pose.pose.position);
     ASSERT_GEOM_NEAR(required_finish, real_finish, 0.01);
 }

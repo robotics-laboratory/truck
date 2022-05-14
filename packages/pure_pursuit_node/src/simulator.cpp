@@ -37,7 +37,7 @@ SimulationResult simulate(nav_msgs::msg::Odometry start, nav_msgs::msg::Odometry
     uint64_t current_time = 0;
     while (current_time < sim_timeout_ns) {
         ans.emplace_back(current_odometry);
-        auto controller_result = controller.get_motion(current_odometry, trajectory);
+        auto controller_result = controller.getMotion(current_odometry, trajectory);
         if (!controller_result)
             return SimulationError{static_cast<int>(SimulationError::CONTROLLER_FAILED) | static_cast<int>(controller_result.error()) << 1};
         tf2::Quaternion current_orientation;

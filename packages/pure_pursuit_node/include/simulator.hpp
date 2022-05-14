@@ -18,10 +18,10 @@ enum class SimulationError {
     FINISH_POINT_IS_NOT_ARRIVED = 1
 };
 
-inline std::string error_to_string(SimulationError e) {
+inline std::string errorToString(SimulationError e) {
     switch (SimulationError{static_cast<int>(e) & 1}) {
     case SimulationError::CONTROLLER_FAILED:
-        return "Controller failed. Reason: " + error_to_string(ControllerError{static_cast<int>(e) >> 1});
+        return "Controller failed. Reason: " + errorToString(ControllerError{static_cast<int>(e) >> 1});
     case SimulationError::FINISH_POINT_IS_NOT_ARRIVED:
         return "Finish point is not arrived in time";
     default:

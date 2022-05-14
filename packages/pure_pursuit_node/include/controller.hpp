@@ -18,7 +18,7 @@ enum class ControllerError {
     IMPOSSIBLE_ARC
 };
 
-inline std::string error_to_string(ControllerError e) {
+inline std::string errorToString(ControllerError e) {
     switch (e) {
     case ControllerError::UNREACHEABLE_TRAJECTORY:
         return "Can not find the target point";
@@ -42,7 +42,7 @@ private:
 
 public:
     Controller(const model::Model &model) : model{model} {}
-    ControllerResult get_motion(
+    ControllerResult getMotion(
         const nav_msgs::msg::Odometry &odometry,
         const std::vector<geometry_msgs::msg::PoseStamped> &path,
         bool visual_info_required = 0);
