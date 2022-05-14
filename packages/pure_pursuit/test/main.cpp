@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "simulator.hpp"
-#include "speed_planner.hpp"
+#include "pure_pursuit/simulator.hpp"
+#include "pure_pursuit/speed_planner.hpp"
 #include "geom/vector.hpp"
 #include "geom/test/near_assert.hpp"
 

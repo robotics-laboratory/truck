@@ -1,5 +1,5 @@
-#include "controller.hpp"
-#include "speed_planner.hpp"
+#include "pure_pursuit/controller.hpp"
+#include "pure_pursuit/speed_planner.hpp"
 
 #include <algorithm>
 #include <cmath>

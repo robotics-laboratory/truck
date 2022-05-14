@@ -1,4 +1,4 @@
-#include "simulator.hpp"
+#include "pure_pursuit/simulator.hpp"
 
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -7,8 +7,6 @@
 
 #include <algorithm>
 #include <cmath>
-
-#include "controller.hpp"
 
 inline auto odometry_to_pose_stamped(const nav_msgs::msg::Odometry& odm) {
     geometry_msgs::msg::PoseStamped pose;

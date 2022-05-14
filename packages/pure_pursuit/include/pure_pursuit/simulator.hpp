@@ -8,8 +8,8 @@
 
 #include "model/model.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "controller.hpp"
-#include "result.hpp"
+#include "pure_pursuit/controller.hpp"
+#include "pure_pursuit/result.hpp"
 
 namespace pure_pursuit {
 

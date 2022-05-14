@@ -5,12 +5,12 @@
 #include <string>
 #include <limits>
 
-#include "controller.hpp"
+#include "pure_pursuit/controller.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "truck_interfaces/msg/path.hpp"
 #include "pure_pursuit_msgs/msg/command.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "visual_info.hpp"
+#include "pure_pursuit/visual_info.hpp"
 #include "model/model.hpp"
 
 namespace pure_pursuit {

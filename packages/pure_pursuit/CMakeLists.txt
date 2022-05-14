@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(pure_pursuit_node)
+project(pure_pursuit)
 
 set(CMAKE_CXX_STANDARD 20)
 add_compile_options(-Wall -Wextra -Werror)
@@ -18,7 +18,7 @@ find_package(geom REQUIRED)
 
 set(COMMON_SRC src/controller.cpp src/speed_planner.cpp)
 
-add_executable(${PROJECT_NAME}
+add_executable(${PROJECT_NAME}_node
   src/main.cpp
   ${COMMON_SRC}
 )
@@ -26,25 +26,25 @@ add_executable(${PROJECT_NAME}
 ament_target_dependencies(${PROJECT_NAME} rclcpp pure_pursuit_msgs truck_interfaces visualization_msgs nav_msgs geometry_msgs)
 
 install(TARGETS
-  ${PROJECT_NAME}
-  DESTINATION lib/${PROJECT_NAME}
+  ${PROJECT_NAME}_node
+  DESTINATION lib/${PROJECT_NAME}_node
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME}_node PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 install(DIRECTORY
   launch
-  DESTINATION share/${PROJECT_NAME})
+  DESTINATION share/${PROJECT_NAME}_node)
 
 add_library(${PROJECT_NAME}_simulator
   src/simulator.cpp
   ${COMMON_SRC}
 )
 
-set_target_properties(${PROJECT_NAME}_simulator PROPERTIES PUBLIC_HEADER include/simulator.hpp)
+set_target_properties(${PROJECT_NAME}_simulator PROPERTIES PUBLIC_HEADER include/pure_pursuit/simulator.hpp)
 
 target_include_directories(${PROJECT_NAME}_simulator PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

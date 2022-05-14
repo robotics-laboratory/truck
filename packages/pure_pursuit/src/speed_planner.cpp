@@ -1,6 +1,6 @@
 #include <cmath>
 
-#include "speed_planner.hpp"
+#include "pure_pursuit/speed_planner.hpp"
 
 inline double pathTimeByAccel(double required_dist, double current_velocity, double final_velocity, double accel) noexcept {
     double accel_time = std::max((final_velocity - current_velocity) / accel, 0.0);
