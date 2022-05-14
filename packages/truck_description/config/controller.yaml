@@ -5,8 +5,8 @@ controller_manager:
     velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
 
-    joint_trajectory_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+    steering_controller:
+      type: position_controllers/JointGroupPositionController
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -23,9 +23,8 @@ velocity_controller:
       - position
       - velocity
 
-joint_trajectory_controller:
+steering_controller:
   ros__parameters:
-    allow_partial_joints_goal: true
     joints:
       - left_steering_joint
       - right_steering_joint

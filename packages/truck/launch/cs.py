@@ -42,8 +42,8 @@ def generate_launch_description():
         output=OUTPUT,
     )
 
-    load_joint_trajectory_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'joint_trajectory_controller'],
+    load_steering_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'steering_controller'],
         output=OUTPUT,
     )
 
@@ -55,6 +55,7 @@ def generate_launch_description():
     control_node = Node(
         package='control_node',
         executable='control_node',
+        arguments=[os.path.join(get_package_share_directory('model'), 'config', 'model.yaml')],
         output=OUTPUT,
         namespace=NAMESPACE,
     )
@@ -76,12 +77,12 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_joint_state_controller,
-                on_exit=[load_joint_trajectory_controller],
+                on_exit=[load_steering_controller],
             )
         ),
         RegisterEventHandler(
             event_handler=OnProcessExit(
-                target_action=load_joint_trajectory_controller,
+                target_action=load_steering_controller,
                 on_exit=[load_velocity_controller],
             )
         ),

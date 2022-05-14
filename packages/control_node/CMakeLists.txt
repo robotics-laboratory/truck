@@ -10,10 +10,10 @@ find_package(rclcpp_action REQUIRED)
 find_package(truck_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
-find_package(trajectory_msgs REQUIRED)
+find_package(model)
 
 add_executable(${PROJECT_NAME} src/main.cpp)
-ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_action truck_interfaces std_msgs control_msgs trajectory_msgs)
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_action truck_interfaces std_msgs control_msgs model)
 
 install(
   TARGETS ${PROJECT_NAME}
