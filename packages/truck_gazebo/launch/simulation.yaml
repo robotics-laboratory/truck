@@ -3,7 +3,7 @@ launch:
 
 - executable:
     name: "gzserver"
-    cmd: "gzserver --verbose $(find-pkg-share truck_gazebo)/worlds/$(var world)"
+    cmd: "gzserver --verbose $(find-pkg-share truck_gazebo)/worlds/$(var world) gui:=false"
     output: "log"
     shell: True
     # TODO(dasimagin) fix this duty hack

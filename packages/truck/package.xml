@@ -15,6 +15,7 @@
 
   <depend>planning_node</depend>
   <depend>pure_pursuit_node</depend>
+  <exec_depend>control_node</exec_depend>
   <depend>truck_gazebo_plugins</depend>
 
   <export>

@@ -6,7 +6,7 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(planning_interfaces REQUIRED)
+find_package(truck_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(OpenCV REQUIRED)
 
@@ -39,7 +39,7 @@ target_include_directories(
 )
 target_link_libraries(planning_node ${OpenCV_LIBS})
 target_compile_features(planning_node PUBLIC c_std_11 cxx_std_17)
-ament_target_dependencies(planning_node planning_interfaces rclcpp)
+ament_target_dependencies(planning_node truck_interfaces rclcpp)
 
 install(
   TARGETS

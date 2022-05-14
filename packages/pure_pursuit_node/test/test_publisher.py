@@ -1,6 +1,6 @@
 import rclpy
 
-from planning_interfaces.msg import Path
+from truck_interfaces.msg import Path
 from geometry_msgs.msg import PoseStamped, Point
 from nav_msgs.msg import Odometry
 from pure_pursuit_msgs.msg import Command

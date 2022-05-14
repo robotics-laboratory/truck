@@ -30,6 +30,8 @@ private:
     DECLARE_MODEL_FIELD(double, max_acceleration);
     DECLARE_MODEL_FIELD(double, max_decceleration);
     DECLARE_MODEL_FIELD(double, lookahead_distance);
+    DECLARE_MODEL_FIELD(double, truck_length);
+    DECLARE_MODEL_FIELD(double, truck_width);
 public:
     Model(const std::string &config_file) {
         YAML::Node config = YAML::LoadFile(config_file);

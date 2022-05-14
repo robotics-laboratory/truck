@@ -2,3 +2,5 @@ max_velocity: 2.0
 max_acceleration: 1.0
 max_decceleration: 1.0
 lookahead_distance: 2.0
+truck_length: 1.0
+truck_width: 0.5

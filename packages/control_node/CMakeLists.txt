@@ -1,26 +1,28 @@
 cmake_minimum_required(VERSION 3.8)
-project(planning_interfaces)
+project(control_node)
 
+set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-# find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(visualization_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(truck_interfaces REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
+find_package(model)
 
-find_package(rosidl_default_generators REQUIRED)
+add_executable(${PROJECT_NAME} src/main.cpp)
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_action truck_interfaces std_msgs control_msgs model)
 
-rosidl_generate_interfaces(${PROJECT_NAME} 
-  msg/MetaData.msg
-  msg/Path.msg
-  msg/Point.msg
-  msg/RandomSeed.msg
-  msg/Scene.msg
-  DEPENDENCIES
-  geometry_msgs
-  nav_msgs
-  visualization_msgs
+install(
+  TARGETS ${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
@@ -34,5 +36,4 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_export_dependencies(rosidl_default_runtime)
 ament_package()

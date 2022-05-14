@@ -5,7 +5,7 @@
 
 #include "controller.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "planning_interfaces/msg/path.hpp"
+#include "truck_interfaces/msg/path.hpp"
 #include "pure_pursuit_msgs/msg/command.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "visual_info.hpp"
@@ -23,8 +23,8 @@ public:
             arc_publisher =
                 Node::create_publisher<visualization_msgs::msg::MarkerArray>("pure_pursuit_arc", 1);
         }
-        slot_path = this->create_subscription<planning_interfaces::msg::Path>(
-            "planned_path", 1, [this](planning_interfaces::msg::Path::UniquePtr path) {
+        slot_path = this->create_subscription<truck_interfaces::msg::Path>(
+            "planned_path", 1, [this](truck_interfaces::msg::Path::UniquePtr path) {
                 trajectory = std::move(path->path.poses);
             });
         slot_state = Node::create_subscription<nav_msgs::msg::Odometry>(
@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    rclcpp::Subscription<planning_interfaces::msg::Path>::SharedPtr slot_path;
+    rclcpp::Subscription<truck_interfaces::msg::Path>::SharedPtr slot_path;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr slot_state;
     rclcpp::Publisher<pure_pursuit_msgs::msg::Command>::SharedPtr cmd_publisher;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr arc_publisher;

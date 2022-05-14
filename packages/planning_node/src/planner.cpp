@@ -24,7 +24,7 @@
 #include <vector>
 
 
-using namespace planning_interfaces;
+using namespace truck_interfaces;
 
 namespace {
 
