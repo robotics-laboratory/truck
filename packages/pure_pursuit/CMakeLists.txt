@@ -7,7 +7,6 @@ add_compile_options(-Wall -Wextra -Werror)
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(pure_pursuit_msgs REQUIRED)
 find_package(truck_interfaces REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
@@ -23,7 +22,7 @@ add_executable(${PROJECT_NAME}_node
   ${COMMON_SRC}
 )
 
-ament_target_dependencies(${PROJECT_NAME} rclcpp pure_pursuit_msgs truck_interfaces visualization_msgs nav_msgs geometry_msgs)
+ament_target_dependencies(${PROJECT_NAME}_node rclcpp truck_interfaces model geom visualization_msgs nav_msgs geometry_msgs)
 
 install(TARGETS
   ${PROJECT_NAME}_node
@@ -51,7 +50,7 @@ target_include_directories(${PROJECT_NAME}_simulator PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-set(SIMULATOR_DEPENDENCIES rclcpp tf2 pure_pursuit_msgs visualization_msgs nav_msgs geometry_msgs model geom)
+set(SIMULATOR_DEPENDENCIES rclcpp tf2 truck_interfaces visualization_msgs nav_msgs geometry_msgs model geom)
 
 ament_target_dependencies(${PROJECT_NAME}_simulator ${SIMULATOR_DEPENDENCIES})
 ament_export_dependencies(${SIMULATOR_DEPENDENCIES})

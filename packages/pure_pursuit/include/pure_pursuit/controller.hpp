@@ -5,7 +5,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "pure_pursuit_msgs/msg/command.hpp"
+#include "truck_interfaces/msg/control.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "pure_pursuit/visual_info.hpp"
 #include "model/model.hpp"
@@ -30,7 +30,7 @@ inline std::string errorToString(ControllerError e) {
 }
 
 struct ControllerResultData {
-    pure_pursuit_msgs::msg::Command cmd;
+    truck_interfaces::msg::Control cmd;
     std::optional<VisualInfo> visual_info;
 };
 

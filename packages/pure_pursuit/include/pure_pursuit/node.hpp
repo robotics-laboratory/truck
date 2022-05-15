@@ -8,7 +8,7 @@
 #include "pure_pursuit/controller.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "truck_interfaces/msg/path.hpp"
-#include "pure_pursuit_msgs/msg/command.hpp"
+#include "truck_interfaces/msg/control.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "pure_pursuit/visual_info.hpp"
 #include "model/model.hpp"
@@ -17,8 +17,8 @@ namespace pure_pursuit {
 
 class PursuitNode: public rclcpp::Node {
 private:
-    static inline pure_pursuit_msgs::msg::Command getStopCommand() {
-        pure_pursuit_msgs::msg::Command stop;
+    static inline truck_interfaces::msg::Control getStopCommand() {
+        truck_interfaces::msg::Control stop;
         stop.velocity = 0;
         stop.acceleration = -std::numeric_limits<double>::infinity();
         stop.curvature = 0;
@@ -30,7 +30,7 @@ public:
         bool publish_debug_info = this->declare_parameter<bool>("publish_debug_info", true);
 
         cmd_publisher =
-            Node::create_publisher<pure_pursuit_msgs::msg::Command>("pure_pursuit_command", 1);
+            Node::create_publisher<truck_interfaces::msg::Control>("pure_pursuit_command", 1);
         if (publish_debug_info) {
             arc_publisher =
                 Node::create_publisher<visualization_msgs::msg::MarkerArray>("pure_pursuit_arc", 1);
@@ -63,7 +63,7 @@ public:
 private:
     rclcpp::Subscription<truck_interfaces::msg::Path>::SharedPtr slot_path;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr slot_state;
-    rclcpp::Publisher<pure_pursuit_msgs::msg::Command>::SharedPtr cmd_publisher;
+    rclcpp::Publisher<truck_interfaces::msg::Control>::SharedPtr cmd_publisher;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr arc_publisher;
     std::optional<std::vector<geometry_msgs::msg::PoseStamped>> trajectory;
 

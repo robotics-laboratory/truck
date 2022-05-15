@@ -8,7 +8,7 @@
 #include "geom/vector.hpp"
 #include "geom/arc.hpp"
 
-using pure_pursuit_msgs::msg::Command;
+using truck_interfaces::msg::Control;
 using namespace geometry_msgs::msg;
 using visualization_msgs::msg::Marker;
 using geom::Vec2d;
@@ -82,7 +82,7 @@ ControllerResult Controller::getMotion(const nav_msgs::msg::Odometry& odometry,
         plan = getPlanWithVelocityPrior(dist, required_time, required_velocity, current_velocity, model);
     }
 
-    Command command;
+    Control command;
 
     command.acceleration = plan.acceleration;
     command.velocity = plan.velocity;
