@@ -1,17 +1,24 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>pure_pursuit_msgs</name>
+  <name>pure_pursuit</name>
   <version>0.1.0</version>
-  <description>Pure Pursuit interfaces package</description>
+  <description>Pure Pursuit node package</description>
   <maintainer email="erop.sergeev.00@mail.ru">root</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>rosidl_default_generators</build_depend>
-  <exec_depend>rosidl_default_runtime</exec_depend>
-  <member_of_group>rosidl_interface_packages</member_of_group>
+  <depend>rclcpp</depend>
+  <depend>pure_pursuit_msgs</depend>
+  <depend>truck_interfaces</depend>
+  <depend>model</depend>
+  <depend>tf2</depend>
+  <depend>geom</depend>
+  
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
