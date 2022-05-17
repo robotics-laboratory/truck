@@ -42,15 +42,11 @@ RUN apt-get update -q && \
         libavcodec-dev \
         libavformat-dev \
         libavresample-dev \
-        libcanberra-gtk3-module \
         libdc1394-22-dev \
         libeigen3-dev \
-        libglew-dev \
-        libglu1-mesa-dev \
         libgstreamer-plugins-base1.0-dev \
         libgstreamer-plugins-good1.0-dev \
         libgstreamer1.0-dev \
-        libgtk-3-dev \
         libjpeg-dev \
         libjpeg8-dev \
         libjpeg-turbo8-dev \
@@ -68,19 +64,7 @@ RUN apt-get update -q && \
         libxine2-dev \
         libxvidcore-dev \
         libx264-dev \
-        libgtkglext1 \
-        libgtkglext1-dev\
-        mesa-common-dev \
-        pkg-config \
-        python3-pip \
-        python3-dev \
-        python3-numpy \
-        python3-distutils \
-        python3-setuptools \
-        qv4l2 \
         tar \
-        v4l-utils \
-        v4l2ucp \
         zlib1g-dev \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
@@ -94,11 +78,11 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
     && cmake .. \
         -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' '  ',') \
         -DCMAKE_BUILD_TYPE=RELEASE \
-        -DWITH_GTK=ON \
+        -DWITH_GTK=OFF \
         -DBUILD_EXAMPLES=OFF \
         -DBUILD_opencv_apps=OFF \
         -DBUILD_opencv_python2=OFF \
-        -DBUILD_opencv_python3=ON \
+        -DBUILD_opencv_python3=OFF \
         -DBUILD_opencv_java=OFF \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
         -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 \
@@ -116,23 +100,11 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
-### INSTALL REALSENSE2
+# ### INSTALL REALSENSE2
 
-RUN apt-get update -q \
-    && apt-get install -yq --no-install-recommends \
-        gnupg2 \
-        libgtk-3-dev \
-        libglfw3-dev \
-        libgl1-mesa-dev \
-        libglu1-mesa-dev \
-        libssl-dev \
-        libudev-dev \
-        libusb-1.0-0-dev \
-        lsb-release \
-        pkg-config \
-        software-properties-common \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE \
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE \
     && add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u \
+    && apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         librealsense2-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
@@ -148,12 +120,11 @@ RUN apt-get update -q && \
         libpython3-dev \
         python3-dev \
         libyaml-cpp-dev \
-        libboost-all-dev \
+        libboost-dev \
         libtbb-dev \
         libsqlite3-dev \
         libpcl-dev \
         libproj-dev \
-        libqt5svg5-dev \
         libsuitesparse-dev \
         tar \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
@@ -237,7 +208,6 @@ RUN apt-get update -q \
         make \
         libasio-dev \
         libboost-dev \
-        libbullet-dev \
         lib${GAZEBO}-dev \
         libpython3-dev \
         libtinyxml-dev \
@@ -251,6 +221,7 @@ RUN apt-get update -q \
         python3-setuptools \
         python3-vcstool \
         python3-rosinstall-generator \
+        python3-pip \
         libtinyxml2-dev \
         libcunit1-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
@@ -276,43 +247,54 @@ RUN pip3 install --no-cache-dir -U \
         pytest-rerunfailures \
         pytest
 
-RUN mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT} \
+ENV ROS_TMP=/tmp/${ROS_DISTRO}
+
+RUN mkdir -p ${ROS_ROOT} \
+    && mkdir -p ${ROS_TMP} && cd ${ROS_TMP} \
     && rosinstall_generator \
             --rosdistro ${ROS_DISTRO} \
-            --exclude librealsense2 rtabmap libg2o \
+            --exclude librealsense2 rtabmap libg2o libpointmatcher libnabo \
             --deps \
-        ament_lint \
         ament_cmake_clang_format \
-        image_geometry \
-        image_pipeline \
-        image_transport \
-        compressed_image_transport \
         compressed_depth_image_transport \
+        compressed_image_transport \
         cv_bridge \
+        foxglove_msgs \
+        image_geometry \
+        image_transport \
+        image_rotate \
         gazebo_ros_pkgs \
         gazebo_ros2_control \
+        geometry_msgs \
+        geometry2 \
+        joint_state_publisher \
+        joy_linux \
         launch_xml \
         launch_yaml \
         nav2_common \
         pcl_conversions \
         realsense2_camera \
-        realsense2_description \
         ros_base \
         ros2_control \
         ros2_controllers \
         rosbridge_suite \
         rtabmap_ros \
+        sensor_msgs \
+        std_msgs \
+        tf2 \
+        urdf \
+        urdfdom \
         vision_opencv \
-        vision_msgs \
-    > ros2.${ROS_DISTRO}.rosinstall \
-    && vcs import src < ros2.${ROS_DISTRO}.rosinstall > /dev/null
+        visualization_msgs \
+    > ${ROS_ROOT}/ros2.rosinstall \
+    && vcs import ${ROS_TMP} < ${ROS_ROOT}/ros2.rosinstall > /dev/null
 
 RUN apt-get update -q \
     && rosdep init \
     && rosdep update \
     && rosdep install -qy --ignore-src  \
         --rosdistro ${ROS_DISTRO} \
-        --from-paths ${ROS_ROOT}/src \
+        --from-paths ${ROS_TMP} \
         --skip-keys fastcdr \
         --skip-keys gazebo11 \
         --skip-keys libg2o \
@@ -322,13 +304,12 @@ RUN apt-get update -q \
         --skip-keys libopencv-contrib-dev \
         --skip-keys libopencv-imgproc-dev \
         --skip-keys python3-opencv \
-        --skip-keys python3-opencv \
         --skip-keys rti-connext-dds-5.3.1 \
         --skip-keys rtabmap \
         --skip-keys urdfdom_headers \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-RUN cd ${ROS_ROOT}/src \
+RUN cd ${ROS_TMP} \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
@@ -336,7 +317,7 @@ RUN cd ${ROS_ROOT}/src \
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
-RUN printf "export ROS_ROOT=${ROS_ROOT}\nexport ROS_DISTRO=${ROS_DISTRO}\nsource \${ROS_ROOT}/setup.bash" >> /root/.bashrc
+RUN printf "export ROS_ROOT=${ROS_ROOT}\nexport ROS_DISTRO=${ROS_DISTRO}\nsource ${ROS_ROOT}/setup.bash" >> /root/.bashrc
 
 ENV GZWEB_VERSION="1.4.1"
 ENV GZWEB_PATH=/opt/gzweb
@@ -348,7 +329,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | b
     && wget -qO - https://github.com/osrf/gzweb/archive/refs/tags/gzweb_${GZWEB_VERSION}.tar.gz | tar -xz -C ${GZWEB_PATH} --strip-components 1 \
     && cd ${GZWEB_PATH} \
     && source /usr/share/gazebo/setup.sh \
-    && npm run deploy --- -m
+    && npm run deploy --- -m local
 
 ### INSTALL DEV PKGS
 
@@ -363,10 +344,13 @@ RUN apt-get update -q \
         git \
         gnupg2 \
         file \
+        hdf5-tools \
         htop \
         httpie \
+        libatlas-base-dev \
+        libhdf5-serial-dev \
         less \
-        make \
+        mlocate \
         nlohmann-json-dev \
         python3 \
         python3-dev \
@@ -374,10 +358,13 @@ RUN apt-get update -q \
         python3-pip \
         python3-setuptools \
         tar \
+        tree \
         tmux \
         vim \
         wget \
         ssh \
+    && pip3 install --no-cache-dir -U \
+        jetson-stats \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \

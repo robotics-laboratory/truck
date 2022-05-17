@@ -42,11 +42,6 @@ RUN apt-get update -yq && \
         git \
         file \
         tar \
-        python3-pip \
-        python3-dev \
-        python3-numpy \
-        python3-distutils \
-        python3-setuptools \
         libatlas-base-dev \
         libavcodec-dev \
         libavformat-dev \
@@ -54,11 +49,9 @@ RUN apt-get update -yq && \
         libcanberra-gtk3-module \
         libdc1394-22-dev \
         libeigen3-dev \
-        libglew-dev \
         libgstreamer-plugins-base1.0-dev \
         libgstreamer-plugins-good1.0-dev \
         libgstreamer1.0-dev \
-        libgtk-3-dev \
         libjpeg-dev \
         libjpeg8-dev \
         libjpeg-turbo8-dev \
@@ -76,12 +69,7 @@ RUN apt-get update -yq && \
         libxine2-dev \
         libxvidcore-dev \
         libx264-dev \
-        libgtkglext1 \
-        libgtkglext1-dev \
         pkg-config \
-        qv4l2 \
-        v4l-utils \
-        v4l2ucp \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
@@ -95,7 +83,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
     && cmake .. \
         -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' ' ',') \
         -DCMAKE_BUILD_TYPE=RELEASE \
-        -DWITH_GTK=ON \
+        -DWITH_GTK=OFF \
         -DBUILD_opencv_apps=OFF \
         -DBUILD_EXAMPLES=OFF \
         -DBUILD_opencv_python2=OFF \
@@ -138,18 +126,12 @@ RUN apt-get update -yq \
         curl \
         git \
         make \
-        libgl1-mesa-dev \
-        libglfw3-dev \
-        libgtk-3-dev \
-        libglu1-mesa-dev \
         libssl-dev \
         libusb-1.0-0-dev \
         libusb-1.0-0 \
         libudev-dev \
         libomp-dev \
         pkg-config \
-        python3 \
-        python3-dev \
         software-properties-common \
         sudo \
         tar \
@@ -167,7 +149,7 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
         -DFORCE_RSUSB_BACKEND=false \
         -DBUILD_WITH_CUDA=true \
         -DBUILD_WITH_OPENMP=true \
-        -DBUILD_PYTHON_BINDINGS=true \
+        -DBUILD_PYTHON_BINDINGS=false \
         -DBUILD_WITH_TM2=false \
     && make -j$(($(nproc)-1)) install \
     && rm -rf /tmp/*
@@ -227,12 +209,11 @@ RUN apt-get update -q && \
         libpython3-dev \
         python3-dev \
         libyaml-cpp-dev \
-        libboost-all-dev \
+        libboost-dev \
         libtbb-dev \
         libsqlite3-dev \
         libpcl-dev \
         libproj-dev \
-        libqt5svg5-dev \
         libsuitesparse-dev \
         tar \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
@@ -305,33 +286,33 @@ ENV GAZEBO="gazebo11"
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
-        apt-utils \
-        build-essential \
-        ${GAZEBO} \
-        ${GAZEBO}-common \
-        ${GAZEBO}-plugin-base \
-        git \
-        imagemagick \
-        libjansson-dev \
-        make \
-        libasio-dev \
-        libboost-dev \
-        libbullet-dev \
-        lib${GAZEBO}-dev \
-        libpython3-dev \
-        libtinyxml-dev \
-        locales \
-        python3-bson \
-        python3-colcon-common-extensions \
-        python3-flake8 \
-        python3-numpy \
-        python3-pytest-cov \
-        python3-rosdep \
-        python3-setuptools \
-        python3-vcstool \
-        python3-rosinstall-generator \
-        libtinyxml2-dev \
-        libcunit1-dev \
+    apt-utils \
+    build-essential \
+    ${GAZEBO} \
+    ${GAZEBO}-common \
+    ${GAZEBO}-plugin-base \
+    git \
+    imagemagick \
+    libjansson-dev \
+    make \
+    libasio-dev \
+    libboost-dev \
+    lib${GAZEBO}-dev \
+    libpython3-dev \
+    libtinyxml-dev \
+    locales \
+    python3-bson \
+    python3-colcon-common-extensions \
+    python3-flake8 \
+    python3-numpy \
+    python3-pytest-cov \
+    python3-rosdep \
+    python3-setuptools \
+    python3-vcstool \
+    python3-rosinstall-generator \
+    python3-pip \
+    libtinyxml2-dev \
+    libcunit1-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ENV LANG=en_US.UTF-8
@@ -340,58 +321,69 @@ ENV PYTHONIOENCODING=utf-8
 RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
 RUN pip3 install --no-cache-dir -U \
-        argcomplete \
-        importlib-metadata \
-        importlib-resources \
-        flake8-blind-except \
-        flake8-builtins \
-        flake8-class-newline \
-        flake8-comprehensions \
-        flake8-deprecated \
-        flake8-docstrings \
-        flake8-import-order \
-        flake8-quotes \
-        pytest-repeat \
-        pytest-rerunfailures \
-        pytest
+    argcomplete \
+    importlib-metadata \
+    importlib-resources \
+    flake8-blind-except \
+    flake8-builtins \
+    flake8-class-newline \
+    flake8-comprehensions \
+    flake8-deprecated \
+    flake8-docstrings \
+    flake8-import-order \
+    flake8-quotes \
+    pytest-repeat \
+    pytest-rerunfailures \
+    pytest
 
-RUN mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT} \
+ENV ROS_TMP=/tmp/${ROS_DISTRO}
+
+RUN mkdir -p ${ROS_ROOT} \
+    && mkdir -p ${ROS_TMP} && cd ${ROS_TMP} \
     && rosinstall_generator \
-            --rosdistro ${ROS_DISTRO} \
-            --exclude librealsense2 rtabmap libg2o \
-            --deps \
-        ament_lint \
+    --rosdistro ${ROS_DISTRO} \
+    --exclude librealsense2 rtabmap libg2o libpointmatcher libnabo \
+    --deps \
         ament_cmake_clang_format \
-        image_geometry \
-        image_pipeline \
-        image_transport \
-        compressed_image_transport \
         compressed_depth_image_transport \
+        compressed_image_transport \
         cv_bridge \
+        foxglove_msgs \
+        image_geometry \
+        image_transport \
+        image_rotate \
         gazebo_ros_pkgs \
         gazebo_ros2_control \
+        geometry_msgs \
+        geometry2 \
+        joint_state_publisher \
+        joy_linux \
         launch_xml \
         launch_yaml \
         nav2_common \
         pcl_conversions \
         realsense2_camera \
-        realsense2_description \
         ros_base \
         ros2_control \
         ros2_controllers \
         rosbridge_suite \
         rtabmap_ros \
+        sensor_msgs \
+        std_msgs \
+        tf2 \
+        urdf \
+        urdfdom \
         vision_opencv \
-        vision_msgs \
-    > ros2.${ROS_DISTRO}.rosinstall \
-    && vcs import src < ros2.${ROS_DISTRO}.rosinstall > /dev/null
+        visualization_msgs \
+    > ${ROS_ROOT}/ros2.rosinstall \
+    && vcs import ${ROS_TMP} < ${ROS_ROOT}/ros2.rosinstall > /dev/null
 
 RUN apt-get update -q \
     && rosdep init \
     && rosdep update \
     && rosdep install -qy --ignore-src  \
         --rosdistro ${ROS_DISTRO} \
-        --from-paths ${ROS_ROOT}/src \
+        --from-paths ${ROS_TMP} \
         --skip-keys fastcdr \
         --skip-keys gazebo11 \
         --skip-keys libg2o \
@@ -401,13 +393,12 @@ RUN apt-get update -q \
         --skip-keys libopencv-contrib-dev \
         --skip-keys libopencv-imgproc-dev \
         --skip-keys python3-opencv \
-        --skip-keys python3-opencv \
         --skip-keys rti-connext-dds-5.3.1 \
         --skip-keys rtabmap \
         --skip-keys urdfdom_headers \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-RUN cd ${ROS_ROOT}/src \
+RUN cd ${ROS_TMP} \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
@@ -415,7 +406,7 @@ RUN cd ${ROS_ROOT}/src \
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
-RUN printf "export ROS_ROOT=${ROS_ROOT}\nexport ROS_DISTRO=${ROS_DISTRO}\nsource \${ROS_ROOT}/setup.bash" >> /root/.bashrc
+RUN printf "export ROS_ROOT=${ROS_ROOT}\nexport ROS_DISTRO=${ROS_DISTRO}\nsource ${ROS_ROOT}/setup.bash" >> /root/.bashrc
 
 ENV GZWEB_VERSION="1.4.1"
 ENV GZWEB_PATH=/opt/gzweb
@@ -427,7 +418,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | b
     && wget -qO - https://github.com/osrf/gzweb/archive/refs/tags/gzweb_${GZWEB_VERSION}.tar.gz | tar -xz -C ${GZWEB_PATH} --strip-components 1 \
     && cd ${GZWEB_PATH} \
     && source /usr/share/gazebo/setup.sh \
-    && npm run deploy --- -m
+    && npm run deploy --- -m local
 
 ### INSTALL DEV PKGS
 
@@ -435,16 +426,20 @@ RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         build-essential \
         gfortran \
+        clang-format \
         curl \
         file \
         gfortran \
         git \
         gnupg2 \
         file \
+        hdf5-tools \
         htop \
         httpie \
+        libatlas-base-dev \
+        libhdf5-serial-dev \
         less \
-        make \
+        mlocate \
         nlohmann-json-dev \
         python3 \
         python3-dev \
@@ -452,10 +447,13 @@ RUN apt-get update -q \
         python3-pip \
         python3-setuptools \
         tar \
+        tree \
         tmux \
         vim \
         wget \
         ssh \
+    && pip3 install --no-cache-dir -U \
+    jetson-stats \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
