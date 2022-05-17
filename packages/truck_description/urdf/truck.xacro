@@ -37,6 +37,13 @@ limitations under the License.
 -->
 
 <robot name="truck" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <gazebo>
+    <plugin name="OdometryPlugin" filename="libtruck_gazebo_odometry.so">
+      <link_name>base_link</link_name>
+      <period>0.05</period>
+    </plugin>
+  </gazebo>
+
   <!-- Degree-to-radian conversions -->
   <xacro:property name="degrees_45" value="0.785398163"/>
   <xacro:property name="degrees_90" value="1.57079633"/>

@@ -22,7 +22,6 @@ target_include_directories(geom
 )
 
 ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_libraries(geom)
 
 # Export modern CMake targets
 ament_export_targets(geom)

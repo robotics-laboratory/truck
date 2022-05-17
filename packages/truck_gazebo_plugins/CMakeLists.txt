@@ -5,6 +5,7 @@ find_package(ament_cmake REQUIRED)
 
 find_package(gazebo_dev REQUIRED)
 find_package(gazebo_ros REQUIRED)
+find_package(tf2_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 
@@ -14,27 +15,33 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-file(GLOB SRCS src/*.cpp)
 
-add_library(truck_gazebo_plugins SHARED ${SRCS})
-ament_target_dependencies(truck_gazebo_plugins gazebo_dev gazebo_ros nav_msgs rclcpp)
 
-target_include_directories(truck_gazebo_plugins PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
-)
+# truck_gazebo_odometry
+add_library(truck_gazebo_odometry SHARED src/odometry.cpp)
 
-ament_export_targets(truck_gazebo_plugins HAS_LIBRARY_TARGET)
-ament_export_dependencies(truck_gazebo_plugins gazebo_dev gazebo_ros nav_msgs rclcpp)
+target_include_directories(truck_gazebo_odometry PUBLIC include)
+ament_target_dependencies(truck_gazebo_odometry gazebo_dev gazebo_ros nav_msgs rclcpp tf2_msgs)
+ament_export_libraries(truck_gazebo_odometry)
 
-install(
-  DIRECTORY include/
-  DESTINATION include
-)
+# truck_gazebo_occupnacy_grid
 
-install(
-  TARGETS truck_gazebo_plugins
-  EXPORT truck_gazebo_plugins
+add_library(truck_gazebo_occupancy_grid SHARED src/occupancy_grid.cpp)
+
+target_include_directories(truck_gazebo_occupancy_grid PUBLIC include)
+ament_target_dependencies(truck_gazebo_occupancy_grid gazebo_dev gazebo_ros  nav_msgs rclcpp)
+ament_export_libraries(truck_gazebo_occupancy_grid)
+
+#
+
+ament_export_include_directories(include)
+ament_export_dependencies(gazebo_dev gazebo_ros geometry_msgs nav_msgs rclcpp)
+
+install(DIRECTORY include/ DESTINATION include)
+
+install(TARGETS
+  truck_gazebo_odometry
+  truck_gazebo_occupancy_grid
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
