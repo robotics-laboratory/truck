@@ -31,9 +31,13 @@ private:
     private:
         cv::Mat quaternion_sum_;
         tf2::Vector3 average_translation_;
+        tf2::Vector3 average_translation_square_;
         int transforms_count_;
 
         Transform average_transform_;
+        
+        double quaternion_error_square_;
+        double translation_error_square_;
         double error_;
     };
 

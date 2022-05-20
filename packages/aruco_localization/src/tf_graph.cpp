@@ -1,4 +1,5 @@
 #include "graph_algorithms.hpp"
+#include "math_helpers.hpp"
 #include "tf_graph.hpp"
 
 namespace rosaruco {
@@ -82,7 +83,20 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
     average_translation_ = average_translation_ * transforms_count_  / (transforms_count_ + 1) 
         + t.GetTranslation() / (transforms_count_ + 1);
 
+    auto translation_square = ElementWiseMul(t.GetTranslation(), t.GetTranslation());
+
+    average_translation_square_ = average_translation_square_ * transforms_count_  / (transforms_count_ + 1) 
+        + translation_square / (transforms_count_ + 1);
+
     transforms_count_++;
+
+    auto dispersion = average_translation_square_ - ElementWiseMul(average_translation_, average_translation_);
+
+    translation_error_square_ = 0;
+
+    for (size_t i = 0; i < 3; i++) {
+        translation_error_square_ += dispersion[i];
+    }
 
     cv::Mat w, u, vt;
     cv::SVD::compute(quaternion_sum_, w, u, vt);
@@ -96,8 +110,12 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
 
     average_transform_.SetTranslation(average_translation_);
 
-    w.at<double>(0) = 0;
-    error_ = cv::norm(w);
+    quaternion_error_square_ = 0;
+    for (size_t i = 1; i < 4; i++) {
+        quaternion_error_square_ += w.at<double>(i) * w.at<double>(i);
+    }
+
+    error_ = sqrt(translation_error_square_ + quaternion_error_square_);
 }
 
 bool TfGraph::Edge::Empty() const {

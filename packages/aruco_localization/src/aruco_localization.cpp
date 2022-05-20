@@ -130,7 +130,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
         for (size_t i = 0; i < marker_ids.size(); i++) {
             auto to_anchor = coordinator_.GetTransformToAnchor(marker_ids[i]);
             if (to_anchor) {
-                add_labeled_marker(marker_array.markers, *to_anchor, marker_ids[i], 1.0);
+                AddLabeledMarker(marker_array.markers, *to_anchor, marker_ids[i], 1.0);
             }
         }
 
