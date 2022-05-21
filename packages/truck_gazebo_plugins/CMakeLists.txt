@@ -5,19 +5,18 @@ find_package(ament_cmake REQUIRED)
 
 find_package(gazebo_dev REQUIRED)
 find_package(gazebo_ros REQUIRED)
-find_package(tf2_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(tf2_msgs REQUIRED)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+# add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
+# odometry
 
-
-# truck_gazebo_odometry
 add_library(truck_gazebo_odometry SHARED src/odometry.cpp)
 
 target_include_directories(truck_gazebo_odometry PUBLIC include)
@@ -32,26 +31,28 @@ target_include_directories(truck_gazebo_occupancy_grid PUBLIC include)
 ament_target_dependencies(truck_gazebo_occupancy_grid gazebo_dev gazebo_ros  nav_msgs rclcpp)
 ament_export_libraries(truck_gazebo_occupancy_grid)
 
-#
 
 ament_export_include_directories(include)
 ament_export_dependencies(gazebo_dev gazebo_ros geometry_msgs nav_msgs rclcpp)
 
-install(DIRECTORY include/ DESTINATION include)
-
-install(TARGETS
-  truck_gazebo_odometry
-  truck_gazebo_occupancy_grid
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
+install(
+  DIRECTORY include/
+  DESTINATION include
 )
 
-if(BUILD_TESTING)
-  find_package(ament_cmake_clang_format REQUIRED)
-  find_file(CLANG_FORMAT .clang-format PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../..)
-  ament_clang_format(CONFIG_FILE ${CLANG_FORMAT})
-endif()
+install(TARGETS
+    truck_gazebo_odometry
+    truck_gazebo_occupancy_grid
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)
+
+# if(BUILD_TESTING)
+#   find_package(ament_cmake_clang_format REQUIRED)
+#   find_file(CLANG_FORMAT .clang-format PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+#   ament_clang_format(CONFIG_FILE ${CLANG_FORMAT})
+# endif()
 
 ament_package()
