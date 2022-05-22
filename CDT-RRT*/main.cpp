@@ -10,7 +10,7 @@
  
 int main(int argc, char** argv) {
 //  {x-bounds}, {y-bounds}, {maximum extension length}, {starting point}, {goal point}, {allowed deviation from goal}
-    WorkSpaceTree tree(Bounds(0,100), Bounds(0, 100), 3, Point(10, 40), Point(80, 80), 2);
+    WorkSpaceTree tree(Bounds(0, 100), Bounds(0, 100), 2, Point(10, 40), Point(80, 80), 2);
     auto tr = tree.findAndExport();
     std::cout << "RRT test: coordinates from start to goal\n";
     std::cout << "START\n";
@@ -20,6 +20,5 @@ int main(int argc, char** argv) {
         tr.pop_front();
     }
     std::cout << "FINISH\n";
-    
     return 0;
 }
