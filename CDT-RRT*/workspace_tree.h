@@ -16,21 +16,7 @@
 #include <deque>
 #include <fstream>
 #include "json.hpp"
-
-//Primitives
-struct Bounds
-{
-    double min;
-    double max;
-    Bounds(double inp_min, double inp_max) : min(inp_min), max(inp_max){}
-};
-
-struct Point
-{
-    double x;
-    double y;
-    Point(double inp_x, double inp_y) : x(inp_x), y(inp_y){}
-};
+#include "primitives.h"
 
 class WorkSpaceTree
 {
@@ -90,21 +76,8 @@ public:
     WorkSpaceTree(Bounds x_bounds, Bounds y_bounds, double mExt, Point start, Point goal, double rad) :
     _xBounds(x_bounds), _yBounds(y_bounds), _maxExtend(mExt), _root(new Node(start)), _goal(goal), _r(rad)
     {}
-    
     ~WorkSpaceTree()
     {}
-
 //  Finds a path and exports in to JSON
     std::deque<Point> findAndExport();
 };
-
-
-//Auxillary methods
-namespace WorkSpaceAuxillary{
-
-    //  Samples a pseudorandom integer in a given range
-    double genRand(const Bounds& bounds);
-        
-    //  Returns squared Euclidean distance between two points
-    double findSqDistance(const Point& first, const Point& second);
-}
