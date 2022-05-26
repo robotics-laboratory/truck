@@ -17,6 +17,7 @@
 #include <fstream>
 #include "json.hpp"
 #include "primitives.h"
+#include "statespace_tree.h"
 
 class WorkSpaceTree
 {
@@ -25,26 +26,35 @@ class WorkSpaceTree
         Point pos;
         std::vector<std::shared_ptr<Node>> children;
         std::shared_ptr<Node> parent;
+        StateSpaceTree::nodePtr stateNode;
         
         Node(Point coords) : pos(coords), parent(nullptr)
         {}
         
         ~Node()
         {}
+        //Links workspace node to a statespace node
+        void assignStateNode(const StateSpaceTree::nodePtr& node);
+        
     };
     
-//  Maximum extension length
-    double _maxExtend;
+    typedef std::shared_ptr<Node> nodePtr;
+    
 //  Workspace boundaries
     Bounds _xBounds;
     Bounds _yBounds;
+//  Maximum extension length
+    double _maxExtend;
 //  Goal coordinates
     Point _goal;
 //  Maximum expasion radius
     double _r;
     //  Stores the root node
-    std::shared_ptr<Node> _root;
-    
+    StateSpaceTree physical;
+    nodePtr _root;
+    size_t _card;
+    double _lebesgue;
+    double _speedInMovement;
     /*-------------------*/
     /*Implement obstacles*/
     /*-------------------*/
@@ -53,29 +63,40 @@ class WorkSpaceTree
     Point sampleCoords();
     
 //  Finds the nearest exisiting node in the tree
-    std::shared_ptr<Node> findNearest(const std::shared_ptr<Node> rand);
+    nodePtr findNearest(const nodePtr rand);
     
 //  Moves new point towards nearest node
-    double moveToNear(std::shared_ptr<Node> newnode, const std::shared_ptr<Node> near);
+    double moveToNear(nodePtr newnode, const nodePtr near);
+    
+//  Calculates the vicinity radius for parent candidates
+    double getVicinityRadius();
+    
+    std::vector<nodePtr> getNodesInVicinity(double radius, const Point& target);
+    
+//  Find least-cost parent in the given list
+    std::pair<nodePtr, arcPtr> cheapestParent(const std::vector<nodePtr>& cand, Point target, double targetSpeed);
     
 //  Expands the tree by 1 vertice
-    std::shared_ptr<Node> expand();
+    nodePtr expand(nodePtr child, double goalSpeed);
     
 //  Grows the tree from root to goal
-    std::shared_ptr<Node> grow();
+    nodePtr grow();
     
 //  Finds a path from root to the given node
-    std::deque<Point> trace(std::shared_ptr<Node> fin);
+    std::deque<Point> trace(nodePtr fin);
     
 //  Returns the closest alternative
-    static std::shared_ptr<Node> chooseNearest(const std::shared_ptr<Node>& target, std::shared_ptr<Node>& alt1, std::shared_ptr<Node>& alt2);
-
-
+    static nodePtr chooseNearest(const nodePtr& target, nodePtr& alt1, nodePtr& alt2);
 public:
-//  {x-bounds}, {y-bounds}, {maximum extension length}, {starting point}, {goal point}, {allowed deviation from goal}
-    WorkSpaceTree(Bounds x_bounds, Bounds y_bounds, double mExt, Point start, Point goal, double rad) :
-    _xBounds(x_bounds), _yBounds(y_bounds), _maxExtend(mExt), _root(new Node(start)), _goal(goal), _r(rad)
-    {}
+//  {x-bounds}, {y-bounds}, {maximum extension length}, {starting point}, {goal point}, {allowed deviation from goal}, {speed in intermediate points}
+    WorkSpaceTree(Bounds x_bounds, Bounds y_bounds, double mExt, Point start, Point goal, double rad, double speed) :
+    _xBounds(x_bounds), _yBounds(y_bounds), _maxExtend(mExt), _goal(goal), _r(rad),
+    physical(StatePoint(start.x, start.y, 0, 0, 0)), _root(new Node(start)), _speedInMovement(speed)
+    {
+        _root->assignStateNode(physical._root);
+        _card = 1;
+        _lebesgue = (x_bounds.max - x_bounds.min)*(y_bounds.max - y_bounds.min);
+    }
     ~WorkSpaceTree()
     {}
 //  Finds a path and exports in to JSON
