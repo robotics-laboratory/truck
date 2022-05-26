@@ -9,8 +9,8 @@
 #include "workspace_tree.h"
  
 int main(int argc, char** argv) {
-//  {x-bounds}, {y-bounds}, {maximum extension length}, {starting point}, {goal point}, {allowed deviation from goal}
-    WorkSpaceTree tree(Bounds(0, 100), Bounds(0, 100), 2, Point(10, 40), Point(80, 80), 2);
+//  {x-bounds}, {y-bounds}, {maximum extension length}, {starting point}, {goal point}, {allowed deviation from goal}, {speed at movement}
+    WorkSpaceTree tree(Bounds(0, 100), Bounds(0, 100), 2, Point(10, 40), Point(80, 80), 2, 5);
     auto tr = tree.findAndExport();
     std::cout << "RRT test: coordinates from start to goal\n";
     std::cout << "START\n";
