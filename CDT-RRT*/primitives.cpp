@@ -92,3 +92,18 @@ double Arc::getCost()
 {
     return pi * radius;
 }
+
+StatePoint Arc::getLastPoint()
+{
+    double baseAngle = atan((goal.y - start.y)/(goal.x - start.x));
+    if(start.x < goal.x)
+    {
+        baseAngle += pi;
+    }
+    double initTheta = baseAngle + pi/2;
+    if(initTheta > 2*pi)
+    {
+        initTheta -= 2*pi;
+    }
+    return StatePoint(goal.x, goal.y, initTheta, 0, goalV);
+}
