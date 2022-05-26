@@ -73,8 +73,11 @@ class WorkSpaceTree
     
     std::vector<nodePtr> getNodesInVicinity(double radius, const Point& target);
     
-//  Find least-cost parent in the given list
+//  Finds the least-cost parent in the given list
     std::pair<nodePtr, arcPtr> cheapestParent(const std::vector<nodePtr>& cand, Point target, double targetSpeed);
+    
+//  Reconnects the neigbours in the vicinity
+    void reconnectNeighbours(std::vector<nodePtr>& neighbours, nodePtr vertex);
     
 //  Expands the tree by 1 vertice
     nodePtr expand(nodePtr child, double goalSpeed);
