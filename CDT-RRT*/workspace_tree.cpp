@@ -123,27 +123,22 @@ std::pair<WorkSpaceTree::nodePtr, arcPtr> WorkSpaceTree::cheapestParent(const st
 }
 
 //  Reconnects the neigbours in the vicinity
-    void WorkSpaceTree::reconnectNeighbours(std::vector<nodePtr>& neighbours, nodePtr vertex)
+void WorkSpaceTree::reconnectNeighbours(std::vector<nodePtr>& neighbours, nodePtr vertex)
+{
+    for(nodePtr nb : neighbours)
     {
-        std::cout << vertex->pos.x << ' ' << vertex->pos.y << '\n'; //vertex
-        for(nodePtr nb : neighbours)
+        arcPtr arcToNeighbour(new Arc(vertex->stateNode->pos, nb->pos, _speedInMovement));
+
+        if (nb->stateNode->cost > vertex->stateNode->cost + arcToNeighbour->getCost())
         {
-            std::cout << nb->pos.x << ' ' << nb->pos.y << ' ' << nb->stateNode->cost << ' '; //position and initial cost
-            arcPtr arcToNeighbour(new Arc(vertex->stateNode->pos, nb->pos, _speedInMovement));
-            
-            if (nb->stateNode->cost > vertex->stateNode->cost + arcToNeighbour->getCost())
-            {
-                std::cout << vertex->stateNode->cost + arcToNeighbour->getCost() << ' '; //alternative cost
-                physical.detach(nb->stateNode->parent, nb->stateNode);
-                nb->stateNode = physical.attach(vertex->stateNode, arcToNeighbour->getLastPoint(), arcToNeighbour);
-                nb->parent->children.erase(std::find(nb->parent->children.begin(), nb->parent->children.end(), nb));
-                vertex->children.push_back(nb);
-                nb->parent = vertex;
-            }
-            std::cout << nb->stateNode->cost << '\n'; //final cost
+            physical.detach(nb->stateNode->parent, nb->stateNode);
+            nb->stateNode = physical.attach(vertex->stateNode, arcToNeighbour->getLastPoint(), arcToNeighbour);
+            nb->parent->children.erase(std::find(nb->parent->children.begin(), nb->parent->children.end(), nb));
+            vertex->children.push_back(nb);
+            nb->parent = vertex;
         }
-        std::cout << '\n';
     }
+}
 
 //  Expands the tree by 1 vertice
 WorkSpaceTree::nodePtr WorkSpaceTree::expand(nodePtr child, double goalSpeed)
