@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <chrono>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/qos.hpp>
@@ -6,8 +7,8 @@
 
 #include <std_msgs/msg/header.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <nav_msgs/msg/path.hpp>
+#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 #include <truck_foxglove/odom_translator.h>
 
@@ -22,16 +23,21 @@ namespace truck
     _baseLink("camera_link"),
     _odomQoSType("DEFAULT"),
     _odomTopic("rtabmap/odom"),
-    _outputTopic("odom_path")
+    _outputTopic("odom_path"),
+    _secondRate(0.5),
+    _latest()
     {
         _baseLink = this->declare_parameter("base_frame_id", _baseLink);
         _odomQoSType = this->declare_parameter("qos", _odomQoSType);
         _odomTopic = this->declare_parameter("odom_topic", _odomTopic);
         _outputTopic = this->declare_parameter("output_topic", _outputTopic);
+        _secondRate = this->declare_parameter<double>("secondRate", _secondRate);
 
-        RCLCPP_INFO(this->get_logger(), "Input odometry topic: %s", _odomTopic.c_str());
-        RCLCPP_INFO(this->get_logger(), "Output odometry topic: %s", _outputTopic.c_str());
+        RCLCPP_INFO(this->get_logger(), "Input odometry topic: /%s", _odomTopic.c_str());
+        RCLCPP_INFO(this->get_logger(), "Output odometry topic: /%s", _outputTopic.c_str());
         RCLCPP_INFO(this->get_logger(), "Base frame ID: %s", _baseLink.c_str());
+        RCLCPP_INFO(this->get_logger(), "Base frame ID: %s", _baseLink.c_str());
+        RCLCPP_INFO(this->get_logger(), "Rate of publication in seconds: %f", _secondRate);
 
         if (_odomQoSType == "DEFAULT") 
             _odomQoSProfile = rmw_qos_profile_default;
@@ -55,68 +61,94 @@ namespace truck
             rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(_odomQoSProfile)),
             std::bind(&OdometryTranslator::callbackOdometry, this, _1));
 
-        _pathPublisher = this->create_publisher<nav_msgs::msg::Path>(
+        _pathPublisher = this->create_publisher<visualization_msgs::msg::MarkerArray>(
             _outputTopic, 
             rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(_odomQoSProfile))
             );
 
-        startWarningThread();
+        _republishOdometry = this->create_wall_timer(
+            std::chrono::duration<double>(_secondRate),
+            std::bind(&OdometryTranslator::republishOdometry, this));
+
+        _warningThread = this->create_wall_timer(
+            std::chrono::duration<double>(5.0),
+            std::bind(&OdometryTranslator::warningThread, this));
     }
 
     OdometryTranslator::~OdometryTranslator()
     {
-        if(_warningThread)
+
+    }
+
+    void OdometryTranslator::republishOdometry() 
+    {
+        if (_latest != nav_msgs::msg::Odometry()) 
         {
-            _callbackOccured = true;
-            _warningThread->join();
-            delete _warningThread;
+            visualization_msgs::msg::Marker cumtrail;
+            cumtrail.pose = _latest.pose.pose;
+            cumtrail.header = _latest.header;
+            cumtrail.ns = "odometry_path";
+            cumtrail.id = _markers.size();
+            cumtrail.type = visualization_msgs::msg::Marker::ARROW;
+            cumtrail.action = visualization_msgs::msg::Marker::ADD;
+            cumtrail.lifetime = rclcpp::Duration::from_seconds(0);
+            cumtrail.scale.x = 0.1;
+            cumtrail.scale.y = 0.005;
+            cumtrail.scale.z = 0.005;
+            cumtrail.color.r = 255;
+            cumtrail.color.g = 0;
+            cumtrail.color.b = 255;
+            cumtrail.color.a = 1.0;
+
+            _markers.push_back(cumtrail);
+            visualization_msgs::msg::MarkerArray markers;
+            markers.markers = _markers;
+
+            _pathPublisher->publish(markers);
+            RCLCPP_INFO(
+                this->get_logger(),
+                "Odometry message added to the path and republished at %f, markers count: %d",
+                this->now().seconds(),
+                _markers.size());
+            _latest = nav_msgs::msg::Odometry();
         }
     }
 
-    void OdometryTranslator::startWarningThread()
+    void OdometryTranslator::warningThread() 
     {
-        _warningThread = new std::thread(
-            [&]()
-            {
-                rclcpp::Rate r(1.0/5.0);
-                while(!_callbackOccured)
-                {
-                    r.sleep();
-                    if (!_callbackOccured)
-                        RCLCPP_WARN(
-                            this->get_logger(),
-                            "Data from the topic /%s has not been received for more than 5 seconds."
-                            " Check that the input topic is being published correctly.",
-                            _odomTopic.c_str()
-                            );
-                }
-            }
-        );
+        if (!_callbackOccured)
+            RCLCPP_WARN(
+                this->get_logger(),
+                "Data from the topic /%s has not been received for more than 5 seconds."
+                " Check that the input topic is being published correctly.",
+                _odomTopic.c_str());
+        else if (_pathPublisher->get_subscription_count() < 1)
+            RCLCPP_WARN(
+                this->get_logger(),
+                "There are no subscribers at /%s, thus the marker messages will not be published.",
+                _outputTopic.c_str());
     }
 
     void OdometryTranslator::callbackOdometry(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
         _callbackOccured = true;
-        if (msg->pose.pose.orientation.w == 0) {
+        if(_pathPublisher->get_subscription_count() < 1)
+            return;
+
+        if (msg->pose.pose.orientation.w == 0) 
+        {
             RCLCPP_ERROR(
                 this->get_logger(),
                 "Null odometry has been received at %f, aborting translation",
                 msg->header.stamp.sec);
             return;
-        } else
+        } 
+        else
+        {
             RCLCPP_INFO(this->get_logger(), "Odometry received at %f", msg->header.stamp.sec);
+            _latest = *msg;
+        }
 
-        geometry_msgs::msg::PoseStamped nigger;
-        nigger.pose = msg->pose.pose;
-        nigger.header = msg->header;
-        _poses.push_back(nigger);
-
-        nav_msgs::msg::Path cumtrail;
-        cumtrail.poses = _poses;
-        cumtrail.header = msg->header;
-
-        _pathPublisher->publish(cumtrail);
-        RCLCPP_INFO(this->get_logger(), "Odometry message added to the path and republished at %f", this->now().seconds());
         _callbackOccured = false;
     }
 }

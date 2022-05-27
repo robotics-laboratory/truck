@@ -2,3 +2,9 @@
 packages/build
 packages/install
 packages/log
+camera_params.txt
+graphsetup.sh
+packages/truck_description/urdf/truck.urdf
+realsense.sh
+ros2
+rtabmap_params.txt

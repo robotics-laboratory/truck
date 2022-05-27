@@ -6,13 +6,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rmw/qos_profiles.h>
 
+#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include <nav_msgs/msg/path.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-//#include <rclcpp_components/register_node_macro.hpp>
-
-//#include <tf2_ros/transform_broadcaster.h>
-//#include <tf2_ros/transform_listener.h>
 
 namespace truck
 {
@@ -23,19 +19,20 @@ namespace truck
         ~OdometryTranslator() noexcept;
 
       private:
-        void startWarningThread();
+        void warningThread();
         void callbackOdometry(const nav_msgs::msg::Odometry::SharedPtr msg);
+        void republishOdometry();
 
         rmw_qos_profile_t _odomQoSProfile;
-        std::vector<geometry_msgs::msg::PoseStamped> _poses;
-        std::thread* _warningThread;
+        nav_msgs::msg::Odometry _latest;
+        std::vector<visualization_msgs::msg::Marker> _markers;
         bool _callbackOccured;
 
-        //std::shared_ptr<tf2_ros::TransformBroadcaster> _tfBroadcaster;
-        //std::shared_ptr<tf2_ros::TransformListener> _tfListener;
+        rclcpp::TimerBase::SharedPtr _republishOdometry;
+        rclcpp::TimerBase::SharedPtr _warningThread;
 
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odomSubscriber;
-        rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr _pathPublisher;
+        rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _pathPublisher;
 
         //parameters
         std::string _baseLink;         
@@ -43,6 +40,7 @@ namespace truck
         std::string _odomQoSType;
         std::string _odomTopic;
         std::string _outputTopic;
+        double _secondRate;
     };
 }
 

@@ -10,9 +10,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rmw REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(rclcpp_components REQUIRED)
+find_package(visualization_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -22,7 +21,7 @@ find_package(rclcpp_components REQUIRED)
 #rclcpp_components_register_nodes(odom_translator_node "truck::OdometryTranslator")
 
 add_executable(odom_translator src/main.cpp src/odom_translator.cpp)
-ament_target_dependencies(odom_translator rclcpp rmw std_msgs geometry_msgs nav_msgs)
+ament_target_dependencies(odom_translator rclcpp rmw std_msgs nav_msgs visualization_msgs)
 
 target_include_directories(odom_translator PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
