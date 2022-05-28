@@ -8,3 +8,5 @@ packages/truck_description/urdf/truck.urdf
 realsense.sh
 ros2
 rtabmap_params.txt
+.vscode
+.gitignore
