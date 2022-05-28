@@ -12,6 +12,8 @@ find_package(rmw REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -21,7 +23,7 @@ find_package(visualization_msgs REQUIRED)
 #rclcpp_components_register_nodes(odom_translator_node "truck::OdometryTranslator")
 
 add_executable(odom_translator src/main.cpp src/odom_translator.cpp)
-ament_target_dependencies(odom_translator rclcpp rmw std_msgs nav_msgs visualization_msgs)
+ament_target_dependencies(odom_translator tf2 tf2_geometry_msgs rclcpp rmw std_msgs nav_msgs visualization_msgs)
 
 target_include_directories(odom_translator PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

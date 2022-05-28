@@ -1,0 +1,551 @@
+[INFO] [1653750388.667223594] [odom_translator]: Input odometry topic: /rtabmap/odom
+[INFO] [1653750388.667815215] [odom_translator]: Output odometry topic: /odom_path
+[INFO] [1653750388.667981713] [odom_translator]: Base frame ID: camera_link
+[INFO] [1653750388.668101522] [odom_translator]: Base frame ID: camera_link
+[INFO] [1653750388.668209299] [odom_translator]: Rate of the publication in seconds: 0.500000
+[INFO] [1653750388.668313428] [odom_translator]: Length of the arrow marker: 0.100000
+[INFO] [1653750388.668449717] [odom_translator]: QoS settings profile: DEFAULT
+[WARN] [1653750393.677850538] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653750398.677674393] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[INFO] [1653750401.101854986] [odom_translator]: Odometry received at 0.999585
+[INFO] [1653750401.177924959] [odom_translator]: Odometry message added to the path and republished at 1653750401.177894, markers count: 1
+[INFO] [1653750401.218683507] [odom_translator]: Odometry received at 0.999642
+[INFO] [1653750401.336128065] [odom_translator]: Odometry received at 0.999653
+[INFO] [1653750401.438639943] [odom_translator]: Odometry received at 0.999667
+[INFO] [1653750401.552250195] [odom_translator]: Odometry received at 0.999674
+[INFO] [1653750401.660852592] [odom_translator]: Odometry received at 0.999661
+[INFO] [1653750401.677689162] [odom_translator]: Info: distance between the latest and the last odometry is 0.009350
+[INFO] [1653750401.678346768] [odom_translator]: Odometry message added to the path and republished at 1653750401.678339, markers count: 2
+[INFO] [1653750401.807340008] [odom_translator]: Odometry received at 0.999669
+[INFO] [1653750401.936849348] [odom_translator]: Odometry received at 0.999687
+[INFO] [1653750402.057272301] [odom_translator]: Odometry received at 0.999662
+[INFO] [1653750402.177664055] [odom_translator]: Info: distance between the latest and the last odometry is 0.003564
+[INFO] [1653750402.181514298] [odom_translator]: Odometry message added to the path and republished at 1653750402.181505, markers count: 3
+[INFO] [1653750402.196297184] [odom_translator]: Odometry received at 0.999675
+[INFO] [1653750402.323106692] [odom_translator]: Odometry received at 0.999672
+[INFO] [1653750402.444249620] [odom_translator]: Odometry received at 0.999671
+[INFO] [1653750402.545816882] [odom_translator]: Odometry received at 0.999671
+[INFO] [1653750402.641338488] [odom_translator]: Odometry received at 0.999671
+[INFO] [1653750402.677598787] [odom_translator]: Info: distance between the latest and the last odometry is 0.009421
+[INFO] [1653750402.678327145] [odom_translator]: Odometry message added to the path and republished at 1653750402.678320, markers count: 4
+[INFO] [1653750402.749107502] [odom_translator]: Odometry received at 0.999674
+[INFO] [1653750402.867777320] [odom_translator]: Odometry received at 0.999707
+[INFO] [1653750402.972971367] [odom_translator]: Odometry received at 0.999682
+[INFO] [1653750403.094224248] [odom_translator]: Odometry received at 0.999693
+[INFO] [1653750403.177588399] [odom_translator]: Info: distance between the latest and the last odometry is 0.005917
+[INFO] [1653750403.178428247] [odom_translator]: Odometry message added to the path and republished at 1653750403.178422, markers count: 5
+[INFO] [1653750403.228024283] [odom_translator]: Odometry received at 0.999689
+[INFO] [1653750403.342042634] [odom_translator]: Odometry received at 0.999658
+[INFO] [1653750403.433950383] [odom_translator]: Odometry received at 0.999660
+[INFO] [1653750403.527278658] [odom_translator]: Odometry received at 0.999623
+[INFO] [1653750403.626350697] [odom_translator]: Odometry received at 0.999628
+[INFO] [1653750403.677563804] [odom_translator]: Info: distance between the latest and the last odometry is 0.006922
+[INFO] [1653750403.678977896] [odom_translator]: Odometry message added to the path and republished at 1653750403.678970, markers count: 6
+[WARN] [1653750403.680884570] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653750403.739077964] [odom_translator]: Odometry received at 0.999587
+[INFO] [1653750403.825891363] [odom_translator]: Odometry received at 0.999624
+[INFO] [1653750403.948058173] [odom_translator]: Odometry received at 0.999689
+[INFO] [1653750404.042993438] [odom_translator]: Odometry received at 0.999691
+[INFO] [1653750404.169887394] [odom_translator]: Odometry received at 0.999658
+[INFO] [1653750404.177548328] [odom_translator]: Info: distance between the latest and the last odometry is 0.031651
+[INFO] [1653750404.180034686] [odom_translator]: Odometry message added to the path and republished at 1653750404.180027, markers count: 7
+[INFO] [1653750404.269586766] [odom_translator]: Odometry received at 0.999664
+[INFO] [1653750404.363598343] [odom_translator]: Odometry received at 0.999667
+[INFO] [1653750404.456901625] [odom_translator]: Odometry received at 0.999649
+[INFO] [1653750404.569440763] [odom_translator]: Odometry received at 0.999731
+[INFO] [1653750404.677521844] [odom_translator]: Info: distance between the latest and the last odometry is 0.035885
+[INFO] [1653750404.679587910] [odom_translator]: Odometry message added to the path and republished at 1653750404.679581, markers count: 8
+[INFO] [1653750404.690056678] [odom_translator]: Odometry received at 0.999713
+[INFO] [1653750404.798206271] [odom_translator]: Odometry received at 0.999664
+[INFO] [1653750404.902758520] [odom_translator]: Odometry received at 0.999529
+[INFO] [1653750404.993292177] [odom_translator]: Odometry received at 0.999408
+[INFO] [1653750405.120209558] [odom_translator]: Odometry received at 0.999187
+[INFO] [1653750405.177516000] [odom_translator]: Info: distance between the latest and the last odometry is 0.049998
+[INFO] [1653750405.178480648] [odom_translator]: Odometry message added to the path and republished at 1653750405.178473, markers count: 9
+[INFO] [1653750405.205775137] [odom_translator]: Odometry received at 0.999094
+[INFO] [1653750405.303564924] [odom_translator]: Odometry received at 0.998912
+[INFO] [1653750405.481400945] [odom_translator]: Odometry received at 0.999165
+[INFO] [1653750405.597905526] [odom_translator]: Odometry received at 0.999061
+[INFO] [1653750405.677567628] [odom_translator]: Info: distance between the latest and the last odometry is 0.008132
+[INFO] [1653750405.678637686] [odom_translator]: Odometry message added to the path and republished at 1653750405.678630, markers count: 10
+[INFO] [1653750405.694016866] [odom_translator]: Odometry received at 0.999131
+[INFO] [1653750405.802748769] [odom_translator]: Odometry received at 0.999102
+[INFO] [1653750405.912746507] [odom_translator]: Odometry received at 0.998860
+[INFO] [1653750406.007089703] [odom_translator]: Odometry received at 0.998967
+[INFO] [1653750406.100212439] [odom_translator]: Odometry received at 0.998946
+[INFO] [1653750406.177489911] [odom_translator]: Info: distance between the latest and the last odometry is 0.011461
+[INFO] [1653750406.181089368] [odom_translator]: Odometry message added to the path and republished at 1653750406.181081, markers count: 11
+[INFO] [1653750406.190233771] [odom_translator]: Odometry received at 0.998928
+[INFO] [1653750406.301905349] [odom_translator]: Odometry received at 0.998904
+[INFO] [1653750406.392807521] [odom_translator]: Odometry received at 0.998832
+[INFO] [1653750406.481691339] [odom_translator]: Odometry received at 0.998774
+[INFO] [1653750406.568125822] [odom_translator]: Odometry received at 0.998758
+[INFO] [1653750406.652188828] [odom_translator]: Odometry received at 0.998737
+[INFO] [1653750406.677488259] [odom_translator]: Info: distance between the latest and the last odometry is 0.015373
+[INFO] [1653750406.678699950] [odom_translator]: Odometry message added to the path and republished at 1653750406.678693, markers count: 12
+[INFO] [1653750406.734572939] [odom_translator]: Odometry received at 0.998841
+[INFO] [1653750406.820245943] [odom_translator]: Odometry received at 0.998812
+[INFO] [1653750406.918407574] [odom_translator]: Odometry received at 0.998846
+[INFO] [1653750407.004546503] [odom_translator]: Odometry received at 0.998792
+[INFO] [1653750407.088994632] [odom_translator]: Odometry received at 0.998778
+[INFO] [1653750407.177437102] [odom_translator]: Info: distance between the latest and the last odometry is 0.005029
+[INFO] [1653750407.181999383] [odom_translator]: Odometry message added to the path and republished at 1653750407.181991, markers count: 13
+[INFO] [1653750407.184196459] [odom_translator]: Odometry received at 0.999042
+[INFO] [1653750407.265675666] [odom_translator]: Odometry received at 0.998979
+[INFO] [1653750407.348196706] [odom_translator]: Odometry received at 0.998693
+[INFO] [1653750407.431862524] [odom_translator]: Odometry received at 0.998844
+[INFO] [1653750407.536428468] [odom_translator]: Odometry received at 0.999153
+[INFO] [1653750407.629326019] [odom_translator]: Odometry received at 0.999003
+[INFO] [1653750407.677500666] [odom_translator]: Info: distance between the latest and the last odometry is 0.019275
+[INFO] [1653750407.679706062] [odom_translator]: Odometry message added to the path and republished at 1653750407.679699, markers count: 14
+[INFO] [1653750407.721238952] [odom_translator]: Odometry received at 0.998498
+[INFO] [1653750407.816911408] [odom_translator]: Odometry received at 0.998083
+[INFO] [1653750407.927009627] [odom_translator]: Odometry received at 0.997800
+[INFO] [1653750408.009692204] [odom_translator]: Odometry received at 0.997806
+[INFO] [1653750408.100192997] [odom_translator]: Odometry received at 0.998131
+[INFO] [1653750408.177569158] [odom_translator]: Info: distance between the latest and the last odometry is 0.043304
+[INFO] [1653750408.179972507] [odom_translator]: Odometry message added to the path and republished at 1653750408.179965, markers count: 15
+[INFO] [1653750408.194786498] [odom_translator]: Odometry received at 0.998202
+[INFO] [1653750408.276127367] [odom_translator]: Odometry received at 0.998054
+[INFO] [1653750408.365646391] [odom_translator]: Odometry received at 0.998001
+[INFO] [1653750408.451332804] [odom_translator]: Odometry received at 0.998008
+[INFO] [1653750408.552994786] [odom_translator]: Odometry received at 0.998163
+[INFO] [1653750408.653665431] [odom_translator]: Odometry received at 0.997861
+[INFO] [1653750408.677547984] [odom_translator]: Info: distance between the latest and the last odometry is 0.040607
+[INFO] [1653750408.680881839] [odom_translator]: Odometry message added to the path and republished at 1653750408.680873, markers count: 16
+[WARN] [1653750408.682554206] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653750408.753986505] [odom_translator]: Odometry received at 0.997078
+[INFO] [1653750408.861804351] [odom_translator]: Odometry received at 0.996587
+[INFO] [1653750408.977844832] [odom_translator]: Odometry received at 0.995697
+[INFO] [1653750409.098873295] [odom_translator]: Odometry received at 0.995629
+[INFO] [1653750409.177536443] [odom_translator]: Info: distance between the latest and the last odometry is 0.030372
+[INFO] [1653750409.180302293] [odom_translator]: Odometry message added to the path and republished at 1653750409.180290, markers count: 17
+[INFO] [1653750409.203481800] [odom_translator]: Odometry received at 0.995547
+[INFO] [1653750409.328131095] [odom_translator]: Odometry received at 0.995985
+[INFO] [1653750409.430839967] [odom_translator]: Odometry received at 0.997207
+[INFO] [1653750409.544955534] [odom_translator]: Odometry received at 0.997390
+[INFO] [1653750409.635535367] [odom_translator]: Odometry received at 0.997372
+[INFO] [1653750409.677555398] [odom_translator]: Info: distance between the latest and the last odometry is 0.016565
+[INFO] [1653750409.679876059] [odom_translator]: Odometry message added to the path and republished at 1653750409.679869, markers count: 18
+[INFO] [1653750409.762616141] [odom_translator]: Odometry received at 0.997492
+[INFO] [1653750409.870566789] [odom_translator]: Odometry received at 0.996980
+[INFO] [1653750409.975696354] [odom_translator]: Odometry received at 0.996493
+[INFO] [1653750410.072378707] [odom_translator]: Odometry received at 0.996126
+[INFO] [1653750410.154686273] [odom_translator]: Odometry received at 0.995293
+[INFO] [1653750410.177657138] [odom_translator]: Info: distance between the latest and the last odometry is 0.023880
+[INFO] [1653750410.179477698] [odom_translator]: Odometry message added to the path and republished at 1653750410.179471, markers count: 19
+[INFO] [1653750410.249464672] [odom_translator]: Odometry received at 0.994151
+[INFO] [1653750410.336005876] [odom_translator]: Odometry received at 0.994845
+[INFO] [1653750410.426601646] [odom_translator]: Odometry received at 0.995378
+[INFO] [1653750410.529712153] [odom_translator]: Odometry received at 0.996758
+[INFO] [1653750410.612121287] [odom_translator]: Odometry received at 0.996948
+[INFO] [1653750410.677558684] [odom_translator]: Info: distance between the latest and the last odometry is 0.019529
+[INFO] [1653750410.678693734] [odom_translator]: Odometry message added to the path and republished at 1653750410.678688, markers count: 20
+[INFO] [1653750410.698809309] [odom_translator]: Odometry received at 0.997144
+[INFO] [1653750410.780069601] [odom_translator]: Odometry received at 0.996931
+[INFO] [1653750410.870394808] [odom_translator]: Odometry received at 0.996655
+[INFO] [1653750410.946487693] [odom_translator]: Odometry received at 0.996320
+[INFO] [1653750411.032510141] [odom_translator]: Odometry received at 0.996151
+[INFO] [1653750411.123044181] [odom_translator]: Odometry received at 0.995502
+[INFO] [1653750411.177431461] [odom_translator]: Info: distance between the latest and the last odometry is 0.019940
+[INFO] [1653750411.179297942] [odom_translator]: Odometry message added to the path and republished at 1653750411.179291, markers count: 21
+[INFO] [1653750411.218552731] [odom_translator]: Odometry received at 0.994877
+[INFO] [1653750411.318217959] [odom_translator]: Odometry received at 0.993811
+[INFO] [1653750411.417906355] [odom_translator]: Odometry received at 0.992613
+[INFO] [1653750411.510089307] [odom_translator]: Odometry received at 0.991823
+[INFO] [1653750411.612377086] [odom_translator]: Odometry received at 0.990895
+[INFO] [1653750411.677667793] [odom_translator]: Info: distance between the latest and the last odometry is 0.017548
+[INFO] [1653750411.679703108] [odom_translator]: Odometry message added to the path and republished at 1653750411.679695, markers count: 22
+[INFO] [1653750411.694948911] [odom_translator]: Odometry received at 0.989908
+[INFO] [1653750411.790979257] [odom_translator]: Odometry received at 0.986699
+[INFO] [1653750411.883256450] [odom_translator]: Odometry received at 0.985996
+[INFO] [1653750411.964350212] [odom_translator]: Odometry received at 0.986633
+[INFO] [1653750412.065384445] [odom_translator]: Odometry received at 0.986951
+[INFO] [1653750412.157554916] [odom_translator]: Odometry received at 0.989461
+[INFO] [1653750412.177590427] [odom_translator]: Info: distance between the latest and the last odometry is 0.014782
+[INFO] [1653750412.179555820] [odom_translator]: Odometry message added to the path and republished at 1653750412.179547, markers count: 23
+[INFO] [1653750412.239596655] [odom_translator]: Odometry received at 0.990970
+[INFO] [1653750412.325003033] [odom_translator]: Odometry received at 0.992030
+[INFO] [1653750412.427738817] [odom_translator]: Odometry received at 0.993971
+[INFO] [1653750412.520437197] [odom_translator]: Odometry received at 0.994793
+[INFO] [1653750412.621699047] [odom_translator]: Odometry received at 0.996066
+[INFO] [1653750412.677485252] [odom_translator]: Info: distance between the latest and the last odometry is 0.008353
+[INFO] [1653750412.681431208] [odom_translator]: Odometry message added to the path and republished at 1653750412.681423, markers count: 24
+[INFO] [1653750412.830268371] [odom_translator]: Odometry received at 0.997040
+[INFO] [1653750412.836582957] [odom_translator]: Odometry received at 0.997238
+[INFO] [1653750412.944588164] [odom_translator]: Odometry received at 0.998526
+[INFO] [1653750413.041342390] [odom_translator]: Odometry received at 0.998521
+[INFO] [1653750413.126892097] [odom_translator]: Odometry received at 0.998620
+[INFO] [1653750413.177603087] [odom_translator]: Info: distance between the latest and the last odometry is 0.009606
+[INFO] [1653750413.180433608] [odom_translator]: Odometry message added to the path and republished at 1653750413.180426, markers count: 25
+[INFO] [1653750413.238186518] [odom_translator]: Odometry received at 0.998339
+[INFO] [1653750413.354402841] [odom_translator]: Odometry received at 0.998216
+[INFO] [1653750413.510304293] [odom_translator]: Odometry received at 0.997759
+[INFO] [1653750413.627116268] [odom_translator]: Odometry received at 0.996928
+[INFO] [1653750413.678079965] [odom_translator]: Info: distance between the latest and the last odometry is 0.005269
+[INFO] [1653750413.679583786] [odom_translator]: Odometry message added to the path and republished at 1653750413.679577, markers count: 26
+[WARN] [1653750413.682022464] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653750413.749634184] [odom_translator]: Odometry received at 0.995490
+[INFO] [1653750413.872721321] [odom_translator]: Odometry received at 0.992850
+[INFO] [1653750413.983202551] [odom_translator]: Odometry received at 0.992219
+[INFO] [1653750414.125530632] [odom_translator]: Odometry received at 0.990564
+[INFO] [1653750414.177804228] [odom_translator]: Info: distance between the latest and the last odometry is 0.012684
+[INFO] [1653750414.180260954] [odom_translator]: Odometry message added to the path and republished at 1653750414.180253, markers count: 27
+[INFO] [1653750414.246418068] [odom_translator]: Odometry received at 0.988560
+[INFO] [1653750414.374606052] [odom_translator]: Odometry received at 0.987546
+[INFO] [1653750414.479281373] [odom_translator]: Odometry received at 0.986494
+[INFO] [1653750414.624219685] [odom_translator]: Odometry received at 0.986727
+[INFO] [1653750414.677544811] [odom_translator]: Info: distance between the latest and the last odometry is 0.007107
+[INFO] [1653750414.679979521] [odom_translator]: Odometry message added to the path and republished at 1653750414.679972, markers count: 28
+[INFO] [1653750414.760486334] [odom_translator]: Odometry received at 0.987532
+[INFO] [1653750414.908152415] [odom_translator]: Odometry received at 0.989677
+[INFO] [1653750414.995442714] [odom_translator]: Odometry received at 0.989754
+[INFO] [1653750415.105930920] [odom_translator]: Odometry received at 0.990715
+[INFO] [1653750415.177572532] [odom_translator]: Info: distance between the latest and the last odometry is 0.020488
+[INFO] [1653750415.179999914] [odom_translator]: Odometry message added to the path and republished at 1653750415.179993, markers count: 29
+[INFO] [1653750415.216767129] [odom_translator]: Odometry received at 0.991658
+[INFO] [1653750415.332440599] [odom_translator]: Odometry received at 0.992328
+[INFO] [1653750415.435720291] [odom_translator]: Odometry received at 0.992712
+[INFO] [1653750415.531963983] [odom_translator]: Odometry received at 0.993828
+[INFO] [1653750415.629729482] [odom_translator]: Odometry received at 0.994532
+[INFO] [1653750415.677545021] [odom_translator]: Info: distance between the latest and the last odometry is 0.018975
+[INFO] [1653750415.680966460] [odom_translator]: Odometry message added to the path and republished at 1653750415.680959, markers count: 30
+[INFO] [1653750415.735106121] [odom_translator]: Odometry received at 0.995230
+[INFO] [1653750415.847760523] [odom_translator]: Odometry received at 0.995818
+[INFO] [1653750415.950518419] [odom_translator]: Odometry received at 0.995862
+[INFO] [1653750416.029078430] [odom_translator]: Odometry received at 0.995951
+[INFO] [1653750416.125462668] [odom_translator]: Odometry received at 0.995961
+[INFO] [1653750416.177561862] [odom_translator]: Info: distance between the latest and the last odometry is 0.010645
+[INFO] [1653750416.181928206] [odom_translator]: Odometry message added to the path and republished at 1653750416.181921, markers count: 31
+[INFO] [1653750416.216476233] [odom_translator]: Odometry received at 0.996105
+[INFO] [1653750416.310452288] [odom_translator]: Odometry received at 0.995814
+[INFO] [1653750416.522467691] [odom_translator]: Odometry received at 0.995527
+[INFO] [1653750416.531317276] [odom_translator]: Odometry received at 0.995000
+[INFO] [1653750416.635768403] [odom_translator]: Odometry received at 0.994883
+[INFO] [1653750416.677561999] [odom_translator]: Info: distance between the latest and the last odometry is 0.012285
+[INFO] [1653750416.681607252] [odom_translator]: Odometry message added to the path and republished at 1653750416.681600, markers count: 32
+[INFO] [1653750416.729557033] [odom_translator]: Odometry received at 0.994677
+[INFO] [1653750416.850096562] [odom_translator]: Odometry received at 0.994378
+[INFO] [1653750417.006726052] [odom_translator]: Odometry received at 0.991795
+[INFO] [1653750417.178759715] [odom_translator]: Info: distance between the latest and the last odometry is 0.014945
+[INFO] [1653750417.180435474] [odom_translator]: Odometry message added to the path and republished at 1653750417.180429, markers count: 33
+[INFO] [1653750417.215955574] [odom_translator]: Odometry received at 0.990410
+[INFO] [1653750417.390619052] [odom_translator]: Odometry received at 0.985213
+[INFO] [1653750417.519358976] [odom_translator]: Odometry received at 0.984301
+[INFO] [1653750417.654711889] [odom_translator]: Odometry received at 0.981915
+[INFO] [1653750417.677594433] [odom_translator]: Info: distance between the latest and the last odometry is 0.048328
+[INFO] [1653750417.680991264] [odom_translator]: Odometry message added to the path and republished at 1653750417.680983, markers count: 34
+[INFO] [1653750417.803510011] [odom_translator]: Odometry received at 0.980694
+[INFO] [1653750417.912928576] [odom_translator]: Odometry received at 0.978724
+[INFO] [1653750418.036356195] [odom_translator]: Odometry received at 0.977871
+[INFO] [1653750418.179133463] [odom_translator]: Info: distance between the latest and the last odometry is 0.018206
+[INFO] [1653750418.180901095] [odom_translator]: Odometry message added to the path and republished at 1653750418.180894, markers count: 35
+[INFO] [1653750418.182277748] [odom_translator]: Odometry received at 0.970805
+[INFO] [1653750418.298705656] [odom_translator]: Odometry received at 0.970427
+[INFO] [1653750418.434173225] [odom_translator]: Odometry received at 0.960703
+[INFO] [1653750418.532106117] [odom_translator]: Odometry received at 0.956851
+[INFO] [1653750418.629028280] [odom_translator]: Odometry received at 0.954857
+[INFO] [1653750418.678063190] [odom_translator]: Info: distance between the latest and the last odometry is 0.049012
+[INFO] [1653750418.679792646] [odom_translator]: Odometry message added to the path and republished at 1653750418.679786, markers count: 36
+[WARN] [1653750418.680470348] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653750418.729915470] [odom_translator]: Odometry received at 0.952579
+[INFO] [1653750418.807051020] [odom_translator]: Odometry received at 0.950424
+[INFO] [1653750418.991885727] [odom_translator]: Odometry received at 0.947386
+[INFO] [1653750419.097961669] [odom_translator]: Odometry received at 0.943907
+[INFO] [1653750419.177531609] [odom_translator]: Info: distance between the latest and the last odometry is 0.009709
+[INFO] [1653750419.179169224] [odom_translator]: Odometry message added to the path and republished at 1653750419.179162, markers count: 37
+[INFO] [1653750419.198681466] [odom_translator]: Odometry received at 0.941593
+[INFO] [1653750419.303722902] [odom_translator]: Odometry received at 0.939674
+[INFO] [1653750419.386659433] [odom_translator]: Odometry received at 0.938435
+[INFO] [1653750419.471252299] [odom_translator]: Odometry received at 0.939190
+[INFO] [1653750419.574544248] [odom_translator]: Odometry received at 0.935605
+[INFO] [1653750419.657522027] [odom_translator]: Odometry received at 0.934673
+[INFO] [1653750419.677581570] [odom_translator]: Info: distance between the latest and the last odometry is 0.025277
+[INFO] [1653750419.679828822] [odom_translator]: Odometry message added to the path and republished at 1653750419.679821, markers count: 38
+[INFO] [1653750419.755962475] [odom_translator]: Odometry received at 0.934752
+[INFO] [1653750419.850824107] [odom_translator]: Odometry received at 0.935022
+[INFO] [1653750419.934660838] [odom_translator]: Odometry received at 0.934661
+[INFO] [1653750420.025597698] [odom_translator]: Odometry received at 0.933738
+[INFO] [1653750420.124284517] [odom_translator]: Odometry received at 0.932616
+[INFO] [1653750420.177606858] [odom_translator]: Info: distance between the latest and the last odometry is 0.006480
+[INFO] [1653750420.181915313] [odom_translator]: Odometry message added to the path and republished at 1653750420.181907, markers count: 39
+[INFO] [1653750420.216520204] [odom_translator]: Odometry received at 0.931921
+[INFO] [1653750420.309752989] [odom_translator]: Odometry received at 0.931770
+[INFO] [1653750420.410223600] [odom_translator]: Odometry received at 0.928888
+[INFO] [1653750420.516893499] [odom_translator]: Odometry received at 0.925218
+[INFO] [1653750420.597714939] [odom_translator]: Odometry received at 0.924120
+[INFO] [1653750420.677014604] [odom_translator]: Odometry received at 0.921190
+[INFO] [1653750420.678216311] [odom_translator]: Info: distance between the latest and the last odometry is 0.021593
+[INFO] [1653750420.683915723] [odom_translator]: Odometry message added to the path and republished at 1653750420.683907, markers count: 40
+[INFO] [1653750420.777902307] [odom_translator]: Odometry received at 0.918645
+[INFO] [1653750420.859799148] [odom_translator]: Odometry received at 0.918371
+[INFO] [1653750420.950315140] [odom_translator]: Odometry received at 0.918206
+[INFO] [1653750421.059569031] [odom_translator]: Odometry received at 0.917505
+[INFO] [1653750421.140889707] [odom_translator]: Odometry received at 0.918649
+[INFO] [1653750421.177725211] [odom_translator]: Info: distance between the latest and the last odometry is 0.005920
+[INFO] [1653750421.183640208] [odom_translator]: Odometry message added to the path and republished at 1653750421.183632, markers count: 41
+[INFO] [1653750421.237833534] [odom_translator]: Odometry received at 0.930037
+[INFO] [1653750421.318756254] [odom_translator]: Odometry received at 0.932057
+[INFO] [1653750421.402498169] [odom_translator]: Odometry received at 0.939621
+[INFO] [1653750421.501707424] [odom_translator]: Odometry received at 0.949919
+[INFO] [1653750421.661945810] [odom_translator]: Odometry received at 0.964025
+[INFO] [1653750421.677664386] [odom_translator]: Info: distance between the latest and the last odometry is 0.038710
+[INFO] [1653750421.680288057] [odom_translator]: Odometry message added to the path and republished at 1653750421.680281, markers count: 42
+[INFO] [1653750421.774063887] [odom_translator]: Odometry received at 0.970800
+[INFO] [1653750421.870181946] [odom_translator]: Odometry received at 0.972772
+[INFO] [1653750421.974775922] [odom_translator]: Odometry received at 0.977351
+[INFO] [1653750422.060267516] [odom_translator]: Odometry received at 0.978916
+[INFO] [1653750422.147876090] [odom_translator]: Odometry received at 0.982101
+[INFO] [1653750422.177672169] [odom_translator]: Info: distance between the latest and the last odometry is 0.011442
+[INFO] [1653750422.180841030] [odom_translator]: Odometry message added to the path and republished at 1653750422.180833, markers count: 43
+[INFO] [1653750422.247560741] [odom_translator]: Odometry received at 0.983712
+[INFO] [1653750422.349846888] [odom_translator]: Odometry received at 0.986841
+[INFO] [1653750422.436532701] [odom_translator]: Odometry received at 0.987409
+[INFO] [1653750422.513764892] [odom_translator]: Odometry received at 0.987673
+[INFO] [1653750422.620056964] [odom_translator]: Odometry received at 0.989034
+[INFO] [1653750422.677628752] [odom_translator]: Info: distance between the latest and the last odometry is 0.010882
+[INFO] [1653750422.681082479] [odom_translator]: Odometry message added to the path and republished at 1653750422.681075, markers count: 44
+[INFO] [1653750422.705228651] [odom_translator]: Odometry received at 0.990072
+[INFO] [1653750422.788774852] [odom_translator]: Odometry received at 0.990686
+[INFO] [1653750422.885956600] [odom_translator]: Odometry received at 0.992980
+[INFO] [1653750422.969310543] [odom_translator]: Odometry received at 0.994162
+[INFO] [1653750423.060137546] [odom_translator]: Odometry received at 0.994506
+[INFO] [1653750423.152881238] [odom_translator]: Odometry received at 0.994983
+[INFO] [1653750423.177668151] [odom_translator]: Info: distance between the latest and the last odometry is 0.009243
+[INFO] [1653750423.180522577] [odom_translator]: Odometry message added to the path and republished at 1653750423.180508, markers count: 45
+[INFO] [1653750423.254346993] [odom_translator]: Odometry received at 0.995923
+[INFO] [1653750423.348304361] [odom_translator]: Odometry received at 0.997150
+[INFO] [1653750423.433386543] [odom_translator]: Odometry received at 0.997348
+[INFO] [1653750423.525866969] [odom_translator]: Odometry received at 0.997360
+[INFO] [1653750423.624969279] [odom_translator]: Odometry received at 0.997316
+[INFO] [1653750423.677673150] [odom_translator]: Info: distance between the latest and the last odometry is 0.010060
+[INFO] [1653750423.679804210] [odom_translator]: Odometry message added to the path and republished at 1653750423.679797, markers count: 46
+[WARN] [1653750423.684229114] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653750423.709673570] [odom_translator]: Odometry received at 0.997353
+[INFO] [1653750423.801017281] [odom_translator]: Odometry received at 0.997996
+[INFO] [1653750423.875035235] [odom_translator]: Odometry received at 0.998094
+[INFO] [1653750423.967487852] [odom_translator]: Odometry received at 0.998510
+[INFO] [1653750424.049963355] [odom_translator]: Odometry received at 0.998626
+[INFO] [1653750424.131143486] [odom_translator]: Odometry received at 0.998722
+[INFO] [1653750424.177662405] [odom_translator]: Info: distance between the latest and the last odometry is 0.003378
+[INFO] [1653750424.180647680] [odom_translator]: Odometry message added to the path and republished at 1653750424.180640, markers count: 47
+[INFO] [1653750424.227859438] [odom_translator]: Odometry received at 0.999394
+[INFO] [1653750424.323315987] [odom_translator]: Odometry received at 0.999423
+[INFO] [1653750424.435817427] [odom_translator]: Odometry received at 0.999591
+[INFO] [1653750424.526557837] [odom_translator]: Odometry received at 0.999788
+[INFO] [1653750424.621405356] [odom_translator]: Odometry received at 0.999925
+[INFO] [1653750424.677596075] [odom_translator]: Info: distance between the latest and the last odometry is 0.008005
+[INFO] [1653750424.679677054] [odom_translator]: Odometry message added to the path and republished at 1653750424.679669, markers count: 48
+[INFO] [1653750424.740715210] [odom_translator]: Odometry received at 0.999842
+[INFO] [1653750424.821080101] [odom_translator]: Odometry received at 0.999806
+[INFO] [1653750424.918931232] [odom_translator]: Odometry received at 0.999568
+[INFO] [1653750425.012421459] [odom_translator]: Odometry received at 0.999458
+[INFO] [1653750425.098957446] [odom_translator]: Odometry received at 0.999395
+[INFO] [1653750425.177638450] [odom_translator]: Info: distance between the latest and the last odometry is 0.007419
+[INFO] [1653750425.179680645] [odom_translator]: Odometry message added to the path and republished at 1653750425.179672, markers count: 49
+[INFO] [1653750425.190048675] [odom_translator]: Odometry received at 0.998922
+[INFO] [1653750425.271377927] [odom_translator]: Odometry received at 0.998722
+[INFO] [1653750425.359876781] [odom_translator]: Odometry received at 0.997690
+[INFO] [1653750425.445269078] [odom_translator]: Odometry received at 0.997480
+[INFO] [1653750425.521910480] [odom_translator]: Odometry received at 0.997496
+[INFO] [1653750425.610420213] [odom_translator]: Odometry received at 0.997347
+[INFO] [1653750425.677605432] [odom_translator]: Info: distance between the latest and the last odometry is 0.008846
+[INFO] [1653750425.681038264] [odom_translator]: Odometry message added to the path and republished at 1653750425.681030, markers count: 50
+[INFO] [1653750425.699494752] [odom_translator]: Odometry received at 0.997366
+[INFO] [1653750425.783076376] [odom_translator]: Odometry received at 0.997386
+[INFO] [1653750425.858001666] [odom_translator]: Odometry received at 0.997364
+[INFO] [1653750425.931967267] [odom_translator]: Odometry received at 0.997359
+[INFO] [1653750426.012505824] [odom_translator]: Odometry received at 0.997368
+[INFO] [1653750426.089589598] [odom_translator]: Odometry received at 0.997321
+[INFO] [1653750426.177680287] [odom_translator]: Info: distance between the latest and the last odometry is 0.001275
+[INFO] [1653750426.179818931] [odom_translator]: Odometry message added to the path and republished at 1653750426.179814, markers count: 51
+[INFO] [1653750426.182663789] [odom_translator]: Odometry received at 0.997103
+[INFO] [1653750426.274858196] [odom_translator]: Odometry received at 0.996981
+[INFO] [1653750426.356009430] [odom_translator]: Odometry received at 0.996967
+[INFO] [1653750426.442989614] [odom_translator]: Odometry received at 0.996992
+[INFO] [1653750426.542187413] [odom_translator]: Odometry received at 0.996956
+[INFO] [1653750426.624540514] [odom_translator]: Odometry received at 0.996884
+[INFO] [1653750426.677618469] [odom_translator]: Info: distance between the latest and the last odometry is 0.003054
+[INFO] [1653750426.682192239] [odom_translator]: Odometry message added to the path and republished at 1653750426.682183, markers count: 52
+[INFO] [1653750426.722381372] [odom_translator]: Odometry received at 0.996773
+[INFO] [1653750426.822091272] [odom_translator]: Odometry received at 0.996447
+[INFO] [1653750426.911695543] [odom_translator]: Odometry received at 0.995679
+[INFO] [1653750427.007736833] [odom_translator]: Odometry received at 0.994550
+[INFO] [1653750427.088987653] [odom_translator]: Odometry received at 0.994239
+[INFO] [1653750427.175629913] [odom_translator]: Odometry received at 0.993682
+[INFO] [1653750427.178396434] [odom_translator]: Info: distance between the latest and the last odometry is 0.009075
+[INFO] [1653750427.182340758] [odom_translator]: Odometry message added to the path and republished at 1653750427.182333, markers count: 53
+[INFO] [1653750427.258298537] [odom_translator]: Odometry received at 0.992739
+[INFO] [1653750427.345035231] [odom_translator]: Odometry received at 0.992479
+[INFO] [1653750427.432766109] [odom_translator]: Odometry received at 0.991882
+[INFO] [1653750427.514805223] [odom_translator]: Odometry received at 0.991729
+[INFO] [1653750427.598260959] [odom_translator]: Odometry received at 0.991669
+[INFO] [1653750427.677721554] [odom_translator]: Info: distance between the latest and the last odometry is 0.004149
+[INFO] [1653750427.680015495] [odom_translator]: Odometry message added to the path and republished at 1653750427.680008, markers count: 54
+[INFO] [1653750427.687448459] [odom_translator]: Odometry received at 0.991483
+[INFO] [1653750427.777486878] [odom_translator]: Odometry received at 0.991618
+[INFO] [1653750427.869355170] [odom_translator]: Odometry received at 0.991579
+[INFO] [1653750427.960669921] [odom_translator]: Odometry received at 0.991684
+[INFO] [1653750428.057071342] [odom_translator]: Odometry received at 0.991759
+[INFO] [1653750428.132914688] [odom_translator]: Odometry received at 0.991943
+[INFO] [1653750428.177731768] [odom_translator]: Info: distance between the latest and the last odometry is 0.002282
+[INFO] [1653750428.180683091] [odom_translator]: Odometry message added to the path and republished at 1653750428.180675, markers count: 55
+[INFO] [1653750428.213253211] [odom_translator]: Odometry received at 0.993234
+[INFO] [1653750428.287179868] [odom_translator]: Odometry received at 0.993894
+[INFO] [1653750428.370677204] [odom_translator]: Odometry received at 0.994980
+[INFO] [1653750428.479691636] [odom_translator]: Odometry received at 0.999100
+[INFO] [1653750428.572688034] [odom_translator]: Odometry received at 0.999531
+[INFO] [1653750428.677627741] [odom_translator]: Info: distance between the latest and the last odometry is 0.014693
+[INFO] [1653750428.680263925] [odom_translator]: Odometry message added to the path and republished at 1653750428.680258, markers count: 56
+[WARN] [1653750428.680933307] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653750428.693487757] [odom_translator]: Odometry received at 0.999951
+[INFO] [1653750428.794466052] [odom_translator]: Odometry received at 0.999934
+[INFO] [1653750428.894900278] [odom_translator]: Odometry received at 0.999684
+[INFO] [1653750428.978818225] [odom_translator]: Odometry received at 0.999439
+[INFO] [1653750429.074228629] [odom_translator]: Odometry received at 0.999006
+[INFO] [1653750429.169903676] [odom_translator]: Odometry received at 0.998332
+[INFO] [1653750429.177640386] [odom_translator]: Info: distance between the latest and the last odometry is 0.022127
+[INFO] [1653750429.179991960] [odom_translator]: Odometry message added to the path and republished at 1653750429.179985, markers count: 57
+[INFO] [1653750429.253543061] [odom_translator]: Odometry received at 0.998147
+[INFO] [1653750429.338911742] [odom_translator]: Odometry received at 0.995947
+[INFO] [1653750429.430695521] [odom_translator]: Odometry received at 0.994967
+[INFO] [1653750429.520446545] [odom_translator]: Odometry received at 0.993741
+[INFO] [1653750429.602935872] [odom_translator]: Odometry received at 0.991851
+[INFO] [1653750429.677676552] [odom_translator]: Info: distance between the latest and the last odometry is 0.017882
+[INFO] [1653750429.680590210] [odom_translator]: Odometry message added to the path and republished at 1653750429.680583, markers count: 58
+[INFO] [1653750429.693966716] [odom_translator]: Odometry received at 0.990679
+[INFO] [1653750429.775797573] [odom_translator]: Odometry received at 0.990248
+[INFO] [1653750429.860885931] [odom_translator]: Odometry received at 0.989237
+[INFO] [1653750429.956412816] [odom_translator]: Odometry received at 0.988194
+[INFO] [1653750430.128772592] [odom_translator]: Odometry received at 0.984694
+[INFO] [1653750430.177690189] [odom_translator]: Info: distance between the latest and the last odometry is 0.013173
+[INFO] [1653750430.180911467] [odom_translator]: Odometry message added to the path and republished at 1653750430.180904, markers count: 59
+[INFO] [1653750430.215009409] [odom_translator]: Odometry received at 0.982987
+[INFO] [1653750430.314222984] [odom_translator]: Odometry received at 0.981255
+[INFO] [1653750430.405722952] [odom_translator]: Odometry received at 0.980550
+[INFO] [1653750430.491751959] [odom_translator]: Odometry received at 0.980077
+[INFO] [1653750430.583549306] [odom_translator]: Odometry received at 0.981978
+[INFO] [1653750430.667259348] [odom_translator]: Odometry received at 0.988054
+[INFO] [1653750430.678083638] [odom_translator]: Info: distance between the latest and the last odometry is 0.010428
+[INFO] [1653750430.681686423] [odom_translator]: Odometry message added to the path and republished at 1653750430.681679, markers count: 60
+[INFO] [1653750430.759091735] [odom_translator]: Odometry received at 0.989403
+[INFO] [1653750430.902999764] [odom_translator]: Odometry received at 0.991313
+[INFO] [1653750431.177744536] [odom_translator]: Info: distance between the latest and the last odometry is 0.007917
+[INFO] [1653750431.181915678] [odom_translator]: Odometry message added to the path and republished at 1653750431.181908, markers count: 61
+[INFO] [1653750431.234333883] [odom_translator]: Odometry received at 0.995554
+[INFO] [1653750431.317035371] [odom_translator]: Odometry received at 0.995029
+[INFO] [1653750431.438711422] [odom_translator]: Odometry received at 0.994505
+[INFO] [1653750431.544773187] [odom_translator]: Odometry received at 0.994514
+[INFO] [1653750431.655819829] [odom_translator]: Odometry received at 0.993987
+[INFO] [1653750431.677710269] [odom_translator]: Info: distance between the latest and the last odometry is 0.056304
+[INFO] [1653750431.680854137] [odom_translator]: Odometry message added to the path and republished at 1653750431.680809, markers count: 62
+[INFO] [1653750431.764689908] [odom_translator]: Odometry received at 0.994250
+[INFO] [1653750431.862923026] [odom_translator]: Odometry received at 0.994373
+[INFO] [1653750432.016744969] [odom_translator]: Odometry received at 0.994780
+[INFO] [1653750432.173437722] [odom_translator]: Odometry received at 0.995257
+[INFO] [1653750432.177731521] [odom_translator]: Info: distance between the latest and the last odometry is 0.022645
+[INFO] [1653750432.180984191] [odom_translator]: Odometry message added to the path and republished at 1653750432.180977, markers count: 63
+[ERROR] [1653750432.424271012] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750432.577769625] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750432.735403635] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750432.872998070] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750433.029172323] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750433.163851308] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750433.302727324] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750433.446236693] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750433.598103482] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750433.757562117] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750433.903338547] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750434.057236491] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750434.194432555] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750434.334530757] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750434.468505832] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750434.598572199] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750434.739028581] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750434.865680549] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750434.999946474] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750435.125050716] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750435.244700380] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750435.368769669] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750435.508660765] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750435.628057915] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750435.760562832] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750435.892987045] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750436.030437671] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750436.166480412] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750436.316658802] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750436.442725261] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750436.569033545] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750436.705784101] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750436.848225589] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750436.979878946] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750437.123080792] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750437.252308656] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750437.394736351] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750437.525538757] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750437.660089804] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750437.804411277] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750437.935244531] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750438.062530104] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750438.186142620] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750438.306568708] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750438.428175221] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750438.552066172] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750438.674076946] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750438.811926295] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750438.954470696] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750439.092268013] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750439.216792569] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750439.343782780] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750439.486507022] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750439.622272544] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750439.768260336] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750439.895589174] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750440.016467745] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750440.137051945] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750440.261507541] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750440.383569643] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750440.514698003] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750440.665587119] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750440.799746387] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750440.937831163] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750441.074938073] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750441.226776862] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750441.362702258] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750441.490795327] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750441.621492547] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750441.759803757] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750441.896583592] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750442.027657744] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750442.155940734] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750442.288731574] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750442.425878069] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750442.560124217] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750442.692333707] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750442.822440426] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750442.951250813] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750443.084767675] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750443.215707682] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750443.348578266] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750443.482086935] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750443.618170637] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750443.748976754] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750443.876822876] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750444.021338590] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750444.147668314] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750444.270664440] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750444.404273463] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750444.543577930] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750444.684873710] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750444.839529932] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750444.980905489] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750445.126456220] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750445.267336285] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750445.399173995] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750445.531166939] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750445.666100934] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750445.796356262] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750445.929390591] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750446.054208878] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[ERROR] [1653750446.185759930] [odom_translator]: Null odometry has been received at 0.000000, aborting translation
+[INFO] [1653750446.335019334] [rclcpp]: signal_handler(signal_value=2)

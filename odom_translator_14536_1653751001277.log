@@ -1,0 +1,1371 @@
+[INFO] [1653751001.341212993] [odom_translator]: Input odometry topic: /rtabmap/odom
+[INFO] [1653751001.341673959] [odom_translator]: Output odometry topic: /odom_path
+[INFO] [1653751001.341811337] [odom_translator]: Base frame ID: camera_link
+[INFO] [1653751001.341917834] [odom_translator]: Base frame ID: camera_link
+[INFO] [1653751001.342022668] [odom_translator]: Rate of the publication in seconds: 0.500000
+[INFO] [1653751001.342144333] [odom_translator]: Length of the arrow marker: 0.100000
+[INFO] [1653751001.342243471] [odom_translator]: Minimal difference between odometry markers: 0.010000
+[INFO] [1653751001.342343408] [odom_translator]: QoS settings profile: DEFAULT
+[WARN] [1653751006.352575446] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751011.352419792] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[INFO] [1653751014.348991098] [odom_translator]: Odometry received at 0.996347
+[INFO] [1653751014.353339379] [odom_translator]: Odometry message added to the path and republished at 1653751014.353311, markers count: 1
+[INFO] [1653751014.476063918] [odom_translator]: Odometry received at 0.997076
+[INFO] [1653751014.590141465] [odom_translator]: Odometry received at 0.997523
+[INFO] [1653751014.701530433] [odom_translator]: Odometry received at 0.997244
+[INFO] [1653751014.831611228] [odom_translator]: Odometry received at 0.996290
+[INFO] [1653751014.852687694] [odom_translator]: Odometry message added to the path and republished at 1653751014.852680, markers count: 2
+[INFO] [1653751014.932594749] [odom_translator]: Odometry received at 0.996165
+[INFO] [1653751015.018290551] [odom_translator]: Odometry received at 0.996249
+[INFO] [1653751015.100072605] [odom_translator]: Odometry received at 0.996113
+[INFO] [1653751015.185540532] [odom_translator]: Odometry received at 0.996245
+[INFO] [1653751015.271572241] [odom_translator]: Odometry received at 0.996193
+[INFO] [1653751015.370900732] [odom_translator]: Odometry received at 0.996316
+[INFO] [1653751015.460469160] [odom_translator]: Odometry received at 0.996212
+[INFO] [1653751015.550283959] [odom_translator]: Odometry received at 0.996471
+[INFO] [1653751015.640899088] [odom_translator]: Odometry received at 0.996189
+[INFO] [1653751015.725691038] [odom_translator]: Odometry received at 0.996241
+[INFO] [1653751015.823580822] [odom_translator]: Odometry received at 0.996248
+[INFO] [1653751015.909524242] [odom_translator]: Odometry received at 0.995449
+[INFO] [1653751016.001768065] [odom_translator]: Odometry received at 0.996695
+[INFO] [1653751016.097551357] [odom_translator]: Odometry received at 0.996273
+[INFO] [1653751016.195020495] [odom_translator]: Odometry received at 0.996349
+[INFO] [1653751016.297220062] [odom_translator]: Odometry received at 0.996215
+[WARN] [1653751016.352558509] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751016.412465495] [odom_translator]: Odometry received at 0.996094
+[INFO] [1653751016.502855820] [odom_translator]: Odometry received at 0.996136
+[INFO] [1653751016.614699161] [odom_translator]: Odometry received at 0.996134
+[INFO] [1653751016.728024601] [odom_translator]: Odometry received at 0.996312
+[INFO] [1653751016.852805485] [odom_translator]: Odometry message added to the path and republished at 1653751016.852799, markers count: 3
+[INFO] [1653751016.859476580] [odom_translator]: Odometry received at 0.996534
+[INFO] [1653751016.962707968] [odom_translator]: Odometry received at 0.996604
+[INFO] [1653751017.070206580] [odom_translator]: Odometry received at 0.995799
+[INFO] [1653751017.166776154] [odom_translator]: Odometry received at 0.994721
+[INFO] [1653751017.284359120] [odom_translator]: Odometry received at 0.996369
+[INFO] [1653751017.352753608] [odom_translator]: Odometry message added to the path and republished at 1653751017.352747, markers count: 4
+[INFO] [1653751017.382724621] [odom_translator]: Odometry received at 0.996308
+[INFO] [1653751017.494730970] [odom_translator]: Odometry received at 0.996517
+[INFO] [1653751017.609747375] [odom_translator]: Odometry received at 0.996756
+[INFO] [1653751017.728927866] [odom_translator]: Odometry received at 0.996392
+[INFO] [1653751017.820810147] [odom_translator]: Odometry received at 0.996401
+[INFO] [1653751017.909905288] [odom_translator]: Odometry received at 0.996280
+[INFO] [1653751018.006257802] [odom_translator]: Odometry received at 0.996400
+[INFO] [1653751018.112344363] [odom_translator]: Odometry received at 0.996312
+[INFO] [1653751018.229664477] [odom_translator]: Odometry received at 0.996372
+[INFO] [1653751018.360146970] [odom_translator]: Odometry received at 0.996399
+[INFO] [1653751018.464562148] [odom_translator]: Odometry received at 0.996638
+[INFO] [1653751018.565379008] [odom_translator]: Odometry received at 0.996323
+[INFO] [1653751018.685369333] [odom_translator]: Odometry received at 0.996271
+[INFO] [1653751018.785903629] [odom_translator]: Odometry received at 0.996417
+[INFO] [1653751018.875335478] [odom_translator]: Odometry received at 0.996053
+[INFO] [1653751018.995979219] [odom_translator]: Odometry received at 0.996328
+[INFO] [1653751019.104763445] [odom_translator]: Odometry received at 0.996369
+[INFO] [1653751019.212630380] [odom_translator]: Odometry received at 0.996375
+[INFO] [1653751019.334893438] [odom_translator]: Odometry received at 0.996355
+[INFO] [1653751019.446968139] [odom_translator]: Odometry received at 0.996367
+[INFO] [1653751019.554490269] [odom_translator]: Odometry received at 0.996388
+[INFO] [1653751019.664275821] [odom_translator]: Odometry received at 0.996450
+[INFO] [1653751019.768540373] [odom_translator]: Odometry received at 0.996422
+[INFO] [1653751019.868832394] [odom_translator]: Odometry received at 0.996387
+[INFO] [1653751019.980929623] [odom_translator]: Odometry received at 0.996353
+[INFO] [1653751020.098023525] [odom_translator]: Odometry received at 0.996374
+[INFO] [1653751020.197358732] [odom_translator]: Odometry received at 0.996388
+[INFO] [1653751020.333773301] [odom_translator]: Odometry received at 0.996364
+[INFO] [1653751020.429853906] [odom_translator]: Odometry received at 0.996383
+[INFO] [1653751020.521578615] [odom_translator]: Odometry received at 0.996400
+[INFO] [1653751020.619721039] [odom_translator]: Odometry received at 0.996420
+[INFO] [1653751020.713855987] [odom_translator]: Odometry received at 0.996469
+[INFO] [1653751020.804989456] [odom_translator]: Odometry received at 0.996589
+[INFO] [1653751020.899793917] [odom_translator]: Odometry received at 0.996458
+[INFO] [1653751020.989021665] [odom_translator]: Odometry received at 0.996586
+[INFO] [1653751021.070061147] [odom_translator]: Odometry received at 0.996338
+[INFO] [1653751021.154635747] [odom_translator]: Odometry received at 0.996478
+[INFO] [1653751021.241484872] [odom_translator]: Odometry received at 0.996493
+[INFO] [1653751021.326157745] [odom_translator]: Odometry received at 0.996335
+[WARN] [1653751021.352467142] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751021.419277127] [odom_translator]: Odometry received at 0.996365
+[INFO] [1653751021.502642655] [odom_translator]: Odometry received at 0.996347
+[INFO] [1653751021.591014040] [odom_translator]: Odometry received at 0.996418
+[INFO] [1653751021.676092326] [odom_translator]: Odometry received at 0.996372
+[INFO] [1653751021.760080966] [odom_translator]: Odometry received at 0.996353
+[INFO] [1653751021.839527180] [odom_translator]: Odometry received at 0.996434
+[INFO] [1653751021.922761922] [odom_translator]: Odometry received at 0.996383
+[INFO] [1653751022.007424459] [odom_translator]: Odometry received at 0.996279
+[INFO] [1653751022.091759663] [odom_translator]: Odometry received at 0.996491
+[INFO] [1653751022.180675982] [odom_translator]: Odometry received at 0.996376
+[INFO] [1653751022.270985855] [odom_translator]: Odometry received at 0.995951
+[INFO] [1653751022.372953320] [odom_translator]: Odometry received at 0.996169
+[INFO] [1653751022.479730990] [odom_translator]: Odometry received at 0.996128
+[INFO] [1653751022.577843173] [odom_translator]: Odometry received at 0.996089
+[INFO] [1653751022.682587377] [odom_translator]: Odometry received at 0.996363
+[INFO] [1653751022.788185768] [odom_translator]: Odometry received at 0.996739
+[INFO] [1653751022.852996367] [odom_translator]: Odometry message added to the path and republished at 1653751022.852990, markers count: 5
+[INFO] [1653751022.886042555] [odom_translator]: Odometry received at 0.996345
+[INFO] [1653751022.989651481] [odom_translator]: Odometry received at 0.996049
+[INFO] [1653751023.094185794] [odom_translator]: Odometry received at 0.996123
+[INFO] [1653751023.193888620] [odom_translator]: Odometry received at 0.996220
+[INFO] [1653751023.395441789] [odom_translator]: Odometry received at 0.996162
+[INFO] [1653751023.404611315] [odom_translator]: Odometry received at 0.996099
+[INFO] [1653751023.502377669] [odom_translator]: Odometry received at 0.996154
+[INFO] [1653751023.591584807] [odom_translator]: Odometry received at 0.996095
+[INFO] [1653751023.682823876] [odom_translator]: Odometry received at 0.996183
+[INFO] [1653751023.791312192] [odom_translator]: Odometry received at 0.995974
+[INFO] [1653751023.894062514] [odom_translator]: Odometry received at 0.995815
+[INFO] [1653751024.095085499] [odom_translator]: Odometry received at 0.996334
+[INFO] [1653751024.111719474] [odom_translator]: Odometry received at 0.996398
+[INFO] [1653751024.207974191] [odom_translator]: Odometry received at 0.996263
+[INFO] [1653751024.307547767] [odom_translator]: Odometry received at 0.995362
+[INFO] [1653751024.353071780] [odom_translator]: Odometry message added to the path and republished at 1653751024.353064, markers count: 6
+[INFO] [1653751024.411071923] [odom_translator]: Odometry received at 0.995948
+[INFO] [1653751024.519280170] [odom_translator]: Odometry received at 0.996094
+[INFO] [1653751024.624670174] [odom_translator]: Odometry received at 0.995567
+[INFO] [1653751024.724804749] [odom_translator]: Odometry received at 0.996116
+[INFO] [1653751024.833574028] [odom_translator]: Odometry received at 0.996107
+[INFO] [1653751024.924544037] [odom_translator]: Odometry received at 0.996257
+[INFO] [1653751025.028562790] [odom_translator]: Odometry received at 0.996286
+[INFO] [1653751025.124231515] [odom_translator]: Odometry received at 0.996281
+[INFO] [1653751025.204125572] [odom_translator]: Odometry received at 0.995902
+[INFO] [1653751025.308861486] [odom_translator]: Odometry received at 0.995861
+[INFO] [1653751025.423157428] [odom_translator]: Odometry received at 0.996068
+[INFO] [1653751025.529841368] [odom_translator]: Odometry received at 0.995734
+[INFO] [1653751025.628663925] [odom_translator]: Odometry received at 0.995953
+[INFO] [1653751025.736774507] [odom_translator]: Odometry received at 0.996002
+[INFO] [1653751025.832522593] [odom_translator]: Odometry received at 0.996188
+[INFO] [1653751025.933306776] [odom_translator]: Odometry received at 0.996069
+[INFO] [1653751026.035509409] [odom_translator]: Odometry received at 0.996031
+[INFO] [1653751026.142485288] [odom_translator]: Odometry received at 0.995908
+[INFO] [1653751026.236632457] [odom_translator]: Odometry received at 0.995990
+[INFO] [1653751026.342198909] [odom_translator]: Odometry received at 0.995880
+[WARN] [1653751026.352744805] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751026.443729085] [odom_translator]: Odometry received at 0.995904
+[INFO] [1653751026.552761342] [odom_translator]: Odometry received at 0.995933
+[INFO] [1653751026.641351191] [odom_translator]: Odometry received at 0.996117
+[INFO] [1653751026.732142572] [odom_translator]: Odometry received at 0.996177
+[INFO] [1653751026.826419438] [odom_translator]: Odometry received at 0.995460
+[INFO] [1653751026.938961725] [odom_translator]: Odometry received at 0.995389
+[INFO] [1653751027.020728765] [odom_translator]: Odometry received at 0.995851
+[INFO] [1653751027.120428069] [odom_translator]: Odometry received at 0.997466
+[INFO] [1653751027.238038932] [odom_translator]: Odometry received at 0.995181
+[INFO] [1653751027.366441967] [odom_translator]: Odometry received at 0.996666
+[INFO] [1653751027.471240985] [odom_translator]: Odometry received at 0.996675
+[INFO] [1653751027.573783493] [odom_translator]: Odometry received at 0.996665
+[INFO] [1653751027.664688379] [odom_translator]: Odometry received at 0.996628
+[INFO] [1653751027.756607679] [odom_translator]: Odometry received at 0.996635
+[INFO] [1653751027.853110909] [odom_translator]: Odometry message added to the path and republished at 1653751027.853104, markers count: 7
+[INFO] [1653751027.868522212] [odom_translator]: Odometry received at 0.996579
+[INFO] [1653751027.966567543] [odom_translator]: Odometry received at 0.996666
+[INFO] [1653751028.070476597] [odom_translator]: Odometry received at 0.996792
+[INFO] [1653751028.175947494] [odom_translator]: Odometry received at 0.996475
+[INFO] [1653751028.273326543] [odom_translator]: Odometry received at 0.996842
+[INFO] [1653751028.413932039] [odom_translator]: Odometry received at 0.996684
+[INFO] [1653751028.515557543] [odom_translator]: Odometry received at 0.996683
+[INFO] [1653751028.605632850] [odom_translator]: Odometry received at 0.996641
+[INFO] [1653751028.688154875] [odom_translator]: Odometry received at 0.996701
+[INFO] [1653751028.807765283] [odom_translator]: Odometry received at 0.996726
+[INFO] [1653751028.901976644] [odom_translator]: Odometry received at 0.996721
+[INFO] [1653751028.976806730] [odom_translator]: Odometry received at 0.996724
+[INFO] [1653751029.070185279] [odom_translator]: Odometry received at 0.996687
+[INFO] [1653751029.173963962] [odom_translator]: Odometry received at 0.996734
+[INFO] [1653751029.242854355] [odom_translator]: Odometry received at 0.996675
+[INFO] [1653751029.332952286] [odom_translator]: Odometry received at 0.996656
+[INFO] [1653751029.425753067] [odom_translator]: Odometry received at 0.996671
+[INFO] [1653751029.510807445] [odom_translator]: Odometry received at 0.996661
+[INFO] [1653751029.606706763] [odom_translator]: Odometry received at 0.996597
+[INFO] [1653751029.697917220] [odom_translator]: Odometry received at 0.996637
+[INFO] [1653751029.785447981] [odom_translator]: Odometry received at 0.996696
+[INFO] [1653751029.864206021] [odom_translator]: Odometry received at 0.996428
+[INFO] [1653751029.947878013] [odom_translator]: Odometry received at 0.996421
+[INFO] [1653751030.031394451] [odom_translator]: Odometry received at 0.997420
+[INFO] [1653751030.125574289] [odom_translator]: Odometry received at 0.996225
+[INFO] [1653751030.227819256] [odom_translator]: Odometry received at 0.995710
+[INFO] [1653751030.326628211] [odom_translator]: Odometry received at 0.995753
+[INFO] [1653751030.353074280] [odom_translator]: Odometry message added to the path and republished at 1653751030.353068, markers count: 8
+[INFO] [1653751030.433724120] [odom_translator]: Odometry received at 0.995801
+[INFO] [1653751030.527533874] [odom_translator]: Odometry received at 0.995828
+[INFO] [1653751030.625947239] [odom_translator]: Odometry received at 0.995712
+[INFO] [1653751030.714777441] [odom_translator]: Odometry received at 0.995481
+[INFO] [1653751030.818426426] [odom_translator]: Odometry received at 0.995802
+[INFO] [1653751030.927197397] [odom_translator]: Odometry received at 0.995640
+[INFO] [1653751031.033723923] [odom_translator]: Odometry received at 0.995599
+[INFO] [1653751031.133910942] [odom_translator]: Odometry received at 0.995618
+[INFO] [1653751031.228565443] [odom_translator]: Odometry received at 0.995652
+[INFO] [1653751031.340928811] [odom_translator]: Odometry received at 0.995655
+[WARN] [1653751031.352847045] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751031.429464993] [odom_translator]: Odometry received at 0.995627
+[INFO] [1653751031.520350676] [odom_translator]: Odometry received at 0.995643
+[INFO] [1653751031.638095298] [odom_translator]: Odometry received at 0.995697
+[INFO] [1653751031.737024126] [odom_translator]: Odometry received at 0.995651
+[INFO] [1653751031.837725264] [odom_translator]: Odometry received at 0.995651
+[INFO] [1653751031.950695040] [odom_translator]: Odometry received at 0.995644
+[INFO] [1653751032.053916371] [odom_translator]: Odometry received at 0.995713
+[INFO] [1653751032.164931945] [odom_translator]: Odometry received at 0.995729
+[INFO] [1653751032.252405872] [odom_translator]: Odometry received at 0.995762
+[INFO] [1653751032.347458489] [odom_translator]: Odometry received at 0.995765
+[INFO] [1653751032.447865543] [odom_translator]: Odometry received at 0.995747
+[INFO] [1653751032.540334895] [odom_translator]: Odometry received at 0.995705
+[INFO] [1653751032.639385291] [odom_translator]: Odometry received at 0.995769
+[INFO] [1653751032.737104022] [odom_translator]: Odometry received at 0.995692
+[INFO] [1653751032.826119729] [odom_translator]: Odometry received at 0.995723
+[INFO] [1653751032.932833808] [odom_translator]: Odometry received at 0.995743
+[INFO] [1653751033.043509026] [odom_translator]: Odometry received at 0.995660
+[INFO] [1653751033.133749228] [odom_translator]: Odometry received at 0.995676
+[INFO] [1653751033.226772986] [odom_translator]: Odometry received at 0.995642
+[INFO] [1653751033.329238498] [odom_translator]: Odometry received at 0.995716
+[INFO] [1653751033.421713801] [odom_translator]: Odometry received at 0.995562
+[INFO] [1653751033.521675889] [odom_translator]: Odometry received at 0.995676
+[INFO] [1653751033.632761735] [odom_translator]: Odometry received at 0.996034
+[INFO] [1653751033.731058169] [odom_translator]: Odometry received at 0.995462
+[INFO] [1653751033.847392020] [odom_translator]: Odometry received at 0.996080
+[INFO] [1653751033.942700319] [odom_translator]: Odometry received at 0.995669
+[INFO] [1653751034.051376919] [odom_translator]: Odometry received at 0.995699
+[INFO] [1653751034.153531226] [odom_translator]: Odometry received at 0.995454
+[INFO] [1653751034.240253302] [odom_translator]: Odometry received at 0.995677
+[INFO] [1653751034.333852811] [odom_translator]: Odometry received at 0.995707
+[INFO] [1653751034.416955577] [odom_translator]: Odometry received at 0.995700
+[INFO] [1653751034.500261705] [odom_translator]: Odometry received at 0.995665
+[INFO] [1653751034.601344383] [odom_translator]: Odometry received at 0.995743
+[INFO] [1653751034.700378649] [odom_translator]: Odometry received at 0.995213
+[INFO] [1653751034.799022319] [odom_translator]: Odometry received at 0.995433
+[INFO] [1653751034.853318570] [odom_translator]: Odometry message added to the path and republished at 1653751034.853311, markers count: 9
+[INFO] [1653751034.912923018] [odom_translator]: Odometry received at 0.995425
+[INFO] [1653751035.000965975] [odom_translator]: Odometry received at 0.995303
+[INFO] [1653751035.110014290] [odom_translator]: Odometry received at 0.995453
+[INFO] [1653751035.221899186] [odom_translator]: Odometry received at 0.995432
+[INFO] [1653751035.314562106] [odom_translator]: Odometry received at 0.995426
+[INFO] [1653751035.416685372] [odom_translator]: Odometry received at 0.995445
+[INFO] [1653751035.500312016] [odom_translator]: Odometry received at 0.995435
+[INFO] [1653751035.584067878] [odom_translator]: Odometry received at 0.995426
+[INFO] [1653751035.673710503] [odom_translator]: Odometry received at 0.995398
+[INFO] [1653751035.759887452] [odom_translator]: Odometry received at 0.995439
+[INFO] [1653751035.850186150] [odom_translator]: Odometry received at 0.995485
+[INFO] [1653751035.937507306] [odom_translator]: Odometry received at 0.995518
+[INFO] [1653751036.025099057] [odom_translator]: Odometry received at 0.995507
+[INFO] [1653751036.118925607] [odom_translator]: Odometry received at 0.995473
+[INFO] [1653751036.218474952] [odom_translator]: Odometry received at 0.995506
+[INFO] [1653751036.306646262] [odom_translator]: Odometry received at 0.995505
+[WARN] [1653751036.352759527] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751036.394505664] [odom_translator]: Odometry received at 0.995525
+[INFO] [1653751036.488153140] [odom_translator]: Odometry received at 0.995439
+[INFO] [1653751036.589316553] [odom_translator]: Odometry received at 0.995517
+[INFO] [1653751036.681589068] [odom_translator]: Odometry received at 0.995412
+[INFO] [1653751036.779553048] [odom_translator]: Odometry received at 0.995438
+[INFO] [1653751036.871441045] [odom_translator]: Odometry received at 0.995442
+[INFO] [1653751036.958114224] [odom_translator]: Odometry received at 0.995410
+[INFO] [1653751037.046750276] [odom_translator]: Odometry received at 0.995440
+[INFO] [1653751037.133900612] [odom_translator]: Odometry received at 0.995419
+[INFO] [1653751037.235436829] [odom_translator]: Odometry received at 0.995414
+[INFO] [1653751037.322468252] [odom_translator]: Odometry received at 0.995416
+[INFO] [1653751037.415016738] [odom_translator]: Odometry received at 0.995474
+[INFO] [1653751037.501100052] [odom_translator]: Odometry received at 0.995492
+[INFO] [1653751037.601861860] [odom_translator]: Odometry received at 0.995454
+[INFO] [1653751037.705517912] [odom_translator]: Odometry received at 0.995484
+[INFO] [1653751037.811650732] [odom_translator]: Odometry received at 0.995421
+[INFO] [1653751037.906653618] [odom_translator]: Odometry received at 0.995359
+[INFO] [1653751038.005352422] [odom_translator]: Odometry received at 0.995398
+[INFO] [1653751038.148438453] [odom_translator]: Odometry received at 0.995427
+[INFO] [1653751038.345872414] [odom_translator]: Odometry received at 0.995466
+[INFO] [1653751038.347980281] [odom_translator]: Odometry received at 0.991718
+[INFO] [1653751038.353727619] [odom_translator]: Odometry message added to the path and republished at 1653751038.353720, markers count: 10
+[INFO] [1653751038.439134828] [odom_translator]: Odometry received at 0.991747
+[INFO] [1653751038.532768127] [odom_translator]: Odometry received at 0.991407
+[INFO] [1653751038.650313381] [odom_translator]: Odometry received at 0.991418
+[INFO] [1653751038.752158210] [odom_translator]: Odometry received at 0.991360
+[INFO] [1653751038.853656922] [odom_translator]: Odometry message added to the path and republished at 1653751038.853650, markers count: 11
+[INFO] [1653751038.872090759] [odom_translator]: Odometry received at 0.991677
+[INFO] [1653751039.092368213] [odom_translator]: Odometry received at 0.994362
+[INFO] [1653751039.324842206] [odom_translator]: Odometry received at 0.995137
+[INFO] [1653751039.353506062] [odom_translator]: Odometry message added to the path and republished at 1653751039.353500, markers count: 12
+[INFO] [1653751039.454844132] [odom_translator]: Odometry received at 0.995408
+[INFO] [1653751039.545221548] [odom_translator]: Odometry received at 0.995515
+[INFO] [1653751039.629416646] [odom_translator]: Odometry received at 0.995034
+[INFO] [1653751039.730574745] [odom_translator]: Odometry received at 0.993067
+[INFO] [1653751039.835510780] [odom_translator]: Odometry received at 0.993650
+[INFO] [1653751039.853508228] [odom_translator]: Odometry message added to the path and republished at 1653751039.853501, markers count: 13
+[INFO] [1653751039.926920498] [odom_translator]: Odometry received at 0.993411
+[INFO] [1653751040.039540473] [odom_translator]: Odometry received at 0.993414
+[INFO] [1653751040.227417508] [odom_translator]: Odometry received at 0.994778
+[INFO] [1653751040.329037149] [odom_translator]: Odometry received at 0.995476
+[INFO] [1653751040.353646393] [odom_translator]: Odometry message added to the path and republished at 1653751040.353638, markers count: 14
+[INFO] [1653751040.418051443] [odom_translator]: Odometry received at 0.995822
+[INFO] [1653751040.510642584] [odom_translator]: Odometry received at 0.996692
+[INFO] [1653751040.614556078] [odom_translator]: Odometry received at 0.996665
+[INFO] [1653751040.717524055] [odom_translator]: Odometry received at 0.996666
+[INFO] [1653751040.825964295] [odom_translator]: Odometry received at 0.996748
+[INFO] [1653751040.853349479] [odom_translator]: Odometry message added to the path and republished at 1653751040.853342, markers count: 15
+[INFO] [1653751040.937203163] [odom_translator]: Odometry received at 0.996672
+[INFO] [1653751041.052607460] [odom_translator]: Odometry received at 0.996756
+[INFO] [1653751041.157982860] [odom_translator]: Odometry received at 0.997125
+[INFO] [1653751041.256779232] [odom_translator]: Odometry received at 0.997231
+[INFO] [1653751041.342469867] [odom_translator]: Odometry received at 0.997648
+[INFO] [1653751041.353592250] [odom_translator]: Odometry message added to the path and republished at 1653751041.353586, markers count: 16
+[WARN] [1653751041.354271075] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751041.448862784] [odom_translator]: Odometry received at 0.997056
+[INFO] [1653751041.532358352] [odom_translator]: Odometry received at 0.996864
+[INFO] [1653751041.638995432] [odom_translator]: Odometry received at 0.996316
+[INFO] [1653751041.853497896] [odom_translator]: Odometry message added to the path and republished at 1653751041.853491, markers count: 17
+[INFO] [1653751041.894727897] [odom_translator]: Odometry received at 0.995628
+[INFO] [1653751042.019007188] [odom_translator]: Odometry received at 0.993413
+[INFO] [1653751042.160705357] [odom_translator]: Odometry received at 0.989806
+[INFO] [1653751042.296762590] [odom_translator]: Odometry received at 0.985641
+[INFO] [1653751042.353772249] [odom_translator]: Odometry message added to the path and republished at 1653751042.353765, markers count: 18
+[INFO] [1653751042.444186784] [odom_translator]: Odometry received at 0.983433
+[INFO] [1653751042.585323218] [odom_translator]: Odometry received at 0.980477
+[INFO] [1653751042.727811605] [odom_translator]: Odometry received at 0.978693
+[INFO] [1653751042.853504705] [odom_translator]: Odometry message added to the path and republished at 1653751042.853499, markers count: 19
+[INFO] [1653751043.043869194] [odom_translator]: Odometry received at 0.981573
+[INFO] [1653751043.196846259] [odom_translator]: Odometry received at 0.986094
+[INFO] [1653751043.294635289] [odom_translator]: Odometry received at 0.986126
+[INFO] [1653751043.354326902] [odom_translator]: Odometry message added to the path and republished at 1653751043.354321, markers count: 20
+[INFO] [1653751043.387649921] [odom_translator]: Odometry received at 0.986361
+[INFO] [1653751043.614991331] [odom_translator]: Odometry received at 0.985599
+[INFO] [1653751043.718723925] [odom_translator]: Odometry received at 0.984320
+[INFO] [1653751043.804991111] [odom_translator]: Odometry received at 0.984551
+[INFO] [1653751043.896316921] [odom_translator]: Odometry received at 0.984371
+[INFO] [1653751043.986812897] [odom_translator]: Odometry received at 0.984256
+[INFO] [1653751044.082060390] [odom_translator]: Odometry received at 0.984324
+[INFO] [1653751044.184990572] [odom_translator]: Odometry received at 0.984222
+[INFO] [1653751044.276572994] [odom_translator]: Odometry received at 0.983984
+[INFO] [1653751044.361281791] [odom_translator]: Odometry received at 0.983747
+[INFO] [1653751044.462395086] [odom_translator]: Odometry received at 0.983961
+[INFO] [1653751044.556122527] [odom_translator]: Odometry received at 0.984237
+[INFO] [1653751044.646309699] [odom_translator]: Odometry received at 0.983835
+[INFO] [1653751044.729550413] [odom_translator]: Odometry received at 0.984100
+[INFO] [1653751044.838225342] [odom_translator]: Odometry received at 0.983785
+[INFO] [1653751044.934504015] [odom_translator]: Odometry received at 0.984093
+[INFO] [1653751045.035061367] [odom_translator]: Odometry received at 0.984576
+[INFO] [1653751045.123553477] [odom_translator]: Odometry received at 0.985027
+[INFO] [1653751045.212951933] [odom_translator]: Odometry received at 0.984932
+[INFO] [1653751045.403361220] [odom_translator]: Odometry received at 0.985246
+[INFO] [1653751045.493336388] [odom_translator]: Odometry received at 0.985188
+[INFO] [1653751045.589462451] [odom_translator]: Odometry received at 0.985090
+[INFO] [1653751045.693220228] [odom_translator]: Odometry received at 0.984825
+[INFO] [1653751045.790612323] [odom_translator]: Odometry received at 0.984798
+[INFO] [1653751045.887850528] [odom_translator]: Odometry received at 0.985163
+[INFO] [1653751045.975250687] [odom_translator]: Odometry received at 0.985254
+[INFO] [1653751046.090725446] [odom_translator]: Odometry received at 0.985416
+[INFO] [1653751046.195698373] [odom_translator]: Odometry received at 0.985492
+[INFO] [1653751046.274843226] [odom_translator]: Odometry received at 0.985407
+[WARN] [1653751046.352926274] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751046.370899976] [odom_translator]: Odometry received at 0.985503
+[INFO] [1653751046.478099716] [odom_translator]: Odometry received at 0.985283
+[INFO] [1653751046.575386753] [odom_translator]: Odometry received at 0.985528
+[INFO] [1653751046.664136017] [odom_translator]: Odometry received at 0.985572
+[INFO] [1653751046.769289651] [odom_translator]: Odometry received at 0.985411
+[INFO] [1653751046.853675819] [odom_translator]: Odometry message added to the path and republished at 1653751046.853669, markers count: 21
+[INFO] [1653751046.868578826] [odom_translator]: Odometry received at 0.985389
+[INFO] [1653751046.961807795] [odom_translator]: Odometry received at 0.985458
+[INFO] [1653751047.046923765] [odom_translator]: Odometry received at 0.985384
+[INFO] [1653751047.152372730] [odom_translator]: Odometry received at 0.985420
+[INFO] [1653751047.233730155] [odom_translator]: Odometry received at 0.985468
+[INFO] [1653751047.334470451] [odom_translator]: Odometry received at 0.985232
+[INFO] [1653751047.429238640] [odom_translator]: Odometry received at 0.985583
+[INFO] [1653751047.537366167] [odom_translator]: Odometry received at 0.985510
+[INFO] [1653751047.612223797] [odom_translator]: Odometry received at 0.985796
+[INFO] [1653751047.722409335] [odom_translator]: Odometry received at 0.985732
+[INFO] [1653751047.820443805] [odom_translator]: Odometry received at 0.985676
+[INFO] [1653751047.915348251] [odom_translator]: Odometry received at 0.985628
+[INFO] [1653751047.998950729] [odom_translator]: Odometry received at 0.985581
+[INFO] [1653751048.099134602] [odom_translator]: Odometry received at 0.985699
+[INFO] [1653751048.190299128] [odom_translator]: Odometry received at 0.985968
+[INFO] [1653751048.276588039] [odom_translator]: Odometry received at 0.985899
+[INFO] [1653751048.380767515] [odom_translator]: Odometry received at 0.985740
+[INFO] [1653751048.462070059] [odom_translator]: Odometry received at 0.985679
+[INFO] [1653751048.557670034] [odom_translator]: Odometry received at 0.985698
+[INFO] [1653751048.651728580] [odom_translator]: Odometry received at 0.986138
+[INFO] [1653751048.743479226] [odom_translator]: Odometry received at 0.985502
+[INFO] [1653751048.852636846] [odom_translator]: Odometry received at 0.985739
+[INFO] [1653751048.855831127] [odom_translator]: Odometry message added to the path and republished at 1653751048.855825, markers count: 22
+[INFO] [1653751048.966752065] [odom_translator]: Odometry received at 0.984862
+[INFO] [1653751049.045040714] [odom_translator]: Odometry received at 0.984737
+[INFO] [1653751049.150022088] [odom_translator]: Odometry received at 0.984229
+[INFO] [1653751049.275751983] [odom_translator]: Odometry received at 0.983004
+[INFO] [1653751049.354317403] [odom_translator]: Odometry message added to the path and republished at 1653751049.354310, markers count: 23
+[INFO] [1653751049.358453072] [odom_translator]: Odometry received at 0.982946
+[INFO] [1653751049.427448098] [odom_translator]: Odometry received at 0.983446
+[INFO] [1653751049.526774199] [odom_translator]: Odometry received at 0.983832
+[INFO] [1653751049.622179227] [odom_translator]: Odometry received at 0.984517
+[INFO] [1653751049.723085285] [odom_translator]: Odometry received at 0.984825
+[INFO] [1653751049.811469518] [odom_translator]: Odometry received at 0.984736
+[INFO] [1653751049.855924518] [odom_translator]: Odometry message added to the path and republished at 1653751049.855917, markers count: 24
+[INFO] [1653751049.902356664] [odom_translator]: Odometry received at 0.982297
+[INFO] [1653751050.015306620] [odom_translator]: Odometry received at 0.982268
+[INFO] [1653751050.105901825] [odom_translator]: Odometry received at 0.982609
+[INFO] [1653751050.186110402] [odom_translator]: Odometry received at 0.982511
+[INFO] [1653751050.270516664] [odom_translator]: Odometry received at 0.982228
+[INFO] [1653751050.350037008] [odom_translator]: Odometry received at 0.982422
+[INFO] [1653751050.354074020] [odom_translator]: Odometry message added to the path and republished at 1653751050.354068, markers count: 25
+[INFO] [1653751050.452878802] [odom_translator]: Odometry received at 0.981792
+[INFO] [1653751050.554278305] [odom_translator]: Odometry received at 0.980728
+[INFO] [1653751050.649681924] [odom_translator]: Odometry received at 0.978489
+[INFO] [1653751050.752394373] [odom_translator]: Odometry received at 0.976634
+[INFO] [1653751050.843801428] [odom_translator]: Odometry received at 0.977273
+[INFO] [1653751050.854523293] [odom_translator]: Odometry message added to the path and republished at 1653751050.854515, markers count: 26
+[INFO] [1653751050.937004475] [odom_translator]: Odometry received at 0.977335
+[INFO] [1653751051.024289398] [odom_translator]: Odometry received at 0.978431
+[INFO] [1653751051.107859681] [odom_translator]: Odometry received at 0.978573
+[INFO] [1653751051.198365029] [odom_translator]: Odometry received at 0.980063
+[INFO] [1653751051.281829647] [odom_translator]: Odometry received at 0.980585
+[WARN] [1653751051.353094717] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751051.369946804] [odom_translator]: Odometry received at 0.982602
+[INFO] [1653751051.451292195] [odom_translator]: Odometry received at 0.982480
+[INFO] [1653751051.544104068] [odom_translator]: Odometry received at 0.982502
+[INFO] [1653751051.623614939] [odom_translator]: Odometry received at 0.982604
+[INFO] [1653751051.722534347] [odom_translator]: Odometry received at 0.982533
+[INFO] [1653751051.821726269] [odom_translator]: Odometry received at 0.982445
+[INFO] [1653751051.854419807] [odom_translator]: Odometry message added to the path and republished at 1653751051.854411, markers count: 27
+[INFO] [1653751051.916378230] [odom_translator]: Odometry received at 0.982329
+[INFO] [1653751052.006016687] [odom_translator]: Odometry received at 0.982361
+[INFO] [1653751052.107573087] [odom_translator]: Odometry received at 0.981936
+[INFO] [1653751052.196345324] [odom_translator]: Odometry received at 0.982158
+[INFO] [1653751052.305957091] [odom_translator]: Odometry received at 0.982615
+[INFO] [1653751052.393637474] [odom_translator]: Odometry received at 0.982591
+[INFO] [1653751052.495776698] [odom_translator]: Odometry received at 0.982634
+[INFO] [1653751052.600271728] [odom_translator]: Odometry received at 0.982588
+[INFO] [1653751052.689259872] [odom_translator]: Odometry received at 0.982700
+[INFO] [1653751052.790601805] [odom_translator]: Odometry received at 0.982646
+[INFO] [1653751052.883771218] [odom_translator]: Odometry received at 0.982655
+[INFO] [1653751052.985754888] [odom_translator]: Odometry received at 0.982633
+[INFO] [1653751053.092362616] [odom_translator]: Odometry received at 0.982596
+[INFO] [1653751053.180770848] [odom_translator]: Odometry received at 0.982617
+[INFO] [1653751053.267425074] [odom_translator]: Odometry received at 0.982691
+[INFO] [1653751053.348901441] [odom_translator]: Odometry received at 0.982648
+[INFO] [1653751053.434938603] [odom_translator]: Odometry received at 0.982642
+[INFO] [1653751053.533660150] [odom_translator]: Odometry received at 0.982646
+[INFO] [1653751053.628529745] [odom_translator]: Odometry received at 0.982646
+[INFO] [1653751053.715715753] [odom_translator]: Odometry received at 0.982646
+[INFO] [1653751053.810143774] [odom_translator]: Odometry received at 0.982680
+[INFO] [1653751053.899394672] [odom_translator]: Odometry received at 0.982705
+[INFO] [1653751053.986347750] [odom_translator]: Odometry received at 0.982573
+[INFO] [1653751054.085770266] [odom_translator]: Odometry received at 0.982637
+[INFO] [1653751054.164428901] [odom_translator]: Odometry received at 0.982674
+[INFO] [1653751054.247193188] [odom_translator]: Odometry received at 0.982653
+[INFO] [1653751054.342747078] [odom_translator]: Odometry received at 0.982670
+[INFO] [1653751054.434898910] [odom_translator]: Odometry received at 0.982623
+[INFO] [1653751054.531476845] [odom_translator]: Odometry received at 0.982729
+[INFO] [1653751054.620406235] [odom_translator]: Odometry received at 0.982613
+[INFO] [1653751054.701640359] [odom_translator]: Odometry received at 0.982630
+[INFO] [1653751054.782094537] [odom_translator]: Odometry received at 0.982646
+[INFO] [1653751054.863790363] [odom_translator]: Odometry received at 0.982721
+[INFO] [1653751054.958398257] [odom_translator]: Odometry received at 0.982620
+[INFO] [1653751055.043252171] [odom_translator]: Odometry received at 0.982636
+[INFO] [1653751055.133867662] [odom_translator]: Odometry received at 0.982553
+[INFO] [1653751055.215126810] [odom_translator]: Odometry received at 0.982662
+[INFO] [1653751055.290313752] [odom_translator]: Odometry received at 0.982672
+[INFO] [1653751055.378385435] [odom_translator]: Odometry received at 0.982702
+[INFO] [1653751055.457999953] [odom_translator]: Odometry received at 0.982651
+[INFO] [1653751055.549883493] [odom_translator]: Odometry received at 0.982664
+[INFO] [1653751055.630122147] [odom_translator]: Odometry received at 0.982605
+[INFO] [1653751055.709318005] [odom_translator]: Odometry received at 0.982773
+[INFO] [1653751055.817363414] [odom_translator]: Odometry received at 0.982652
+[INFO] [1653751055.921485061] [odom_translator]: Odometry received at 0.982521
+[INFO] [1653751056.016716323] [odom_translator]: Odometry received at 0.982751
+[INFO] [1653751056.112781483] [odom_translator]: Odometry received at 0.982819
+[INFO] [1653751056.211469748] [odom_translator]: Odometry received at 0.982745
+[INFO] [1653751056.312634301] [odom_translator]: Odometry received at 0.982649
+[INFO] [1653751056.354273839] [odom_translator]: Odometry message added to the path and republished at 1653751056.354267, markers count: 28
+[WARN] [1653751056.355005689] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751056.405299545] [odom_translator]: Odometry received at 0.982941
+[INFO] [1653751056.485291733] [odom_translator]: Odometry received at 0.983047
+[INFO] [1653751056.581536159] [odom_translator]: Odometry received at 0.983252
+[INFO] [1653751056.672083968] [odom_translator]: Odometry received at 0.983911
+[INFO] [1653751056.755857868] [odom_translator]: Odometry received at 0.983595
+[INFO] [1653751056.835307712] [odom_translator]: Odometry received at 0.983228
+[INFO] [1653751056.946716171] [odom_translator]: Odometry received at 0.983282
+[INFO] [1653751057.053778591] [odom_translator]: Odometry received at 0.983127
+[INFO] [1653751057.159092348] [odom_translator]: Odometry received at 0.983033
+[INFO] [1653751057.264529115] [odom_translator]: Odometry received at 0.983032
+[INFO] [1653751057.341927732] [odom_translator]: Odometry received at 0.983126
+[INFO] [1653751057.423371201] [odom_translator]: Odometry received at 0.982978
+[INFO] [1653751057.504164806] [odom_translator]: Odometry received at 0.982939
+[INFO] [1653751057.596759361] [odom_translator]: Odometry received at 0.983131
+[INFO] [1653751057.689071641] [odom_translator]: Odometry received at 0.983185
+[INFO] [1653751057.773816304] [odom_translator]: Odometry received at 0.983022
+[INFO] [1653751057.855820900] [odom_translator]: Odometry received at 0.983000
+[INFO] [1653751057.946217603] [odom_translator]: Odometry received at 0.983051
+[INFO] [1653751058.036097628] [odom_translator]: Odometry received at 0.983054
+[INFO] [1653751058.136067124] [odom_translator]: Odometry received at 0.983087
+[INFO] [1653751058.222495840] [odom_translator]: Odometry received at 0.983041
+[INFO] [1653751058.315620706] [odom_translator]: Odometry received at 0.983070
+[INFO] [1653751058.405583899] [odom_translator]: Odometry received at 0.983162
+[INFO] [1653751058.491201148] [odom_translator]: Odometry received at 0.983203
+[INFO] [1653751058.573886841] [odom_translator]: Odometry received at 0.983101
+[INFO] [1653751058.673830801] [odom_translator]: Odometry received at 0.983219
+[INFO] [1653751058.753929228] [odom_translator]: Odometry received at 0.983076
+[INFO] [1653751058.833882566] [odom_translator]: Odometry received at 0.983167
+[INFO] [1653751058.921752869] [odom_translator]: Odometry received at 0.983260
+[INFO] [1653751058.999014876] [odom_translator]: Odometry received at 0.983408
+[INFO] [1653751059.087826982] [odom_translator]: Odometry received at 0.983517
+[INFO] [1653751059.172484763] [odom_translator]: Odometry received at 0.983357
+[INFO] [1653751059.257408051] [odom_translator]: Odometry received at 0.983336
+[INFO] [1653751059.338490139] [odom_translator]: Odometry received at 0.983854
+[INFO] [1653751059.354124834] [odom_translator]: Odometry message added to the path and republished at 1653751059.354118, markers count: 29
+[INFO] [1653751059.427960653] [odom_translator]: Odometry received at 0.982904
+[INFO] [1653751059.509514523] [odom_translator]: Odometry received at 0.983357
+[INFO] [1653751059.590120188] [odom_translator]: Odometry received at 0.982965
+[INFO] [1653751059.664451758] [odom_translator]: Odometry received at 0.983431
+[INFO] [1653751059.758938016] [odom_translator]: Odometry received at 0.983550
+[INFO] [1653751059.846297111] [odom_translator]: Odometry received at 0.983549
+[INFO] [1653751059.925577032] [odom_translator]: Odometry received at 0.983548
+[INFO] [1653751060.003742027] [odom_translator]: Odometry received at 0.983508
+[INFO] [1653751060.093244797] [odom_translator]: Odometry received at 0.983660
+[INFO] [1653751060.180617236] [odom_translator]: Odometry received at 0.983229
+[INFO] [1653751060.275850703] [odom_translator]: Odometry received at 0.983639
+[INFO] [1653751060.351530001] [odom_translator]: Odometry received at 0.983910
+[INFO] [1653751060.440839169] [odom_translator]: Odometry received at 0.983451
+[INFO] [1653751060.535191601] [odom_translator]: Odometry received at 0.983149
+[INFO] [1653751060.623594581] [odom_translator]: Odometry received at 0.983162
+[INFO] [1653751060.708725711] [odom_translator]: Odometry received at 0.983062
+[INFO] [1653751060.793997100] [odom_translator]: Odometry received at 0.983816
+[INFO] [1653751060.869979634] [odom_translator]: Odometry received at 0.983244
+[INFO] [1653751060.952101862] [odom_translator]: Odometry received at 0.983544
+[INFO] [1653751061.036826748] [odom_translator]: Odometry received at 0.983395
+[INFO] [1653751061.116814804] [odom_translator]: Odometry received at 0.983350
+[INFO] [1653751061.203305888] [odom_translator]: Odometry received at 0.983412
+[INFO] [1653751061.287730641] [odom_translator]: Odometry received at 0.983391
+[WARN] [1653751061.353258610] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751061.379676865] [odom_translator]: Odometry received at 0.983899
+[INFO] [1653751061.467035992] [odom_translator]: Odometry received at 0.983654
+[INFO] [1653751061.548938537] [odom_translator]: Odometry received at 0.983669
+[INFO] [1653751061.626666885] [odom_translator]: Odometry received at 0.983964
+[INFO] [1653751061.709968520] [odom_translator]: Odometry received at 0.983122
+[INFO] [1653751061.792825157] [odom_translator]: Odometry received at 0.982838
+[INFO] [1653751061.855318975] [odom_translator]: Odometry message added to the path and republished at 1653751061.855312, markers count: 30
+[INFO] [1653751061.873418693] [odom_translator]: Odometry received at 0.983373
+[INFO] [1653751061.958824771] [odom_translator]: Odometry received at 0.983296
+[INFO] [1653751062.038068626] [odom_translator]: Odometry received at 0.983119
+[INFO] [1653751062.228297251] [odom_translator]: Odometry received at 0.983106
+[INFO] [1653751062.315799578] [odom_translator]: Odometry received at 0.982973
+[INFO] [1653751062.495701992] [odom_translator]: Odometry received at 0.983252
+[INFO] [1653751062.581667788] [odom_translator]: Odometry received at 0.983241
+[INFO] [1653751062.679602568] [odom_translator]: Odometry received at 0.983243
+[INFO] [1653751062.774621536] [odom_translator]: Odometry received at 0.982737
+[INFO] [1653751062.862523804] [odom_translator]: Odometry received at 0.983625
+[INFO] [1653751062.955474137] [odom_translator]: Odometry received at 0.983503
+[INFO] [1653751063.040014955] [odom_translator]: Odometry received at 0.983221
+[INFO] [1653751063.127166046] [odom_translator]: Odometry received at 0.983141
+[INFO] [1653751063.213420389] [odom_translator]: Odometry received at 0.983735
+[INFO] [1653751063.303895010] [odom_translator]: Odometry received at 0.983192
+[INFO] [1653751063.382805900] [odom_translator]: Odometry received at 0.983466
+[INFO] [1653751063.482830850] [odom_translator]: Odometry received at 0.983246
+[INFO] [1653751063.567652215] [odom_translator]: Odometry received at 0.983536
+[INFO] [1653751063.664453029] [odom_translator]: Odometry received at 0.984156
+[INFO] [1653751063.760855693] [odom_translator]: Odometry received at 0.982749
+[INFO] [1653751063.860621504] [odom_translator]: Odometry received at 0.982936
+[INFO] [1653751063.955268146] [odom_translator]: Odometry received at 0.983879
+[INFO] [1653751064.061938460] [odom_translator]: Odometry received at 0.983136
+[INFO] [1653751064.163013823] [odom_translator]: Odometry received at 0.982862
+[INFO] [1653751064.258941281] [odom_translator]: Odometry received at 0.983583
+[INFO] [1653751064.359745280] [odom_translator]: Odometry received at 0.983301
+[INFO] [1653751064.452597339] [odom_translator]: Odometry received at 0.982986
+[INFO] [1653751064.538242682] [odom_translator]: Odometry received at 0.984275
+[INFO] [1653751064.640936209] [odom_translator]: Odometry received at 0.982900
+[INFO] [1653751064.732528476] [odom_translator]: Odometry received at 0.982851
+[INFO] [1653751064.826934762] [odom_translator]: Odometry received at 0.982981
+[INFO] [1653751064.929640834] [odom_translator]: Odometry received at 0.984137
+[INFO] [1653751065.021755763] [odom_translator]: Odometry received at 0.983398
+[INFO] [1653751065.117315951] [odom_translator]: Odometry received at 0.983559
+[INFO] [1653751065.219953158] [odom_translator]: Odometry received at 0.983146
+[INFO] [1653751065.308611882] [odom_translator]: Odometry received at 0.983179
+[INFO] [1653751065.397845110] [odom_translator]: Odometry received at 0.982849
+[INFO] [1653751065.489027931] [odom_translator]: Odometry received at 0.982949
+[INFO] [1653751065.576702420] [odom_translator]: Odometry received at 0.983015
+[INFO] [1653751065.667986426] [odom_translator]: Odometry received at 0.983021
+[INFO] [1653751065.761522205] [odom_translator]: Odometry received at 0.983789
+[INFO] [1653751065.852669249] [odom_translator]: Odometry received at 0.983430
+[INFO] [1653751065.947284369] [odom_translator]: Odometry received at 0.982764
+[INFO] [1653751066.035011946] [odom_translator]: Odometry received at 0.984276
+[INFO] [1653751066.129850141] [odom_translator]: Odometry received at 0.983262
+[INFO] [1653751066.218595810] [odom_translator]: Odometry received at 0.983269
+[INFO] [1653751066.306977187] [odom_translator]: Odometry received at 0.982951
+[WARN] [1653751066.353081772] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751066.394481273] [odom_translator]: Odometry received at 0.983463
+[INFO] [1653751066.483587427] [odom_translator]: Odometry received at 0.983104
+[INFO] [1653751066.584212159] [odom_translator]: Odometry received at 0.982931
+[INFO] [1653751066.672142074] [odom_translator]: Odometry received at 0.984038
+[INFO] [1653751066.778326525] [odom_translator]: Odometry received at 0.982710
+[INFO] [1653751066.865298603] [odom_translator]: Odometry received at 0.982947
+[INFO] [1653751066.956910901] [odom_translator]: Odometry received at 0.982791
+[INFO] [1653751067.048957764] [odom_translator]: Odometry received at 0.982708
+[INFO] [1653751067.137883659] [odom_translator]: Odometry received at 0.982626
+[INFO] [1653751067.228804492] [odom_translator]: Odometry received at 0.982579
+[INFO] [1653751067.331352032] [odom_translator]: Odometry received at 0.982615
+[INFO] [1653751067.440182307] [odom_translator]: Odometry received at 0.982523
+[INFO] [1653751067.540401434] [odom_translator]: Odometry received at 0.982477
+[INFO] [1653751067.625652722] [odom_translator]: Odometry received at 0.982564
+[INFO] [1653751067.718191047] [odom_translator]: Odometry received at 0.982467
+[INFO] [1653751067.817715189] [odom_translator]: Odometry received at 0.982585
+[INFO] [1653751067.930898575] [odom_translator]: Odometry received at 0.982617
+[INFO] [1653751068.034531249] [odom_translator]: Odometry received at 0.982593
+[INFO] [1653751068.128483927] [odom_translator]: Odometry received at 0.982541
+[INFO] [1653751068.228203335] [odom_translator]: Odometry received at 0.982482
+[INFO] [1653751068.332033482] [odom_translator]: Odometry received at 0.982525
+[INFO] [1653751068.423011563] [odom_translator]: Odometry received at 0.982528
+[INFO] [1653751068.517440471] [odom_translator]: Odometry received at 0.982395
+[INFO] [1653751068.626523549] [odom_translator]: Odometry received at 0.982051
+[INFO] [1653751068.732820896] [odom_translator]: Odometry received at 0.982489
+[INFO] [1653751068.827563280] [odom_translator]: Odometry received at 0.982557
+[INFO] [1653751068.854426277] [odom_translator]: Odometry message added to the path and republished at 1653751068.854420, markers count: 31
+[INFO] [1653751068.915769838] [odom_translator]: Odometry received at 0.982615
+[INFO] [1653751069.012092946] [odom_translator]: Odometry received at 0.982522
+[INFO] [1653751069.106742657] [odom_translator]: Odometry received at 0.982379
+[INFO] [1653751069.219410036] [odom_translator]: Odometry received at 0.982292
+[INFO] [1653751069.318827487] [odom_translator]: Odometry received at 0.982427
+[INFO] [1653751069.424686363] [odom_translator]: Odometry received at 0.982542
+[INFO] [1653751069.529879248] [odom_translator]: Odometry received at 0.982500
+[INFO] [1653751069.639887329] [odom_translator]: Odometry received at 0.982504
+[INFO] [1653751069.754096679] [odom_translator]: Odometry received at 0.982546
+[INFO] [1653751069.864388444] [odom_translator]: Odometry received at 0.982556
+[INFO] [1653751069.968995945] [odom_translator]: Odometry received at 0.982657
+[INFO] [1653751070.055426223] [odom_translator]: Odometry received at 0.982729
+[INFO] [1653751070.138872111] [odom_translator]: Odometry received at 0.982691
+[INFO] [1653751070.229482730] [odom_translator]: Odometry received at 0.982560
+[INFO] [1653751070.326686553] [odom_translator]: Odometry received at 0.982379
+[INFO] [1653751070.424182635] [odom_translator]: Odometry received at 0.982527
+[INFO] [1653751070.521490394] [odom_translator]: Odometry received at 0.982454
+[INFO] [1653751070.619716438] [odom_translator]: Odometry received at 0.982423
+[INFO] [1653751070.714531110] [odom_translator]: Odometry received at 0.982464
+[INFO] [1653751070.786862906] [odom_translator]: Odometry received at 0.982562
+[INFO] [1653751070.878240414] [odom_translator]: Odometry received at 0.982543
+[INFO] [1653751070.983448498] [odom_translator]: Odometry received at 0.982636
+[INFO] [1653751071.063688585] [odom_translator]: Odometry received at 0.982643
+[INFO] [1653751071.147201514] [odom_translator]: Odometry received at 0.982704
+[INFO] [1653751071.241586708] [odom_translator]: Odometry received at 0.982783
+[WARN] [1653751071.354317479] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751071.417024384] [odom_translator]: Odometry received at 0.982590
+[INFO] [1653751071.505826500] [odom_translator]: Odometry received at 0.982735
+[INFO] [1653751071.600108940] [odom_translator]: Odometry received at 0.982649
+[INFO] [1653751071.696741107] [odom_translator]: Odometry received at 0.982684
+[INFO] [1653751071.804161634] [odom_translator]: Odometry received at 0.982688
+[INFO] [1653751071.890354053] [odom_translator]: Odometry received at 0.982778
+[INFO] [1653751071.976064641] [odom_translator]: Odometry received at 0.982639
+[INFO] [1653751072.069484735] [odom_translator]: Odometry received at 0.982673
+[INFO] [1653751072.168255328] [odom_translator]: Odometry received at 0.982566
+[INFO] [1653751072.252251078] [odom_translator]: Odometry received at 0.982769
+[INFO] [1653751072.352512314] [odom_translator]: Odometry received at 0.982772
+[INFO] [1653751072.443310775] [odom_translator]: Odometry received at 0.982689
+[INFO] [1653751072.538119014] [odom_translator]: Odometry received at 0.982777
+[INFO] [1653751072.634613482] [odom_translator]: Odometry received at 0.982877
+[INFO] [1653751072.727006522] [odom_translator]: Odometry received at 0.982593
+[INFO] [1653751072.809715152] [odom_translator]: Odometry received at 0.982673
+[INFO] [1653751072.902772713] [odom_translator]: Odometry received at 0.982698
+[INFO] [1653751072.993910954] [odom_translator]: Odometry received at 0.982497
+[INFO] [1653751073.078156403] [odom_translator]: Odometry received at 0.982548
+[INFO] [1653751073.169784505] [odom_translator]: Odometry received at 0.982739
+[INFO] [1653751073.251820934] [odom_translator]: Odometry received at 0.982741
+[INFO] [1653751073.344787805] [odom_translator]: Odometry received at 0.982751
+[INFO] [1653751073.427563668] [odom_translator]: Odometry received at 0.982695
+[INFO] [1653751073.584785687] [odom_translator]: Odometry received at 0.982537
+[INFO] [1653751073.679539653] [odom_translator]: Odometry received at 0.982704
+[INFO] [1653751073.768157317] [odom_translator]: Odometry received at 0.982671
+[INFO] [1653751073.856263743] [odom_translator]: Odometry received at 0.982657
+[INFO] [1653751073.936775897] [odom_translator]: Odometry received at 0.982676
+[INFO] [1653751074.019489678] [odom_translator]: Odometry received at 0.982670
+[INFO] [1653751074.111147764] [odom_translator]: Odometry received at 0.982786
+[INFO] [1653751074.200513085] [odom_translator]: Odometry received at 0.982597
+[INFO] [1653751074.299495168] [odom_translator]: Odometry received at 0.982775
+[INFO] [1653751074.385015033] [odom_translator]: Odometry received at 0.982612
+[INFO] [1653751074.467162055] [odom_translator]: Odometry received at 0.982670
+[INFO] [1653751074.569466483] [odom_translator]: Odometry received at 0.982659
+[INFO] [1653751074.667377832] [odom_translator]: Odometry received at 0.982819
+[INFO] [1653751074.776775567] [odom_translator]: Odometry received at 0.982637
+[INFO] [1653751074.878500916] [odom_translator]: Odometry received at 0.982696
+[INFO] [1653751074.973372003] [odom_translator]: Odometry received at 0.982644
+[INFO] [1653751075.084620864] [odom_translator]: Odometry received at 0.982734
+[INFO] [1653751075.171755788] [odom_translator]: Odometry received at 0.982666
+[INFO] [1653751075.259481536] [odom_translator]: Odometry received at 0.982626
+[INFO] [1653751075.350571391] [odom_translator]: Odometry received at 0.982665
+[INFO] [1653751075.460381738] [odom_translator]: Odometry received at 0.982675
+[INFO] [1653751075.566644616] [odom_translator]: Odometry received at 0.982659
+[INFO] [1653751075.660121700] [odom_translator]: Odometry received at 0.982886
+[INFO] [1653751075.746309669] [odom_translator]: Odometry received at 0.982591
+[INFO] [1653751075.843921302] [odom_translator]: Odometry received at 0.982646
+[INFO] [1653751076.035122916] [odom_translator]: Odometry received at 0.982819
+[INFO] [1653751076.123072250] [odom_translator]: Odometry received at 0.982527
+[INFO] [1653751076.205068998] [odom_translator]: Odometry received at 0.982623
+[INFO] [1653751076.300345368] [odom_translator]: Odometry received at 0.982546
+[WARN] [1653751076.353646553] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751076.391154835] [odom_translator]: Odometry received at 0.982826
+[INFO] [1653751076.488955941] [odom_translator]: Odometry received at 0.982469
+[INFO] [1653751076.572857833] [odom_translator]: Odometry received at 0.982603
+[INFO] [1653751076.763075850] [odom_translator]: Odometry received at 0.982724
+[INFO] [1653751076.858433918] [odom_translator]: Odometry received at 0.982770
+[INFO] [1653751076.942745958] [odom_translator]: Odometry received at 0.982869
+[INFO] [1653751077.034462636] [odom_translator]: Odometry received at 0.982865
+[INFO] [1653751077.133789265] [odom_translator]: Odometry received at 0.982807
+[INFO] [1653751077.229094243] [odom_translator]: Odometry received at 0.982560
+[INFO] [1653751077.318348586] [odom_translator]: Odometry received at 0.982673
+[INFO] [1653751077.410879609] [odom_translator]: Odometry received at 0.982658
+[INFO] [1653751077.498878096] [odom_translator]: Odometry received at 0.982746
+[INFO] [1653751077.594836842] [odom_translator]: Odometry received at 0.982769
+[INFO] [1653751077.685255615] [odom_translator]: Odometry received at 0.982521
+[INFO] [1653751077.776109242] [odom_translator]: Odometry received at 0.982548
+[INFO] [1653751077.876558861] [odom_translator]: Odometry received at 0.982613
+[INFO] [1653751077.970953172] [odom_translator]: Odometry received at 0.982748
+[INFO] [1653751078.054791606] [odom_translator]: Odometry received at 0.982707
+[INFO] [1653751078.153745878] [odom_translator]: Odometry received at 0.982527
+[INFO] [1653751078.251657865] [odom_translator]: Odometry received at 0.982864
+[INFO] [1653751078.345706955] [odom_translator]: Odometry received at 0.982954
+[INFO] [1653751078.427918296] [odom_translator]: Odometry received at 0.982643
+[INFO] [1653751078.517637892] [odom_translator]: Odometry received at 0.983018
+[INFO] [1653751078.616216223] [odom_translator]: Odometry received at 0.982812
+[INFO] [1653751078.698916978] [odom_translator]: Odometry received at 0.982965
+[INFO] [1653751078.780236820] [odom_translator]: Odometry received at 0.982851
+[INFO] [1653751078.868466060] [odom_translator]: Odometry received at 0.982857
+[INFO] [1653751078.965803384] [odom_translator]: Odometry received at 0.982771
+[INFO] [1653751079.053293223] [odom_translator]: Odometry received at 0.982717
+[INFO] [1653751079.157892846] [odom_translator]: Odometry received at 0.982485
+[INFO] [1653751079.242752572] [odom_translator]: Odometry received at 0.982689
+[INFO] [1653751079.335711152] [odom_translator]: Odometry received at 0.982737
+[INFO] [1653751079.419780884] [odom_translator]: Odometry received at 0.982602
+[INFO] [1653751079.507741832] [odom_translator]: Odometry received at 0.982662
+[INFO] [1653751079.592851609] [odom_translator]: Odometry received at 0.982732
+[INFO] [1653751079.675214056] [odom_translator]: Odometry received at 0.982734
+[INFO] [1653751079.762515668] [odom_translator]: Odometry received at 0.982649
+[INFO] [1653751079.850477129] [odom_translator]: Odometry received at 0.982748
+[INFO] [1653751079.944455626] [odom_translator]: Odometry received at 0.982784
+[INFO] [1653751080.041925623] [odom_translator]: Odometry received at 0.982805
+[INFO] [1653751080.132194888] [odom_translator]: Odometry received at 0.982607
+[INFO] [1653751080.233786408] [odom_translator]: Odometry received at 0.982768
+[INFO] [1653751080.319424159] [odom_translator]: Odometry received at 0.982720
+[INFO] [1653751080.415614076] [odom_translator]: Odometry received at 0.982850
+[INFO] [1653751080.521792118] [odom_translator]: Odometry received at 0.982814
+[INFO] [1653751080.611502912] [odom_translator]: Odometry received at 0.982815
+[INFO] [1653751080.701897235] [odom_translator]: Odometry received at 0.982814
+[INFO] [1653751080.792461832] [odom_translator]: Odometry received at 0.982834
+[INFO] [1653751080.872556346] [odom_translator]: Odometry received at 0.982818
+[INFO] [1653751080.963219664] [odom_translator]: Odometry received at 0.982812
+[INFO] [1653751081.058858757] [odom_translator]: Odometry received at 0.982670
+[INFO] [1653751081.143685329] [odom_translator]: Odometry received at 0.982584
+[INFO] [1653751081.228438493] [odom_translator]: Odometry received at 0.982836
+[INFO] [1653751081.321082924] [odom_translator]: Odometry received at 0.982842
+[WARN] [1653751081.353752391] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751081.414047103] [odom_translator]: Odometry received at 0.982773
+[INFO] [1653751081.501875633] [odom_translator]: Odometry received at 0.982716
+[INFO] [1653751081.597217570] [odom_translator]: Odometry received at 0.982753
+[INFO] [1653751081.684266890] [odom_translator]: Odometry received at 0.982712
+[INFO] [1653751081.772736805] [odom_translator]: Odometry received at 0.982872
+[INFO] [1653751081.865264722] [odom_translator]: Odometry received at 0.982822
+[INFO] [1653751081.952772960] [odom_translator]: Odometry received at 0.982873
+[INFO] [1653751082.030249872] [odom_translator]: Odometry received at 0.983049
+[INFO] [1653751082.109978780] [odom_translator]: Odometry received at 0.983000
+[INFO] [1653751082.192687085] [odom_translator]: Odometry received at 0.982998
+[INFO] [1653751082.274993497] [odom_translator]: Odometry received at 0.982708
+[INFO] [1653751082.361673469] [odom_translator]: Odometry received at 0.982803
+[INFO] [1653751082.459997938] [odom_translator]: Odometry received at 0.982817
+[INFO] [1653751082.552762722] [odom_translator]: Odometry received at 0.982779
+[INFO] [1653751082.640492499] [odom_translator]: Odometry received at 0.982698
+[INFO] [1653751082.748163870] [odom_translator]: Odometry received at 0.982805
+[INFO] [1653751082.829221723] [odom_translator]: Odometry received at 0.982710
+[INFO] [1653751082.928350971] [odom_translator]: Odometry received at 0.982814
+[INFO] [1653751083.036124456] [odom_translator]: Odometry received at 0.983210
+[INFO] [1653751083.122610472] [odom_translator]: Odometry received at 0.983200
+[INFO] [1653751083.229840461] [odom_translator]: Odometry received at 0.983386
+[INFO] [1653751083.326390380] [odom_translator]: Odometry received at 0.983117
+[INFO] [1653751083.439155703] [odom_translator]: Odometry received at 0.982805
+[INFO] [1653751083.538547322] [odom_translator]: Odometry received at 0.982464
+[INFO] [1653751083.636441546] [odom_translator]: Odometry received at 0.984767
+[INFO] [1653751083.779422257] [odom_translator]: Odometry received at 0.981318
+[INFO] [1653751083.880692492] [odom_translator]: Odometry received at 0.980657
+[INFO] [1653751083.964493802] [odom_translator]: Odometry received at 0.980432
+[INFO] [1653751084.042559073] [odom_translator]: Odometry received at 0.980634
+[INFO] [1653751084.127089672] [odom_translator]: Odometry received at 0.982594
+[INFO] [1653751084.215443935] [odom_translator]: Odometry received at 0.983948
+[INFO] [1653751084.321521302] [odom_translator]: Odometry received at 0.985745
+[INFO] [1653751084.433410325] [odom_translator]: Odometry received at 0.988454
+[INFO] [1653751084.549696972] [odom_translator]: Odometry received at 0.990219
+[INFO] [1653751084.799035916] [odom_translator]: Odometry received at 0.990935
+[INFO] [1653751084.854725097] [odom_translator]: Odometry message added to the path and republished at 1653751084.854717, markers count: 32
+[INFO] [1653751084.878985530] [odom_translator]: Odometry received at 0.990841
+[INFO] [1653751084.958490722] [odom_translator]: Odometry received at 0.990797
+[INFO] [1653751085.041520502] [odom_translator]: Odometry received at 0.990819
+[INFO] [1653751085.122897717] [odom_translator]: Odometry received at 0.990806
+[INFO] [1653751085.207579102] [odom_translator]: Odometry received at 0.990863
+[INFO] [1653751085.278376056] [odom_translator]: Odometry received at 0.990852
+[INFO] [1653751085.372214100] [odom_translator]: Odometry received at 0.990027
+[INFO] [1653751085.460824750] [odom_translator]: Odometry received at 0.988122
+[INFO] [1653751085.556717348] [odom_translator]: Odometry received at 0.988862
+[INFO] [1653751085.759940895] [odom_translator]: Odometry received at 0.988947
+[INFO] [1653751085.764589145] [odom_translator]: Odometry received at 0.989324
+[INFO] [1653751085.854734439] [odom_translator]: Odometry message added to the path and republished at 1653751085.854726, markers count: 33
+[INFO] [1653751085.861483931] [odom_translator]: Odometry received at 0.989088
+[INFO] [1653751085.953973766] [odom_translator]: Odometry received at 0.988602
+[INFO] [1653751086.113256088] [odom_translator]: Odometry received at 0.988754
+[INFO] [1653751086.246921608] [odom_translator]: Odometry received at 0.987773
+[INFO] [1653751086.354882933] [odom_translator]: Odometry message added to the path and republished at 1653751086.354876, markers count: 34
+[WARN] [1653751086.357254483] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751086.398256822] [odom_translator]: Odometry received at 0.989526
+[INFO] [1653751086.545067371] [odom_translator]: Odometry received at 0.987579
+[INFO] [1653751086.680513393] [odom_translator]: Odometry received at 0.985681
+[INFO] [1653751086.838370161] [odom_translator]: Odometry received at 0.987569
+[INFO] [1653751086.854977986] [odom_translator]: Odometry message added to the path and republished at 1653751086.854971, markers count: 35
+[INFO] [1653751086.928040472] [odom_translator]: Odometry received at 0.988303
+[INFO] [1653751087.019095312] [odom_translator]: Odometry received at 0.988030
+[INFO] [1653751087.109209980] [odom_translator]: Odometry received at 0.988073
+[INFO] [1653751087.199563691] [odom_translator]: Odometry received at 0.988665
+[INFO] [1653751087.285374657] [odom_translator]: Odometry received at 0.988904
+[INFO] [1653751087.372997742] [odom_translator]: Odometry received at 0.989130
+[INFO] [1653751087.474850157] [odom_translator]: Odometry received at 0.989154
+[INFO] [1653751087.562090389] [odom_translator]: Odometry received at 0.988944
+[INFO] [1653751087.665934638] [odom_translator]: Odometry received at 0.989170
+[INFO] [1653751087.751978503] [odom_translator]: Odometry received at 0.989158
+[INFO] [1653751087.850777344] [odom_translator]: Odometry received at 0.989167
+[INFO] [1653751087.855818015] [odom_translator]: Odometry message added to the path and republished at 1653751087.855809, markers count: 36
+[INFO] [1653751087.950481540] [odom_translator]: Odometry received at 0.989058
+[INFO] [1653751088.040417262] [odom_translator]: Odometry received at 0.988929
+[INFO] [1653751088.132088973] [odom_translator]: Odometry received at 0.988859
+[INFO] [1653751088.222014710] [odom_translator]: Odometry received at 0.988893
+[INFO] [1653751088.321803451] [odom_translator]: Odometry received at 0.988722
+[INFO] [1653751088.354749945] [odom_translator]: Odometry message added to the path and republished at 1653751088.354743, markers count: 37
+[INFO] [1653751088.414951885] [odom_translator]: Odometry received at 0.987401
+[INFO] [1653751088.512942331] [odom_translator]: Odometry received at 0.987297
+[INFO] [1653751088.624429011] [odom_translator]: Odometry received at 0.984431
+[INFO] [1653751088.705945554] [odom_translator]: Odometry received at 0.985572
+[INFO] [1653751088.787845399] [odom_translator]: Odometry received at 0.985658
+[INFO] [1653751088.854870336] [odom_translator]: Odometry message added to the path and republished at 1653751088.854863, markers count: 38
+[INFO] [1653751088.898905673] [odom_translator]: Odometry received at 0.984603
+[INFO] [1653751088.991831384] [odom_translator]: Odometry received at 0.984615
+[INFO] [1653751089.093607702] [odom_translator]: Odometry received at 0.985093
+[INFO] [1653751089.243941812] [odom_translator]: Odometry received at 0.986636
+[INFO] [1653751089.334422436] [odom_translator]: Odometry received at 0.987277
+[INFO] [1653751089.355218025] [odom_translator]: Odometry message added to the path and republished at 1653751089.355210, markers count: 39
+[INFO] [1653751089.418024413] [odom_translator]: Odometry received at 0.985822
+[INFO] [1653751089.516779125] [odom_translator]: Odometry received at 0.985614
+[INFO] [1653751089.613733749] [odom_translator]: Odometry received at 0.985872
+[INFO] [1653751089.706225342] [odom_translator]: Odometry received at 0.986013
+[INFO] [1653751089.805502300] [odom_translator]: Odometry received at 0.986286
+[INFO] [1653751089.909873242] [odom_translator]: Odometry received at 0.986569
+[INFO] [1653751089.998223503] [odom_translator]: Odometry received at 0.987149
+[INFO] [1653751090.076113248] [odom_translator]: Odometry received at 0.987452
+[INFO] [1653751090.160136190] [odom_translator]: Odometry received at 0.987982
+[INFO] [1653751090.239004668] [odom_translator]: Odometry received at 0.988518
+[INFO] [1653751090.319673808] [odom_translator]: Odometry received at 0.988595
+[INFO] [1653751090.355718740] [odom_translator]: Odometry message added to the path and republished at 1653751090.355709, markers count: 40
+[INFO] [1653751090.413421512] [odom_translator]: Odometry received at 0.988261
+[INFO] [1653751090.509499229] [odom_translator]: Odometry received at 0.987514
+[INFO] [1653751090.598251895] [odom_translator]: Odometry received at 0.987256
+[INFO] [1653751090.699896946] [odom_translator]: Odometry received at 0.986506
+[INFO] [1653751090.783208295] [odom_translator]: Odometry received at 0.986485
+[INFO] [1653751090.855790549] [odom_translator]: Odometry message added to the path and republished at 1653751090.855783, markers count: 41
+[INFO] [1653751090.879273692] [odom_translator]: Odometry received at 0.985519
+[INFO] [1653751090.967565808] [odom_translator]: Odometry received at 0.985226
+[INFO] [1653751091.057374070] [odom_translator]: Odometry received at 0.985291
+[INFO] [1653751091.176042790] [odom_translator]: Odometry received at 0.987003
+[INFO] [1653751091.293769354] [odom_translator]: Odometry received at 0.986929
+[INFO] [1653751091.354917833] [odom_translator]: Odometry message added to the path and republished at 1653751091.354910, markers count: 42
+[WARN] [1653751091.359354049] [odom_translator]: Data from the topic /rtabmap/odom has not been received for more than 5 seconds. Check that the input topic is being published correctly.
+[INFO] [1653751091.399331094] [odom_translator]: Odometry received at 0.985021
+[INFO] [1653751091.500970673] [odom_translator]: Odometry received at 0.983603
+[INFO] [1653751091.587127657] [odom_translator]: Odometry received at 0.983168
+[INFO] [1653751091.696605958] [odom_translator]: Odometry received at 0.983752
+[INFO] [1653751091.790474079] [odom_translator]: Odometry received at 0.982763
+[INFO] [1653751091.855071881] [odom_translator]: Odometry message added to the path and republished at 1653751091.855064, markers count: 43
+[INFO] [1653751091.889211221] [odom_translator]: Odometry received at 0.980789
+[INFO] [1653751091.989717249] [odom_translator]: Odometry received at 0.981550
+[INFO] [1653751092.073648349] [odom_translator]: Odometry received at 0.982115
+[INFO] [1653751092.161275880] [odom_translator]: Odometry received at 0.983928
+[INFO] [1653751092.241570742] [odom_translator]: Odometry received at 0.984012
+[INFO] [1653751092.324402468] [odom_translator]: Odometry received at 0.983917
+[INFO] [1653751092.354960547] [odom_translator]: Odometry message added to the path and republished at 1653751092.354954, markers count: 44
+[INFO] [1653751092.405079096] [odom_translator]: Odometry received at 0.983872
+[INFO] [1653751092.511682192] [odom_translator]: Odometry received at 0.983633
+[INFO] [1653751092.600333415] [odom_translator]: Odometry received at 0.983782
+[INFO] [1653751092.703193584] [odom_translator]: Odometry received at 0.983893
+[INFO] [1653751092.792796339] [odom_translator]: Odometry received at 0.984073
+[INFO] [1653751092.855701128] [odom_translator]: Odometry message added to the path and republished at 1653751092.855693, markers count: 45
+[INFO] [1653751092.879025100] [odom_translator]: Odometry received at 0.984087
+[INFO] [1653751092.975414948] [odom_translator]: Odometry received at 0.984276
+[INFO] [1653751093.079271258] [odom_translator]: Odometry received at 0.984058
+[INFO] [1653751093.164291619] [odom_translator]: Odometry received at 0.984316
+[INFO] [1653751093.246699499] [odom_translator]: Odometry received at 0.984381
+[INFO] [1653751093.329727867] [odom_translator]: Odometry received at 0.983975
+[INFO] [1653751093.420513773] [odom_translator]: Odometry received at 0.984119
+[INFO] [1653751093.522483178] [odom_translator]: Odometry received at 0.983865
+[INFO] [1653751093.615657114] [odom_translator]: Odometry received at 0.983197
+[INFO] [1653751093.717951099] [odom_translator]: Odometry received at 0.983329
+[INFO] [1653751093.815142621] [odom_translator]: Odometry received at 0.984003
+[INFO] [1653751093.898983031] [odom_translator]: Odometry received at 0.983487
+[INFO] [1653751093.993835292] [odom_translator]: Odometry received at 0.983954
+[INFO] [1653751094.086850505] [odom_translator]: Odometry received at 0.983905
+[INFO] [1653751094.170219197] [odom_translator]: Odometry received at 0.983901
+[INFO] [1653751094.272696512] [odom_translator]: Odometry received at 0.984016
+[INFO] [1653751094.355096232] [odom_translator]: Odometry message added to the path and republished at 1653751094.355083, markers count: 46
+[INFO] [1653751094.364183482] [odom_translator]: Odometry received at 0.984067
+[INFO] [1653751094.444053538] [odom_translator]: Odometry received at 0.983995
+[INFO] [1653751094.533354848] [odom_translator]: Odometry received at 0.983810
+[INFO] [1653751094.624544310] [odom_translator]: Odometry received at 0.984066
+[INFO] [1653751094.715921807] [odom_translator]: Odometry received at 0.984283
+[INFO] [1653751094.802643181] [odom_translator]: Odometry received at 0.984198
+[INFO] [1653751094.883115932] [odom_translator]: Odometry received at 0.984100
+[INFO] [1653751094.965671558] [odom_translator]: Odometry received at 0.984176
+[INFO] [1653751095.048642133] [odom_translator]: Odometry received at 0.983934
+[INFO] [1653751095.131028764] [odom_translator]: Odometry received at 0.984216
+[INFO] [1653751095.216869519] [odom_translator]: Odometry received at 0.984032
+[INFO] [1653751095.309053329] [odom_translator]: Odometry received at 0.983938
+[INFO] [1653751095.408797073] [odom_translator]: Odometry received at 0.983919
+[INFO] [1653751095.496514587] [odom_translator]: Odometry received at 0.984086
+[INFO] [1653751095.580796346] [odom_translator]: Odometry received at 0.984184
+[INFO] [1653751095.677581910] [odom_translator]: Odometry received at 0.983991
+[INFO] [1653751095.761613874] [odom_translator]: Odometry received at 0.984027
+[INFO] [1653751095.861338354] [odom_translator]: Odometry received at 0.984174
+[WARN] [1653751096.353784772] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751101.353769444] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751106.353701532] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751111.353686959] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751116.353895966] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751121.353786310] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751126.353956143] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751131.353988981] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751136.353980827] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751141.354320454] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751146.354353424] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751151.354161338] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751156.354216269] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751161.354242982] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751166.354332102] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751171.354557073] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751176.354508034] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751181.354501918] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751186.354574055] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751191.354646845] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751196.354682945] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751201.354903990] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751206.354893913] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751211.354869262] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751216.355134488] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751221.355094610] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751226.355052225] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751231.355421515] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751236.355595305] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751241.355479035] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751246.355397350] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751251.355374092] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751256.355395406] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751261.355786543] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751266.355743720] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751271.355766271] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751276.355838934] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751281.355703209] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751286.355731008] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751291.355883385] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751296.355939507] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751301.355978577] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751306.356098707] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751311.356243099] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751316.356419658] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751321.356484158] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751326.356547481] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751331.356656094] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751336.356333959] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751341.356456800] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751346.356742789] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751351.356778964] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751356.356892784] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751361.356917401] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751366.356892912] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751371.356950102] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751376.357106286] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751381.357105333] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751386.356946699] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751391.356965654] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751396.357709500] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751401.357565612] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751406.357534481] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751411.357480748] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751416.357494749] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751421.357596933] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751426.357566372] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751431.357546235] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751436.357519211] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751441.357863608] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751446.357560088] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751451.357563447] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751456.357644562] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751461.358113997] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751466.358039648] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751471.358067953] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751476.358119680] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751481.358234479] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751486.358297149] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751491.358364522] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751496.358418681] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751501.358576074] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751506.358537562] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751511.358385068] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751516.358640773] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751521.358846370] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751526.358717375] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751531.358767683] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751536.358832365] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751541.358927517] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751546.358930418] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751551.358909423] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751556.359081781] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751561.359134530] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751566.359165080] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751571.359256984] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751576.359019646] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751581.359342612] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751586.359484628] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751591.359160153] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751596.359515954] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751601.359592661] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751606.359549635] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751611.359614784] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751616.359645962] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751621.359784356] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751626.359776587] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751631.359868418] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751636.359928073] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751641.359741566] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751646.359991560] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751651.359744670] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751656.360055436] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751661.360080649] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751666.360080376] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751671.359973113] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751676.360049168] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751681.360399773] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751686.360337306] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751691.360210764] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751696.360351477] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751701.360354546] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751706.360404006] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751711.360458257] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751716.360548498] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751721.360475785] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751726.360549466] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751731.360756803] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751736.360738787] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751741.360807133] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751746.360839055] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751751.360892251] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751756.360911648] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751761.360977633] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751766.361006875] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751771.361093329] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751776.361184867] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751781.361234032] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751786.361258617] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751791.361302398] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751796.361330880] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751801.361522401] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751806.361528029] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751811.361512087] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751816.361584496] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751821.361723464] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751826.361657437] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751831.361706258] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751836.362086282] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751841.361813275] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751846.361940304] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751851.361954404] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751856.362299421] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751861.362284338] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751866.362314698] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751871.362344419] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751876.362239708] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751881.362268537] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751886.362506683] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751891.362620766] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751896.362608675] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751901.362630091] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751906.362713272] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751911.362525062] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751916.362651579] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751921.363084920] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751926.362690225] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751931.362733555] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751936.362929564] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751941.363074411] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751946.363187262] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751951.363188182] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751956.363194101] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751961.363434653] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751966.363337352] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751971.363431099] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751976.363399477] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751981.363601305] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751986.363279871] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751991.363489202] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653751996.363751790] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752001.363471629] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752006.363529112] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752011.363592876] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752016.368182487] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752021.363657326] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752026.364041537] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752031.364234172] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752036.364170751] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752041.364338829] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752046.364058338] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752051.364412008] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752056.364495542] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752061.364420365] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752066.364133645] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752071.364491391] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752076.364427065] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752081.364497696] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752086.364550930] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752091.364377391] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752096.364748061] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752101.364469906] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752106.364773273] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752111.364814922] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752116.364910921] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752121.365023414] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752126.365016783] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752131.365051510] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752136.364908329] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752141.365082638] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752146.364961502] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752151.365217760] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752156.365298030] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752161.365400716] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752166.365462552] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752171.365490931] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752176.365540734] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752181.365688185] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752186.365383550] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752191.365583097] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752196.365746275] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752201.365768380] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752206.365777701] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752211.365779326] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752216.365832488] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752221.365758178] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752226.365986447] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752231.366071468] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752236.366017177] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752241.366105912] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752246.366159400] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752251.366276843] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752256.366355903] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752261.366359939] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752266.366471675] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752271.366516645] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752276.366489599] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752281.366557549] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752286.366600206] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752291.366602432] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752296.366673766] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752301.366670878] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752306.366538568] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752311.366890090] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752316.366913884] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752321.367035490] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752326.367019130] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752331.366725859] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752336.366826308] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752341.366872056] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752346.367182883] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752351.367242783] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752356.367506386] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752361.367051570] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752366.367423566] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752371.367464188] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752376.367237883] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752381.367673622] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752386.367618593] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752391.367653442] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752396.367673400] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752401.367465921] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752406.367859589] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752411.367874779] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752416.367910311] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752421.367961736] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752426.367886878] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752431.368115532] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752436.368173999] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752441.368104327] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752446.368202710] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752451.368265147] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752456.368228502] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752461.368394057] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752466.368036365] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752471.368510704] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752476.368508837] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752481.368512529] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752486.368344018] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752491.368515405] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752496.368695776] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752501.368440677] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752506.368547493] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752511.368536027] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752516.368605418] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752521.368790769] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752526.368862894] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752531.368779010] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752536.368956080] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752541.368880691] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752546.368892111] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752551.369043012] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752556.369258290] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752561.369088820] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752566.369216529] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752571.369451912] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752576.369232210] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752581.369567994] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752586.369670201] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752591.369736239] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752596.369762078] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752601.369833574] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752606.369843911] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752611.369847296] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752616.369968723] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752621.370018718] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752626.369684383] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752631.370056000] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752636.369776019] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752641.369880099] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752646.370314449] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752651.370077360] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752656.369977035] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752661.370402500] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752666.370092464] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752671.370431772] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752676.370421146] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752681.370528347] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752686.370667634] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752691.370640126] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752696.370560289] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752701.370740541] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752706.370497419] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752711.370919416] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752716.370876247] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752721.370921038] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752726.371002204] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752731.371036770] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752736.371187424] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752741.370818928] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752746.371188896] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752751.371091554] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752756.371298752] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752761.371361940] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752766.371446143] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752771.371373474] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752776.371550879] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752781.371420785] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752786.371619359] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752791.371632387] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752796.371744704] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752801.371718357] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752806.371828964] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752811.371811402] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752816.371766664] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752821.371576062] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752826.372013842] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752831.371883034] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752836.372015998] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752841.371941465] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752846.372159247] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752851.372066844] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752856.372194628] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752861.372217637] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752866.372268031] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752871.372228529] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752876.372375071] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752881.372349477] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752886.372464678] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752891.372486240] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752896.372566420] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752901.372550561] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752906.372584520] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752911.372728170] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752916.372732421] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752921.372798906] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752926.372821450] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752931.372858163] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752936.372890967] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752941.372952725] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752946.372880364] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752951.373005984] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752956.373049581] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752961.373292119] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752966.373243577] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752971.373341814] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752976.373398702] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752981.373403968] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752986.373489997] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752991.373421748] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653752996.373498711] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753001.373628886] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753006.373785935] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753011.373829283] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753016.373905842] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753021.373927388] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753026.373597469] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753031.373953696] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753036.374120797] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753041.374050419] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753046.374081573] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753051.374078738] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753056.373989721] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753061.374012477] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753066.374121598] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753071.374164313] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753076.374279217] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753081.374199683] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753086.374446035] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753091.374460285] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753096.374649284] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753101.374458116] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753106.374465985] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753111.374707292] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753116.374531952] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753121.374718339] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753126.374886385] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753131.374771609] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753136.374822879] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753141.374841920] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753146.374911422] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753151.374906136] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753156.375150224] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753161.375007393] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753166.375090609] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753171.375118908] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753176.375197092] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753181.375236488] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753186.375404074] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753191.375320421] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753196.375376703] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753201.375428757] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753206.375454440] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753211.375578200] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753216.375664005] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753221.375595788] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753226.375686130] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753231.375841909] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753236.375788851] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753241.375946512] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753246.376828849] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753251.377944177] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753256.376632919] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753261.379363200] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753266.378899816] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753271.377691461] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753276.376432894] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753281.376506114] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753286.376565219] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753291.376314334] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753296.376642907] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753301.376650643] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753306.376683720] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753311.376726554] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753316.376862379] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753321.376670197] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753326.376855169] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753331.376644838] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753336.379485767] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753341.376757806] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753346.377044784] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753351.377111341] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753356.376924486] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753361.377324961] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753366.377432535] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753371.377095495] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753376.377206264] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753381.377548137] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753386.377564533] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753391.377578110] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[WARN] [1653753396.377341955] [odom_translator]: There are no subscribers at /odom_path, thus the marker messages will not be published.
+[INFO] [1653753400.056647362] [rclcpp]: signal_handler(signal_value=2)

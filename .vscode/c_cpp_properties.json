@@ -5,7 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/ros/galactic/**",
-                "${workspaceFolder}/packages/build/**"
+                "/usr/local/**",
+                "${workspaceFolder}/packages/build/**",
+                "/usr/include/eigen3"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

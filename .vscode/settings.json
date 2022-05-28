@@ -13,4 +13,11 @@
     },
     "C_Cpp.clang_format_fallbackStyle": "Google",
     "cmake.configureOnOpen": false,
+    "files.associations": {
+        "cstdio": "cpp",
+        "eigen": "cpp",
+        "dense": "cpp",
+        "core": "cpp",
+        "*.idl": "cpp"
+    },
 }
