@@ -6,7 +6,6 @@
 //
 
 #include "workspace_tree.h"
-#include <iostream>
 
 void WorkSpaceTree::Node::assignStateNode(const StateSpaceTree::nodePtr& node)
 {
