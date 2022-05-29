@@ -2,4 +2,4 @@ launch:
 - include:
     file: $(dirname)/rosbridge.yaml
 - include:
-    file: $(find-pkg-share pure_pursuit_node)/launch/pure_pursuit.yaml
+    file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml

@@ -153,8 +153,8 @@ TEST(Arc, make) {
     ASSERT_GEOM_NEAR(arc->getCenter(), Vec2d{2, 2}, 1e-9);
     ASSERT_GEOM_NEAR(arc->getAngle(), M_PI, 1e-9);
     ASSERT_GEOM_NEAR(arc->getPoint(0.5), Vec2d{2, 4}, 1e-9);
-    ASSERT_GEOM_NEAR(arc->getSignedCurvature(), 0.5, 1e-9);
-    ASSERT_EQ(arc->getDirection(), Arc::Direction::LEFT);
+    ASSERT_GEOM_NEAR(arc->getSignedCurvature(), -0.5, 1e-9);
+    ASSERT_EQ(arc->getDirection(), Arc::Direction::RIGHT);
     arc = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{1, 1});
     ASSERT_TRUE(arc);
     ASSERT_GEOM_NEAR(arc->getRadius(), std::sqrt(8), 1e-9);
@@ -162,8 +162,8 @@ TEST(Arc, make) {
     ASSERT_GEOM_NEAR(arc->getCenter(), Vec2d{2, 0}, 1e-9);
     ASSERT_GEOM_NEAR(arc->getAngle(), M_PI / 2, 1e-9);
     ASSERT_GEOM_NEAR(arc->getPoint(0.5), Vec2d{2, std::sqrt(8)}, 1e-9);
-    ASSERT_GEOM_NEAR(arc->getSignedCurvature(), std::sqrt(1.0 / 8.0), 1e-9);
-    ASSERT_EQ(arc->getDirection(), Arc::Direction::LEFT);
+    ASSERT_GEOM_NEAR(arc->getSignedCurvature(), -std::sqrt(1.0 / 8.0), 1e-9);
+    ASSERT_EQ(arc->getDirection(), Arc::Direction::RIGHT);
     arc = Arc::fromTwoPointsAndTangentalVector(start, finish, Vec2d{-1, 0});
     ASSERT_FALSE(arc);
 }
