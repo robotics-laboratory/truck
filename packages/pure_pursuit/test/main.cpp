@@ -94,36 +94,36 @@ TEST(SpeedPlannerVelocityPrior, multiphse) {
     ASSERT_GEOM_NEAR(current_time, requierd_time, 1e-2);
 }
 
-class TaylorSeriesIntgratorTest: public testing::Test {
+class TaylorSeriesIntegratorTest: public testing::Test {
 protected:
     constexpr static size_t powers = 20;
     static std::array<double, powers> sinCoefs;
     static void SetUpTestSuite() {
-        double fact = 1;
         for (size_t i = 0; i < powers; ++i) {
-            double coef = 1 / fact;
-            if (i / 2 % 2 == 1) {
-                coef = -coef;
-            }
             if (i % 2 == 1) {
+                double coef;
+                if (i / 2 % 2 == 1) {
+                    coef = -1;
+                } else {
+                    coef = 1;
+                }
                 sinCoefs[i] = coef;
             }
-            fact *= (i + 1);
         }
     }
 };
 
-std::array<double, TaylorSeriesIntgratorTest::powers> TaylorSeriesIntgratorTest::sinCoefs{};
+std::array<double, TaylorSeriesIntegratorTest::powers> TaylorSeriesIntegratorTest::sinCoefs{};
 
-TEST_F(TaylorSeriesIntgratorTest, simple_func) {
-    pure_pursuit::detail::TaylorSeriesIntgrator<TaylorSeriesIntgratorTest::powers> integrator([](auto x) { return x; }, -1, 1, 100000);
+TEST_F(TaylorSeriesIntegratorTest, simple_func) {
+    pure_pursuit::detail::TaylorSeriesIntegrator<TaylorSeriesIntegratorTest::powers> integrator([](auto x) { return x; }, -1, 1, 100000);
 
     ASSERT_GEOM_NEAR(integrator.getAnaliticFuncIntegral(sinCoefs, -1, 1, 1), 0, 1e-5); // int from -1 to 1 sin(x) dx = 0
     ASSERT_GEOM_NEAR(integrator.getAnaliticFuncIntegral(sinCoefs, 0, 1, M_PI), 2.0 / M_PI, 1e-5); // int from 0 to 1 sin(pi * x) dx = 2 / pi
 }
 
-TEST_F(TaylorSeriesIntgratorTest, complicated_func) {
-    pure_pursuit::detail::TaylorSeriesIntgrator<TaylorSeriesIntgratorTest::powers> integrator([](auto x) { return sin(x); }, 0, 1, 1000000);
+TEST_F(TaylorSeriesIntegratorTest, complicated_func) {
+    pure_pursuit::detail::TaylorSeriesIntegrator<TaylorSeriesIntegratorTest::powers> integrator([](auto x) { return sin(x); }, 0, 1, 1000000);
 
     ASSERT_GEOM_NEAR(integrator.getAnaliticFuncIntegral(sinCoefs, 0, 1, 1), 0.430606, 1e-5); // int from 0 to 1 sin(sin(x)) dx ~= (value from wolfram)
     ASSERT_GEOM_NEAR(integrator.getAnaliticFuncIntegral(sinCoefs, 0, 1, 2), 0.703332, 1e-5); // int from 0 to 1 sin(2 * sin(x)) dx ~= (value from wolfram)
