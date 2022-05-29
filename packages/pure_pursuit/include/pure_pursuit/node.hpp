@@ -15,8 +15,8 @@
 
 namespace pure_pursuit {
 
-class PursuitNode: public rclcpp::Node {
-private:
+class PursuitNode : public rclcpp::Node {
+  private:
     static inline truck_interfaces::msg::Control getStopCommand() {
         truck_interfaces::msg::Control stop;
         stop.velocity = 0;
@@ -25,8 +25,12 @@ private:
         return stop;
     }
 
-public:
-    PursuitNode() : Node("PursuitNode"), controller(model::Model(Node::declare_parameter<std::string>("model_config_path"))) {
+  public:
+    PursuitNode()
+        : Node("PursuitNode")
+        , controller(
+              model::Model(Node::declare_parameter<std::string>("model_config_path")),
+              ControllerConfig(Node::declare_parameter<std::string>("controller_config_path"))) {
         bool publish_debug_info = this->declare_parameter<bool>("publish_debug_info", true);
 
         cmd_publisher =
@@ -40,14 +44,16 @@ public:
                 trajectory = std::move(path->path.poses);
             });
         slot_state = Node::create_subscription<nav_msgs::msg::Odometry>(
-            "current_state", 1,
+            "current_state",
+            1,
             [this, publish_debug_info](nav_msgs::msg::Odometry::UniquePtr odometry) {
                 const auto STOP = getStopCommand();
                 if (!trajectory) {
                     cmd_publisher->publish(STOP);
                     return;
                 }
-                ControllerResult res = controller.getMotion(*odometry, *trajectory, publish_debug_info);
+                ControllerResult res =
+                    controller.getMotion(*odometry, *trajectory, publish_debug_info);
                 if (!res) {
                     RCLCPP_ERROR(get_logger(), errorToString(res.error()).c_str());
                     cmd_publisher->publish(STOP);
@@ -60,7 +66,7 @@ public:
             });
     }
 
-private:
+  private:
     rclcpp::Subscription<truck_interfaces::msg::Path>::SharedPtr slot_path;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr slot_state;
     rclcpp::Publisher<truck_interfaces::msg::Control>::SharedPtr cmd_publisher;

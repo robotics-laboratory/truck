@@ -8,8 +8,9 @@
 #include "truck_interfaces/msg/control.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "pure_pursuit/visual_info.hpp"
+#include "pure_pursuit/controller_config.hpp"
 #include "model/model.hpp"
-#include "pure_pursuit/result.hpp"
+#include "util/result.hpp"
 
 namespace pure_pursuit {
 
@@ -34,14 +35,14 @@ struct ControllerResultData {
     std::optional<VisualInfo> visual_info;
 };
 
-using ControllerResult = Result<ControllerResultData, ControllerError>;
+using ControllerResult = util::Result<ControllerResultData, ControllerError>;
 
 class Controller {
 private:
     model::Model model;
-
+    ControllerConfig config;
 public:
-    Controller(const model::Model &model) : model{model} {}
+    Controller(const model::Model& model, const ControllerConfig &config) : model{model}, config{config} {}
     ControllerResult getMotion(
         const nav_msgs::msg::Odometry &odometry,
         const std::vector<geometry_msgs::msg::PoseStamped> &path,

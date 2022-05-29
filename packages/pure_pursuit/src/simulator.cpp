@@ -24,11 +24,11 @@ namespace pure_pursuit {
 
 SimulationResult simulate(const nav_msgs::msg::Odometry& start, const nav_msgs::msg::Odometry& finish,
                           uint64_t sim_timeout_ns, uint64_t sim_dt_ns, uint64_t controller_period,
-                          const model::Model& params) {
+                          const model::Model& model, const ControllerConfig& controller_config) {
     const double eps = 1e-3, PI2_INV = 1 / (M_PI * 2);
     const tf2::Vector3 z_axis(0, 0, 1);
     const double dt = sim_dt_ns * 1e-9;
-    Controller controller(params);
+    Controller controller(model, controller_config);
     auto current_odometry = start;
     std::vector trajectory = {odometry_to_pose_stamped(start), odometry_to_pose_stamped(finish)};
     std::vector<nav_msgs::msg::Odometry> ans;
