@@ -6,12 +6,13 @@
 
 namespace pure_pursuit::detail {
 
-template<size_t powers, class F>
+template<size_t powers>
 class TaylorSeriesIntgrator {
 private:
     std::vector<std::array<double, powers - 1>> precalc;
     double from, step;
 public:
+    template<class F>
     TaylorSeriesIntgrator(const F& func, double from, double to, size_t n): from(from), step((to - from) / n) {
         precalc.resize(n + 1);
         double x2, f1, f2;
@@ -42,10 +43,5 @@ public:
         return ans;
     }
 };
-
-template<size_t powers, class F>
-inline auto makeTaylorSeriesIntgrator(const F& func, double from, double to, size_t n) {
-    return TaylorSeriesIntgrator<powers, F>(func, from, to, n);
-}
 
 };
