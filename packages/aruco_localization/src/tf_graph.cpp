@@ -2,9 +2,6 @@
 #include "math_helpers.hpp"
 #include "tf_graph.hpp"
 
-#include <iostream>
-#include <fstream>
-
 namespace rosaruco {
 
 const static double kDefaultEdgeError = 1e9;
