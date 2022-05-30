@@ -2,12 +2,18 @@
 #include "math_helpers.hpp"
 #include "tf_graph.hpp"
 
+#include <iostream>
+#include <fstream>
+
 namespace rosaruco {
 
 const static double kDefaultEdgeError = 1e9;
 
 TfGraph::TfGraph(int nodes_count) : nodes_count_(nodes_count) {
-    edges_.resize(nodes_count, std::vector<Edge>(nodes_count));
+    edges_.resize(nodes_count);
+    for (auto &row : edges_) {
+        row.resize(nodes_count);
+    }
 }
 
 void TfGraph::AddTransform(int x, int y, const Transform& t) {
@@ -29,9 +35,9 @@ const Transform& TfGraph::GetTransform(int x, int y) {
 void TfGraph::GetBestTransformFromStartNode(int start_node, const std::vector<int> &finish_nodes,
         std::vector<Transform>& best_transforms, std::vector<double>& errors) {
     std::vector<double> distance;
-    std::vector<int> last_node;
+    std::vector<int> prev_node;
 
-    Dijkstra(nodes_count_, start_node, distance, last_node, GetWeights());
+    Dijkstra(nodes_count_, start_node, distance, prev_node, GetWeights());
 
     best_transforms.clear();
     best_transforms.reserve(finish_nodes.size());
@@ -39,24 +45,35 @@ void TfGraph::GetBestTransformFromStartNode(int start_node, const std::vector<in
     errors.clear();
     errors.reserve(finish_nodes.size());
 
-    for (int node : finish_nodes) {
-        errors.push_back(distance[node]);
+    for (const int &finish_node : finish_nodes) {
 
-        Transform to_start_node({0, 0, 0, 1}, {0, 0, 0});
-        while (node != start_node) {
-            to_start_node = to_start_node * GetTransform(node, last_node[node]);
-            node = last_node[node];
+        if (std::isinf(distance[finish_node])) {
+            continue;   
         }
-        best_transforms.push_back(to_start_node);
+
+        errors.push_back(distance[finish_node]);
+
+        int current_node = finish_node;
+
+        Transform from_finish_to_current({0, 0, 0, 1}, {0, 0, 0});
+        while (current_node != start_node) {
+            from_finish_to_current = 
+                GetTransform(current_node, prev_node[current_node]) * from_finish_to_current;
+            current_node = prev_node[current_node];
+        }
+
+        best_transforms.push_back(from_finish_to_current);
     }
 }
 
 TfGraph::Edge::Edge() :
-    quaternion_sum_(4, 4, CV_64F), 
     average_translation_({0, 0, 0}),
     transforms_count_(0),
     average_transform_({0, 0, 0, 0}, {0, 0, 0}),
-    error_(kDefaultEdgeError) {}
+    error_(kDefaultEdgeError) {
+        
+    quaternion_sum_ = cv::Mat::zeros(4, 4, CV_64F);
+}
 
 const Transform& TfGraph::Edge::GetAverage() const {
     return average_transform_;   
@@ -100,7 +117,7 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
 
     cv::Mat w, u, vt;
     cv::SVD::compute(quaternion_sum_, w, u, vt);
-    
+
     average_transform_.SetRotation(tf2::Quaternion(
         vt.at<double>(0, 0), 
         vt.at<double>(0, 1),

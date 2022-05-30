@@ -3,7 +3,7 @@
 namespace rosaruco {
 
 Transform::Transform(const tf2::Quaternion &rotation, const tf2::Vector3 &translation)
-    : rotation_(rotation), translation_(translation) {}
+    : rotation_(rotation.normalized()), translation_(translation) {}
 
 tf2::Vector3 Transform::Apply(const tf2::Vector3 &v) const {
     auto res = tf2::quatRotate(rotation_, v);
@@ -16,7 +16,7 @@ tf2::Vector3 Transform::operator()(const tf2::Vector3 &v) const {
 }
 
 Transform Transform::operator*(const Transform &other) const {
-    return Transform(rotation_ * other.rotation_, (*this)(other.translation_));
+    return Transform((rotation_ * other.rotation_).normalized(), (*this)(other.translation_));
 }
 
 Transform Transform::Inverse() const {

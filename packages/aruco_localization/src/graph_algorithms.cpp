@@ -3,12 +3,12 @@
 namespace rosaruco {
 
 void Dijkstra(int nodes_count, int start_node, std::vector<double> &distance, 
-    std::vector<int> &last_node, const std::function<double(int, int)> &get_weight) {
+    std::vector<int> &prev_node, const std::function<double(int, int)> &get_weight) {
 
     distance.resize(nodes_count);
     fill(distance.begin(), distance.end(), std::numeric_limits<double>::infinity());
 
-    last_node.resize(nodes_count);
+    prev_node.resize(nodes_count);
 
     std::priority_queue<
         std::pair<double, int>, 
@@ -31,7 +31,7 @@ void Dijkstra(int nodes_count, int start_node, std::vector<double> &distance,
             double new_distance = distance[node] + get_weight(node, to);
             if (distance[to] > new_distance) {
                 distance[to] = new_distance;
-                last_node[to] = node;
+                prev_node[to] = node;
                 q.push({distance[to], to});
             }
         }

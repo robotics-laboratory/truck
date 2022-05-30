@@ -15,8 +15,8 @@
 
 using std::placeholders::_1;
 
-const static std::string kImageRawTopic = "/camera/color/image_raw";
-const static std::string kCameraInfoTopic = "/camera/color/camera_info";
+const static std::string kImageRawTopic = "/color/image_raw";
+const static std::string kCameraInfoTopic = "/color/camera_info";
 const static std::string kArucoLocalizationNodeName = "aruco_localization";
 const static std::string kArucoOdometryTopic = "/truck/aruco/odometry";
 const static std::string kArucoPoseTopic = "/truck/aruco/pose";
@@ -80,7 +80,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     for (size_t i = 0; i < rvecs.size(); i++) {
         from_cam_to_marker.push_back(GetTransform(rvecs[i], tvecs[i]));
     }
-
+    
     coordinator_.Update(marker_ids, from_cam_to_marker);
 
     auto pose = coordinator_.GetPose();
@@ -127,10 +127,12 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     if (publisher_marker_array_->get_subscription_count()) {
         visualization_msgs::msg::MarkerArray marker_array;
 
-        for (size_t i = 0; i < marker_ids.size(); i++) {
-            auto to_anchor = coordinator_.GetTransformToAnchor(marker_ids[i]);
+        std::unordered_set<int> visible_markers(marker_ids.begin(), marker_ids.end());
+
+        for (size_t i = 0; i < kMarkerCount; i++) {
+            auto to_anchor = coordinator_.GetTransformToAnchor(i);
             if (to_anchor) {
-                AddLabeledMarker(marker_array.markers, *to_anchor, marker_ids[i], 1.0);
+                AddLabeledMarker(marker_array.markers, *to_anchor, i, 1.0, visible_markers.count(i));
             }
         }
 
