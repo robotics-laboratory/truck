@@ -8,7 +8,7 @@
 #include "primitives.h"
 
 //  Samples a pseudorandom integer in a given range
-double auxillary::genRand(const Bounds& bounds)
+double auxiliary::genRand(const Bounds& bounds)
 {
     std::random_device device;
     std::mt19937 generator(device());
@@ -17,7 +17,7 @@ double auxillary::genRand(const Bounds& bounds)
 }
 
 //  Returns squared Euclidean distance between two points
-double auxillary::findSqDistance(const Point& first, const Point& second)
+double auxiliary::findSqDistance(const Point& first, const Point& second)
 {
     double xdisp = first.x - second.x;
     double ydisp = first.y - second.y;
@@ -25,7 +25,7 @@ double auxillary::findSqDistance(const Point& first, const Point& second)
 }
 
 //  Returns Euclidean distance between two points
-double auxillary::findDistance(const Point& first, const Point& second)
+double auxiliary::findDistance(const Point& first, const Point& second)
 {
     return sqrt(findSqDistance(first, second));
 }
@@ -91,4 +91,19 @@ std::queue<StatePoint> Arc::getIntermediate()
 double Arc::getCost()
 {
     return pi * radius;
+}
+
+StatePoint Arc::getLastPoint()
+{
+    double baseAngle = atan((goal.y - start.y)/(goal.x - start.x));
+    if(start.x < goal.x)
+    {
+        baseAngle += pi;
+    }
+    double initTheta = baseAngle + pi/2;
+    if(initTheta > 2*pi)
+    {
+        initTheta -= 2*pi;
+    }
+    return StatePoint(goal.x, goal.y, initTheta, 0, goalV);
 }
