@@ -26,7 +26,7 @@ for i in range(1, len(data["path"])):
     plt.plot(xdisp, ydisp, color="#FFA500")
 
 # Plots start and finish
-plt.plot(data["start"]["x"], data["start"]["y"], marker='^', color="green", markersize=8)
+plt.plot(data["start"]["x"], data["start"]["y"], marker='^', color="green", markersize=8)  # #00FF00
 plt.plot(data["goal"]["x"], data["goal"]["y"], marker='v', color="red", markersize=8)
 draw_circle = plt.Circle((data["goal"]["x"], data["goal"]["y"]), data["radius"], color="r", fill=False)
 axes.add_artist(draw_circle)
