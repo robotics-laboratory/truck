@@ -8,7 +8,10 @@
 #pragma once
 #include <cmath>
 #include <queue>
+#include <deque>
 #include <random>
+#include "geom/arc.hpp"
+#include "geom/vector.hpp"
 
 //The pi number
 const double pi = 3.1415926535897932384626433;
@@ -44,30 +47,9 @@ struct StatePoint
 {
     double x;
     double y;
-    double theta;
-    double delta;
-    double v;
-    StatePoint(double inp_x, double inp_y, double inp_t, double inp_d, double inp_v) :
-    x(inp_x), y(inp_y), theta(inp_t), delta(inp_d), v(inp_v){}
+    geom::Vec2d direction;
+    StatePoint(double pos_x, double pos_y, geom::Vec2d dir) :
+    x(pos_x), y(pos_y), direction(dir / dir.len()) {}
 };
 
-struct Arc
-{
-    double radius;
-    StatePoint start;
-    Point goal;
-    double goalV;
-    int numInter; //number of intermediate points, equals 11 by default
-//  Finds 'numInter' equidistant intermediate points on the trajectory
-    std::queue<StatePoint> getIntermediate();
-    
-//  Returns the cost of the arc (in terms of Euclidean distance)
-    double getCost();
-    StatePoint getLastPoint();
-    Arc(StatePoint inp_start, Point inp_end, double goalSpeed) : start(inp_start), goal(inp_end), goalV(goalSpeed), numInter(11)
-    {
-        radius = auxiliary::findDistance(Point(start.x, start.y), goal) / 2;
-    }
-};
-
-typedef std::shared_ptr<Arc> arcPtr;
+typedef std::shared_ptr<std::optional<geom::Arc>> arcPtr;
