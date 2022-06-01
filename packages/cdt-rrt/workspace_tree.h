@@ -3,7 +3,6 @@
 //  Workspace Tree
 //  2D RRT
 //  CDT-RRT*
-//  Assumes the workspace being parametrised into integer coordinates
 //
 //  Created by Konstantin Shashkov on 13.04.2022.
 //
@@ -21,6 +20,7 @@
 
 class WorkSpaceTree
 {
+//  Node structure
     struct Node
     {
         Point pos;
@@ -49,15 +49,14 @@ class WorkSpaceTree
     Point _goal;
 //  Maximum expasion radius
     double _r;
-    //  Stores the root node
+//  Stores the state space tree
     StateSpaceTree physical;
+//  Stores the root node
     nodePtr _root;
+//  Number of vertices
     size_t _card;
+//  Area of the free work space
     double _lebesgue;
-    double _speedInMovement;
-    /*-------------------*/
-    /*Implement obstacles*/
-    /*-------------------*/
 
 //  Samples a random point in the workspace using a uniform distribution
     Point sampleCoords();
@@ -71,16 +70,17 @@ class WorkSpaceTree
 //  Calculates the vicinity radius for parent candidates
     double getVicinityRadius();
     
+//  Finds all vertices in the given vicinity
     std::vector<nodePtr> getNodesInVicinity(double radius, const Point& target);
     
 //  Finds the least-cost parent in the given list
-    std::pair<nodePtr, arcPtr> cheapestParent(const std::vector<nodePtr>& cand, Point target, double targetSpeed);
+    std::pair<nodePtr, arcPtr> cheapestParent(const std::vector<nodePtr>& cand, Point target);
     
 //  Reconnects the neigbours in the vicinity
     void reconnectNeighbours(std::vector<nodePtr>& neighbours, nodePtr vertex);
     
 //  Expands the tree by 1 vertice
-    nodePtr expand(nodePtr child, double goalSpeed);
+    nodePtr expand(nodePtr child);
     
 //  Grows the tree from root to goal
     nodePtr grow();
@@ -91,15 +91,8 @@ class WorkSpaceTree
 //  Returns the closest alternative
     static nodePtr chooseNearest(const nodePtr& target, nodePtr& alt1, nodePtr& alt2);
 public:
-//  {x-bounds}, {y-bounds}, {maximum extension length}, {starting point}, {goal point}, {allowed deviation from goal}, {speed in intermediate points}
-    WorkSpaceTree(Bounds x_bounds, Bounds y_bounds, double mExt, Point start, Point goal, double rad, double speed) :
-    _xBounds(x_bounds), _yBounds(y_bounds), _maxExtend(mExt), _goal(goal), _r(rad),
-    physical(StatePoint(start.x, start.y, 0, 0, 0)), _root(new Node(start)), _speedInMovement(speed)
-    {
-        _root->assignStateNode(physical._root);
-        _card = 1;
-        _lebesgue = (x_bounds.max - x_bounds.min)*(y_bounds.max - y_bounds.min);
-    }
+//  {x-bounds}, {y-bounds}, {maximum extension length}, {starting point}, {tangental vector at start}, {goal point}, {allowed deviation from goal}
+    WorkSpaceTree(Bounds x_bounds, Bounds y_bounds, double mExt, Point start, geom::Vec2d dirAtStart, Point goal, double rad);
     ~WorkSpaceTree()
     {}
 //  Finds a path and exports in to JSON
