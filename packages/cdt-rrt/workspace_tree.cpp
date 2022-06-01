@@ -7,6 +7,17 @@
 
 #include "workspace_tree.h"
 
+using namespace geom;
+
+WorkSpaceTree::WorkSpaceTree(Bounds x_bounds, Bounds y_bounds, double mExt, Point start, geom::Vec2d dirAtStart, Point goal, double rad) :
+_xBounds(x_bounds), _yBounds(y_bounds), _maxExtend(mExt), _goal(goal), _r(rad),
+physical(StatePoint(start.x, start.y, dirAtStart)), _root(new Node(start))
+{
+    _root->assignStateNode(physical._root);
+    _card = 1;
+    _lebesgue = (x_bounds.max - x_bounds.min)*(y_bounds.max - y_bounds.min);
+}
+
 void WorkSpaceTree::Node::assignStateNode(const StateSpaceTree::nodePtr& node)
 {
     stateNode = node;
@@ -15,8 +26,8 @@ void WorkSpaceTree::Node::assignStateNode(const StateSpaceTree::nodePtr& node)
 //  Samples a random point in the workspace using a uniform distribution
 Point WorkSpaceTree::sampleCoords()
 {
-    double x = auxiliary::genRand(_xBounds);
-    double y = auxiliary::genRand(_yBounds);
+    double x = auxillary::genRand(_xBounds);
+    double y = auxillary::genRand(_yBounds);
     return Point(x, y);
 }
 
@@ -24,8 +35,8 @@ Point WorkSpaceTree::sampleCoords()
 std::shared_ptr<WorkSpaceTree::Node> WorkSpaceTree::chooseNearest(const nodePtr& target, nodePtr& alt1, nodePtr& alt2)
 {
 //      Squared distances to vertices
-    double dist1 = auxiliary::findSqDistance(target->pos, alt1->pos);
-    double dist2 = auxiliary::findSqDistance(target->pos, alt2->pos);
+    double dist1 = auxillary::findSqDistance(target->pos, alt1->pos);
+    double dist2 = auxillary::findSqDistance(target->pos, alt2->pos);
 //      Compares distances
     if(dist1 > dist2)
     {
@@ -64,7 +75,7 @@ double WorkSpaceTree::moveToNear(nodePtr newnode, const nodePtr near)
         newnode->pos.x = near->pos.x + _maxExtend * xdisp / rootsqd;
         newnode->pos.y = near->pos.y + _maxExtend * ydisp / rootsqd;
     }
-    return auxiliary::findDistance(newnode->pos, near->pos);
+    return auxillary::findDistance(newnode->pos, near->pos);
 }
 //  Calculates the vicinity radius for parent candidates
 double WorkSpaceTree::getVicinityRadius()
@@ -86,7 +97,7 @@ std::vector<WorkSpaceTree::nodePtr> WorkSpaceTree::getNodesInVicinity(double rad
     while(q.size() > 0)
     {
         Point pt(q.front()->stateNode->pos.x, q.front()->stateNode->pos.y);
-        if(auxiliary::findSqDistance(target, pt) < radius)
+        if(auxillary::findSqDistance(target, pt) < radius)
         {
             result.push_back(q.front());
         }
@@ -100,16 +111,17 @@ std::vector<WorkSpaceTree::nodePtr> WorkSpaceTree::getNodesInVicinity(double rad
     return result;
 }
 
-std::pair<WorkSpaceTree::nodePtr, arcPtr> WorkSpaceTree::cheapestParent(const std::vector<nodePtr>& candParents, Point target, double targetSpeed)
+//Finds the cheapest parent and the path from it
+std::pair<WorkSpaceTree::nodePtr, arcPtr> WorkSpaceTree::cheapestParent(const std::vector<nodePtr>& candParents, Point target)
 {
     size_t ln = candParents.size();
     nodePtr cheapest = candParents[0];
-    arcPtr fromCheapest(new Arc(candParents[0]->stateNode->pos, target, targetSpeed));
-    double minCost = candParents[0]->stateNode->cost + fromCheapest->getCost();
+    std::optional<Arc> fromCheapest = Arc::fromTwoPointsAndTangentalVector(Vec2d(candParents[0]->stateNode->pos.x, candParents[0]->stateNode->pos.y), Vec2d(target.x, target.y), candParents[0]->stateNode->pos.direction);
+    double minCost = candParents[0]->stateNode->cost + fromCheapest->getLength();
     for(size_t i = 1; i < ln; ++i)
     {
-        arcPtr arc(new Arc(candParents[i]->stateNode->pos, target, targetSpeed));
-        double cost = candParents[i]->stateNode->cost + arc->getCost();
+        std::optional<Arc> arc = Arc::fromTwoPointsAndTangentalVector(Vec2d(candParents[i]->stateNode->pos.x, candParents[i]->stateNode->pos.y), Vec2d(target.x, target.y), candParents[i]->stateNode->pos.direction);
+        double cost = candParents[i]->stateNode->cost + arc->getLength();
         if(cost < minCost)
         {
             cheapest = candParents[i];
@@ -118,29 +130,11 @@ std::pair<WorkSpaceTree::nodePtr, arcPtr> WorkSpaceTree::cheapestParent(const st
         }
     }
     
-    return {cheapest, fromCheapest};
-}
-
-//  Reconnects the neigbours in the vicinity
-void WorkSpaceTree::reconnectNeighbours(std::vector<nodePtr>& neighbours, nodePtr vertex)
-{
-    for(nodePtr nb : neighbours)
-    {
-        arcPtr arcToNeighbour(new Arc(vertex->stateNode->pos, nb->pos, _speedInMovement));
-
-        if (nb->stateNode->cost > vertex->stateNode->cost + arcToNeighbour->getCost())
-        {
-            physical.detach(nb->stateNode->parent, nb->stateNode);
-            nb->stateNode = physical.attach(vertex->stateNode, arcToNeighbour->getLastPoint(), arcToNeighbour);
-            nb->parent->children.erase(std::find(nb->parent->children.begin(), nb->parent->children.end(), nb));
-            vertex->children.push_back(nb);
-            nb->parent = vertex;
-        }
-    }
+    return {cheapest, arcPtr(&fromCheapest)};
 }
 
 //  Expands the tree by 1 vertice
-WorkSpaceTree::nodePtr WorkSpaceTree::expand(nodePtr child, double goalSpeed)
+WorkSpaceTree::nodePtr WorkSpaceTree::expand(nodePtr child)
 {
 //  Calculate the vicinity radius
     double vicinityRadius = getVicinityRadius();
@@ -149,17 +143,17 @@ WorkSpaceTree::nodePtr WorkSpaceTree::expand(nodePtr child, double goalSpeed)
     
 //  Find costs and assosiated ss points through arcs
 //  Choose the parent point with the least cost
-    std::pair<nodePtr, arcPtr> bestParentPair = cheapestParent(neighbours, child->pos, goalSpeed);
+    std::pair<nodePtr, arcPtr> bestParentPair = cheapestParent(neighbours, child->pos);
     //attach the new point to the chosen parent point
     //attach the chosen parent point to the ws tree
     //build a link
-    child->stateNode = physical.attach(bestParentPair.first->stateNode, bestParentPair.second->getLastPoint(), bestParentPair.second);
+    child->stateNode = physical.attach(bestParentPair.first->stateNode,
+                                       StatePoint(bestParentPair.second->value().getFinish().x, bestParentPair.second->value().getFinish().y, bestParentPair.first->stateNode->pos.direction.rotate(bestParentPair.second->value().getAngle())),
+                                       bestParentPair.second);
     //  Connect to the parent node in the WS tree
     bestParentPair.first->children.push_back(child);
     child->parent = bestParentPair.first;
     neighbours.erase(std::find(neighbours.begin(), neighbours.end(), bestParentPair.first));
-    //reconnect nodes in the vicinity
-    reconnectNeighbours(neighbours, child);
     return child;
 }
 
@@ -167,7 +161,7 @@ std::shared_ptr<WorkSpaceTree::Node> WorkSpaceTree::grow()
 {
     nodePtr cur = _root;
 //      Finds distance to the goal
-    double dist = auxiliary::findSqDistance(cur->pos, _goal);
+    double dist = auxillary::findSqDistance(cur->pos, _goal);
 //  While current node is not in the goal region
     while(dist > _r*_r)
     {
@@ -178,13 +172,10 @@ std::shared_ptr<WorkSpaceTree::Node> WorkSpaceTree::grow()
     //  Moves new point towards nearest node and returns resultant distance
         moveToNear(rand, nearest);
 //      Attach the new node to the tree
-        cur = expand(rand, _speedInMovement);
+        cur = expand(rand);
         ++_card;
-        dist = auxiliary::findSqDistance(Point(cur->stateNode->pos.x, cur->stateNode->pos.y), _goal);
+        dist = auxillary::findSqDistance(Point(cur->stateNode->pos.x, cur->stateNode->pos.y), _goal);
     }
-    arcPtr end(new Arc(cur->stateNode->parent->pos, Point(cur->stateNode->pos.x, cur->stateNode->pos.y), 0));
-    cur->stateNode->fromParent = end;
-    cur->parent->stateNode->children[cur->stateNode] = end;
 //      Returns the tree node in the goal region
     return cur;
 }
@@ -243,6 +234,7 @@ std::deque<Point> WorkSpaceTree::findAndExport()
         nlohmann::json node;
         node["position"] = {{"x", cur->pos.x}, {"y", cur->pos.y}};
         node["parent"] = {{"x", cur->parent->pos.x}, {"y", cur->parent->pos.y}};
+        
         j["tree"].push_back(node);
         
     }
