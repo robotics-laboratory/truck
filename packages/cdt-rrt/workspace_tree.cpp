@@ -6,6 +6,7 @@
 //
 
 #include "workspace_tree.h"
+#include <iostream>
 
 using namespace geom;
 
@@ -26,8 +27,8 @@ void WorkSpaceTree::Node::assignStateNode(const StateSpaceTree::nodePtr& node)
 //  Samples a random point in the workspace using a uniform distribution
 Point WorkSpaceTree::sampleCoords()
 {
-    double x = auxillary::genRand(_xBounds);
-    double y = auxillary::genRand(_yBounds);
+    double x = auxiliary::genRand(_xBounds);
+    double y = auxiliary::genRand(_yBounds);
     return Point(x, y);
 }
 
@@ -35,8 +36,8 @@ Point WorkSpaceTree::sampleCoords()
 std::shared_ptr<WorkSpaceTree::Node> WorkSpaceTree::chooseNearest(const nodePtr& target, nodePtr& alt1, nodePtr& alt2)
 {
 //      Squared distances to vertices
-    double dist1 = auxillary::findSqDistance(target->pos, alt1->pos);
-    double dist2 = auxillary::findSqDistance(target->pos, alt2->pos);
+    double dist1 = auxiliary::findSqDistance(target->pos, alt1->pos);
+    double dist2 = auxiliary::findSqDistance(target->pos, alt2->pos);
 //      Compares distances
     if(dist1 > dist2)
     {
@@ -75,7 +76,7 @@ double WorkSpaceTree::moveToNear(nodePtr newnode, const nodePtr near)
         newnode->pos.x = near->pos.x + _maxExtend * xdisp / rootsqd;
         newnode->pos.y = near->pos.y + _maxExtend * ydisp / rootsqd;
     }
-    return auxillary::findDistance(newnode->pos, near->pos);
+    return auxiliary::findDistance(newnode->pos, near->pos);
 }
 //  Calculates the vicinity radius for parent candidates
 double WorkSpaceTree::getVicinityRadius()
@@ -97,7 +98,7 @@ std::vector<WorkSpaceTree::nodePtr> WorkSpaceTree::getNodesInVicinity(double rad
     while(q.size() > 0)
     {
         Point pt(q.front()->stateNode->pos.x, q.front()->stateNode->pos.y);
-        if(auxillary::findSqDistance(target, pt) < radius)
+        if(auxiliary::findSqDistance(target, pt) < radius)
         {
             result.push_back(q.front());
         }
@@ -111,7 +112,6 @@ std::vector<WorkSpaceTree::nodePtr> WorkSpaceTree::getNodesInVicinity(double rad
     return result;
 }
 
-//Finds the cheapest parent and the path from it
 std::pair<WorkSpaceTree::nodePtr, arcPtr> WorkSpaceTree::cheapestParent(const std::vector<nodePtr>& candParents, Point target)
 {
     size_t ln = candParents.size();
@@ -161,7 +161,7 @@ std::shared_ptr<WorkSpaceTree::Node> WorkSpaceTree::grow()
 {
     nodePtr cur = _root;
 //      Finds distance to the goal
-    double dist = auxillary::findSqDistance(cur->pos, _goal);
+    double dist = auxiliary::findSqDistance(cur->pos, _goal);
 //  While current node is not in the goal region
     while(dist > _r*_r)
     {
@@ -174,7 +174,7 @@ std::shared_ptr<WorkSpaceTree::Node> WorkSpaceTree::grow()
 //      Attach the new node to the tree
         cur = expand(rand);
         ++_card;
-        dist = auxillary::findSqDistance(Point(cur->stateNode->pos.x, cur->stateNode->pos.y), _goal);
+        dist = auxiliary::findSqDistance(Point(cur->stateNode->pos.x, cur->stateNode->pos.y), _goal);
     }
 //      Returns the tree node in the goal region
     return cur;
@@ -201,11 +201,11 @@ std::deque<Point> WorkSpaceTree::findAndExport()
 //  Export the path to a JSON file
     nlohmann::json j;
     
-//      Store the workspace bounds
+//  Store the workspace bounds
     j["x"] = { {"min", _xBounds.min}, {"max", _xBounds.max} };
     j["y"] = { {"min", _yBounds.min}, {"max", _yBounds.max} };
     
-//      Store the starting point
+//  Store the starting point
     j["start"] = { {"x", _root->pos.x}, {"y", _root->pos.y} };
     
 //      Store the goal point
