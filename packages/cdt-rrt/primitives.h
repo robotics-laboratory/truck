@@ -28,8 +28,8 @@ struct Point
     Point(double inp_x, double inp_y) : x(inp_x), y(inp_y){}
 };
 
-// Workspace auxillary methods
-namespace auxillary
+// Workspace auxiliary methods
+namespace auxiliary
 {
 //  Samples a pseudorandom integer in a given range
     double genRand(const Bounds& bounds);
@@ -66,7 +66,7 @@ struct Arc
     StatePoint getLastPoint();
     Arc(StatePoint inp_start, Point inp_end, double goalSpeed) : start(inp_start), goal(inp_end), goalV(goalSpeed), numInter(11)
     {
-        radius = auxillary::findDistance(Point(start.x, start.y), goal) / 2;
+        radius = auxiliary::findDistance(Point(start.x, start.y), goal) / 2;
     }
 };
 

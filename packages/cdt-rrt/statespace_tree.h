@@ -8,7 +8,6 @@
 #pragma once
 #include "primitives.h"
 #include <map>
-#include "workspace_tree.h"
 
 struct StateSpaceTree
 {
@@ -18,7 +17,6 @@ struct StateSpaceTree
         std::map<std::shared_ptr<Node>, arcPtr> children;
         std::shared_ptr<Node> parent;
         arcPtr fromParent;
-        std::shared_ptr<int> wsNode;
         double cost;
         
         
@@ -37,11 +35,18 @@ struct StateSpaceTree
     typedef std::shared_ptr<Node> nodePtr;
     nodePtr _root;
     
-    nodePtr attach(nodePtr parent, const StatePoint& child, arcPtr path)
+    nodePtr attach(nodePtr parent, const StatePoint& child, const arcPtr path)
     {
         nodePtr newNode(new Node(child, parent, path, parent->cost));
         parent->children.insert({newNode, path});
         return newNode;
+    }
+    
+    void detach(nodePtr parent, nodePtr child)
+    {
+        parent->children.erase(parent->children.find(child));
+        child->parent = nullptr;
+        child->fromParent = nullptr;
     }
 
     StateSpaceTree(StatePoint root) : _root(new Node(root)){}
