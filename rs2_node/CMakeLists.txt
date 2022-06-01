@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(publish_img)
+project(rs2_node)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
@@ -16,13 +16,12 @@ find_package(OpenCV REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(realsense2 REQUIRED)
 
-add_executable(publisher main.cpp)
-ament_target_dependencies(publisher rclcpp sensor_msgs OpenCV cv_bridge)
-target_link_libraries(publisher ${realsense2_LIBRARY})
+add_executable(rs2_node main.cpp)
+ament_target_dependencies(rs2_node rclcpp sensor_msgs OpenCV cv_bridge realsense2)
+target_link_libraries(rs2_node realsense2)
 
 install(TARGETS
-  publisher
+  rs2_node
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
-

@@ -3,7 +3,7 @@
    href="http://download.ros.org/schema/package_format3.xsd"
    schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
- <name>publish_img</name>
+ <name>rs2_node</name>
  <version>1.0.0</version>
  <description>Publishes ROS2-type Image message containing depth image from realsense camera. Tested on D435i.</description>
  <maintainer email="dasha.lapko@yandex.ru">Daria Lapko</maintainer>

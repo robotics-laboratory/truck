@@ -31,20 +31,22 @@ class RS2Node : public rclcpp::Node
       rs2::frameset data = pipe_.wait_for_frames();
       rs2::frame depth = data.get_depth_frame().apply_filter(colorize_);
       cv::Mat img(cv::Size(848, 480), CV_8UC3, (void*)depth.get_data());
-      about_img_.header.stamp = rclcpp::Node::now(); // transfer to if 
-      about_img_.header.frame_id = "camera"; //
-      sensor_msgs::msg::Image::SharedPtr img_msg = cv_bridge::CvImage(about_img_.header, "bgr8", img).toImageMsg(); //
-      about_compr_.header.stamp = rclcpp::Node::now(); //
-      about_compr_.header.frame_id = "camera"; // 
-      sensor_msgs::msg::CompressedImage::SharedPtr compr_msg = cv_bridge::CvImage(about_compr_.header, "bgr8", img).toCompressedImageMsg(cv_bridge::Format::JPEG); //
       std::vector<rclcpp::TopicEndpointInfo> img_sub = rclcpp::Node::get_subscriptions_info_by_topic("imgtopic");
       std::vector<rclcpp::TopicEndpointInfo> compr_sub = rclcpp::Node::get_subscriptions_info_by_topic("comprtopic");
       if (img_sub.size() > 0)
       {
+	sensor_msgs::msg::Image about_img_;
+        about_img_.header.stamp = rclcpp::Node::now(); 
+        about_img_.header.frame_id = "camera";
+        sensor_msgs::msg::Image::SharedPtr img_msg = cv_bridge::CvImage(about_img_.header, "bgr8", img).toImageMsg();
         publisher_img_->publish(*img_msg.get());
       }
       if (compr_sub.size() > 0)
       {
+	sensor_msgs::msg::CompressedImage about_compr_;
+	about_compr_.header.stamp = rclcpp::Node::now(); 
+        about_compr_.header.frame_id = "camera"; 
+        sensor_msgs::msg::CompressedImage::SharedPtr compr_msg = cv_bridge::CvImage(about_compr_.header, "bgr8", img).toCompressedImageMsg(cv_bridge::Format::JPEG);
         publisher_compr_->publish(*compr_msg.get());
       }
     }
@@ -53,8 +55,6 @@ class RS2Node : public rclcpp::Node
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr publisher_compr_;
     rs2::config cfg_;
     rs2::pipeline pipe_;
-    sensor_msgs::msg::Image about_img_;
-    sensor_msgs::msg::CompressedImage about_compr_;
     rs2::colorizer colorize_;
 };
 
