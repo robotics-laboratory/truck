@@ -1,6 +1,6 @@
 import json
 import matplotlib.pyplot as plt
-
+import matplotlib
 
 # Parses JSON
 with open("info.json", "r") as read_file:
