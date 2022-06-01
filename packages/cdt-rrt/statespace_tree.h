@@ -25,7 +25,7 @@ struct StateSpaceTree
         {}
         
         Node(StatePoint coords, std::shared_ptr<Node> inp_parent, arcPtr path, double prevCost) :
-        pos(coords), parent(inp_parent), fromParent(path), cost(prevCost+path->getCost())
+        pos(coords), parent(inp_parent), fromParent(path), cost(prevCost + path->value().getLength())
         {}
         
         ~Node()
