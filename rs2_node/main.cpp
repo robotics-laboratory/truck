@@ -10,19 +10,19 @@
 
 using namespace std::chrono_literals;
 
-class ImagePublisher : public rclcpp::Node
+class RS2Node : public rclcpp::Node
 {
   public:
-    ImagePublisher()
-    : Node("image_publisher"), count_(0)
+    RS2Node()
+    : Node("image_publisher")
     {
-      cfg_.enable_stream(RS2_STREAM_DEPTH, 848, 480, RS2_FORMAT_Z16); // size and format from rs-viewer
+      cfg_.enable_stream(RS2_STREAM_DEPTH, 848, 480, RS2_FORMAT_Z16);
       colorize_.set_option(RS2_OPTION_HISTOGRAM_EQUALIZATION_ENABLED, 0);
       colorize_.set_option(RS2_OPTION_COLOR_SCHEME, 9.0f);
       pipe_.start(cfg_);
       publisher_img_ = this->create_publisher<sensor_msgs::msg::Image>("imgtopic", 10);
       publisher_compr_ = this->create_publisher<sensor_msgs::msg::CompressedImage>("comprtopic", 10);
-      timer_ = this->create_wall_timer(1000ms, std::bind(&ImagePublisher::timer_callback, this));
+      timer_ = this->create_wall_timer(1000ms, std::bind(&RS2Node::timer_callback, this));
     }
 
   private:
@@ -30,13 +30,13 @@ class ImagePublisher : public rclcpp::Node
     {
       rs2::frameset data = pipe_.wait_for_frames();
       rs2::frame depth = data.get_depth_frame().apply_filter(colorize_);
-      cv::Mat img(cv::Size(848, 480), CV_8UC3, (void*)depth.get_data()); // depth - CV_16U, colorized - CV_8UC3
-      about_img_.header.stamp = rclcpp::Node::now();
-      about_img_.header.frame_id = "depth_frame";
-      sensor_msgs::msg::Image::SharedPtr img_msg = cv_bridge::CvImage(about_img_.header, "bgr8", img).toImageMsg(); // depth - mono16, colorized - bgr8
-      about_compr_.header.stamp = rclcpp::Node::now();
-      about_compr_.header.frame_id = "depth_frame_compressed";
-      sensor_msgs::msg::CompressedImage::SharedPtr compr_msg = cv_bridge::CvImage(about_compr_.header, "bgr8", img).toCompressedImageMsg(cv_bridge::Format::PNG); // change here for JPEG/PNG compression
+      cv::Mat img(cv::Size(848, 480), CV_8UC3, (void*)depth.get_data());
+      about_img_.header.stamp = rclcpp::Node::now(); // transfer to if 
+      about_img_.header.frame_id = "camera"; //
+      sensor_msgs::msg::Image::SharedPtr img_msg = cv_bridge::CvImage(about_img_.header, "bgr8", img).toImageMsg(); //
+      about_compr_.header.stamp = rclcpp::Node::now(); //
+      about_compr_.header.frame_id = "camera"; // 
+      sensor_msgs::msg::CompressedImage::SharedPtr compr_msg = cv_bridge::CvImage(about_compr_.header, "bgr8", img).toCompressedImageMsg(cv_bridge::Format::JPEG); //
       std::vector<rclcpp::TopicEndpointInfo> img_sub = rclcpp::Node::get_subscriptions_info_by_topic("imgtopic");
       std::vector<rclcpp::TopicEndpointInfo> compr_sub = rclcpp::Node::get_subscriptions_info_by_topic("comprtopic");
       if (img_sub.size() > 0)
@@ -53,7 +53,6 @@ class ImagePublisher : public rclcpp::Node
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr publisher_compr_;
     rs2::config cfg_;
     rs2::pipeline pipe_;
-    size_t count_;
     sensor_msgs::msg::Image about_img_;
     sensor_msgs::msg::CompressedImage about_compr_;
     rs2::colorizer colorize_;
@@ -62,7 +61,7 @@ class ImagePublisher : public rclcpp::Node
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ImagePublisher>());
+  rclcpp::spin(std::make_shared<RS2Node>());
   rclcpp::shutdown();
   return 0;
 }
