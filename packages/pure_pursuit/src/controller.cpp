@@ -35,7 +35,7 @@ ControllerResult Controller::getMotion(const nav_msgs::msg::Odometry& odometry,
     }
     auto& position = odometry.pose.pose.position;
     auto it = std::find_if(path.rbegin(), path.rend(), [position = Vec2d(position), this](const PoseStamped& p) {
-        return geom::dist(Vec2d(p.pose.position), position) <= model.lookahead_distance;
+        return geom::dist(Vec2d(p.pose.position), position) <= config.lookahead_distance;
     });
     if (it == path.rend()) return ControllerError::UNREACHEABLE_TRAJECTORY;
     if (visual_info_required) {

@@ -12,7 +12,6 @@ struct Model {
     YAML_DECLARE_FIELD(double, max_velocity);
     YAML_DECLARE_FIELD(double, max_acceleration);
     YAML_DECLARE_FIELD(double, max_decceleration);
-    YAML_DECLARE_FIELD(double, lookahead_distance);
     YAML_DECLARE_FIELD(double, truck_length);
     YAML_DECLARE_FIELD(double, truck_width);
     YAML_DECLARE_FIELD(double, wheel_radius);

@@ -13,7 +13,8 @@
 using namespace pure_pursuit;
 
 TEST(simulator, just_works) {
-    model::Model model(std::getenv("TEST_CONFIG"));
+    model::Model model(std::getenv("TEST_MODEL_CONFIG"));
+    ControllerConfig controller_config(std::getenv("TEST_CONTROLLER_CONFIG"));
 
     nav_msgs::msg::Odometry start, finish;
     start.pose.pose.position.x = 0;
@@ -24,7 +25,7 @@ TEST(simulator, just_works) {
     start.pose.pose.orientation.z = 0;
     start.pose.pose.orientation.w = 1;
 
-    finish.pose.pose.position.x = model.lookahead_distance / 2;
+    finish.pose.pose.position.x = controller_config.lookahead_distance / 2;
     finish.pose.pose.position.y = 0;
 
     finish.pose.pose.orientation.z = 0;
@@ -32,7 +33,7 @@ TEST(simulator, just_works) {
     finish.pose.pose.orientation.z = 0;
     finish.pose.pose.orientation.w = 1;
 
-    auto path = simulate(start, finish, 10'000'000'000, 1'000'000, 100, model);
+    auto path = simulate(start, finish, 10'000'000'000, 1'000'000, 100, model, controller_config);
     ASSERT_TRUE(path) << errorToString(path.error());
     geom::Vec2d required_finish(finish.pose.pose.position), real_finish(path->back().pose.pose.position);
     ASSERT_GEOM_NEAR(required_finish, real_finish, 0.01);
