@@ -4,3 +4,4 @@ max_decceleration: 1.0
 truck_length: 1.0
 truck_width: 0.5
 wheel_radius: 0.1
+max_wheels_angle: 1.0471975511965976 # pi / 3

@@ -15,6 +15,7 @@ struct Model {
     YAML_DECLARE_FIELD(double, truck_length);
     YAML_DECLARE_FIELD(double, truck_width);
     YAML_DECLARE_FIELD(double, wheel_radius);
+    YAML_DECLARE_FIELD(double, max_wheels_angle);
 public:
     Model() = default;
     Model(const std::string &config_file) {
