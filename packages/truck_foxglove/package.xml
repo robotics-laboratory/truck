@@ -4,8 +4,8 @@
   <name>truck_foxglove</name>
   <version>0.2.1</version>
   <description>A supplementary ROS2 package for translating nav_msgs/Oodmetry messages with the purpose of Foxglove visualization</description>
-  <maintainer email="depressingsupremacy@outlook.com">I. Tane</maintainer>
-  <license>CUMBAWLZ</license>
+  <maintainer email="depressingsupremacy@outlook.com">Isa Gadaev</maintainer>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

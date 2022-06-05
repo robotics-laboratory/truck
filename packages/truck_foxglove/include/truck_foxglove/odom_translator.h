@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <deque>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rmw/qos_profiles.h>
@@ -18,36 +18,34 @@ class OdometryTranslator : public rclcpp::Node {
   private:
     void warningThread();
     void callbackOdometry(const nav_msgs::msg::Odometry::SharedPtr msg);
-    visualization_msgs::msg::Marker generateMarker(const nav_msgs::msg::Odometry msg);
+    visualization_msgs::msg::Marker generateMarker(const nav_msgs::msg::Odometry& msg);
     bool checkOdomDiffSignificance();
     void republishOdometryPath();
 
-    rmw_qos_profile_t _odomQoSProfile;
-    nav_msgs::msg::Odometry _latest;
-    std::vector<visualization_msgs::msg::Marker> _markers;
-    bool _callbackOccured;
-    int _count;
+    rmw_qos_profile_t odom_qos_profile_;
+    nav_msgs::msg::Odometry latest_;
+    std::deque<visualization_msgs::msg::Marker> markers_;
+    bool callback_occured_;
+    int count_;
 
-    rclcpp::TimerBase::SharedPtr _republishOdometryPath;
-    rclcpp::TimerBase::SharedPtr _warningThread;
+    rclcpp::TimerBase::SharedPtr republish_odometry_path_;
+    rclcpp::TimerBase::SharedPtr warning_thread_;
 
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odomSubscriber;
-    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _pathPublisher;
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr _curPublisher;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr path_publisher_;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr curr_publisher_;
 
     // parameters
-    std::string _baseLink;
-    std::string _odomFrameId;
-    std::string _odomQoSType;
-    std::string _odomTopic;
-    std::string _pathTopic;
-    std::string _curTopic;
-    std::string _debug;
-    std::string _showPath;
-    int _arraySize;
-    double _markerLongevity;
-    double _secondRate;
-    double _distSensitivity;
-    double _arrowLength;
+    std::string odom_qos_type_;
+    std::string odom_topic_;
+    std::string path_topic_;
+    std::string curr_topic_;
+    bool debug_;
+    bool show_path_;
+    int array_size_;
+    double marker_lifetime_;
+    double rate_in_seconds_;
+    double dist_sensitivity_;
+    double arrow_length_;
 };
 }  // namespace truck

@@ -8,13 +8,8 @@
         "formatOnSaveMode": "modifications",
         "formatOnType": true,
     },
-    "C_Cpp.clang_format_fallbackStyle": "Google",
-    "cmake.configureOnOpen": false,
-    "files.associations": {
-        "cstdio": "cpp",
-        "eigen": "cpp",
-        "dense": "cpp",
-        "core": "cpp",
-        "*.idl": "cpp"
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
     },
+    "C_Cpp.clang_format_fallbackStyle": "Google",
 }
