@@ -9,6 +9,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "pure_pursuit/visual_info.hpp"
 #include "pure_pursuit/controller_config.hpp"
+#include "pure_pursuit/curvature_planner.hpp"
 #include "model/model.hpp"
 #include "util/result.hpp"
 
@@ -41,8 +42,13 @@ class Controller {
 private:
     model::Model model;
     ControllerConfig config;
+    std::optional<CurvaturePlanner> curvature_planner;
 public:
-    Controller(const model::Model& model, const ControllerConfig &config) : model{model}, config{config} {}
+    Controller(const model::Model& model, const ControllerConfig &config) : model{model}, config{config} {
+        if (config.smooth_curvature) {
+            curvature_planner.emplace(model, config.integrator_steps);
+        }
+    }
     ControllerResult getMotion(
         const nav_msgs::msg::Odometry &odometry,
         const std::vector<geometry_msgs::msg::PoseStamped> &path,

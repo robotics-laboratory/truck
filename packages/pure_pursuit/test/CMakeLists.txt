@@ -1,5 +1,6 @@
 ament_add_gtest(${PROJECT_NAME}_tests main.cpp
-    ENV TEST_CONFIG=${CMAKE_CURRENT_SOURCE_DIR}/../../model/config/model.yaml)
+    ENV TEST_MODEL_CONFIG=${CMAKE_CURRENT_SOURCE_DIR}/../../model/config/model.yaml
+    ENV TEST_CONTROLLER_CONFIG=${CMAKE_CURRENT_SOURCE_DIR}/../config/controller.yaml)
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME}_simulator)
 
 set_tests_properties(${Tests} PROPERTIES TIMEOUT 1)

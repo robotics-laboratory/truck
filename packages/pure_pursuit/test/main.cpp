@@ -3,6 +3,7 @@
 #include "pure_pursuit/simulator.hpp"
 #include "pure_pursuit/speed_planner.hpp"
 #include "pure_pursuit/integrator.hpp"
+#include "pure_pursuit/curvature_planner.hpp"
 #include "geom/vector.hpp"
 #include "geom/test/near_assert.hpp"
 
@@ -40,28 +41,28 @@ TEST(simulator, just_works) {
 }
 
 TEST(SpeedPlannerTimePror, as_soon_as_posible) {
-    model::Model model(std::getenv("TEST_CONFIG"));
+    model::Model model(std::getenv("TEST_MODEL_CONFIG"));
     auto plan = getPlanWithTimePrior(1, 0, 0, 0, model);
     ASSERT_GEOM_NEAR(plan.velocity, model.max_velocity, 1e-6);
     ASSERT_GEOM_NEAR(plan.acceleration, model.max_acceleration, 1e-6);
 }
 
 TEST(SpeedPlannerTimePror, smooth) {
-    model::Model model(std::getenv("TEST_CONFIG"));
+    model::Model model(std::getenv("TEST_MODEL_CONFIG"));
     auto plan = getPlanWithTimePrior(10, 20, 1, 0, model);
     ASSERT_GEOM_NEAR(plan.velocity, 1, 1e-6);
     ASSERT_GEOM_NEAR(plan.acceleration, 0.05, 1e-6);
 }
 
 TEST(SpeedPlannerTimePror, slow_down) {
-    model::Model model(std::getenv("TEST_CONFIG"));
+    model::Model model(std::getenv("TEST_MODEL_CONFIG"));
     auto plan = getPlanWithTimePrior(5, 10, 0, 1, model);
     ASSERT_GEOM_NEAR(plan.velocity, 0, 1e-6);
     ASSERT_GEOM_NEAR(plan.acceleration, -model.max_decceleration, 1e-6);
 }
 
 TEST(SpeedPlannerVelocityPrior, max_acceleration) {
-    model::Model model(std::getenv("TEST_CONFIG"));
+    model::Model model(std::getenv("TEST_MODEL_CONFIG"));
     double time = model.max_velocity / model.max_acceleration / 2;
     auto plan = getPlanWithVelocityPrior(model.max_acceleration / 2 * time * time, time, model.max_velocity, 0, model);
     ASSERT_GEOM_NEAR(plan.velocity, model.max_velocity, 1e-6);
@@ -69,7 +70,7 @@ TEST(SpeedPlannerVelocityPrior, max_acceleration) {
 }
 
 TEST(SpeedPlannerVelocityPrior, multiphse) {
-    model::Model model(std::getenv("TEST_CONFIG"));
+    model::Model model(std::getenv("TEST_MODEL_CONFIG"));
     double current_path = 0, current_time = 0;
     double requierd_path = 10, requierd_time = 10;
     double current_velocity = 0;
@@ -128,6 +129,41 @@ TEST_F(TaylorSeriesIntegratorTest, complicated_func) {
 
     ASSERT_GEOM_NEAR(integrator.getAnaliticFuncIntegral(sinCoefs, 0, 1, 1), 0.430606, 1e-5); // int from 0 to 1 sin(sin(x)) dx ~= (value from wolfram)
     ASSERT_GEOM_NEAR(integrator.getAnaliticFuncIntegral(sinCoefs, 0, 1, 2), 0.703332, 1e-5); // int from 0 to 1 sin(2 * sin(x)) dx ~= (value from wolfram)
+}
+
+TEST(CurvaturePlanner, zero_curvature) {
+    model::Model model(std::getenv("TEST_MODEL_CONFIG"));
+    CurvaturePlanner planner(model, 1'000'000);
+    geom::Vec2d start(0, 0), finish(10, 0);
+    auto plan = planner.calculatePlan(start, finish, 0, 0, 1, 1);
+    ASSERT_TRUE(plan);
+    ASSERT_GEOM_NEAR(plan->sigma_delta, 0, 1e-3);
+    ASSERT_GEOM_NEAR(plan->final_arc.getStart(), start, 1e-9);
+    ASSERT_GEOM_NEAR(plan->final_arc.getFinish(), finish, 1e-9);
+}
+
+TEST(CurvaturePlanner, equals_curvature) {
+    model::Model model(std::getenv("TEST_MODEL_CONFIG"));
+    CurvaturePlanner planner(model, 1'000'000);
+    double r = 10;
+    geom::Vec2d start(0, 0), finish(r, r);
+    auto plan = planner.calculatePlan(start, finish, 0, std::atan(model.truck_length / r), 1, 1);
+    ASSERT_TRUE(plan);
+    ASSERT_GEOM_NEAR(plan->sigma_delta, 0, 1e-3);
+    ASSERT_GEOM_NEAR(plan->final_arc.getStart(), start, 1e-9);
+    ASSERT_GEOM_NEAR(plan->final_arc.getFinish(), finish, 1e-9);
+}
+
+TEST(CurvaturePlanner, change_curvature) {
+    model::Model model(std::getenv("TEST_MODEL_CONFIG"));
+    CurvaturePlanner planner(model, 1'000'000);
+    double r = 10;
+    geom::Vec2d start(0, 0), finish(r, r);
+    auto plan = planner.calculatePlan(start, finish, 0, 0, 1, 1);
+    ASSERT_TRUE(plan);
+    ASSERT_GT(plan->sigma_delta, 0);
+    ASSERT_LT(plan->sigma_delta, std::atan(model.truck_length / r));
+    ASSERT_GEOM_NEAR(plan->final_arc.getFinish(), finish, 1e-9);
 }
 
 int main(int argc, char *argv[]) {
