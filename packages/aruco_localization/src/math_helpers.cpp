@@ -1,13 +1,23 @@
 #include "math_helpers.hpp"
 
-tf2::Quaternion math_helpers::RotationVectorToQuaternion(const cv::Vec3d& rot_vec) {
+namespace rosaruco {
+
+tf2::Quaternion RotationVectorToQuaternion(const cv::Vec3d& rot_vec) {
     double angle = cv::norm(rot_vec);
-    auto unit_vec = cv::normalize(rot_vec);
-    return tf2::Quaternion(tf2::Vector3(unit_vec[0], unit_vec[1], unit_vec[2]), angle);
+    auto axis = cv::normalize(rot_vec);
+    return tf2::Quaternion(tf2::Vector3(axis[0], axis[1], axis[2]), angle);
 }
 
-cv::Vec3d math_helpers::RotateUsingQuaternion(const cv::Vec3d& p, const tf2::Quaternion& rot_quat) {
-    tf2::Vector3 p_tf2 = {p[0], p[1], p[2]};
-    auto rotated_p_tf2 = tf2::quatRotate(rot_quat, p_tf2);
-    return cv::Vec3d(rotated_p_tf2[0], rotated_p_tf2[1], rotated_p_tf2[2]);
+Transform GetTransform(const cv::Vec3d& rvec, const cv::Vec3d& tvec) {
+    return Transform(RotationVectorToQuaternion(rvec), {tvec[0], tvec[1], tvec[2]});
 }
+
+tf2::Vector3 ElementWiseMul(const tf2::Vector3& x, const tf2::Vector3& y) {
+    tf2::Vector3 res;
+    for (size_t i = 0; i < 3; i++) {
+        res[i] = x[i] * y[i];
+    }
+    return res;
+}
+
+} // namespace rosaruco

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <memory>
 #include <nav_msgs/msg/odometry.hpp>
@@ -10,6 +12,8 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
+#include "camera_tracker.hpp"
+
 /**
  * node gets messages from two topics:
  *
@@ -20,6 +24,9 @@
  *
  * /truck/aruco_odometry [nav_msgs/msg/Odometry]
  */
+
+namespace rosaruco {
+
 
 class ArucoLocalization : public rclcpp::Node {
    public:
@@ -40,4 +47,8 @@ class ArucoLocalization : public rclcpp::Node {
     cv::Mat camera_matrix_, dist_coeffs_;
     cv::Ptr<cv::aruco::DetectorParameters> detector_parameters_;
     cv::Ptr<cv::aruco::Dictionary> marker_dictionary_;
+
+    CameraTracker coordinator_;
 };
+
+} // namespace rosaruco
