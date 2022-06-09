@@ -26,7 +26,7 @@ ament_target_dependencies(${PROJECT_NAME}_node rclcpp truck_interfaces model geo
 
 install(TARGETS
   ${PROJECT_NAME}_node
-  DESTINATION lib/${PROJECT_NAME}_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME}_node PUBLIC
@@ -36,7 +36,7 @@ target_include_directories(${PROJECT_NAME}_node PUBLIC
 
 install(DIRECTORY
   launch
-  DESTINATION share/${PROJECT_NAME}_node)
+  DESTINATION share/${PROJECT_NAME})
 
 add_library(${PROJECT_NAME}_simulator
   src/simulator.cpp

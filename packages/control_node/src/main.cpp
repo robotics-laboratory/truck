@@ -41,15 +41,15 @@ private:
             message->acceleration
         );
 
-        double r = 1.0 / std::abs(message->curvature);
+        double abs_curvature = std::abs(message->curvature);
         bool sign = message->curvature < 0;
 
         // default velocity controller ignores acceleration
         // to use acceleration, we need to build custom controller
         std_msgs::msg::Float64MultiArray velocity_command;
         double angular_velocity = message->velocity / model.wheel_radius;
-        double left_wheel_velocity = angular_velocity * (r - model.truck_width / 2.0) / r;
-        double right_wheel_velocity = angular_velocity * (r + model.truck_width / 2.0) / r;
+        double left_wheel_velocity = angular_velocity * (1 - abs_curvature * model.truck_width / 2.0);
+        double right_wheel_velocity = angular_velocity * (1 + abs_curvature * model.truck_width / 2.0);
         if (sign) {
             std::swap(left_wheel_velocity, right_wheel_velocity);
         }
@@ -64,8 +64,10 @@ private:
 
         velocity_command.data.push_back(left_wheel_velocity);
         velocity_command.data.push_back(right_wheel_velocity);
+
         velocity_publisher->publish(velocity_command);
 
+        double r = 1.0 / std::max(abs_curvature, 1e-9);
         double left_wheel_angle = std::atan2(model.truck_length, r - model.truck_width / 2.0);
         double right_wheel_angle = std::atan2(model.truck_length, r + model.truck_width / 2.0);
         if (sign) {
