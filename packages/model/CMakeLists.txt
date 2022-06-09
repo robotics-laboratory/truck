@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(model)
 
 find_package(ament_cmake REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(util REQUIRED)
 
 add_library(model INTERFACE)
 
@@ -18,9 +18,9 @@ install(
   RUNTIME DESTINATION bin
 )
 
-target_link_libraries(model INTERFACE yaml-cpp)
+ament_target_dependencies(model INTERFACE util)
 
-ament_export_dependencies(yaml-cpp)
+ament_export_dependencies(util)
 
 # Export old-style CMake variables
 ament_export_include_directories("include/model")

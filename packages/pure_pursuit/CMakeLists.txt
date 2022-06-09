@@ -15,7 +15,7 @@ find_package(model REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(geom REQUIRED)
 
-set(COMMON_SRC src/controller.cpp src/speed_planner.cpp)
+set(COMMON_SRC src/controller.cpp src/speed_planner.cpp src/curvature_planner.cpp)
 
 add_executable(${PROJECT_NAME}_node
   src/main.cpp

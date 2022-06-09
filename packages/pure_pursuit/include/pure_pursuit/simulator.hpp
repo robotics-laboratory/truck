@@ -8,8 +8,9 @@
 
 #include "model/model.hpp"
 #include "nav_msgs/msg/odometry.hpp"
+#include "pure_pursuit/controller_config.hpp"
 #include "pure_pursuit/controller.hpp"
-#include "pure_pursuit/result.hpp"
+#include "util/result.hpp"
 
 namespace pure_pursuit {
 
@@ -29,10 +30,10 @@ inline std::string errorToString(SimulationError e) {
     }
 }
 
-using SimulationResult = Result<std::vector<nav_msgs::msg::Odometry>, SimulationError>;
+using SimulationResult = util::Result<std::vector<nav_msgs::msg::Odometry>, SimulationError>;
 
 SimulationResult simulate(const nav_msgs::msg::Odometry& start,
                                               const nav_msgs::msg::Odometry& finish, uint64_t sim_timeout_ns, uint64_t sim_dt_ns, uint64_t controller_period,
-                                              const model::Model &params);
+                                              const model::Model& model, const pure_pursuit::ControllerConfig& controller_config);
 
 };

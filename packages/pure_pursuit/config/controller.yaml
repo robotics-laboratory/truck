@@ -1,0 +1,3 @@
+smooth_curvature: false
+integrator_steps: 1000000
+lookahead_distance: 2.0

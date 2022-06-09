@@ -4,7 +4,7 @@
 #include <variant>
 #include <utility>
 
-namespace pure_pursuit {
+namespace util {
 
 template<class Value, class Error>
 class Result {
