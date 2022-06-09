@@ -11,6 +11,7 @@ struct VisualInfo {
     void addPoint(geom::Vec2d pos, double size, double r, double g, double b) {
         using visualization_msgs::msg::Marker;
         Marker mark;
+        mark.header.frame_id = "world";
         mark.type = Marker::SPHERE;
         mark.pose.position.x = pos.x;
         mark.pose.position.y = pos.y;
