@@ -1,0 +1,35 @@
+launch:
+
+- node:
+    pkg: "rtabmap_ros"
+    exec: "rgbd_odometry"
+    name: "rgbd_odometry"
+    namespace: "rtabmap"
+    output: "log"
+
+    remap:
+    - {from: "rgb/image", to: "/camera/color/image_raw"}
+    - {from: "rgb/camera_info", to: "/camera/color/camera_info"}
+    - {from: "depth/image", to: "/camera/aligned_depth_to_color/image_raw"}
+    - {from: "/rtabmap/imu", to: "/camera/imu"}
+
+    param:
+    - {name: "frame_id", value: "camera_link"}
+    - {name: "subscribe_depth", value: True}
+    - {name: "subscribe_rgb", value: True}
+    - {name: "approx_sync", value: False}
+    - {name: "max_update_rate", value: 30.0}
+    - {name: "queue_size", value: 10} 
+    - {name: "wait_imu_to_init", value: False}
+    - {name: "subscribe_rgbd", value: False}
+    - {name: "publish_tf", value: True}
+    - {name: "expected_update_rate", value: 20.0}
+    - {name: "wait_for_transform", value: 10.0}
+ 
+    - {name: "Odom/Strategy", value: "1"}
+    - {name: "Odom/ResetCountdown", value: "25"}
+    - {name: "GFTT/MinDistance", value: "10"}
+    - {name: "Vis/MaxFeatures", value: "600"}
+    - {name: "Reg/Force3DoF", value: "true"}
+
+

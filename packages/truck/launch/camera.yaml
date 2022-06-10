@@ -15,16 +15,16 @@ launch:
     - {name: "tf_publish_rate", value: 1.0}
 
     - {name: "enable_color", value: True}
-    - {name: "rgb_camera.profile", value: "848x480x30"}
+    - {name: "rgb_camera.profile", value: "640x480x30"}
 
     - {name: "enable_depth", value: True}
-    - {name: "depth_moduel.profile", value: "848x480x30"}
+    - {name: "depth_module.profile", value: "640x480x30"}
 
     - {name: "align_depth", value: True}
     - {name: "align__cuda_.enable", value: True}
 
     - {name: "enable_accel", value: True}
-    - {name: "accel_fps", value: 63}
+    - {name: "accel_fps", value: 100}
 
     - {name: "enable_gyro", value: True}
     - {name: "gyro_fps", value: 200}

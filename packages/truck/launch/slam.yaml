@@ -2,38 +2,8 @@ launch:
 
 - arg: {name: "localization", default: "false"}
 
-- let: {name: "args", value: "--delete_db_on_start", if: "$(var localization)"}
-- let: {name: "args", value: "", unless: "$(var localization)"}
+- let: {name: "args", value: "-d"}
 
-- node:
-    pkg: "rtabmap_ros"
-    exec: "rgbd_odometry"
-    name: "rgbd_odometry"
-    namespace: "rtabmap"
-    output: "log"
-
-    remap:
-    - {from: "rgb/image", to: "/camera/color/image_raw"}
-    - {from: "rgb/camera_info", to: "/camera/color/camera_info"}
-    - {from: "depth/image", to: "/camera/aligned_depth_to_color/image_raw"}
-    - {from: "/rtabmap/imu", to: "/camera/imu"}
-
-    param:
-    - {name: "frame_id", value: "camera_link"}
-    - {name: "subscribe_depth", value: True}
-    - {name: "subscribe_rgb", value: True}
-    - {name: "approx_sync", value: False}
-    - {name: "max_update_rate", value: 30.0}
-    - {name: "queue_size", value: 10} 
-    - {name: "wait_imu_to_init", value: False}
-    - {name: "subscribe_rgbd", value: False}
-    - {name: "publish_tf", value: True}
- 
-    - {name: "Odom/Strategy", value: "1"}
-    - {name: "Vis/MaxFeatures", value: "400"}
-    - {name: "expected_update_rate", value: 20.0}
-    - {name: "wait_for_transform", value: 10.0}
-  
 - node:
     pkg: "rtabmap_ros"
     exec: "rtabmap"
@@ -49,8 +19,29 @@ launch:
 
     param:
     - {name: "args", value: "$(var args)"}
-    - {name: "Mem/IncrementalMemory", value: "$(var not localization)"}
     - {name: "frame_id", value: "camera_link"}
+    - {name: "subscribe_rgb", value: True}
     - {name: "subscribe_depth", value: True}
     - {name: "approx_sync", value: False}
-    - {name: "wait_imu_to_init", value: False}
+    - {name: "wait_imu_to_init", value: True}
+    - {name: "queue_size", value: 200} 
+
+    - {name: "RGBD/CreateOccupancyGrid", value: "true"}
+    - {name: "RGBD/NeighborLinkRefining", value: "true"}
+    - {name: "RGBD/AngularUpdate", value: "0.05"}
+    - {name: "RGBD/LinearUpdate", value: "0.05"}
+    - {name: "RGBD/ProximityBySpace", value: "true"}
+    - {name: "RGBD/OptimizeFromGraphEnd", value: "true"}
+    - {name: "Optimizer/Strategy", value: "2"}
+    - {name: "Optimizer/Epsilon", value: "0.00001"}
+    - {name: "approx_sync", value: "true"}
+    - {name: "Grid/3D", value: "true"}
+    - {name: "Grid/RayTracing", value: "true"}
+    - {name: "Grid/MaxGroundHeight", value: "0.1"}
+    - {name: "Grid/MaxObstacleHeight", value: "0.4"}
+    - {name: "Grid/Sensor", value: "1"}
+    - {name: "Grid/CellSize", value: "0.05"}
+    - {name: "Vis/MinInliers", value: "5"}
+    - {name: "Rtabmap/TimeThr", value: "500"}
+    - {name: "Reg/Force3DoF", value: "true"}
+    - {name: "Mem/IncrementalMemory", value: "true"}
