@@ -1,0 +1,10 @@
+left_servo_home: 1.55406901949413
+right_servo_home: 1.6298109662018816
+wheel_base_length: 0.405
+wheel_base_width: 0.21
+min_turn_radius: 0.5
+max_curvature: 1.5
+linear_speed_to_rpm: 90.4761905
+max_linear_speed: 1
+linear_acceleration: 2
+odrive_main_axis: axis1

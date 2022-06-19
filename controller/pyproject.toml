@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+markers = [
+    "optional: mark optional tests (pass --force-all to unskip)"
+]

@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pyyaml = "*"
+fastapi = "*"
+odrive = "*"
+pytest = "*"
+pytest-timeout = "*"
+uvicorn = "*"
+pyserial = "*"
+numpy = "*"
+msgpacketizer = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
