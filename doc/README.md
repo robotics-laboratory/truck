@@ -1,12 +1,14 @@
 # Docs
 
-## Model
-- [ackerman model](ackermann_vehicle.md)
+### Model
+- [Ackermann model](ackermann_vehicle.md)
   
-## Dev
+### Dev
+- [Getting started](getting_started.md)
+- [Foxglove](foxglove.md)
 - [CPP guides](https://github.com/robotics-laboratory/cookbook/blob/master/cpp/style.md)
 
-## Build docs
+### Build docs
 To rebuild docs run `make` in current dir.
 
 
