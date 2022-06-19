@@ -4,27 +4,17 @@
 
 #include <string>
 
-namespace model {
+namespace truck::model {
+
+struct WheelBase {
+    double width;
+    double length;
+};
 
 struct Model {
-private:
-    template<size_t offset, class = void>
-    struct SerializeHelper {
-        static void deserialize(Model &model, YAML::Node &config) {
-            if constexpr (offset > 0)
-                SerializeHelper<offset - 1>::deserialize(model, config);
-        }
-    };
-#define DECLARE_MODEL_FIELD(type, name) public: \
-    type name; \
-    private: \
-    template<class Dummy> \
-    struct SerializeHelper<offsetof(Model, name) + sizeof(type), Dummy> { \
-        static void deserialize(Model &model, YAML::Node &config) { \
-            model.name = config[#name].as<type>(); \
-            SerializeHelper<offsetof(Model, name)>::deserialize(model, config); \
-        } \
-    };
+
+
+
 
     DECLARE_MODEL_FIELD(double, max_velocity);
     DECLARE_MODEL_FIELD(double, max_acceleration);
@@ -42,4 +32,4 @@ public:
 #undef DECLARE_MODEL_FIELD
 };
 
-};
+}  // namespace truck::model
