@@ -160,6 +160,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         python3-pip \
         python3-dev \
+        python3-numpy \
+        python3-distutils \
+        python3-setuptools \
         libopenblas-dev \
         libopenmpi2 \
         openmpi-bin \
@@ -375,6 +378,7 @@ RUN mkdir -p ${ROS_ROOT} \
         urdfdom \
         vision_opencv \
         visualization_msgs \
+        xacro \
     > ${ROS_ROOT}/ros2.rosinstall \
     && vcs import ${ROS_TMP} < ${ROS_ROOT}/ros2.rosinstall > /dev/null
 
@@ -453,7 +457,7 @@ RUN apt-get update -q \
         wget \
         ssh \
     && pip3 install --no-cache-dir -U \
-    jetson-stats \
+        jetson-stats \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \

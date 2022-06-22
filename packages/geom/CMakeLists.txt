@@ -28,7 +28,6 @@ ament_export_targets(geom)
 
 install(
   TARGETS geom
-  EXPORT geom
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
