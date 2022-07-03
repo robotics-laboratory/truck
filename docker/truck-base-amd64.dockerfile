@@ -271,7 +271,6 @@ RUN mkdir -p ${ROS_ROOT} \
         joy_linux \
         launch_xml \
         launch_yaml \
-        nav2_common \
         pcl_conversions \
         realsense2_camera \
         ros_base \
@@ -286,6 +285,7 @@ RUN mkdir -p ${ROS_ROOT} \
         urdfdom \
         vision_opencv \
         visualization_msgs \
+        xacro \
     > ${ROS_ROOT}/ros2.rosinstall \
     && vcs import ${ROS_TMP} < ${ROS_ROOT}/ros2.rosinstall > /dev/null
 
@@ -363,8 +363,6 @@ RUN apt-get update -q \
         vim \
         wget \
         ssh \
-    && pip3 install --no-cache-dir -U \
-        jetson-stats \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \

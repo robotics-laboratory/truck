@@ -375,6 +375,7 @@ RUN mkdir -p ${ROS_ROOT} \
         urdfdom \
         vision_opencv \
         visualization_msgs \
+        xacro \
     > ${ROS_ROOT}/ros2.rosinstall \
     && vcs import ${ROS_TMP} < ${ROS_ROOT}/ros2.rosinstall > /dev/null
 
