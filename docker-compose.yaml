@@ -2,13 +2,13 @@ version: "3.5"
 
 services:
   truck-base-jetson:
-    container_name: truck-base
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:jetson-0.4.2
+    container_name: truck
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:jetson-0.4.2
     stdin_open: true
     privileged: true
     tty: true
     build:
-      dockerfile: docker/truck-base-jetson.dockerfile
+      dockerfile: docker/truck-jetson.dockerfile
       context: .
     ports:
     - "2222:2222"
@@ -18,12 +18,12 @@ services:
       - /dev:/dev
 
   truck-base-amd64:
-    container_name: truck-base
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck-base:amd64-0.4.2
+    container_name: truck
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:amd64-0.4.2
     stdin_open: true
     tty: true
     build:
-      dockerfile: docker/truck-base-amd64.dockerfile
+      dockerfile: docker/truck-amd64.dockerfile
       context: .
     ports:
     - "2222:2222"

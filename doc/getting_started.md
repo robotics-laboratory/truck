@@ -5,8 +5,8 @@ We use docker for two purposes:
 - Dependency and code delivery system
 
 All prebuild base images are stored at our registry ```cr.yandex/crp8hpfj5tuhlaodm4dl```. At this moment only ubuntu 18.04 is supported (images has some differences):
-- **truck-base-jetson** (jetson runtime)
-- **truck-base-amd64** (dev env, without cuda)
+- **truck-jetson** (jetson runtime)
+- **truck-amd64** (dev env, without cuda)
 
 ### Pull and Run
 For jetson check that nvidia runtime is enbled by default in ```/etc/docker/daemon.json```.
@@ -27,21 +27,21 @@ Now you can start new container and attach.
 
 ```
 # dev/amd64
-docker-compose up -d truck-base-amd64
+docker-compose up -d truck-amd64
 
 # jetson
-docker-compose up -d truck-base-jetson
+docker-compose up -d truck-jetson
 
 # attach to running container
 # use ctrl+p+q to detach
-docker attach truck-base
+docker attach truck
 
 # or just run another shell
 # exit doesn't stop the container
-docker exec -it truck-base bash
+docker exec -it truck bash
 
 # stop container
-docker stop truck-base
+docker stop truck
 ```
 
 ### Build and Push
@@ -49,10 +49,10 @@ If you need to build container, follow this steps. Up version in ```docker-compo
 
 ```
 # dev/amd64
-docker-compose build truck-base-amd64
-docker-compose push truck-base-amd64
+docker-compose build truck-amd64
+docker-compose push truck-amd64
 
 # jetson
-docker-compose build truck-base-jetson
-docker-compose push truck-base-jetson
+docker-compose build truck-jetson
+docker-compose push truck-jetson
 ```

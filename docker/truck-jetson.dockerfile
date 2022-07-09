@@ -160,6 +160,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         python3-pip \
         python3-dev \
+        python3-setuptools \
         libopenblas-dev \
         libopenmpi2 \
         openmpi-bin \
@@ -175,7 +176,6 @@ RUN apt-get update && \
 ARG PILLOW_VERSION=pillow<7
 
 RUN pip3 install --no-cache-dir \
-    setuptools \
     Cython \
     wheel \
     numpy \
