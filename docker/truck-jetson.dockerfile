@@ -1,6 +1,9 @@
-FROM ubuntu:18.04
+FROM nvcr.io/nvidia/l4t-base:r32.6.1
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV CUDA_HOME="/usr/local/cuda"
+ENV PATH="/usr/local/cuda/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
 
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"]
@@ -31,17 +34,19 @@ RUN wget -qO - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key
 
 ARG OPENCV_VERSION="4.5.0"
 
-RUN apt-get update -q && \
+RUN apt-get update -yq && \
     apt-get install -yq --no-install-recommends \
         build-essential \
         gfortran \
         make \
         git \
         file \
+        tar \
         libatlas-base-dev \
         libavcodec-dev \
         libavformat-dev \
         libavresample-dev \
+        libcanberra-gtk3-module \
         libdc1394-22-dev \
         libeigen3-dev \
         libgstreamer-plugins-base1.0-dev \
@@ -64,52 +69,136 @@ RUN apt-get update -q && \
         libxine2-dev \
         libxvidcore-dev \
         libx264-dev \
-        tar \
+        pkg-config \
         zlib1g-dev \
-        wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && cd opencv-${OPENCV_VERSION} && mkdir -p build && cd build \
-    && OPENCV_MODULES=(core calib3d features2d flann highgui imgcodecs photo \
-        stitching video videoio aruco bgsegm ccalib optflow rgbd sfm stereo \
-        surface_matching xfeatures2d ximgproc xphoto) \
+    && OPENCV_MODULES=(core calib3d features2d flann highgui imgcodecs photo python stitching video videoio \
+        aruco bgsegm ccalib cudev cudaarithm cudabgsegm cudacodec cudafeatures2d cudafilters cudaimgproc \
+        cudaoptflow cudastereo cudawarping cudev optflow rgbd sfm stereo surface_matching \
+        xfeatures2d ximgproc xphoto) \
     && cmake .. \
-        -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' '  ',') \
+        -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' ' ',') \
         -DCMAKE_BUILD_TYPE=RELEASE \
         -DWITH_GTK=OFF \
-        -DBUILD_EXAMPLES=OFF \
         -DBUILD_opencv_apps=OFF \
+        -DBUILD_EXAMPLES=OFF \
         -DBUILD_opencv_python2=OFF \
-        -DBUILD_opencv_python3=OFF \
+        -DBUILD_opencv_python3=ON \
         -DBUILD_opencv_java=OFF \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DCUDA_ARCH_BIN=5.3,6.2,7.2 \
+        -DCUDA_ARCH_PTX= \
+        -DCUDA_FAST_MATH=ON \
+        -DCUDNN_INCLUDE_DIR=/usr/include \
         -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 \
         -DWITH_EIGEN=ON \
+        -DENABLE_NEON=ON \
+        -DOPENCV_DNN_CUDA=ON \
         -DOPENCV_ENABLE_NONFREE=ON \
         -DOPENCV_EXTRA_MODULES_PATH=/tmp/opencv_contrib-${OPENCV_VERSION}/modules \
+        -DWITH_CUBLAS=ON \
+        -DWITH_CUDA=ON \
+        -DWITH_CUDNN=ON \
         -DWITH_GSTREAMER=ON \
         -DWITH_LIBV4L=ON \
-        -DWITH_OPENCL=ON \
+        -DWITH_OPENGL=ON \
+        -DWITH_OPENCL=OFF \
         -DWITH_IPP=OFF \
         -DWITH_TBB=ON \
         -DBUILD_TIFF=ON \
         -DBUILD_PERF_TESTS=OFF \
         -DBUILD_TESTS=OFF \
-    && make -j$(nproc) install \
-    && rm -rf /tmp/*
+    && make -j$(nproc) install && rm -rf /tmp/*
 
-# ### INSTALL REALSENSE2
+### INSTALL LIBREALSENSE
 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE \
-    && add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u \
-    && apt-get update -q \
+ARG LIBRS_VERSION="2.50.0"
+
+RUN apt-get update -yq \
     && apt-get install -yq --no-install-recommends \
-        librealsense2-dev \
+        apt-transport-https \
+        build-essential \
+        ca-certificates \
+        curl \
+        git \
+        make \
+        libssl-dev \
+        libusb-1.0-0-dev \
+        libusb-1.0-0 \
+        libudev-dev \
+        libomp-dev \
+        pkg-config \
+        software-properties-common \
+        sudo \
+        tar \
+        udev \
+        wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-# ### INSTALL RTAB-MAP
+RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/v${LIBRS_VERSION}.tar.gz | tar -xz \
+    && cd librealsense-${LIBRS_VERSION} \
+    && bash scripts/setup_udev_rules.sh \
+    && mkdir -p build && cd build \
+    && cmake .. \
+        -DBUILD_EXAMPLES=false \
+        -DCMAKE_BUILD_TYPE=release \
+        -DFORCE_RSUSB_BACKEND=false \
+        -DBUILD_WITH_CUDA=true \
+        -DBUILD_WITH_OPENMP=true \
+        -DBUILD_PYTHON_BINDINGS=false \
+        -DBUILD_WITH_TM2=false \
+    && make -j$(($(nproc)-1)) install \
+    && rm -rf /tmp/*
+
+### INSTALL PYTORCH
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3-pip \
+        python3-dev \
+        python3-setuptools \
+        libopenblas-dev \
+        libopenmpi2 \
+        openmpi-bin \
+        openmpi-common \
+        gfortran \
+        git \
+        wget \
+        build-essential \
+        libjpeg-dev \
+        zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* apt-get clean
+
+ARG PILLOW_VERSION=pillow<7
+
+RUN pip3 install --no-cache-dir \
+    Cython \
+    wheel \
+    numpy \
+    ${PILLOW_VERSION}
+
+ARG PYTORCH_URL=https://nvidia.box.com/shared/static/fjtbno0vpo676a25cgvuqc1wty0fkkg6.whl
+ARG PYTORCH_WHL=torch-1.10.0-cp36-cp36m-linux_aarch64.whl
+
+RUN wget --no-check-certificate -qO ${PYTORCH_WHL} ${PYTORCH_URL} \
+    && pip3 install --no-cache-dir ${PYTORCH_WHL} \
+    && rm -rf /tmp/*
+
+ARG TORCHVISION_VERSION=0.11.1
+
+RUN wget -qO - https://github.com/pytorch/vision/archive/refs/tags/v${TORCHVISION_VERSION}.tar.gz | tar -xz \
+    && cd vision-${TORCHVISION_VERSION} \
+    && python3 setup.py install \
+    && rm -rf /tmp/*
+
+ENV PYTORCH_PATH="/usr/local/lib/python3.6/dist-packages/torch"
+ENV LD_LIBRARY_PATH="${PYTORCH_PATH}/lib:${LD_LIBRARY_PATH}"
+ 
+### INSTALL RTAB-MAP
 
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
@@ -197,33 +286,33 @@ ENV GAZEBO="gazebo11"
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
-        apt-utils \
-        build-essential \
-        ${GAZEBO} \
-        ${GAZEBO}-common \
-        ${GAZEBO}-plugin-base \
-        git \
-        imagemagick \
-        libjansson-dev \
-        make \
-        libasio-dev \
-        libboost-dev \
-        lib${GAZEBO}-dev \
-        libpython3-dev \
-        libtinyxml-dev \
-        locales \
-        python3-bson \
-        python3-colcon-common-extensions \
-        python3-flake8 \
-        python3-numpy \
-        python3-pytest-cov \
-        python3-rosdep \
-        python3-setuptools \
-        python3-vcstool \
-        python3-rosinstall-generator \
-        python3-pip \
-        libtinyxml2-dev \
-        libcunit1-dev \
+    apt-utils \
+    build-essential \
+    ${GAZEBO} \
+    ${GAZEBO}-common \
+    ${GAZEBO}-plugin-base \
+    git \
+    imagemagick \
+    libjansson-dev \
+    make \
+    libasio-dev \
+    libboost-dev \
+    lib${GAZEBO}-dev \
+    libpython3-dev \
+    libtinyxml-dev \
+    locales \
+    python3-bson \
+    python3-colcon-common-extensions \
+    python3-flake8 \
+    python3-numpy \
+    python3-pytest-cov \
+    python3-rosdep \
+    python3-setuptools \
+    python3-vcstool \
+    python3-rosinstall-generator \
+    python3-pip \
+    libtinyxml2-dev \
+    libcunit1-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ENV LANG=en_US.UTF-8
@@ -232,29 +321,29 @@ ENV PYTHONIOENCODING=utf-8
 RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
 RUN pip3 install --no-cache-dir -U \
-        argcomplete \
-        importlib-metadata \
-        importlib-resources \
-        flake8-blind-except \
-        flake8-builtins \
-        flake8-class-newline \
-        flake8-comprehensions \
-        flake8-deprecated \
-        flake8-docstrings \
-        flake8-import-order \
-        flake8-quotes \
-        pytest-repeat \
-        pytest-rerunfailures \
-        pytest
+    argcomplete \
+    importlib-metadata \
+    importlib-resources \
+    flake8-blind-except \
+    flake8-builtins \
+    flake8-class-newline \
+    flake8-comprehensions \
+    flake8-deprecated \
+    flake8-docstrings \
+    flake8-import-order \
+    flake8-quotes \
+    pytest-repeat \
+    pytest-rerunfailures \
+    pytest
 
 ENV ROS_TMP=/tmp/${ROS_DISTRO}
 
 RUN mkdir -p ${ROS_ROOT} \
     && mkdir -p ${ROS_TMP} && cd ${ROS_TMP} \
     && rosinstall_generator \
-            --rosdistro ${ROS_DISTRO} \
-            --exclude librealsense2 rtabmap libg2o libpointmatcher libnabo \
-            --deps \
+    --rosdistro ${ROS_DISTRO} \
+    --exclude librealsense2 rtabmap libg2o libpointmatcher libnabo \
+    --deps \
         ament_cmake_clang_format \
         compressed_depth_image_transport \
         compressed_image_transport \
@@ -286,6 +375,7 @@ RUN mkdir -p ${ROS_ROOT} \
         urdfdom \
         vision_opencv \
         visualization_msgs \
+        xacro \
     > ${ROS_ROOT}/ros2.rosinstall \
     && vcs import ${ROS_TMP} < ${ROS_ROOT}/ros2.rosinstall > /dev/null
 
@@ -364,7 +454,7 @@ RUN apt-get update -q \
         wget \
         ssh \
     && pip3 install --no-cache-dir -U \
-        jetson-stats \
+    jetson-stats \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
