@@ -6,3 +6,7 @@ launch:
     file: $(dirname)/camera.yaml
 - include:
     file: $(dirname)/slam.yaml
+- include:
+    file: $(dirname)/odometry.yaml
+- include:
+    file: $(dirname)/lidar.yaml

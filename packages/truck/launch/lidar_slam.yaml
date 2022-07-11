@@ -1,0 +1,42 @@
+launch:
+
+- arg: {name: "localization", default: "false"}
+
+- let: {name: "args", value: "--delete_db_on_start", if: "$(var localization)"}
+- let: {name: "args", value: "", unless: "$(var localization)"}
+
+- node:
+    pkg: "rtabmap_ros"
+    exec: "rtabmap"
+    name: "rtabmap"
+    namespace: "rtabmap"
+    output: "log"
+
+    remap:
+    - {from: "scan", to: "/lidar/scan"}
+    - {from: "imu", to: "/camera/imu"}
+
+    param:
+    - {name: "frame_id", value: "lidar_link"}
+    - {name: "subscribe_rgb", value: False}
+    - {name: "subscribe_depth", value: False}
+    - {name: "subscribe_scan", value: True}
+    - {name: "approx_sync", value: False}
+    - {name: "wait_imu_to_init", value: False}
+    - {name: "queue_size", value: 200}
+
+    - {name: "Optimizer/Strategy", value: "2"}
+    - {name: "Optimizer/Epsilon", value: "0.00001"}
+    - {name: "approx_sync", value: "true"}
+    - {name: "Grid/3D", value: "false"}
+    - {name: "Grid/FromDepth", value: "false"}
+    - {name: "Grid/RangeMax", value: "false"}
+    - {name: "Grid/RayTracing", value: "true"}
+    - {name: "Grid/MaxGroundHeight", value: "0.1"}
+    - {name: "Grid/MaxObstacleHeight", value: "0.4"}
+    - {name: "Grid/Sensor", value: "0"}
+    - {name: "Grid/CellSize", value: "0.05"}
+    - {name: "Icp/PointToPlane", value: "true"}
+    - {name: "Rtabmap/TimeThr", value: "500"}
+    - {name: "Reg/Force3DoF", value: "false"}
+    - {name: "Mem/IncrementalMemory", value: "true"}

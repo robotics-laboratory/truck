@@ -1,0 +1,28 @@
+launch:
+
+- node:
+    pkg: "rtabmap_ros"
+    exec: "icp_odometry"
+    name: "icp_odometry"
+    namespace: "rtabmap"
+    output: "log"
+
+    remap:
+    - {from: "scan", to: "/lidar/scan"}
+
+    param:
+    - {name: "frame_id", value: "lidar_link"}
+    - {name: "queue_size", value: 10} 
+    - {name: "publish_tf", value: True}
+    - {name: "scan_cloud_max_points", value: 327680}
+    #- {name: "max_update_rate", value: 30.0}
+    #- {name: "expected_update_rate", value: 20.0}
+
+    #- {name: "scan_normal_k", value: 20}
+    #- {name: "scan_normal_radius", value: 30}
+ 
+    - {name: "Odom/Strategy", value: "1"}
+    - {name: "Odom/ResetCountdown", value: "25"}
+    #- {name: "Odom/ScanKeyFrameThr", value: "0"}
+    - {name: "Icp/PointToPlane", value: "true"}
+    #- {name: "Icp/CorrespondenceRatio", value: "1"}
