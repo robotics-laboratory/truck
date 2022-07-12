@@ -23,7 +23,7 @@ launch:
     - {name: "subscribe_scan", value: True}
     - {name: "approx_sync", value: False}
     - {name: "wait_imu_to_init", value: False}
-    - {name: "queue_size", value: 200}
+    - {name: "queue_size", value: 10}
 
     - {name: "Optimizer/Strategy", value: "2"}
     - {name: "Optimizer/Epsilon", value: "0.00001"}

@@ -24,7 +24,7 @@ launch:
     - {name: "align__cuda_.enable", value: True}
 
     - {name: "enable_accel", value: True}
-    - {name: "accel_fps", value: 100}
+    - {name: "accel_fps", value: 63}
 
     - {name: "enable_gyro", value: True}
     - {name: "gyro_fps", value: 200}
