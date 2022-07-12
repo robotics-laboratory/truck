@@ -2,19 +2,31 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>truck_foxglove</name>
+<<<<<<< HEAD
   <version>0.2.1</version>
   <description>A supplementary ROS2 package for translating nav_msgs/Oodmetry messages with the purpose of Foxglove visualization</description>
   <maintainer email="depressingsupremacy@outlook.com">Isa Gadaev</maintainer>
   <license>MIT</license>
+=======
+  <version>0.0.0</version>
+  <description>A supplementary ROS2 package for translating nav_msgs/Oodmetry messages with the purpose of Foxglove visualization</description>
+  <maintainer email="depressingsupremacy@outlook.com">I. Tane</maintainer>
+  <license>CUMBAWLZ</license>
+>>>>>>> Added node for the Foxglove visualization of nav_msgs/Odometry messages
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>nav_msgs</depend>
+<<<<<<< HEAD
   <depend>rmw</depend>
   <depend>std_msgs</depend>
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>visualization_msgs</depend>
+=======
+  <depend>geometry_msgs</depend>
+  <depend>tf2_msgs</depend>
+>>>>>>> Added node for the Foxglove visualization of nav_msgs/Odometry messages
   <depend>rclcpp</depend>
 
   <test_depend>ament_lint_auto</test_depend>
