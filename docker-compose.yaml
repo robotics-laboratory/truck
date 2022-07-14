@@ -30,4 +30,8 @@ services:
     - "9090:9090"
     volumes:
       - "${HOME}/truck:/truck"
+<<<<<<< HEAD
       - "/dev:/dev"
+=======
+      - /dev:/dev
+>>>>>>> 7e10334 (add dev for amd64 container)
