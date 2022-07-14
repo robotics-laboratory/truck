@@ -1,9 +1,9 @@
 version: "3.5"
 
 services:
-  truck-base-jetson:
-    container_name: truck
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:jetson-0.4.2
+  truck-jetson:
+    container_name: truck-jetson
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:jetson-0.5.0
     stdin_open: true
     privileged: true
     tty: true
@@ -17,9 +17,9 @@ services:
       - "${HOME}/truck:/truck"
       - /dev:/dev
 
-  truck-base-amd64:
-    container_name: truck
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:amd64-0.4.2
+  truck-amd64:
+    container_name: truck-amd64
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:amd64-0.5.0
     stdin_open: true
     tty: true
     build:
@@ -30,3 +30,8 @@ services:
     - "9090:9090"
     volumes:
       - "${HOME}/truck:/truck"
+<<<<<<< HEAD
+      - "/dev:/dev"
+=======
+      - /dev:/dev
+>>>>>>> 7e10334 (add dev for amd64 container)

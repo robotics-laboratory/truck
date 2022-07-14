@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
-project(geom)
+project(common)
 
 find_package(ament_cmake REQUIRED)
+find_package(Boost REQUIRED)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
@@ -11,26 +12,24 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 add_library(${PROJECT_NAME} SHARED src/empty.cpp)
 
-target_include_directories(geom PUBLIC
+target_include_directories(common PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-ament_export_targets(geom HAS_LIBRARY_TARGET)
-# ament_export_dependencies(some_dependency)
+ament_export_targets(commonTargets HAS_LIBRARY_TARGET)
+#ament_export_dependencies(...)
 
 install(
-  TARGETS geom
-  EXPORT geom
+  TARGETS common
+  EXPORT commonTargets
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
-
-if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
-  add_subdirectory("test")
-endif()
+install(
+  DIRECTORY include/
+  DESTINATION include/common
+)
 
 ament_package()
