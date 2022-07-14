@@ -89,7 +89,14 @@
     \draw (5,11) node[fill=yellow!30, draw, rounded corners] {$\delta_l = \arctan \big(|C_b| l, 1 - C_b \frac{w}{2} \big)$};
     \draw (5,10) node[fill=yellow!30, draw, rounded corners] {$\delta_r = \arctan \big(|C_b| l, 1 + C_b \frac{w}{2} \big)$};
     
-    \draw (0, 3.5) node[fill=yellow!30, draw, rounded corners] {$v_b = \sqrt{1 - (C l_b)^2} \cdot v$};
+
     \draw (0, 4.5) node[fill=yellow!30, draw, rounded corners] {$C_b = \frac{C}{\sqrt{1 - (C l_b)^2}}$};
+    \draw (0, 3.5) node[fill=yellow!30, draw, rounded corners] {$C = \frac{C_b}{\sqrt{1 + (C_b l_b)^2}}$};
+
+    \draw (0, -1) node[fill=yellow!30, draw, rounded corners] {$v_b = \sqrt{1 - (C l_b)^2} \cdot v$};
+
+    \draw (13, 12) node[fill=yellow!30, draw, rounded corners] {$C_b = \frac{\tan(\delta_l)}{l + \tan(\delta_l) \cdot \frac{w}{2}}$};
+    \draw (13, 11) node[fill=yellow!30, draw, rounded corners] {$C_b = \frac{\tan(\delta_r)}{l - \tan(\delta_r) \cdot \frac{w}{2}}$};
+
 \end{tikzpicture}
 \end{document}
