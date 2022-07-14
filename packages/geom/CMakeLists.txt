@@ -3,28 +3,20 @@ project(geom)
 
 find_package(ament_cmake REQUIRED)
 
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
-
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-add_library(${PROJECT_NAME} INTERFACE)
+add_library(${PROJECT_NAME} SHARED src/empty.cpp)
 
-target_include_directories(geom
-  INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
-)
+target_include_directories(geom PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-ament_export_include_directories("include/${PROJECT_NAME}")
-
-# Export modern CMake targets
-ament_export_targets(geom)
+ament_export_targets(geom HAS_LIBRARY_TARGET)
+# ament_export_dependencies(some_dependency)
 
 install(
   TARGETS geom
@@ -34,15 +26,10 @@ install(
   RUNTIME DESTINATION bin
 )
 
-install(
-  DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
-)
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
-
-  # Add a gtest named ${PROJECT_NAME}_my_test
   add_subdirectory("test")
 endif()
 
