@@ -1,7 +1,14 @@
-max_velocity: 2.0
-max_acceleration: 1.0
-max_decceleration: 1.0
-lookahead_distance: 0.5
-truck_length: 1.0
-truck_width: 0.5
-wheel_radius: 0.1
+wheel_base:
+  # meters
+  length: 1.0
+  width: 0.5
+  base_to_rear: 0.5
+
+limits:
+  steering: { inner: +30.0, outer: +30.0 }  # degrees
+  max_abs_curvature: 1.0
+  steering: { min: -30.0, max: +30.0 }  # degrees
+  velocity: { min: 0.0, max: +2.0 }      # m/s
+  acceleration: { min: -5.0, max: +1.0 } # m/s2
+
+wheel_radius: 0.15 # m
