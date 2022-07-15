@@ -1,14 +1,10 @@
 launch:
 
-- arg: {name: "localization", default: "false"}
-
-- let: {name: "args", value: "--delete_db_on_start", if: "$(var localization)"}
-- let: {name: "args", value: "", unless: "$(var localization)"}
-
 - node:
     pkg: "rtabmap_ros"
     exec: "rtabmap"
     name: "rtabmap"
+    args: "--delete_db_on_start"
     namespace: "rtabmap"
     output: "log"
 

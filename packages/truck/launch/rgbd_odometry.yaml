@@ -17,10 +17,10 @@ launch:
     - {name: "frame_id", value: "camera_link"}
     - {name: "subscribe_depth", value: True}
     - {name: "subscribe_rgb", value: True}
-    - {name: "approx_sync", value: False}
+    - {name: "approx_sync", value: True}
     - {name: "max_update_rate", value: 30.0}
     - {name: "queue_size", value: 10} 
-    - {name: "wait_imu_to_init", value: True}
+    - {name: "wait_imu_to_init", value: False}
     - {name: "subscribe_rgbd", value: False}
     - {name: "publish_tf", value: True}
     - {name: "expected_update_rate", value: 20.0}

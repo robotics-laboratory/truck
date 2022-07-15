@@ -1,13 +1,10 @@
 launch:
 
-- arg: {name: "localization", default: "false"}
-
-- let: {name: "args", value: "-d"}
-
 - node:
     pkg: "rtabmap_ros"
     exec: "rtabmap"
     name: "rtabmap"
+    args: "--delete_db_on_start"
     namespace: "rtabmap"
     output: "log"
 
@@ -18,12 +15,11 @@ launch:
     - {from: "imu", to: "/camera/imu"}
 
     param:
-    - {name: "args", value: "$(var args)"}
     - {name: "frame_id", value: "camera_link"}
     - {name: "subscribe_rgb", value: True}
     - {name: "subscribe_depth", value: True}
     - {name: "approx_sync", value: False}
-    - {name: "queue_size", value: 10} 
+    - {name: "queue_size", value: 100} 
 
     - {name: "RGBD/CreateOccupancyGrid", value: "true"}
 #This parameter is set to true in order to improve upon the performance.
