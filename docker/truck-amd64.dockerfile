@@ -5,8 +5,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"]
 
+ENV ROS_VERSION=2
 ENV ROS_DISTRO=galactic
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+ENV ROS_PYTHON_VERSION=3
 
 WORKDIR /tmp
 
@@ -318,6 +320,16 @@ RUN cd ${ROS_TMP} \
     && rm -rf /tmp/*
 
 RUN printf "export ROS_ROOT=${ROS_ROOT}\nexport ROS_DISTRO=${ROS_DISTRO}\nsource ${ROS_ROOT}/setup.bash" >> /root/.bashrc
+
+RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
+    && cd sllidar_ros2 \
+    && source ${ROS_ROOT}/setup.bash \
+    && colcon build \
+        --merge-install \
+        --install-base ${ROS_ROOT} \
+        --cmake-args -DBUILD_TESTING=OFF \
+        --catkin-skip-building-tests \
+    && rm -rf /tmp/*
 
 ENV GZWEB_VERSION="1.4.1"
 ENV GZWEB_PATH=/opt/gzweb

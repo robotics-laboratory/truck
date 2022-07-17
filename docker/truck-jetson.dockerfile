@@ -409,6 +409,16 @@ RUN cd ${ROS_TMP} \
 
 RUN printf "export ROS_ROOT=${ROS_ROOT}\nexport ROS_DISTRO=${ROS_DISTRO}\nsource ${ROS_ROOT}/setup.bash" >> /root/.bashrc
 
+RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
+    && cd sllidar_ros2 \
+    && source ${ROS_ROOT}/setup.bash \
+    && colcon build \
+    --merge-install \
+    --install-base ${ROS_ROOT} \
+    --cmake-args -DBUILD_TESTING=OFF \
+    --catkin-skip-building-tests \
+    && rm -rf /tmp/*
+
 ENV GZWEB_VERSION="1.4.1"
 ENV GZWEB_PATH=/opt/gzweb
 
