@@ -1,22 +1,6 @@
 launch:
 
 - node:
-    pkg: "rtabmap_ros"
-    exec: "point_cloud_xyzrgb"
-    name: "cloud_generator"
-    namespace: "rtabmap"
-    output: "log"
-
-    remap:
-    - {from: "rgb/image", to: "/camera/color/image_raw"}
-    - {from: "rgb/camera_info", to: "/camera/color/camera_info"}
-    - {from: "depth/image", to: "/camera/aligned_depth_to_color/image_raw"}
-
-    param:
-    - {name: "voxel_size", value: 0.0}
-    - {name: "queue_size", value: 10}
-
-- node:
     pkg: "truck_foxglove"
     exec: "odom_translator"
     name: "odom_pointer"
