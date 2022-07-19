@@ -1,5 +1,6 @@
 # ROS2 Packages
-Home of all our packages!
+
+- [control_proxy](control_proxy/README.md)
 
 ## Build
 
@@ -16,7 +17,6 @@ colcon build --merge-install --packages-up-to package_name
 ```
 
 ## Install
-
 Current installation dir is ```/truck/packages/install```. To run setup do
 
 ```bash

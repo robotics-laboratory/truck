@@ -8,6 +8,12 @@ launch:
     name: "control_proxy"
     output: "log"
     param:
+    # path to truck mode config
     - {name: "model_config", value: "$(var model_config)"}
+    # set mode to `off` if no commands from joypad during this time (milliseconds)
+    - {name: "joypad_timeout", value: "200"}
+    # set mode to `remote` if no commands from planner during this time (milliseconds)
+    - {name: "control_timeout", value: "$(var model_conf)"}
+
 
 

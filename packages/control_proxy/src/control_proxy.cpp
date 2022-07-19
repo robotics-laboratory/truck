@@ -1,5 +1,8 @@
 #include "control_proxy.h"
 
+#include <boost/assert.hpp>
+#include <rclcpp/time.hpp>
+
 #include <utility>
 
 using namespace std::literals;
@@ -7,34 +10,54 @@ using std::placeholders::_1;
 
 namespace truck::control_proxy {
 
+std::string toString(Mode mode) {
+    switch(mode) {
+        case Mode::Off:
+            return "Off";
+        case Mode::Remote:
+            return "Remote";
+        case Mode::Auto:
+            return "Auto";
+        default:
+            BOOST_ASSERT(false);
+    }
+}
+
 ControlProxy::ControlProxy()
     : Node("control_proxy"), model_(Node::declare_parameter<std::string>("model_config")) {
-    // params
-    is_auto_ = this->declare_parameter<bool>("is_auto", false);
+    joypad_timeout_ =
+        std::chrono::milliseconds(this->declare_parameter<long int>("joypad_timeout", 200));
 
-    remote_control_timeout_ =
-        std::chrono::milliseconds(this->declare_parameter<long int>("remote_control_timeout", 200));
+    RCLCPP_INFO(this->get_logger(), "joy pad timeout %li ms", joypad_timeout_.count());
+
+    control_timeout_ =
+        std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 200));
+
+    RCLCPP_INFO(this->get_logger(), "control timeout %li ms", control_timeout_.count());
 
     // input
     commnad_slot_ = Node::create_subscription<truck_interfaces::msg::Control>(
-        "/motion/target", 1, std::bind(&ControlProxy::forwardCommand, this, _1));
+        "/motion/command", 1, std::bind(&ControlProxy::forwardControlCommand, this, _1));
 
-    remote_commnad_slot_ = Node::create_subscription<sensor_msgs::msg::Joy>(
-        "/joy", 1, std::bind(&ControlProxy::handleRemoteCommand, this, _1));
+    joypad_slot_ = Node::create_subscription<sensor_msgs::msg::Joy>(
+        "/joy", 1, std::bind(&ControlProxy::handleJoypadCommand, this, _1));
 
     // output
-    if (remote_control_timeout_ > 0ms) {
-        watchdog_timer_ = this->create_wall_timer(
-            remote_control_timeout_, std::bind(&ControlProxy::watchdog, this));
-    }
+    const auto watchdog_period = std::min(control_timeout_, joypad_timeout_);
+    BOOST_ASSERT(watchdog_period > 0ms);
 
-    mode_timer_ = this->create_wall_timer(200ms, std::bind(&ControlProxy::publishMode, this));
+    watchdog_timer_ = this->create_wall_timer(
+        watchdog_period, std::bind(&ControlProxy::watchdog, this));
 
-    command_feedback_signal_ =
+    publish_mode_timer_ = this->create_wall_timer(200ms, std::bind(&ControlProxy::publishMode, this));
+
+    mode_feedback_signal_ =
         Node::create_publisher<sensor_msgs::msg::JoyFeedback>("/joy/set_feedback", 1);
 
     command_signal_ = Node::create_publisher<truck_interfaces::msg::Control>("/control/command", 1);
     mode_signal_ = Node::create_publisher<truck_interfaces::msg::ControlMode>("/control/mode", 1);
+
+    RCLCPP_INFO(this->get_logger(), "Mode: Off");
 }
 
 namespace {
@@ -68,31 +91,31 @@ bool switchModeToAuto(
     return previous->buttons[BUTTON_CIRCLE] == 1 && current->buttons[BUTTON_CIRCLE] == 0;
 }
 
-static const auto kAutoFeedback = [] {
-    sensor_msgs::msg::JoyFeedback msg;
+} // namespace
 
-    msg.type = sensor_msgs::msg::JoyFeedback::TYPE_RUMBLE;
-    msg.id = 0;
-    msg.intensity = 1.0;
+void ControlProxy::setMode(Mode mode) {
+    if (mode == mode_) {
+        return;
+    }
 
-    return msg;
-}();
+    mode_ = mode;
+    RCLCPP_WARN(this->get_logger(), "Mode: %s", toString(mode).c_str());
 
-static const auto kRemoteFeedback = [] {
-    sensor_msgs::msg::JoyFeedback msg;
+    sensor_msgs::msg::JoyFeedback result;
 
-    msg.type = sensor_msgs::msg::JoyFeedback::TYPE_RUMBLE;
-    msg.id = 0;
-    msg.intensity = 0.4;
+    result.type = sensor_msgs::msg::JoyFeedback::TYPE_RUMBLE;
+    result.id = 0;
+    result.intensity = 0.5;
 
-    return msg;
-}();
+    mode_feedback_signal_->publish(result);
+}
 
-}  // namespace
-
-truck_interfaces::msg::Control ControlProxy::makeCommand(
+truck_interfaces::msg::Control ControlProxy::makeControlCommand(
     sensor_msgs::msg::Joy::ConstSharedPtr command) {
     truck_interfaces::msg::Control result;
+
+    result.header.stamp = now();
+    result.header.frame_id = "base";
 
     result.curvature = command->axes[AXE_LX] * model_.baseMaxAbsCurvature();
 
@@ -105,39 +128,83 @@ truck_interfaces::msg::Control ControlProxy::makeCommand(
     return result;
 }
 
-void ControlProxy::handleRemoteCommand(sensor_msgs::msg::Joy::ConstSharedPtr command) {
-    if (switchModeToRemote(prev_remote_command_, command)) {
-        if (is_auto_) {
-            command_feedback_signal_->publish(kRemoteFeedback);
-        }
-
-        is_auto_ = false;
-    } else if (switchModeToAuto(prev_remote_command_, command)) {
-        if (!is_auto_) {
-            command_feedback_signal_->publish(kAutoFeedback);
-        }
-
-        is_auto_ = true;
+void ControlProxy::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
+    if (switchModeToRemote(prev_joypad_command_, joypad_command)) {
+        setMode(Mode::Remote);
+    } else if (switchModeToAuto(prev_joypad_command_, joypad_command)) {
+        setMode(Mode::Auto);
     }
 
-    if (!is_auto_) {
-        command_signal_->publish(makeCommand(command));
+    if (mode_ == Mode::Remote) {
+        const auto command = makeControlCommand(joypad_command);
+        command_signal_->publish(command);
+        prev_command_ = std::make_shared<truck_interfaces::msg::Control>(command);
     }
 
-    prev_remote_command_ = std::move(command);
+    prev_joypad_command_ = std::move(joypad_command); 
 }
 
 void ControlProxy::publishMode() {
-    truck_interfaces::msg::ControlMode mode;
-    mode.is_auto = is_auto_;
-    mode_signal_->publish(mode);
+    truck_interfaces::msg::ControlMode result;
+
+    result.header.stamp = now();
+    result.header.frame_id = "base";
+
+    result.mode = static_cast<uint8_t>(mode_);
+    mode_signal_->publish(result);
 }
 
-void ControlProxy::watchdog() { publishMode(); }
+void ControlProxy::publishStop() {
+    static const auto stop = [this] {
+        truck_interfaces::msg::Control result;
 
-void ControlProxy::forwardCommand(truck_interfaces::msg::Control::ConstSharedPtr command) {
-    if (is_auto_) {
+        result.header.stamp = now();
+        result.header.frame_id = "base";
+
+        result.velocity = 0.0;
+        result.curvature =  0.0;
+        result.acceleration = 0.0;
+
+        return result;
+    }();
+
+    command_signal_->publish(stop);
+}
+
+void ControlProxy::watchdog() {
+    auto get_delay = [this](const auto& msg) {
+        return std::chrono::nanoseconds((now() - msg.header.stamp).nanoseconds());
+    };
+
+    if (!prev_joypad_command_ || get_delay(*prev_joypad_command_) > joypad_timeout_) {
+        if (mode_ != Mode::Off) {
+            RCLCPP_ERROR(this->get_logger(), "Lose joypad, stop!");
+            setMode(Mode::Off);
+        }
+
+        prev_joypad_command_ = nullptr;
+        publishStop();
+        return;
+    }
+
+    setMode(std::max(Mode::Remote, mode_));
+
+    if (!prev_command_ || get_delay(*prev_command_) > control_timeout_) {
+        if (mode_ != Mode::Remote) {
+            RCLCPP_ERROR(this->get_logger(), "Lose control, stop!");
+            setMode(Mode::Remote);
+        }
+
+        prev_command_ = nullptr;
+        publishStop();
+        return;
+    }
+}
+
+void ControlProxy::forwardControlCommand(truck_interfaces::msg::Control::ConstSharedPtr command) {
+    if (mode_ == Mode::Auto) {
         command_signal_->publish(*command);
+        prev_command_ = command;
     }
 }
 
