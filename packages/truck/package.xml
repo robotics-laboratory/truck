@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>truck</name>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <description>Truck launch package</description>
   <maintainer email="simagin.mail@yandex.ru">Simagin Denis</maintainer>
+  <maintainer email="depressingsupremacy@outlook.com">Isa Gadaev</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -11,6 +12,7 @@
   <depend>launch_ros</depend>
   <depend>realsense2_camera</depend>
   <depend>realsense2_description</depend>
+  <depend>sllidar_ros2</depend>
   <depend>ros_environment</depend>
 
   <depend>planning_node</depend>

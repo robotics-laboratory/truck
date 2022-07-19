@@ -1,0 +1,48 @@
+launch:
+
+- node:
+    pkg: "rtabmap_ros"
+    exec: "rtabmap"
+    name: "rtabmap"
+    args: "--delete_db_on_start"
+    namespace: "rtabmap"
+    output: "log"
+
+    remap:
+    - {from: "rgb/image", to: "/camera/color/image_raw"}
+    - {from: "rgb/camera_info", to: "/camera/color/camera_info"}
+    - {from: "depth/image", to: "/camera/aligned_depth_to_color/image_raw"}
+    - {from: "imu", to: "/camera/imu"}
+
+    param:
+    - {name: "frame_id", value: "camera_link"}
+    - {name: "subscribe_rgb", value: True}
+    - {name: "subscribe_depth", value: True}
+    - {name: "approx_sync", value: False}
+    - {name: "queue_size", value: 100} 
+
+    - {name: "RGBD/CreateOccupancyGrid", value: "true"}
+#This parameter is set to true in order to improve upon the performance.
+    - {name: "RGBD/NeighborLinkRefining", value: "true"}
+    - {name: "RGBD/AngularUpdate", value: "0.05"}
+    - {name: "RGBD/LinearUpdate", value: "0.05"}
+#Detection over locations near in space.
+    - {name: "RGBD/ProximityBySpace", value: "true"}
+#Optimize graph from the newest node. Resolves overhead computations, improving upon the general performance of the node.
+    - {name: "RGBD/OptimizeFromGraphEnd", value: "true"}
+    - {name: "Grid/3D", value: "false"}
+#The following enables the space devoid of obstacles to be explicitly marked as free on the occupancy grid.
+#It is on by default for laser scans, but for the depth image it has to be selected manually.
+    - {name: "Grid/RayTracing", value: "true"}
+    - {name: "Grid/MaxGroundHeight", value: "0.1"}
+    - {name: "Grid/MaxObstacleHeight", value: "0.4"}
+#The following sets the creation of the occupancy grid from the depth image.
+    - {name: "Grid/Sensor", value: "1"}
+#Resolution of the occupancy grid.
+    - {name: "Grid/CellSize", value: "0.05"}
+#Minimal number of feature correspondences required to compute the transformation. We are not very fernickety about that.
+    - {name: "Vis/MinInliers", value: "5"}
+#The longest it can take for a map to update in ms. This option helps us decrease the update time.
+    - {name: "Rtabmap/TimeThr", value: "500"}
+    - {name: "Reg/Force3DoF", value: "true"}
+    - {name: "Mem/IncrementalMemory", value: "true"}

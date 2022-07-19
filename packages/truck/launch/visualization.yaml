@@ -1,0 +1,12 @@
+launch:
+
+- node:
+    pkg: "truck_foxglove"
+    exec: "odom_translator"
+    name: "odom_pointer"
+    namespace: "truck"
+    output: "log"
+
+    param:
+    - {name: "odom_topic", value: "/rtabmap/odom"}
+    - {name: "show_path", value: True}

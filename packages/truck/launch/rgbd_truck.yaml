@@ -1,0 +1,8 @@
+launch:
+
+- include:
+  file: $(dirname)/camera.yaml
+- include:
+  file: $(dirname)/rgbd_odometry.yaml
+- include:
+  file: $(dirname)/rgbd_slam.yaml
