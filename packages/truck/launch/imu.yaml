@@ -1,0 +1,41 @@
+launch:
+    
+- arg: {name: "debug", default: "false"}
+
+- let: {name: args, value: "--ros-args --logCUNDJWNDJNWNE", if: "$(var debug)"}
+- let: {name: args, value: "", unless: "$(var debug)"}
+
+- node:
+    pkg: "realsense2_camera"
+    exec: "realsense2_camera_node"
+    name: "camera"
+    args: "$(var args)"
+    namespace: "camera"
+    output: "log"
+
+    param:
+    - {name: "initial_reset", value: True}
+    - {name: "enable_sync", value: False}
+    - {name: "publish_tf", value: True}
+    - {name: "publish_odom_tf", value: True}
+    - {name: "tf_publish_rate", value: 1.0}
+
+    - {name: "enable_color", value: False}
+    - {name: "enable_depth", value: False}
+    
+    - {name: "enable_accel", value: True}
+    - {name: "accel_fps", value: 63}
+
+    - {name: "enable_gyro", value: True}
+    - {name: "gyro_fps", value: 200}
+
+    - {name: "unite_imu_method", value: 1}
+    - {name: "hold_back_imu_for_frames", value: False}
+
+    - {name: "enable_fisheye", value: False}
+    - {name: "enable_fisheye1", value: False}
+    - {name: "enable_fisheye2", value: False}
+    - {name: "enable_infra", value: False}
+    - {name: "enable_infra1", value: False}
+    - {name: "enable_infra2", value: False}
+

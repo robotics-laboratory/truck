@@ -9,12 +9,14 @@ launch:
 
     remap:
     - {from: "scan", to: "/lidar/scan"}
+    - {from: "/rtabmap/imu", to: "/camera/imu"}
 
     param:
     - {name: "frame_id", value: "lidar_link"}
     - {name: "queue_size", value: 10} 
     - {name: "publish_tf", value: True}
     - {name: "scan_cloud_max_points", value: 327680}
+    - {name: "wait_imu_to_init", value: True}
     #- {name: "max_update_rate", value: 30.0}
     #- {name: "expected_update_rate", value: 20.0}
 

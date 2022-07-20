@@ -3,6 +3,8 @@ launch:
 - include:
     file: $(dirname)/lidar.yaml
 - include:
+    file: $(dirname)/imu.yaml
+- include:
     file: $(dirname)/icp_odometry.yaml
 - include:
     file: $(dirname)/lidar_slam.yaml
