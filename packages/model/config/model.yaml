@@ -1,14 +1,18 @@
 wheel_base:
   # meters
-  length: 1.0
-  width: 0.5
-  base_to_rear: 0.5
+  length: 0.405
+  width: 0.26
+  base_to_rear: 0.20
 
 limits:
-  steering: { inner: +30.0, outer: +30.0 }  # degrees
-  max_abs_curvature: 1.0
-  steering: { min: -30.0, max: +30.0 }  # degrees
-  velocity: { min: 0.0, max: +2.0 }      # m/s
+  steering: {
+    inner: +30.0,   # deg
+    outer: +30.0,   # deg
+    velocity: 120.0 # deg/s
+  }
+  max_abs_curvature: 3.0
+  velocity: { min: -1.0, max: 1.0 }      # m/s
   acceleration: { min: -5.0, max: +1.0 } # m/s2
 
-wheel_radius: 0.15 # m
+wheel_radius: 0.055 # m
+gear_ratio: 12

@@ -3,8 +3,19 @@
   <world name="Simple">
     <physics type="ode">
       <gravity>0.0 0.0 -9.81</gravity>
-      <real_time_update_rate>1000</real_time_update_rate>
-      <max_step_size>0.001</max_step_size>
+      <!-- update with rate 5 kHz -->
+      <!-- need high rate for dummy steering simulation -->
+      <real_time_update_rate>10000</real_time_update_rate>
+      <max_step_size>0.0001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <ode>
+        <solver>
+          <iters>100</iters>
+        </solver>
+        <constraints>
+          <contact_surface_layer>0.2</contact_surface_layer>
+        </constraints>
+      </ode>
     </physics>
     <include>
       <uri>model://ground_plane</uri>
@@ -14,7 +25,7 @@
     </include>
     <include>
       <uri>model://truck_description</uri>
+      <pose>0 0 0.151 0 0 0</pose>
     </include>
-    <plugin name="OccupancyGridPlugin" filename="libtruck_gazebo_occupancy_grid.so"/>
   </world>
 </sdf>

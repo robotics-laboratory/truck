@@ -3,12 +3,17 @@
 <package format="3">
   <name>control_proxy</name>
   <version>0.1.0</version>
-  <description>Robot model</description>
+  <description>Truck control proxy</description>
   <maintainer email="simagin.mail@yandex.ru">Simagin Denis</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>ros2launch</exec_depend>
+
   <depend>model</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>truck_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>

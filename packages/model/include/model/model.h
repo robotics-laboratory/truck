@@ -4,6 +4,8 @@
 #include "model/params.h"
 #include "yaml-cpp/yaml.h"
 
+#include <utility>
+
 namespace truck::model {
 
 struct Steering {
@@ -11,17 +13,34 @@ struct Steering {
     geom::Angle right;
 };
 
+struct WheelVelocity {
+    geom::Angle left;
+    geom::Angle right;
+};
+
+struct Twist {
+  double curvature;
+  double velocity;
+};
+
 class Model {
   public:
     Model(const std::string& config_path);
 
+    // Limits
     double baseMaxAbsCurvature() const;
+    Limits<geom::Angle> leftSteeringLimits() const;
+    Limits<geom::Angle> rightSteeringLimits() const;
     Limits<double> baseVelocityLimits() const;
 
-    double rearToBaseCurvature(double C) const;
-    double baseToRearCurvature(double C) const;
+    geom::Angle steeringVelocity() const;
 
-    Steering rearCurvatureToSteering(double C) const;
+    // Achtung! All results are clamped with limits!
+
+    Twist baseToRearTwist(Twist twist) const;
+
+    Steering rearTwistToSteering(Twist twist) const;
+    WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
 
   private:
     struct Cache {

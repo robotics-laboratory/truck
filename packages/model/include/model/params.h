@@ -22,6 +22,7 @@ struct WheelBase {
 struct SteeringLimit {
     geom::Angle inner;
     geom::Angle outer;
+    geom::Angle velocity;
 };
 
 struct VehicleLimits {
@@ -40,6 +41,7 @@ struct Params {
     WheelBase wheel_base;
     model::VehicleLimits limits;
     double wheel_radius;
+    double gear_ratio;
 };
 
 }  // namespace truck::model

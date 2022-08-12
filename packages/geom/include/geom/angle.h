@@ -29,6 +29,8 @@ class Angle {
 
     friend constexpr Angle abs(Angle angle) { return Angle{std::abs(angle.value_)}; }
 
+    constexpr Angle operator-() const { return Angle{-value_}; }
+
     constexpr Angle& operator*=(double x) {
         value_ *= x;
         return *this;

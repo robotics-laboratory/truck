@@ -16,16 +16,17 @@
 
 namespace truck::control_proxy {
 
-enum class Mode: uint8_t { Off = 0, Remote = 1, Auto = 2 };
+enum class Mode : uint8_t { Off = 0, Remote = 1, Auto = 2 };
 
 std::string toString(Mode mode);
 
-class ControlProxy : public rclcpp::Node {
+class ControlProxyNode : public rclcpp::Node {
   public:
-    ControlProxy();
+    ControlProxyNode();
 
   private:
-    truck_interfaces::msg::Control makeControlCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command);
+    truck_interfaces::msg::Control makeControlCommand(
+        sensor_msgs::msg::Joy::ConstSharedPtr joypad_command);
 
     void forwardControlCommand(truck_interfaces::msg::Control::ConstSharedPtr command);
 
