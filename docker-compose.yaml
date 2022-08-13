@@ -14,13 +14,14 @@ services:
     - "2222:2222"
     - "9090:9090"
     volumes:
-      - "${HOME}/truck:/truck"
-      - /dev:/dev
+      - "${PWD}:/truck"
+      - "/dev:/dev"
 
   truck-amd64:
     container_name: truck-amd64
     image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:amd64-0.5.1
     stdin_open: true
+    privileged: true
     tty: true
     build:
       dockerfile: docker/truck-amd64.dockerfile
@@ -29,5 +30,5 @@ services:
     - "2222:2222"
     - "9090:9090"
     volumes:
-      - "${HOME}/truck:/truck"
+      - "${PWD}:/truck"
       - "/dev:/dev"
