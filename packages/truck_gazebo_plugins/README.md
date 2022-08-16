@@ -22,14 +22,14 @@ Implements dummy (no slippage) [ackermann model](../../doc/ackermann_vehicle.md)
     <torque>0.5</torque>
     <left_joint>left_steering_joint</left_joint>
     <right_joint>right_steering_joint</right_joint>
-</steering>
-<rear>
-  <!-- controller params of reguqlators -->
-  <pd>0.1 0.0</pd>
-  <!-- motor torque -->
-  <torque>10.0</torque>
-  <left_joint>left_rear_axle</left_joint>
-  <right_joint>right_rear_axle</right_joint>
-</rear>
+  </steering>
+  <rear>
+    <!-- controller params of reguqlators -->
+    <pd>0.1 0.0</pd>
+    <!-- motor torque -->
+    <torque>10.0</torque>
+    <left_joint>left_rear_axle</left_joint>
+    <right_joint>right_rear_axle</right_joint>
+  </rear>
 </plugin>
 ```
