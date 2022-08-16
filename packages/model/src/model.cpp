@@ -4,19 +4,6 @@
 
 namespace truck::model {
 
-namespace {
-
-template <typename S>
-inline Limits<S> toLimits(const YAML::Node& node) {
-    return {node["min"].as<S>(), node["max"].as<S>()};
-}
-
-inline SteeringLimit toSteeringLimits(const YAML::Node& node) {
-    return {geom::Angle{node["inner"].as<double>()}, geom::Angle{node["outer"].as<double>()}};
-}
-
-}  // namespace
-
 Model::Model(const std::string& config_path) : params_(config_path) {
     cache_.width_half = params_.wheel_base.width / 2;
 
@@ -28,30 +15,49 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_inner / (params_.wheel_base.length - cache_.width_half * tan_inner),
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
+        auto rearToBaseCurvature = [&](double C) {
+            return C / std::sqrt(1 + squared(C * cache_.width_half));
+        };
+
         cache_.max_abs_curvature =
             std::min(rearToBaseCurvature(max_abs_rear_curvature), params_.limits.max_abs_curvature);
     }
 }
 
-double Model::rearToBaseCurvature(double C) const {
-    return C / std::sqrt(1 + squared(C * params_.wheel_base.base_to_rear));
-}
-
-double Model::baseToRearCurvature(double C) const {
-    return C / std::sqrt(1 - squared(C * params_.wheel_base.base_to_rear));
+Twist Model::baseToRearTwist(Twist twist) const {
+    const double ratio = std::sqrt(1 - squared(twist.curvature * params_.wheel_base.base_to_rear));
+    return {twist.curvature / ratio, twist.velocity * ratio};
 }
 
 Limits<double> Model::baseVelocityLimits() const { return params_.limits.velocity; }
 
 double Model::baseMaxAbsCurvature() const { return cache_.max_abs_curvature; }
 
-Steering Model::rearCurvatureToSteering(double C) const {
-    const double first = std::abs(C) * params_.wheel_base.length;
-    const double second = C * cache_.width_half;
+Limits<geom::Angle> Model::leftSteeringLimits() const {
+    return {-params_.limits.steering.inner, params_.limits.steering.outer};
+}
+
+Limits<geom::Angle> Model::rightSteeringLimits() const {
+    return {-params_.limits.steering.outer, params_.limits.steering.inner};
+}
+
+Steering Model::rearTwistToSteering(Twist twist) const {
+    const double first = twist.curvature * params_.wheel_base.length;
+    const double second = twist.curvature * cache_.width_half;
 
     return Steering {
         geom::Angle::fromRadians(std::atan2(first, 1 - second)),
         geom::Angle::fromRadians(std::atan2(first, 1 + second))};
 }
+
+WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
+    const double ratio = twist.curvature * cache_.width_half;
+
+    return WheelVelocity {
+        geom::Angle{(1 - ratio) * twist.velocity / params_.wheel_radius},
+        geom::Angle{(1 + ratio) * twist.velocity / params_.wheel_radius}};
+}
+
+double Model::gearRatio() const { return params_.gear_ratio; }
 
 }  // namespace truck::model

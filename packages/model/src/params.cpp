@@ -15,7 +15,7 @@ Limits<double> toLimits(const YAML::Node& node) {
     return {node["min"].as<double>(), node["max"].as<double>()};
 }
 
-} // namespace
+}  // namespace
 
 using namespace geom::literals;
 
@@ -37,13 +37,17 @@ VehicleLimits::VehicleLimits(const YAML::Node& node)
     BOOST_VERIFY(max_abs_curvature >= 0);
     BOOST_VERIFY(steering.inner >= 0_deg && steering.inner < 90_deg);
     BOOST_VERIFY(steering.outer >= 0_deg && steering.outer < 90_deg);
-    BOOST_VERIFY(velocity.min >= 0);  // forbid back movement
+    // BOOST_VERIFY(velocity.min >= 0);  // forbid back movement
 }
 
 Params::Params(const YAML::Node& node)
     : wheel_base(node["wheel_base"])
     , limits(node["limits"])
-    , wheel_radius(node["wheel_radius"].as<double>()) {}
+    , wheel_radius(node["wheel_radius"].as<double>())
+    , gear_ratio(node["gear_ratio"].as<double>()) {
+    BOOST_VERIFY(wheel_radius > 0);
+    BOOST_VERIFY(gear_ratio > 0);
+}
 
 Params::Params(const std::string& config_path) : Params(YAML::LoadFile(config_path)) {}
 

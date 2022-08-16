@@ -16,6 +16,11 @@ T clamp(const T& val, const T& low, const T& high) {
     return std::min(std::max(val, low), high);
 }
 
+template <typename T>
+T clamp(const T& val, const T& abs_limit) {
+    return clamp(val, -abs_limit, abs_limit);
+}
+
 template<class T>
 struct Limits { 
     Limits() = default;

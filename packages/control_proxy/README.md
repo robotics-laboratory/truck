@@ -1,4 +1,4 @@
-# Control proxy
+# control_proxy
 
 | [**docs**](../../doc/README.md) | [**packages**](../README.md) |
 |---------------------------------|------------------------------|

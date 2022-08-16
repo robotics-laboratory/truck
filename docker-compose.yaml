@@ -12,6 +12,7 @@ services:
       context: .
     ports:
     - "2222:2222"
+    - "8080:8080"
     - "9090:9090"
     volumes:
       - "${PWD}:/truck"
@@ -28,6 +29,7 @@ services:
       context: .
     ports:
     - "2222:2222"
+    - "8080:8080"
     - "9090:9090"
     volumes:
       - "${PWD}:/truck"

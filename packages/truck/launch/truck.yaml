@@ -1,7 +1,7 @@
 launch:
-# for future
-# - include:
-#     file: $(dirname)/rosbridge.yaml
+
+- include:
+    file: $(dirname)/control.yaml
 - include:
     file: $(dirname)/camera.yaml
 - include:

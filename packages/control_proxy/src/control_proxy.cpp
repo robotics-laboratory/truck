@@ -11,7 +11,7 @@ using std::placeholders::_1;
 namespace truck::control_proxy {
 
 std::string toString(Mode mode) {
-    switch(mode) {
+    switch (mode) {
         case Mode::Off:
             return "Off";
         case Mode::Remote:
@@ -23,7 +23,7 @@ std::string toString(Mode mode) {
     }
 }
 
-ControlProxy::ControlProxy()
+ControlProxyNode::ControlProxyNode()
     : Node("control_proxy"), model_(Node::declare_parameter<std::string>("model_config")) {
     joypad_timeout_ =
         std::chrono::milliseconds(this->declare_parameter<long int>("joypad_timeout", 200));
@@ -37,19 +37,20 @@ ControlProxy::ControlProxy()
 
     // input
     commnad_slot_ = Node::create_subscription<truck_interfaces::msg::Control>(
-        "/motion/command", 1, std::bind(&ControlProxy::forwardControlCommand, this, _1));
+        "/motion/command", 1, std::bind(&ControlProxyNode::forwardControlCommand, this, _1));
 
     joypad_slot_ = Node::create_subscription<sensor_msgs::msg::Joy>(
-        "/joy", 1, std::bind(&ControlProxy::handleJoypadCommand, this, _1));
+        "/joy", 1, std::bind(&ControlProxyNode::handleJoypadCommand, this, _1));
 
     // output
     const auto watchdog_period = std::min(control_timeout_, joypad_timeout_);
     BOOST_ASSERT(watchdog_period > 0ms);
 
-    watchdog_timer_ = this->create_wall_timer(
-        watchdog_period, std::bind(&ControlProxy::watchdog, this));
+    watchdog_timer_ =
+        this->create_wall_timer(watchdog_period, std::bind(&ControlProxyNode::watchdog, this));
 
-    publish_mode_timer_ = this->create_wall_timer(200ms, std::bind(&ControlProxy::publishMode, this));
+    publish_mode_timer_ =
+        this->create_wall_timer(200ms, std::bind(&ControlProxyNode::publishMode, this));
 
     mode_feedback_signal_ =
         Node::create_publisher<sensor_msgs::msg::JoyFeedback>("/joy/set_feedback", 1);
@@ -91,9 +92,9 @@ bool switchModeToAuto(
     return previous->buttons[BUTTON_CIRCLE] == 1 && current->buttons[BUTTON_CIRCLE] == 0;
 }
 
-} // namespace
+}  // namespace
 
-void ControlProxy::setMode(Mode mode) {
+void ControlProxyNode::setMode(Mode mode) {
     if (mode == mode_) {
         return;
     }
@@ -110,7 +111,7 @@ void ControlProxy::setMode(Mode mode) {
     mode_feedback_signal_->publish(result);
 }
 
-truck_interfaces::msg::Control ControlProxy::makeControlCommand(
+truck_interfaces::msg::Control ControlProxyNode::makeControlCommand(
     sensor_msgs::msg::Joy::ConstSharedPtr command) {
     truck_interfaces::msg::Control result;
 
@@ -128,7 +129,7 @@ truck_interfaces::msg::Control ControlProxy::makeControlCommand(
     return result;
 }
 
-void ControlProxy::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
+void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
     if (switchModeToRemote(prev_joypad_command_, joypad_command)) {
         setMode(Mode::Remote);
     } else if (switchModeToAuto(prev_joypad_command_, joypad_command)) {
@@ -141,10 +142,10 @@ void ControlProxy::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joy
         prev_command_ = std::make_shared<truck_interfaces::msg::Control>(command);
     }
 
-    prev_joypad_command_ = std::move(joypad_command); 
+    prev_joypad_command_ = std::move(joypad_command);
 }
 
-void ControlProxy::publishMode() {
+void ControlProxyNode::publishMode() {
     truck_interfaces::msg::ControlMode result;
 
     result.header.stamp = now();
@@ -154,7 +155,7 @@ void ControlProxy::publishMode() {
     mode_signal_->publish(result);
 }
 
-void ControlProxy::publishStop() {
+void ControlProxyNode::publishStop() {
     static const auto stop = [this] {
         truck_interfaces::msg::Control result;
 
@@ -162,7 +163,7 @@ void ControlProxy::publishStop() {
         result.header.frame_id = "base";
 
         result.velocity = 0.0;
-        result.curvature =  0.0;
+        result.curvature = 0.0;
         result.acceleration = 0.0;
 
         return result;
@@ -171,7 +172,7 @@ void ControlProxy::publishStop() {
     command_signal_->publish(stop);
 }
 
-void ControlProxy::watchdog() {
+void ControlProxyNode::watchdog() {
     auto get_delay = [this](const auto& msg) {
         return std::chrono::nanoseconds((now() - msg.header.stamp).nanoseconds());
     };
@@ -201,7 +202,8 @@ void ControlProxy::watchdog() {
     }
 }
 
-void ControlProxy::forwardControlCommand(truck_interfaces::msg::Control::ConstSharedPtr command) {
+void ControlProxyNode::forwardControlCommand(
+    truck_interfaces::msg::Control::ConstSharedPtr command) {
     if (mode_ == Mode::Auto) {
         command_signal_->publish(*command);
         prev_command_ = command;

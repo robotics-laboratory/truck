@@ -8,7 +8,7 @@ All prebuild base images are stored at our registry ```cr.yandex/crp8hpfj5tuhlao
 - **truck-jetson** (jetson runtime)
 - **truck-amd64** (dev env, without cuda)
 
-### Pull and Run
+### Pull and run
 For jetson check that nvidia runtime is enbled by default in ```/etc/docker/daemon.json```.
 
 ```
@@ -43,8 +43,7 @@ docker exec -it truck bash
 # stop container
 docker stop truck
 ```
-
-### Build and Push
+### Build and push
 If you need to build container, follow this steps. Up version in ```docker-compose.yaml``` if orresponding dockerfile is changed.
 
 ```
@@ -56,3 +55,29 @@ docker-compose push truck-amd64
 docker-compose build truck-jetson
 docker-compose push truck-jetson
 ```
+
+## Dev
+### Build
+To build all packages
+
+```bash
+colcon build --merge-install
+```
+
+To build you some single package
+
+```bash
+colcon build --merge-install --packages-up-to package_name
+```
+
+Current installation dir is ```/truck/packages/install```. To run setup do
+
+```bash
+source install/setup.bash
+```
+
+## Pipeline
+- `ros2 launch truck truck.yaml` - run full pipeline
+- `ros2 launch truck assets.yaml` - prepare all assets for gzweb (need run once befor simulation)
+- `ros2 launch truck simulator.yaml` - run simulation (gazebo + part of pipeline), gzweb is avaible at `localhost:8080`.
+

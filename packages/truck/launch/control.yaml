@@ -1,0 +1,6 @@
+launch:
+- include:
+    file: $(find-pkg-share truck)/launch/joy.yaml
+
+- include:
+    file: $(find-pkg-share control_proxy)/launch/control_proxy.yaml

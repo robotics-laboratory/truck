@@ -7,8 +7,6 @@
 
 #include <boost/assert.hpp>
 
-#include <iostream>
-
 namespace truck::model {
 
 struct WheelBase {
@@ -40,6 +38,7 @@ struct Params {
     WheelBase wheel_base;
     model::VehicleLimits limits;
     double wheel_radius;
+    double gear_ratio;
 };
 
 }  // namespace truck::model

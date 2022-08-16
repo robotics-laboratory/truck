@@ -1,0 +1,7 @@
+launch:
+
+- node:
+    pkg: "joy_linux"
+    exec: "joy_linux_node"
+    name: "joy_node"
+    output: "log"

@@ -6,9 +6,8 @@ launch:
     cmd: "gzserver --verbose $(find-pkg-share truck_gazebo)/worlds/$(var world) gui:=false"
     output: "log"
     shell: True
-    # TODO(dasimagin) fix this duty hack
     env: 
-    - {name: 'GAZEBO_MODEL_PATH', value: "/truck/packages/install/share"}
+    - {name: 'GAZEBO_MODEL_PATH', value: "$(find-pkg-share truck_gazebo)/models"}
 
 - executable:
     name: "gzweb"
