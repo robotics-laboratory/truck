@@ -340,7 +340,7 @@
     </link>
     <static>0</static>
     <plugin name='AckermannControlPlugin' filename='libtruck_gazebo_ackermann_model.so'>
-      <config_path>/home/dasimagin/truck/packages/model/config/model.yaml</config_path>
+      <config_path>/truck/packages/model/config/model.yaml</config_path>
       <steering>
         <error>0.1</error>
         <torque>0.3</torque>

@@ -1,8 +1,8 @@
 wheel_base:
   # meters
   length: 0.405
-  width: 0.26
-  base_to_rear: 0.20
+  width: 0.213
+  base_to_rear: 0.2025
 
 limits:
   steering: {
@@ -10,9 +10,11 @@ limits:
     outer: +30.0,   # deg
     velocity: 120.0 # deg/s
   }
-  max_abs_curvature: 3.0
+  max_abs_curvature: 1.5
   velocity: { min: -1.0, max: 1.0 }      # m/s
   acceleration: { min: -5.0, max: +1.0 } # m/s2
 
 wheel_radius: 0.055 # m
-gear_ratio: 12
+# Motor to differential ratio. To get motor to WHEEL ratio, multiply to 0.5.
+# This extra multiplier is property of differential transmission.
+gear_ratio: 0.105263158

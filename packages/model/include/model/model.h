@@ -41,6 +41,7 @@ class Model {
 
     Steering rearTwistToSteering(Twist twist) const;
     WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
+    double linearVelocityToMotorRPS(double velocity) const;
 
   private:
     struct Cache {

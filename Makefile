@@ -1,13 +1,29 @@
-.PHONY: all build start stop
+.PHONY: all cmake-settings setup build-all build-one build-clean
+.SILENT:
+.ONESHELL:
+
+SHELL := /bin/bash
 
 all:
-	echo "Please, use explicit targets"
+	echo "Please, use explicit targets" >&2
 
-build:
-	colcon build --packages-up-to truck
+cmake-settings:
+	echo "Exporting cmake settings..." >&2
+	export CMAKE_BUILD_PARALLEL_LEVEL=$$(($$(nproc) - 1))
 
-launch:
-	. install/setup.sh && ros2 launch truck planner.yaml
+setup:
+	echo "Loading environment variables..." >&2
+	export PYTHONPATH=$$PYTHONPATH:$$(pwd)/packages/install/model/lib
+	source packages/install/setup.sh
 
-pub:
-	./scripts/pub.sh
+build-all: cmake-settings
+	cd packages
+	colcon build --merge-install
+
+build-one: cmake-settings
+	cd packages
+	colcon build --merge-install --packages-up-to $(package)
+
+build-clean:
+	cd packages
+	rm -rf build install log

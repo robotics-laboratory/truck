@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pyyaml = "*"
+odrive = "==0.6.1.post0"
+pyserial = "*"
+numpy = "*"
+cobs = "*"
+crc8 = "*"
+msgpack = "*"
+
+[dev-packages]
+jupyter = "*"
+pandas = "*"
+matplotlib = "*"
+
+[requires]
+python_version = "3.6"

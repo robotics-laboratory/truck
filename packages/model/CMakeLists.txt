@@ -53,3 +53,8 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
+
+add_subdirectory(pybind11)
+pybind11_add_module(pymodel ${CMAKE_SOURCE_DIR}/src/pybind.cpp)
+target_link_libraries(pymodel PRIVATE model)
+install(TARGETS pymodel LIBRARY DESTINATION lib)

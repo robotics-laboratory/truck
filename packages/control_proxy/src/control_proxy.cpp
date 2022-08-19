@@ -65,32 +65,13 @@ namespace {
 
 constexpr size_t BUTTON_CROSS = 0;
 constexpr size_t BUTTON_CIRCLE = 1;
+constexpr size_t BUTTON_TRIANGLE = 2;
 
 constexpr size_t AXE_LX = 0;
 constexpr size_t AXE_LY = 1;
 
 constexpr size_t AXE_RX = 3;
 constexpr size_t AXE_RY = 4;
-
-bool switchModeToRemote(
-    const sensor_msgs::msg::Joy::ConstSharedPtr& previous,
-    const sensor_msgs::msg::Joy::ConstSharedPtr& current) {
-    if (!previous || !current) {
-        return false;
-    }
-
-    return previous->buttons[BUTTON_CROSS] == 0 && current->buttons[BUTTON_CROSS] == 1;
-}
-
-bool switchModeToAuto(
-    const sensor_msgs::msg::Joy::ConstSharedPtr& previous,
-    const sensor_msgs::msg::Joy::ConstSharedPtr& current) {
-    if (!previous || !current) {
-        return false;
-    }
-
-    return previous->buttons[BUTTON_CIRCLE] == 1 && current->buttons[BUTTON_CIRCLE] == 0;
-}
 
 }  // namespace
 
@@ -130,9 +111,11 @@ truck_interfaces::msg::Control ControlProxyNode::makeControlCommand(
 }
 
 void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
-    if (switchModeToRemote(prev_joypad_command_, joypad_command)) {
+    if (checkButtonPressed(joypad_command, BUTTON_CROSS)) {
+        setMode(Mode::Off);
+    } else if (checkButtonPressed(joypad_command, BUTTON_CIRCLE)) {
         setMode(Mode::Remote);
-    } else if (switchModeToAuto(prev_joypad_command_, joypad_command)) {
+    } else if (checkButtonPressed(joypad_command, BUTTON_TRIANGLE)) {
         setMode(Mode::Auto);
     }
 
@@ -143,6 +126,12 @@ void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr
     }
 
     prev_joypad_command_ = std::move(joypad_command);
+}
+
+bool ControlProxyNode::checkButtonPressed( sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button) {
+    if (!prev_joypad_command_ || !joypad_command) return false;
+    return prev_joypad_command_->buttons[joypad_button] == 0 &&
+           joypad_command->buttons[joypad_button] == 1;
 }
 
 void ControlProxyNode::publishMode() {
@@ -177,25 +166,17 @@ void ControlProxyNode::watchdog() {
         return std::chrono::nanoseconds((now() - msg.header.stamp).nanoseconds());
     };
 
-    if (!prev_joypad_command_ || get_delay(*prev_joypad_command_) > joypad_timeout_) {
-        if (mode_ != Mode::Off) {
-            RCLCPP_ERROR(this->get_logger(), "Lose joypad, stop!");
-            setMode(Mode::Off);
-        }
-
+    if (mode_ == Mode::Remote && get_delay(*prev_joypad_command_) > joypad_timeout_) {
+        RCLCPP_ERROR(this->get_logger(), "Lost joypad, stop!");
+        setMode(Mode::Off);
         prev_joypad_command_ = nullptr;
         publishStop();
         return;
     }
 
-    setMode(std::max(Mode::Remote, mode_));
-
-    if (!prev_command_ || get_delay(*prev_command_) > control_timeout_) {
-        if (mode_ != Mode::Remote) {
-            RCLCPP_ERROR(this->get_logger(), "Lose control, stop!");
-            setMode(Mode::Remote);
-        }
-
+    if (mode_ == Mode::Auto && get_delay(*prev_command_) > control_timeout_) {
+        RCLCPP_ERROR(this->get_logger(), "Lost control, stop!");
+        setMode(Mode::Remote);
         prev_command_ = nullptr;
         publishStop();
         return;
