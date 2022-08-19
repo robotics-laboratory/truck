@@ -8,12 +8,16 @@ ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"]
 
+ENV ROS_VERSION=2
 ENV ROS_DISTRO=galactic
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+ENV ROS_PYTHON_VERSION=3
 
 WORKDIR /tmp
 
 ### INSTALL CMAKE
+
+ENV CMAKE_VERSION="3.23.2-0kitware1ubuntu18.04.1"
 
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
@@ -27,7 +31,9 @@ RUN apt-get update -q && \
 RUN wget -qO - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key add - \
     && apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' \
     && apt-get update -q \
-    && apt-get install -yq --no-install-recommends cmake \
+    && apt-get install -yq --no-install-recommends \
+        cmake=${CMAKE_VERSION} \
+        cmake-data=${CMAKE_VERSION} \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### INSTALL OPENCV
@@ -353,10 +359,8 @@ RUN mkdir -p ${ROS_ROOT} \
         image_transport \
         image_rotate \
         gazebo_ros_pkgs \
-        gazebo_ros2_control \
         geometry_msgs \
         geometry2 \
-        joint_state_publisher \
         joy_linux \
         launch_xml \
         launch_yaml \
@@ -364,18 +368,13 @@ RUN mkdir -p ${ROS_ROOT} \
         pcl_conversions \
         realsense2_camera \
         ros_base \
-        ros2_control \
         ros2_controllers \
         rosbridge_suite \
         rtabmap_ros \
         sensor_msgs \
         std_msgs \
-        tf2 \
-        urdf \
-        urdfdom \
         vision_opencv \
         visualization_msgs \
-        xacro \
     > ${ROS_ROOT}/ros2.rosinstall \
     && vcs import ${ROS_TMP} < ${ROS_ROOT}/ros2.rosinstall > /dev/null
 
@@ -396,7 +395,6 @@ RUN apt-get update -q \
         --skip-keys python3-opencv \
         --skip-keys rti-connext-dds-5.3.1 \
         --skip-keys rtabmap \
-        --skip-keys urdfdom_headers \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN cd ${ROS_TMP} \
@@ -426,15 +424,13 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | b
     && source ${HOME}/.nvm/nvm.sh \
     && nvm install 9 \
     && mkdir -p ${GZWEB_PATH} \
-    && wget -qO - https://github.com/osrf/gzweb/archive/refs/tags/gzweb_${GZWEB_VERSION}.tar.gz | tar -xz -C ${GZWEB_PATH} --strip-components 1 \
-    && cd ${GZWEB_PATH} \
-    && source /usr/share/gazebo/setup.sh \
-    && npm run deploy --- -m local
+    && wget -qO - https://github.com/osrf/gzweb/archive/refs/tags/gzweb_${GZWEB_VERSION}.tar.gz | tar -xz -C ${GZWEB_PATH} --strip-components 1
 
 ### INSTALL DEV PKGS
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
+        bluez \
         build-essential \
         gfortran \
         clang-format \
