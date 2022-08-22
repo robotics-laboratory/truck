@@ -1,0 +1,5 @@
+outs:
+- md5: cd804b6372af094b9842d98c620d151f.dir
+  size: 2558184
+  nfiles: 1
+  path: meshes

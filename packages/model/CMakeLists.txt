@@ -45,7 +45,7 @@ install(
 if(BUILD_TESTING)
     find_package(ament_cmake_gtest REQUIRED)
     ament_add_gtest(model_test test/main.cpp WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-    target_link_libraries(model_test model yaml-cpp)
+    target_link_libraries(model_test model)
 endif()
 
 ament_package()

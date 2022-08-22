@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.7">
-  <model name='truck'>
-    <link name='base'>
+  <model name="truck">
+    <link name="truck_base">
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>2.05371</mass>
@@ -14,7 +14,7 @@
           <izz>0.04836</izz>
         </inertia>
       </inertial>
-      <visual name='base_visual'>
+      <visual name="truck_base_visual">
         <pose>0 0 0 1.5708 0 1.5708</pose>
         <geometry>
           <mesh>
@@ -25,17 +25,39 @@
       </visual>
     </link>
 
-    <joint name='left_rear_axle' type='revolute'>
-      <pose relative_to='base'>-0.2025 0.11168 -0.01329 0 0 0</pose>
-      <parent>base</parent>
+    <include>
+      <uri>model://rplidar_s2</uri>
+      <pose relative_to="truck_base_to_lidar">0 0 0 0 0 0</pose>
+    </include>
+
+    <joint name="truck_base_to_lidar" type="fixed">
+      <pose relative_to="truck_base">0 0 0.12 0 0 0</pose>
+      <parent>truck_base</parent>
+      <child>rplidar_s2::lidar_base</child>
+    </joint>
+
+    <include>
+      <uri>model://d455</uri>
+      <pose relative_to="truck_base_to_camera">0 0 0 0 0 0</pose>
+    </include>
+
+    <joint name="truck_base_to_camera" type="fixed">
+      <pose relative_to="truck_base">0.2 0 0.04 0 0 0</pose>
+      <parent>truck_base</parent>
+      <child>d455::camera_base</child>
+    </joint>
+
+    <joint name="left_rear_axle" type="revolute">
+      <pose relative_to="truck_base">-0.2025 0.11168 -0.01329 0 0 0</pose>
+      <parent>truck_base</parent>
       <child>rear_left_wheel</child>
       <axis>
         <xyz>0 1 0</xyz>
       </axis>
     </joint>
 
-    <link name='rear_left_wheel'>
-      <pose relative_to='left_rear_axle'>0 0 0 0 0 0</pose>
+    <link name="rear_left_wheel">
+      <pose relative_to="left_rear_axle">0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.10194</mass>
@@ -48,7 +70,7 @@
           <izz>0.00012</izz>
         </inertia>
       </inertial>
-      <collision name='rear_left_wheel_collision'>
+      <collision name="rear_left_wheel_collision">
         <pose>0 0.0195 0 1.5708 0 0</pose>
         <geometry>
           <cylinder>
@@ -57,7 +79,7 @@
           </cylinder>
         </geometry>
       </collision>
-      <visual name='rear_left_wheel_visual'>
+      <visual name="rear_left_wheel_visual">
         <pose>0.2025 -0.11168 0.01329 1.5708 0 1.5708</pose>
         <geometry>
           <mesh>
@@ -68,9 +90,9 @@
       </visual>
     </link>
 
-    <joint name='left_steering_joint' type='revolute'>
-      <pose relative_to='base'>0.2025 0.10668 -0.01329 0 0 0</pose>
-      <parent>base</parent>
+    <joint name="left_steering_joint" type="revolute">
+      <pose relative_to="truck_base">0.2025 0.10668 -0.01329 0 0 0</pose>
+      <parent>truck_base</parent>
       <child>front_left_cup</child>
       <axis>
         <xyz>0 0 1</xyz>
@@ -81,8 +103,8 @@
       </axis>
     </joint>
 
-    <link name='front_left_cup'>
-      <pose relative_to='left_steering_joint'>0 0 0 0 0 0</pose>
+    <link name="front_left_cup">
+      <pose relative_to="left_steering_joint">0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.0001</mass>
@@ -97,8 +119,8 @@
       </inertial>
     </link>
 
-    <joint name='front_left_wheel_axle' type='revolute'>
-      <pose relative_to='front_left_cup'>0 0.0075 0 0 0 0</pose>
+    <joint name="front_left_wheel_axle" type="revolute">
+      <pose relative_to="front_left_cup">0 0.0075 0 0 0 0</pose>
       <parent>front_left_cup</parent>
       <child>front_left_wheel</child>
       <axis>
@@ -106,8 +128,8 @@
       </axis>
     </joint>
 
-    <link name='front_left_wheel'>
-      <pose relative_to='front_left_wheel_axle'>0 0 0 0 0 0</pose>
+    <link name="front_left_wheel">
+      <pose relative_to="front_left_wheel_axle">0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.10194</mass>
@@ -120,7 +142,7 @@
           <izz>0.00012</izz>
         </inertia>
       </inertial>
-      <collision name='front_left_wheel_collision'>
+      <collision name="front_left_wheel_collision">
         <pose>0 0.017 0 1.5708 0 0</pose>
         <geometry>
           <cylinder>
@@ -129,7 +151,7 @@
           </cylinder>
         </geometry>
       </collision>
-      <visual name='front_left_wheel_visual'>
+      <visual name="front_left_wheel_visual">
         <pose>-0.2025 -0.11418 0.01329 1.5708 0 1.5708</pose>
         <geometry>
           <mesh>
@@ -140,17 +162,17 @@
       </visual>
     </link>
 
-    <joint name='right_rear_axle' type='revolute'>
-      <pose relative_to='base'>-0.2025 -0.11168 -0.01329 0 0 0</pose>
-      <parent>base</parent>
+    <joint name="right_rear_axle" type="revolute">
+      <pose relative_to="truck_base">-0.2025 -0.11168 -0.01329 0 0 0</pose>
+      <parent>truck_base</parent>
       <child>rear_right_wheel</child>
       <axis>
         <xyz>0 1 0</xyz>
       </axis>
     </joint>
 
-    <link name='rear_right_wheel'>
-      <pose relative_to='right_rear_axle'>0 0 0 0 0 0</pose>
+    <link name="rear_right_wheel">
+      <pose relative_to="right_rear_axle">0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.10194</mass>
@@ -163,7 +185,7 @@
           <izz>0.00012</izz>
         </inertia>
       </inertial>
-      <collision name='rear_right_wheel_collision'>
+      <collision name="rear_right_wheel_collision">
         <pose>0 -0.0195 0 1.5708 0 0</pose>
         <geometry>
           <cylinder>
@@ -172,7 +194,7 @@
           </cylinder>
         </geometry>
       </collision>
-      <visual name='rear_right_wheel_visual'>
+      <visual name="rear_right_wheel_visual">
         <pose>0.2025 0.11168 0.01329 1.5708 0 1.5708</pose>
         <geometry>
           <mesh>
@@ -183,17 +205,17 @@
       </visual>
     </link>
 
-    <joint name='right_steering_joint' type='revolute'>
-      <pose relative_to='base'>0.2025 -0.10668 -0.01329 0 0 0</pose>
-      <parent>base</parent>
+    <joint name="right_steering_joint" type="revolute">
+      <pose relative_to="truck_base">0.2025 -0.10668 -0.01329 0 0 0</pose>
+      <parent>truck_base</parent>
       <child>front_right_cup</child>
       <axis>
         <xyz>0 0 1</xyz>
       </axis>
     </joint>
 
-    <link name='front_right_cup'>
-      <pose relative_to='right_steering_joint'>0 0 0 0 0 0</pose>
+    <link name="front_right_cup">
+      <pose relative_to="right_steering_joint">0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.0001</mass>
@@ -208,8 +230,8 @@
       </inertial>
     </link>
 
-    <joint name='front_right_wheel_axle' type='revolute'>
-      <pose relative_to='front_right_cup'>0 -0.0075 0 0 0 0</pose>
+    <joint name="front_right_wheel_axle" type="revolute">
+      <pose relative_to="front_right_cup">0 -0.0075 0 0 0 0</pose>
       <parent>front_right_cup</parent>
       <child>front_right_wheel</child>
       <axis>
@@ -217,8 +239,8 @@
       </axis>
     </joint>
 
-    <link name='front_right_wheel'>
-      <pose relative_to='front_right_wheel_axle'>0 0 0 0 0 0</pose>
+    <link name="front_right_wheel">
+      <pose relative_to="front_right_wheel_axle">0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.10194</mass>
@@ -231,7 +253,7 @@
           <izz>0.00012</izz>
         </inertia>
       </inertial>
-      <collision name='front_right_wheel_collision'>
+      <collision name="front_right_wheel_collision">
         <pose>0 -0.017 0 1.5708 0 0</pose>
         <geometry>
           <cylinder>
@@ -240,7 +262,7 @@
           </cylinder>
         </geometry>
       </collision>
-      <visual name='front_right_wheel_visual'>
+      <visual name="front_right_wheel_visual">
         <pose>-0.2025 0.11418 0.01329 1.5708 0 1.5708</pose>
         <geometry>
           <mesh>
@@ -251,8 +273,7 @@
       </visual>
     </link>
 
-    <plugin name='AckermannControlPlugin' filename='libtruck_gazebo_ackermann_model.so'>
-      <!-- TODO(@dasimagin) fix path -->
+    <plugin name="AckermannControlPlugin" filename="libtruck_gazebo_ackermann_model.so">
       <config_path>/truck/packages/model/config/model.yaml</config_path>
       <steering>
         <error>0.03</error>

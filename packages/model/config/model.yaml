@@ -10,4 +10,4 @@ limits:
   acceleration: { min: -5.0, max: +1.0 }   # m/s^2
 
 wheel_radius: 0.055 # m
-gear_ratio: 12
+gear_ratio: 0.1

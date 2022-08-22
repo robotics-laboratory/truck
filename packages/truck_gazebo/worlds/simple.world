@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <world name="Simple">
+  <world name="simple">
+    <gravity>0.0 0.0 -9.81</gravity>
     <physics type="ode">
-      <gravity>0.0 0.0 -9.81</gravity>
       <!-- update with rate 5 kHz -->
       <!-- need high rate for dummy steering simulation -->
       <real_time_update_rate>1000</real_time_update_rate>
@@ -17,6 +17,16 @@
         </constraints>
       </ode>
     </physics>
+    <gui>
+      <camera name="3dpv_camera">
+        <track_visual>
+          <name>truck</name>
+          <use_model_frame>true</use_model_frame>
+          <static>true</static>
+          <pose relative_to="truck">-0.5 0 0.3 0 0 0</pose>
+        </track_visual>
+      </camera>
+    </gui>
     <include>
       <uri>model://ground_plane</uri>
     </include>
@@ -25,7 +35,15 @@
     </include>
     <include>
       <uri>model://truck</uri>
-      <pose>0 0 0.150 0 0 0</pose>
+      <pose>0 0 0.15 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://beer</uri>
+      <pose>1.26138 0.580289 0.114998 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://bookshelf</uri>
+      <pose>-0.592102 1.28886 0 0 -0 0</pose>
     </include>
   </world>
 </sdf>

@@ -1,0 +1,353 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <model name="d455">
+    <link name="camera_base">
+      <inertial>
+        <pose>0.01115 0.0475 0.0145 0 0 0</pose>
+        <mass>0.072</mass>
+        <inertia>
+          <ixx>0.00388124</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.00049894</iyy>
+          <iyz>0</iyz>
+          <izz>0.00387926</izz>
+        </inertia>
+      </inertial>
+      <collision name="camera_base_collision">
+        <pose>0.0027 0 0.0145 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.026 0.124 0.029</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="camera_base_visual">
+        <pose>0.0158 0 0.0145 1.5708 0 1.5708</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>model://d455/meshes/d455.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+
+    <!-- camera depth joints and links -->
+    <link name="camera_depth_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <link name="camera_depth_optical_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <joint name="camera_depth_joint" type="fixed">
+      <pose>0 0 0 0 0 0</pose>
+      <parent>camera_base</parent>
+      <child>camera_depth_frame</child>
+    </joint>
+
+    <joint name="camera_depth_optical_joint" type="fixed">
+      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <parent>camera_depth_frame</parent>
+      <child>camera_depth_optical_frame</child>
+    </joint>
+
+    <!-- camera left IR joints and links -->
+    <link name="camera_infra1_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <link name="camera_infra1_optical_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <joint name="camera_infra1_joint" type="fixed">
+      <pose>0 0 0 0 0 0</pose>
+      <parent>camera_base</parent>
+      <child>camera_infra1_frame</child>
+    </joint>
+
+    <joint name="camera_infra1_optical_joint" type="fixed">
+      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <parent>camera_infra1_frame</parent>
+      <child>camera_infra1_optical_frame</child>
+    </joint>
+
+    <!-- camera right IR joints and links -->
+    <link name="camera_infra2_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <link name="camera_infra2_optical_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <joint name="camera_infra2_joint" type="fixed">
+      <pose>0 -0.095 0 0 0 0</pose>
+      <parent>camera_base</parent>
+      <child>camera_infra2_frame</child>
+    </joint>
+
+    <joint name="camera_infra2_optical_joint" type="fixed">
+      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <parent>camera_infra2_frame</parent>
+      <child>camera_infra2_optical_frame</child>
+    </joint>
+
+    <!-- camera color joints and links -->
+
+    <link name="camera_color_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+
+    </link>
+
+    <link name="camera_color_optical_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <joint name="camera_color_joint" type="fixed">
+      <pose>0 -0.059 0 0 0 0</pose>
+      <parent>camera_base</parent>
+      <child>camera_color_frame</child>
+    </joint>
+
+    <joint name="camera_color_optical_joint" type="fixed">
+      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <parent>camera_color_frame</parent>
+      <child>camera_color_optical_frame</child>
+    </joint> -->
+
+    <!-- imu joints and links -->
+    <link name="camera_accel_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <link name="camera_accel_optical_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <link name="camera_gyro_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <link name="camera_gyro_optical_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <link name="camera_imu_optical_frame">
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+      <sensor type="imu" name="imu">
+        <always_on>true</always_on>
+        <update_rate>200</update_rate>
+        <visualize>true</visualize>
+        <plugin name="GazeboRosImuSensor" filename="libgazebo_ros_imu_sensor.so">
+          <frame_name>lidar_base</frame_name>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+          <ros>
+            <namespace>/camera</namespace>
+            <remapping>~/out:=imu</remapping>
+          </ros>
+        </plugin>
+        <imu>
+          <enable_orientation>false</enable_orientation>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <stddev>0.1</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <stddev>0.1</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <stddev>0.1</stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <stddev>0.03</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <stddev>0.03</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <stddev>0.03</stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </link>
+
+    <joint name="camera_accel_joint" type="fixed">
+      <pose>-0.01602 -0.03022 0.0074 0 0 0</pose>
+      <parent>camera_base</parent>
+      <child>camera_accel_frame</child>
+    </joint>
+
+    <joint name="camera_accel_optical_joint" type="fixed">
+      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <parent>camera_accel_frame</parent>
+      <child>camera_accel_optical_frame</child>
+    </joint>
+
+    <joint name="camera_gyro_joint" type="fixed">
+      <pose>-0.01602 -0.03022 0.0074 0 0 0</pose>
+      <parent>camera_base</parent>
+      <child>camera_gyro_frame</child>
+    </joint>
+
+    <joint name="camera_gyro_optical_joint" type="fixed">
+      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <parent>camera_gyro_frame</parent>
+      <child>camera_gyro_optical_frame</child>
+    </joint>
+
+    <joint name="camera_imu_optical_joint" type="fixed">
+      <pose>0 0 0 0 0 0</pose>
+      <parent>camera_gyro_optical_frame</parent>
+      <child>camera_imu_optical_frame</child>
+    </joint>
+  </model>
+</sdf>

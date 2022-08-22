@@ -48,7 +48,7 @@ void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
     node_ = gazebo_ros::Node::Get(sdf);
 
     const auto config_path = GetParam<std::string>(sdf, "config_path");
-    gzlog << "Read model params from '" << config_path << "'..." << std::endl;
+    gzwarn << "Read model params from '" << config_path << "'..." << std::endl;
     model_ = std::make_unique<truck::model::Model>(config_path);
 
     {  // steering
@@ -85,7 +85,7 @@ void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
         velocity_right_pd_.SetCmdMin(-wheel_torque);
         velocity_right_pd_.SetCmdMax(+wheel_torque);
 
-        gzlog << "velocity:pd: p=" << pd.X() << " d=" << pd.Y() << " t=" << motor_torque
+        gzwarn << "velocity:pd: p=" << pd.X() << " d=" << pd.Y() << " t=" << motor_torque
               << std::endl;
     }
 
