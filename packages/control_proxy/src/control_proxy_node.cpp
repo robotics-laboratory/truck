@@ -1,6 +1,8 @@
-#include "control_proxy.h"
+#include "control_proxy_node.h"
 
+#include <boost/preprocessor.hpp>
 #include <boost/assert.hpp>
+
 #include <rclcpp/time.hpp>
 
 #include <utility>
@@ -10,21 +12,38 @@ using std::placeholders::_1;
 
 namespace truck::control_proxy {
 
-std::string toString(Mode mode) {
-    switch (mode) {
-        case Mode::Off:
-            return "Off";
-        case Mode::Remote:
-            return "Remote";
-        case Mode::Auto:
-            return "Auto";
-        default:
-            BOOST_ASSERT(false);
-    }
-}
+#define ENUM_case(r, data, elem)                                                        \
+    case data::elem:                                                                    \
+        return BOOST_PP_STRINGIZE(elem);
 
-ControlProxyNode::ControlProxyNode()
-    : Node("control_proxy"), model_(Node::declare_parameter<std::string>("model_config")) {
+#define ENUM_define(enumerators)                                                        \
+    enum class Mode : uint8_t { BOOST_PP_SEQ_ENUM(enumerators) };                       \
+                                                                                        \
+    std::string toString(Mode mode) {                                                   \
+        switch (mode) {                                                                 \
+            BOOST_PP_SEQ_FOR_EACH(                                                      \
+                ENUM_case, Mode, enumerators)                                           \
+            default:                                                                    \
+                BOOST_ASSERT(false);                                                    \
+        }                                                                               \
+    }
+
+ENUM_define((Off)(Remote)(Auto))
+
+#undef ENUM_define
+#undef ENUM_case
+
+ControlProxyNode::ControlProxyNode() : 
+    Node("control_proxy_node"), 
+    model_(Node::declare_parameter<std::string>("model_config", "model.yaml")), 
+    frame_id_("base_link"),
+    mode_(Mode::Off) {
+    RCLCPP_INFO(this->get_logger(), "Model acquired,");
+    RCLCPP_INFO(this->get_logger(), "max velocity: %f, min velocity: %f", 
+                model_.baseVelocityLimits().max, 
+                model_.baseVelocityLimits().min);
+    RCLCPP_INFO(this->get_logger(), "max abs curvature: %f", model_.baseMaxAbsCurvature());
+
     joypad_timeout_ =
         std::chrono::milliseconds(this->declare_parameter<long int>("joypad_timeout", 200));
 
@@ -36,7 +55,7 @@ ControlProxyNode::ControlProxyNode()
     RCLCPP_INFO(this->get_logger(), "control timeout %li ms", control_timeout_.count());
 
     // input
-    commnad_slot_ = Node::create_subscription<truck_interfaces::msg::Control>(
+    command_slot_ = Node::create_subscription<truck_interfaces::msg::Control>(
         "/motion/command", 1, std::bind(&ControlProxyNode::forwardControlCommand, this, _1));
 
     joypad_slot_ = Node::create_subscription<sensor_msgs::msg::Joy>(
@@ -52,11 +71,11 @@ ControlProxyNode::ControlProxyNode()
     publish_mode_timer_ =
         this->create_wall_timer(200ms, std::bind(&ControlProxyNode::publishMode, this));
 
-    mode_feedback_signal_ =
+    mode_feedback_signal_ = 
         Node::create_publisher<sensor_msgs::msg::JoyFeedback>("/joy/set_feedback", 1);
-
     command_signal_ = Node::create_publisher<truck_interfaces::msg::Control>("/control/command", 1);
     mode_signal_ = Node::create_publisher<truck_interfaces::msg::ControlMode>("/control/mode", 1);
+    twist_signal_ = Node::create_publisher<geometry_msgs::msg::TwistStamped>("/control/twist", 1);
 
     RCLCPP_INFO(this->get_logger(), "Mode: Off");
 }
@@ -116,7 +135,7 @@ truck_interfaces::msg::Control ControlProxyNode::makeControlCommand(
     truck_interfaces::msg::Control result;
 
     result.header.stamp = now();
-    result.header.frame_id = "base";
+    result.header.frame_id = frame_id_;
 
     result.curvature = command->axes[AXE_LX] * model_.baseMaxAbsCurvature();
 
@@ -127,6 +146,24 @@ truck_interfaces::msg::Control ControlProxyNode::makeControlCommand(
     }();
 
     return result;
+}
+
+geometry_msgs::msg::TwistStamped ControlProxyNode::turnControlToTwist(
+    truck_interfaces::msg::Control command) {
+    geometry_msgs::msg::TwistStamped twist;
+
+    twist.header.stamp = now();
+    twist.header.frame_id = frame_id_;
+
+    twist.twist.angular.x = 0;
+    twist.twist.angular.y = 0;
+    twist.twist.angular.z = command.velocity * command.curvature;
+
+    twist.twist.linear.x = command.velocity;
+    twist.twist.linear.y = 0;
+    twist.twist.linear.z = 0;
+
+    return twist;
 }
 
 void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
@@ -140,6 +177,7 @@ void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr
         const auto command = makeControlCommand(joypad_command);
         command_signal_->publish(command);
         prev_command_ = std::make_shared<truck_interfaces::msg::Control>(command);
+        twist_signal_->publish(turnControlToTwist(command));
     }
 
     prev_joypad_command_ = std::move(joypad_command);
@@ -149,7 +187,7 @@ void ControlProxyNode::publishMode() {
     truck_interfaces::msg::ControlMode result;
 
     result.header.stamp = now();
-    result.header.frame_id = "base";
+    result.header.frame_id = frame_id_;
 
     result.mode = static_cast<uint8_t>(mode_);
     mode_signal_->publish(result);
@@ -160,7 +198,7 @@ void ControlProxyNode::publishStop() {
         truck_interfaces::msg::Control result;
 
         result.header.stamp = now();
-        result.header.frame_id = "base";
+        result.header.frame_id = frame_id_;
 
         result.velocity = 0.0;
         result.curvature = 0.0;
@@ -207,6 +245,7 @@ void ControlProxyNode::forwardControlCommand(
     if (mode_ == Mode::Auto) {
         command_signal_->publish(*command);
         prev_command_ = command;
+        twist_signal_->publish(turnControlToTwist(*command));
     }
 }
 
