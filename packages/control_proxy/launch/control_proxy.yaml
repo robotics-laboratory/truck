@@ -4,8 +4,8 @@ launch:
     default: "$(find-pkg-share model)/config/model.yaml"
 - node:
     pkg: "control_proxy"
-    exec: "control_proxy"
-    name: "control_proxy"
+    exec: "control_proxy_node"
+    name: "control_proxy_node"
     output: "log"
     param:
     # path to truck mode config
