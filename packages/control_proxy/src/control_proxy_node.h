@@ -20,7 +20,7 @@
 
 namespace truck::control_proxy {
 
-enum class Mode : uint8_t;
+enum class Mode : uint8_t { Off = 0, Remote = 1, Auto = 2 };
 
 std::string toString(Mode mode);
 
@@ -65,7 +65,7 @@ class ControlProxyNode : public rclcpp::Node {
     rclcpp::Publisher<sensor_msgs::msg::JoyFeedback>::SharedPtr mode_feedback_signal_ = nullptr;
 
     // state
-    Mode mode_;
+    Mode mode_ = Mode::Off;
     sensor_msgs::msg::Joy::ConstSharedPtr prev_joypad_command_ = nullptr;
     truck_interfaces::msg::Control::ConstSharedPtr prev_command_ = nullptr;
 };
