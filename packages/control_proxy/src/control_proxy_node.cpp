@@ -12,36 +12,30 @@ using std::placeholders::_1;
 
 namespace truck::control_proxy {
 
-#define ENUM_case(r, data, elem)                                                        \
-    case data::elem:                                                                    \
-        return BOOST_PP_STRINGIZE(elem);
-
-#define ENUM_define(enumerators)                                                        \
-    enum class Mode : uint8_t { BOOST_PP_SEQ_ENUM(enumerators) };                       \
-                                                                                        \
-    std::string toString(Mode mode) {                                                   \
-        switch (mode) {                                                                 \
-            BOOST_PP_SEQ_FOR_EACH(                                                      \
-                ENUM_case, Mode, enumerators)                                           \
-            default:                                                                    \
-                BOOST_ASSERT(false);                                                    \
-        }                                                                               \
+std::string toString(Mode mode) {
+    switch (mode) {
+        case Mode::Off:
+            return "Off";
+        case Mode::Remote:
+            return "Remote";
+        case Mode::Auto:
+            return "Auto";
+        default:
+            BOOST_ASSERT(false);
     }
+}
 
-ENUM_define((Off)(Remote)(Auto))
-
-#undef ENUM_define
-#undef ENUM_case
-
-ControlProxyNode::ControlProxyNode() : 
-    Node("control_proxy_node"), 
-    model_(Node::declare_parameter<std::string>("model_config", "model.yaml")), 
-    frame_id_("base_link"),
-    mode_(Mode::Off) {
+ControlProxyNode::ControlProxyNode()
+    : Node("control_proxy_node")
+    , model_(Node::declare_parameter<std::string>("model_config", "model.yaml"))
+    , frame_id_("base_link")
+    , mode_(Mode::Off) {
     RCLCPP_INFO(this->get_logger(), "Model acquired,");
-    RCLCPP_INFO(this->get_logger(), "max velocity: %f, min velocity: %f", 
-                model_.baseVelocityLimits().max, 
-                model_.baseVelocityLimits().min);
+    RCLCPP_INFO(
+        this->get_logger(),
+        "max velocity: %f, min velocity: %f",
+        model_.baseVelocityLimits().max,
+        model_.baseVelocityLimits().min);
     RCLCPP_INFO(this->get_logger(), "max abs curvature: %f", model_.baseMaxAbsCurvature());
 
     joypad_timeout_ =
@@ -71,7 +65,7 @@ ControlProxyNode::ControlProxyNode() :
     publish_mode_timer_ =
         this->create_wall_timer(200ms, std::bind(&ControlProxyNode::publishMode, this));
 
-    mode_feedback_signal_ = 
+    mode_feedback_signal_ =
         Node::create_publisher<sensor_msgs::msg::JoyFeedback>("/joy/set_feedback", 1);
     command_signal_ = Node::create_publisher<truck_interfaces::msg::Control>("/control/command", 1);
     mode_signal_ = Node::create_publisher<truck_interfaces::msg::ControlMode>("/control/mode", 1);
