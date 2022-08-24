@@ -14,5 +14,5 @@ launch:
     cwd: "/opt/gzweb"
     cmd: "npm start"
     output: "log"
-    launch-prefix: "bash -c 'export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1; $0 $@'"
+    launch-prefix: "export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1; "
     shell: True
