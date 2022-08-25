@@ -1,5 +1,6 @@
 launch:
 - arg: {name: "world", default: "simple.world"}
+- arg: {name: "jetson_env", default: "true"}
 
 - executable:
     name: "gzserver"
@@ -9,10 +10,14 @@ launch:
     env: 
     - {name: 'GAZEBO_MODEL_PATH', value: "$(find-pkg-share truck_gazebo)/models"}
 
+- let: {name: "library_ld", value: "", unless: "$(var jetson_env)"}
+- let: {name: "library_ld", value: "/usr/lib/aarch64-linux-gnu/libgomp.so.1", if: "$(var jetson_env)"}
+
 - executable:
     name: "gzweb"
     cwd: "/opt/gzweb"
     cmd: "npm start"
     output: "log"
-    launch-prefix: "export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1; "
     shell: True
+    env: 
+    - {name: 'LD_PRELOAD', value: "$(var library_ld)"}
