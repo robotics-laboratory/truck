@@ -36,16 +36,16 @@
       <child>rplidar_s2::lidar_base</child>
     </joint>
 
-    <include>
-      <uri>model://d455</uri>
-      <pose relative_to="truck_base_to_camera">0 0 0 0 0 0</pose>
-    </include>
-
     <joint name="truck_base_to_camera" type="fixed">
       <pose relative_to="truck_base">0.2 0 0.04 0 0 0</pose>
       <parent>truck_base</parent>
       <child>d455::camera_base</child>
     </joint>
+
+    <include>
+      <uri>model://d455</uri>
+      <pose relative_to="truck_base_to_camera">0 0.0475 0 0 0 0</pose>
+    </include>
 
     <joint name="left_rear_axle" type="revolute">
       <pose relative_to="truck_base">-0.2025 0.11168 -0.01329 0 0 0</pose>
@@ -275,6 +275,7 @@
 
     <plugin name="AckermannControlPlugin" filename="libtruck_gazebo_ackermann_model.so">
       <config_path>/truck/packages/model/config/model.yaml</config_path>
+      <!-- <config_path>/home/dasimagin/truck/packages/model/config/model.yaml</config_path> -->
       <steering>
         <error>0.03</error>
         <velocity>120</velocity>

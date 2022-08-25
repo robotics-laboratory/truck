@@ -3,19 +3,19 @@
   <model name="d455">
     <link name="camera_base">
       <inertial>
-        <pose>0.01115 0.0475 0.0145 0 0 0</pose>
+        <pose>-0.00845 -0.0475 0</pose>
         <mass>0.072</mass>
         <inertia>
-          <ixx>0.00388124</ixx>
+          <ixx>0.003881243</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>0.00049894</iyy>
+          <iyy>0.000498940</iyy>
           <iyz>0</iyz>
-          <izz>0.00387926</izz>
+          <izz>0.003879257</izz>
         </inertia>
       </inertial>
       <collision name="camera_base_collision">
-        <pose>0.0027 0 0.0145 0 0 0</pose>
+        <pose>-0.00845 -0.0475 0</pose>
         <geometry>
           <box>
             <size>0.026 0.124 0.029</size>
@@ -23,7 +23,7 @@
         </geometry>
       </collision>
       <visual name="camera_base_visual">
-        <pose>0.0158 0 0.0145 1.5708 0 1.5708</pose>
+        <pose>0.0046500000000000005 -0.0475 0 1.5707963267948966 0 1.5707963267948966</pose>
         <geometry>
           <mesh>
             <scale>0.001 0.001 0.001</scale>
@@ -35,6 +35,7 @@
 
     <!-- camera depth joints and links -->
     <link name="camera_depth_frame">
+      <pose relative_to="camera_depth_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -49,6 +50,7 @@
     </link>
 
     <link name="camera_depth_optical_frame">
+      <pose relative_to="camera_depth_optical_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -63,19 +65,20 @@
     </link>
 
     <joint name="camera_depth_joint" type="fixed">
-      <pose>0 0 0 0 0 0</pose>
+      <pose relative_to="camera_base">0 0 0 0 0 0</pose>
       <parent>camera_base</parent>
       <child>camera_depth_frame</child>
     </joint>
 
     <joint name="camera_depth_optical_joint" type="fixed">
-      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <pose relative_to="camera_depth_frame">0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
       <parent>camera_depth_frame</parent>
       <child>camera_depth_optical_frame</child>
     </joint>
 
     <!-- camera left IR joints and links -->
     <link name="camera_infra1_frame">
+      <pose relative_to="camera_infra1_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -90,6 +93,7 @@
     </link>
 
     <link name="camera_infra1_optical_frame">
+      <pose relative_to="camera_infra1_optical_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -104,19 +108,20 @@
     </link>
 
     <joint name="camera_infra1_joint" type="fixed">
-      <pose>0 0 0 0 0 0</pose>
+      <pose relative_to="camera_base">0 0 0 0 0 0</pose>
       <parent>camera_base</parent>
       <child>camera_infra1_frame</child>
     </joint>
 
     <joint name="camera_infra1_optical_joint" type="fixed">
-      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <pose relative_to="camera_infra1_frame">0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
       <parent>camera_infra1_frame</parent>
       <child>camera_infra1_optical_frame</child>
     </joint>
 
     <!-- camera right IR joints and links -->
     <link name="camera_infra2_frame">
+      <pose relative_to="camera_infra2_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -131,6 +136,7 @@
     </link>
 
     <link name="camera_infra2_optical_frame">
+      <pose relative_to="camera_infra2_optical_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -145,13 +151,13 @@
     </link>
 
     <joint name="camera_infra2_joint" type="fixed">
-      <pose>0 -0.095 0 0 0 0</pose>
+      <pose relative_to="camera_base">0 -0.095 0 0 0 0</pose>
       <parent>camera_base</parent>
       <child>camera_infra2_frame</child>
     </joint>
 
     <joint name="camera_infra2_optical_joint" type="fixed">
-      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <pose relative_to="camera_infra2_frame">0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
       <parent>camera_infra2_frame</parent>
       <child>camera_infra2_optical_frame</child>
     </joint>
@@ -159,6 +165,7 @@
     <!-- camera color joints and links -->
 
     <link name="camera_color_frame">
+      <pose relative_to="camera_color_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -170,10 +177,10 @@
           <izz>0.000001</izz>
         </inertia>
       </inertial>
-
     </link>
 
     <link name="camera_color_optical_frame">
+      <pose relative_to="camera_color_optical_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -188,19 +195,20 @@
     </link>
 
     <joint name="camera_color_joint" type="fixed">
-      <pose>0 -0.059 0 0 0 0</pose>
+      <pose relative_to="camera_base">0 -0.059 0 0 0 0</pose>
       <parent>camera_base</parent>
       <child>camera_color_frame</child>
     </joint>
 
     <joint name="camera_color_optical_joint" type="fixed">
-      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <pose relative_to="camera_color_joint">0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
       <parent>camera_color_frame</parent>
       <child>camera_color_optical_frame</child>
-    </joint> -->
+    </joint>
 
     <!-- imu joints and links -->
     <link name="camera_accel_frame">
+      <pose relative_to="camera_accel_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -215,6 +223,7 @@
     </link>
 
     <link name="camera_accel_optical_frame">
+    <pose relative_to="camera_accel_optical_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -229,6 +238,7 @@
     </link>
 
     <link name="camera_gyro_frame">
+    <pose relative_to="camera_gyro_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -243,6 +253,7 @@
     </link>
 
     <link name="camera_gyro_optical_frame">
+    <pose relative_to="camera_gyro_optical_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -257,6 +268,7 @@
     </link>
 
     <link name="camera_imu_optical_frame">
+    <pose relative_to="camera_imu_optical_joint">0 0 0 0 0 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>
@@ -321,31 +333,31 @@
     </link>
 
     <joint name="camera_accel_joint" type="fixed">
-      <pose>-0.01602 -0.03022 0.0074 0 0 0</pose>
+      <pose relative_to="camera_base">-0.01602 -0.03022 0.0074 0 0 0</pose>
       <parent>camera_base</parent>
       <child>camera_accel_frame</child>
     </joint>
 
     <joint name="camera_accel_optical_joint" type="fixed">
-      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <pose relative_to="camera_accel_frame">0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
       <parent>camera_accel_frame</parent>
       <child>camera_accel_optical_frame</child>
     </joint>
 
     <joint name="camera_gyro_joint" type="fixed">
-      <pose>-0.01602 -0.03022 0.0074 0 0 0</pose>
+      <pose relative_to="camera_base">-0.01602 -0.03022 0.0074 0 0 0</pose>
       <parent>camera_base</parent>
       <child>camera_gyro_frame</child>
     </joint>
 
     <joint name="camera_gyro_optical_joint" type="fixed">
-      <pose>0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
+      <pose relative_to="camera_gyro_frame">0 0 0 -1.5707963267948966 0 -1.5707963267948966</pose>
       <parent>camera_gyro_frame</parent>
       <child>camera_gyro_optical_frame</child>
     </joint>
 
     <joint name="camera_imu_optical_joint" type="fixed">
-      <pose>0 0 0 0 0 0</pose>
+      <pose relative_to="camera_gyro_optical_frame">0 0 0 0 0 0</pose>
       <parent>camera_gyro_optical_frame</parent>
       <child>camera_imu_optical_frame</child>
     </joint>

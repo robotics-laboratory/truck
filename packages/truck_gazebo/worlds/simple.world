@@ -35,7 +35,7 @@
     </include>
     <include>
       <uri>model://truck</uri>
-      <pose>0 0 0.15 0 0 0</pose>
+      <pose>0 0 0.08 0 0 0</pose>
     </include>
     <include>
       <uri>model://beer</uri>
