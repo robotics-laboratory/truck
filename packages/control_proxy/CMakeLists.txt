@@ -13,12 +13,12 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-add_executable(control_proxy src/main.cpp src/control_proxy.cpp)
+add_executable(control_proxy_node src/main.cpp src/control_proxy_node.cpp)
 
-ament_target_dependencies(control_proxy model rclcpp sensor_msgs truck_interfaces)
+ament_target_dependencies(control_proxy_node model rclcpp sensor_msgs truck_interfaces)
 
 install(
-    TARGETS control_proxy
+    TARGETS control_proxy_node
     DESTINATION lib/${PROJECT_NAME})
 
 install(

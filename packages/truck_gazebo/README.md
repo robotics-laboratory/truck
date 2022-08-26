@@ -9,7 +9,7 @@ Colleciton of gazebo misc files (models, worlds and etc).
 ### Upload meshes
 1. Install [dvc](https://dvc.org/doc/install), more docs [here](https://dvc.org/doc/command-reference).
 2. Contact us to get `id` and `token` of our storage
-3. Run followeing commands
+3. Run following commands
 
 ```
 dvc remote add --local main s3://the-lab-bucket/dvc

@@ -5,3 +5,5 @@ launch:
     exec: "joy_linux_node"
     name: "joy_node"
     output: "log"
+    param:
+    - {name: "dev", value: "/dev/input/js1"}
