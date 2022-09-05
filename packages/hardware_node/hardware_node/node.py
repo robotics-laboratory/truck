@@ -13,7 +13,7 @@ class HardwareNode(Node):
     ODRIVE_WATCHDOG_TIMEOUT = 0.5
     DEFAULT_MODEL_CONFIG = "/truck/packages/model/config/model.yaml"
     DEFAULT_LINEAR_ACCEL = 1.0
-    TEENSY_SERIAL_PORT = "/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0"
+    TEENSY_SERIAL_PORT = "/dev/ttyTHS0"
     TEENSY_SERIAL_SPEED = 500000
     STEERING_CSV_PATH = "/truck/packages/hardware_node/resource/steering.csv"
 

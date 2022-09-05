@@ -1,0 +1,38 @@
+-i https://pypi.org/simple
+aiohttp==3.8.1
+aiosignal==1.2.0
+appdirs==1.4.4
+async-timeout==4.0.2
+asynctest==0.13.0
+attrs==22.1.0
+backcall==0.2.0
+charset-normalizer==2.1.0
+cobs==1.2.0
+crc8==0.1.0
+decorator==5.1.1
+frozenlist==1.2.0
+idna==3.3
+idna-ssl==1.1.0
+ipython==7.16.3
+ipython-genutils==0.2.0
+jedi==0.17.2
+msgpack==1.0.4
+multidict==5.2.0
+# numpy==1.19.5
+odrive==0.6.1.post0
+parso==0.7.1
+pexpect==4.8.0
+pickleshare==0.7.5
+prompt-toolkit==3.0.30
+ptyprocess==0.7.0
+pyelftools==0.29
+pygments==2.13.0
+# pyserial==3.5
+pyusb==1.2.1
+# pyyaml==6.0
+setuptools==59.6.0
+six==1.16.0
+traitlets==4.3.3
+typing-extensions==4.1.1
+wcwidth==0.2.5
+yarl==1.7.2
