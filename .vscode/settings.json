@@ -1,13 +1,4 @@
 {
-    "editor": {
-        "rulers": [
-            80,
-            100
-        ],
-        "formatOnPaste": true,
-        "formatOnSaveMode": "modifications",
-        "formatOnType": true,
-    },
     "[cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"
     },
