@@ -1,38 +1,55 @@
+from pathlib import PosixPath as Path
+
 import odrive
 import pymodel
 import rclpy
 import rclpy.logging
+from ament_index_python.packages import get_package_share_directory
 from hardware_node.teensy import TeensyBridge
 from rclpy.node import Node
-from truck_interfaces.msg import Control, ControlMode
+from truck_interfaces.msg import Control, ControlMode, HardwareStatus, HardwareTelemetry
 
 
 class HardwareNode(Node):
-    # FIXME: Move some of these to external config (node launch config?)
-    ODRIVE_MAIN_AXIS = "axis1"
-    ODRIVE_WATCHDOG_TIMEOUT = 0.5
-    DEFAULT_MODEL_CONFIG = "/truck/packages/model/config/model.yaml"
     DEFAULT_LINEAR_ACCEL = 1.0
-    TEENSY_SERIAL_PORT = "/dev/ttyTHS0"
-    TEENSY_SERIAL_SPEED = 500000
-    STEERING_CSV_PATH = "/truck/packages/hardware_node/resource/steering.csv"
+    DEFAULT_MODEL_CONFIG = ["model", "config/model.yaml"]
+    STEERING_CSV_PATH = ["hardware_node", "resource/steering.csv"]
 
     def __init__(self):
         super().__init__("hardware_node")
         self._log = self.get_logger()
-        self._prev_mode = ControlMode.OFF
+        self._init_ros_params()
+        self._init_ros_topics()
+        self._init_ros_timers()
         self._teensy = TeensyBridge(
-            serial_port=self.TEENSY_SERIAL_PORT,
-            serial_speed=self.TEENSY_SERIAL_SPEED,
-            steering_csv_path=self.STEERING_CSV_PATH,
+            serial_port=self._teensy_serial_port,
+            serial_speed=self._teensy_serial_speed,
+            steering_csv_path=self._get_shared_path(*self.STEERING_CSV_PATH),
         )
-        self._model = pymodel.Model(self.DEFAULT_MODEL_CONFIG)
+        self._model = pymodel.Model(self._get_shared_path(*self.DEFAULT_MODEL_CONFIG))
         self._odrive = odrive.find_any()
-        self._axis = self._get_main_axis()
-        self._init_ros_communication()
+        self._axis = getattr(self._odrive, self._odrive_axis)
+        self._axis.config.enable_watchdog = True
+        self._axis.config.watchdog_timeout = self._odrive_timeout
+        self._prev_mode = ControlMode.OFF
+        self._prev_status: HardwareStatus = None
         self._log.info("Hardware node initialized")
 
-    def _init_ros_communication(self):
+    def _init_ros_params(self):
+        self.declare_parameter("odrive_axis", "axis1")
+        self.declare_parameter("odrive_timeout", 0.5)
+        self.declare_parameter("teensy_serial_port", "/dev/ttyTHS0")
+        self.declare_parameter("teensy_serial_speed", 500000)
+        self.declare_parameter("status_report_rate", 1.0)
+        self.declare_parameter("telemetry_report_rate", 100.0)
+        self._odrive_axis = self._get_param("odrive_axis", str)
+        self._odrive_timeout = self._get_param("odrive_timeout", float)
+        self._teensy_serial_port = self._get_param("teensy_serial_port", str)
+        self._teensy_serial_speed = self._get_param("teensy_serial_speed", int)
+        self._status_report_rate = self._get_param("status_report_rate", float)
+        self._telemetry_report_rate = self._get_param("telemetry_report_rate", float)
+
+    def _init_ros_topics(self):
         self._mode_sub = self.create_subscription(
             ControlMode,
             "/control/mode",
@@ -44,6 +61,26 @@ class HardwareNode(Node):
             "/control/command",
             self._command_callback,
             qos_profile=1,
+        )
+        self._status_pub = self.create_publisher(
+            HardwareStatus,
+            "/hardware/status",
+            qos_profile=1,
+        )
+        self._telemetry_pub = self.create_publisher(
+            HardwareTelemetry,
+            "/hardware/telemetry",
+            qos_profile=1,
+        )
+
+    def _init_ros_timers(self):
+        self._status_timer = self.create_timer(
+            1 / self._status_report_rate,
+            self._push_status,
+        )
+        self._telemetry_timer = self.create_timer(
+            1 / self._telemetry_report_rate,
+            self._push_telemetry,
         )
 
     def _mode_callback(self, msg: ControlMode):
@@ -79,23 +116,42 @@ class HardwareNode(Node):
         steering = self._model.rear_twist_to_steering(twist)
         self._log.info(
             f"Set wheel angles: "
-            f"{steering.left.degrees:.1f} | {steering.right.degrees:.1f}"
+            f"{steering.left.degrees:.1f} deg | {steering.right.degrees:.1f} deg"
         )
         self._teensy.push(steering.left.radians, steering.right.radians)
 
-    def _get_main_axis(self):
-        axis = getattr(self._odrive, self.ODRIVE_MAIN_AXIS)
-        axis.config.enable_watchdog = True
-        axis.config.watchdog_timeout = self.ODRIVE_WATCHDOG_TIMEOUT
-        axis.watchdog_feed()
-        return axis
+    def _push_status(self):
+        # TODO
+        armed = self._axis.current_state != odrive.enums.AXIS_STATE_IDLE
+        errors = []
+        status = HardwareStatus(armed=armed, errors=errors)
+        self._status_pub.publish(status)
+
+    def _push_telemetry(self):
+        # TODO
+        pass
 
     def _get_default_accel(self):
         return self._model.linear_velocity_to_motor_rps(self.DEFAULT_LINEAR_ACCEL)
 
+    def _get_param(self, name, type):
+        value = self.get_parameter(name).get_parameter_value()
+        if type == str:
+            return value.string_value
+        elif type == float:
+            return value.double_value
+        elif type == int:
+            return value.integer_value
+        else:
+            raise RuntimeError(f"Unsupported type: {type}")
 
-def main(args=None):
-    rclpy.init(args=args)
+    def _get_shared_path(self, package, path):
+        share = get_package_share_directory(package)
+        return Path(share).joinpath(path).as_posix()
+
+
+def main():
+    rclpy.init()
     node = HardwareNode()
     rclpy.spin(node)
     rclpy.shutdown()

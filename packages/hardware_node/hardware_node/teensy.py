@@ -19,10 +19,7 @@ class TeensyBridge:
         self._map = self._map * 180 / np.pi
 
     def push(self, left_wheel_angle: float, right_wheel_angle: float):
-        left_wheel_angle *= -1  # FIXME: Different coordinate systems
-        left_servo_angle = np.interp(
-            -left_wheel_angle, self._map[:, 0], self._map[:, 1]
-        )
+        left_servo_angle = np.interp(left_wheel_angle, self._map[:, 0], self._map[:, 1])
         right_servo_angle = np.interp(
             right_wheel_angle, self._map[:, 0], self._map[:, 1]
         )

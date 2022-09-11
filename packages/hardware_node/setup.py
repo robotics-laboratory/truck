@@ -1,3 +1,5 @@
+from glob import glob
+
 from setuptools import setup
 
 package_name = "hardware_node"
@@ -8,15 +10,12 @@ setup(
     packages=[package_name],
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
-        ("share/" + package_name, ["package.xml"]),
+        (f"share/{package_name}", ["package.xml"]),
+        (f"share/{package_name}/launch", glob("launch/*")),
+        (f"share/{package_name}/resource", ["resource/steering.csv"]),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="root",
-    maintainer_email="root@todo.todo",
-    description="TODO: Package description",
-    license="TODO: License declaration",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "main = hardware_node.node:main",
