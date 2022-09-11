@@ -3,8 +3,6 @@
 #include <gazebo_ros/conversions/builtin_interfaces.hpp>
 #include <gazebo_ros/conversions/geometry_msgs.hpp>
 
-#include "common/chrono.h"
-
 #include <exception>
 #include <sstream>
 #include <string>
@@ -47,21 +45,20 @@ physics::JointPtr GetJoint(gazebo::physics::ModelPtr model, const std::string& n
 }  // namespace
 
 void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) {
-    node_ = gazebo_ros::Node::Get(sdf);  // create gazebo node warpper
+    node_ = gazebo_ros::Node::Get(sdf);
 
-    auto engine = model->GetWorld()->Physics();
-    engine->SetParam("friction_model", std::string("cone_model"));
-    gzwarn << "Force set friction_mode='conde_model'" << std::endl;
-
-    gzerr << "here!" << std::endl;
     const auto config_path = GetParam<std::string>(sdf, "config_path");
-    gzerr << "Read model params from '" << config_path << "'..." << std::endl;
+    gzwarn << "Read model params from '" << config_path << "'..." << std::endl;
     model_ = std::make_unique<truck::model::Model>(config_path);
 
     {  // steering
         const auto steering = GetElement(sdf, "steering");
 
         steering_error_ = GetParam<float>(steering, "error");
+
+        steering_velocity_ =
+            truck::geom::Angle::fromDegrees(GetParam<double>(steering, "velocity"));
+
         steering_torque_ = GetParam<float>(steering, "torque");
 
         steering_left_joint_ = GetJoint(model, GetParam<std::string>(steering, "left_joint"));
@@ -75,19 +72,21 @@ void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
         rear_right_joint_ = GetJoint(model, GetParam<std::string>(rear, "right_joint"));
 
         const auto pd = GetParam<ignition::math::Vector2d>(rear, "pd");
-        const auto force = GetParam<float>(rear, "torque");
+        const auto motor_torque = GetParam<float>(rear, "torque");
+        const float wheel_torque = motor_torque / 2 * model_->gearRatio();
 
         velocity_left_pd_.SetPGain(pd.X());
         velocity_left_pd_.SetDGain(pd.Y());
-        velocity_left_pd_.SetCmdMin(-force);
-        velocity_left_pd_.SetCmdMax(force);
+        velocity_left_pd_.SetCmdMin(-wheel_torque);
+        velocity_left_pd_.SetCmdMax(+wheel_torque);
 
         velocity_right_pd_.SetPGain(pd.X());
         velocity_right_pd_.SetDGain(pd.Y());
-        velocity_right_pd_.SetCmdMin(-force);
-        velocity_right_pd_.SetCmdMax(force);
+        velocity_right_pd_.SetCmdMin(-wheel_torque);
+        velocity_right_pd_.SetCmdMax(+wheel_torque);
 
-        RCLCPP_INFO(node_->get_logger(), "velocity:pd: p=%f d=%f f=%f", pd.X(), pd.Y(), force);
+        gzwarn << "velocity:pd: p=" << pd.X() << " d=" << pd.Y() << " t=" << motor_torque
+              << std::endl;
     }
 
     command_slot_ = node_->create_subscription<truck_interfaces::msg::Control>(
@@ -103,7 +102,7 @@ void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
 void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
     std::lock_guard lock(mutex_);
 
-    auto set_target = [this, &info](double velocity = 0, double curvature = 0) {
+    auto set_target = [this, &info](double velocity, double curvature) {
         const truck::model::Twist base_twist{
             truck::clamp(curvature, model_->baseMaxAbsCurvature()),
             model_->baseVelocityLimits().clamp(velocity)};
@@ -114,12 +113,11 @@ void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
         const auto steering = model_->rearTwistToSteering(rear_twist);
 
         auto diff_to_velocity = [this](double steering_diff) -> double {
-            const double steering_velocity = model_->steeringVelocity().radians();
+            const double steering_velocity = steering_velocity_.radians();
 
             if (steering_diff > +steering_error_) {
                 return +steering_velocity;
             }
-            
             if (steering_diff < -steering_error_) {
                 return -steering_velocity;
             }
@@ -139,12 +137,6 @@ void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
         steering_right_joint_->SetParam("fmax", 0, steering_torque_);
         steering_right_joint_->SetParam("vel", 0, diff_to_velocity(steering_right_diff));
 
-        RCLCPP_ERROR(
-            node_->get_logger(),
-            "steering [l=%f, r=%f]",
-            diff_to_velocity(steering_left_diff),
-            diff_to_velocity(steering_right_diff));
-
         const auto wheel_velocity = model_->rearTwistToWheelVelocity(rear_twist);
 
         const double velocity_left = rear_left_joint_->GetVelocity(0);
@@ -154,18 +146,6 @@ void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
             gzerr << "velocity[l=" << velocity_left << ", r=" << velocity_right << "]" << std::endl;
             throw std::runtime_error("Bad velocity!");
         }
-
-        // RCLCPP_ERROR(
-        //     node_->get_logger(),
-        //     "GetForce [l=%f, r=%f]",
-        //     rear_left_joint_->GetForce(0),
-        //     rear_right_joint_->GetForce(0));
-
-        // RCLCPP_ERROR(
-        //     node_->get_logger(),
-        //     "GetForceTorque [l=%f, r=%f]",
-        //     rear_left_joint_->GetForceTorque(0),
-        //     rear_right_joint_->GetForceTorque(0));
 
         const double velocity_left_force =
             velocity_left_pd_.Update(velocity_left - wheel_velocity.left.radians(), delta);
@@ -182,14 +162,14 @@ void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
             emergency_stop_ = true;
         }
 
-        set_target(0);
+        set_target(0, 0);
     } else {
         const auto now = gazebo_ros::Convert<rclcpp::Time>(info.realTime);
         const auto latency = now - command_->header.stamp;
 
         if (latency > timeout_) {
             RCLCPP_ERROR(node_->get_logger(), "Lose control for %fs!", latency.seconds());
-            set_target(0);
+            set_target(0, 0);
             emergency_stop_ = true;
         } else {
             set_target(command_->velocity, command_->curvature);

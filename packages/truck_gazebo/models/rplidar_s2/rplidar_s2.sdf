@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <model name="rplidar_s2">
+    <link name="lidar_base">
+      <inertial>
+        <mass>0.190</mass>
+        <inertia>
+          <ixx>0,00018916083</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0,00018916083</iyy>
+          <iyz>0</iyz>
+          <izz>0,000175655</izz>
+        </inertia>
+      </inertial>
+      <collision name="lidar_collision">
+        <geometry>
+          <cylinder>
+            <length>0.04</length>
+            <radius>0.043</radius>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="lidar_visual">
+        <pose>0 0 0 -1.578 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>model://rplidar_s2/meshes/rplidar_s2.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <sensor type="ray" name="rplidar_s2">
+        <always_on>true</always_on>
+        <update_rate>10</update_rate>
+        <visualize>false</visualize>
+        <pose>0 0 0.01 0 0 0</pose>
+        <plugin name="GazeboRosRaySensor" filename="libgazebo_ros_ray_sensor.so">
+          <frame_name>lidar_base</frame_name>
+          <ros>
+            <namespace>/lidar</namespace>
+            <remapping>~/out:=scan</remapping>
+          </ros>
+          <output_type>sensor_msgs/LaserScan</output_type>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>3200</samples>
+              <min_angle>-3.1415</min_angle>
+              <max_angle>+3.1415</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.05</min>
+            <max>25.0</max>
+            <resolution>0.013</resolution>
+          </range>
+          <noise>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </ray>
+      </sensor>
+    </link>
+  </model>
+</sdf>

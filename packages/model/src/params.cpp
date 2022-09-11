@@ -38,7 +38,6 @@ VehicleLimits::VehicleLimits(const YAML::Node& node)
     BOOST_VERIFY(max_abs_curvature >= 0);
     BOOST_VERIFY(steering.inner >= 0_deg && steering.inner < 90_deg);
     BOOST_VERIFY(steering.outer >= 0_deg && steering.outer < 90_deg);
-    BOOST_VERIFY(steering.velocity > 0_deg);
     // BOOST_VERIFY(velocity.min >= 0);  // forbid back movement
 }
 

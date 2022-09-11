@@ -7,8 +7,6 @@
 
 #include <boost/assert.hpp>
 
-#include <iostream>
-
 namespace truck::model {
 
 struct WheelBase {

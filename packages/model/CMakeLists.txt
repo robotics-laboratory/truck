@@ -5,7 +5,7 @@ find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system filesystem)
+find_package(Boost REQUIRED)
 
 if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
@@ -43,13 +43,9 @@ install(
 )
 
 if(BUILD_TESTING)
-    #find_package(ament_cmake_clang_format REQUIRED)
-    #find_file(CLANG_FORMAT .clang-format PATHS ${CMAKE_SOURCE_DIR}/../..)
-    #ament_clang_format(CONFIG_FILE "${CLANG_FORMAT}" OTHER "--clang-format-version 10")
-
     find_package(ament_cmake_gtest REQUIRED)
     ament_add_gtest(model_test test/main.cpp WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-    target_link_libraries(model_test model yaml-cpp)
+    target_link_libraries(model_test model)
 endif()
 
 ament_package()

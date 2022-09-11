@@ -58,9 +58,10 @@ WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
         geom::Angle{(1 + ratio) * twist.velocity / params_.wheel_radius}};
 }
 
-geom::Angle Model::steeringVelocity() const { return params_.limits.steering.velocity; }
-
 double Model::linearVelocityToMotorRPS(double velocity) const {
     return velocity / params_.wheel_radius / M_PI / params_.gear_ratio;
 }
+
+double Model::gearRatio() const { return params_.gear_ratio; }
+
 }  // namespace truck::model

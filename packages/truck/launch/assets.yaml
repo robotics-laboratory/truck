@@ -1,0 +1,9 @@
+launch:
+- executable:
+    name: "assets"
+    cwd: "/opt/gzweb"
+    cmd: "bash $(find-pkg-share truck)/launch/assets.bash"
+    output: "log"
+    shell: True
+    env: 
+    - {name: 'GAZEBO_MODEL_PATH', value: "$(find-pkg-share truck_gazebo)/models"}

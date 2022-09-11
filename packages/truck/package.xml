@@ -10,12 +10,10 @@
 
   <depend>launch_ros</depend>
   <depend>realsense2_camera</depend>
-  <depend>realsense2_description</depend>
   <depend>ros_environment</depend>
 
-  <depend>planning_node</depend>
-  <depend>pure_pursuit_node</depend>
-  <exec_depend>control_node</exec_depend>
+  <depend>control_proxy</depend>
+  <depend>truck_gazebo</depend>
   <depend>truck_gazebo_plugins</depend>
 
   <export>

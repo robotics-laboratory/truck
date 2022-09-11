@@ -17,6 +17,7 @@
   <depend>model</depend>
   <depend>nav_msgs</depend>
   <depend>rclcpp</depend>
+  <depend>truck_interfaces</depend>
 
   <test_depend>ament_cmake_lint_cmake</test_depend>
   <test_depend>ament_cmake_clang_format</test_depend>

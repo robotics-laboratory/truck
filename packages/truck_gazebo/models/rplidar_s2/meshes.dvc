@@ -1,0 +1,5 @@
+outs:
+- md5: 50ca94ea998f406e114d6e6c88274ebf.dir
+  size: 1029184
+  nfiles: 1
+  path: meshes

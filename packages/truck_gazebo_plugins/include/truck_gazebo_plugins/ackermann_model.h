@@ -5,7 +5,6 @@
 
 #include <gazebo_ros/node.hpp>
 
-#include "common/chrono.h"
 #include "model/model.h"
 #include "truck_interfaces/msg/control.hpp"
 
@@ -42,11 +41,11 @@ class AckermannModelPlugin : public ModelPlugin {
     event::ConnectionPtr update_ = nullptr;
 
     double steering_error_ = 0.0;
+    truck::geom::Angle steering_velocity_{0.0};
     double steering_torque_ = 0.0;
 
     physics::JointPtr steering_left_joint_ = nullptr;
     physics::JointPtr steering_right_joint_ = nullptr;
-
 
     common::PID velocity_left_pd_{};
     common::PID velocity_right_pd_{};

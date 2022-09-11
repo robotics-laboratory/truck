@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/math.h"
+#include "geom/angle.h"
 #include "model/params.h"
 #include "yaml-cpp/yaml.h"
 
@@ -33,12 +34,9 @@ class Model {
     Limits<geom::Angle> rightSteeringLimits() const;
     Limits<double> baseVelocityLimits() const;
 
-    geom::Angle steeringVelocity() const;
-
-    // Achtung! All results are clamped with limits!
+    double gearRatio() const;
 
     Twist baseToRearTwist(Twist twist) const;
-
     Steering rearTwistToSteering(Twist twist) const;
     WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
     double linearVelocityToMotorRPS(double velocity) const;

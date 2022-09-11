@@ -1,6 +1,10 @@
 # ROS2 Packages
 
 - [control_proxy](control_proxy/README.md)
+- [model](model/README.md)
+- [truck_gazebo](truck_gazebo/README.md)
+- [truck_gazebo_plugins](truck_gazebo_plugins/README.md)
+- [truck](truck/README.md)
 
 ## Build
 
