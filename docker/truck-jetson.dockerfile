@@ -386,14 +386,20 @@ RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
-ENV GZWEB_VERSION="1.4.1"
+ENV GZWEB_TAG="gzweb_1.4.1"
 ENV GZWEB_PATH=/opt/gzweb
+ENV GZWEB_PATCH=/tmp/patch/gzweb.patch
+
+ADD patch/gzweb.patch ${GZWEB_PATCH}
 
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
     && source ${HOME}/.nvm/nvm.sh \
-    && nvm install 9 \
+    && nvm install 11 \
     && mkdir -p ${GZWEB_PATH} \
-    && wget -qO - https://github.com/osrf/gzweb/archive/refs/tags/gzweb_${GZWEB_VERSION}.tar.gz | tar -xz -C ${GZWEB_PATH} --strip-components 1
+    && git clone https://github.com/osrf/gzweb.git ${GZWEB_PATH} \
+    && cd ${GZWEB_PATH} \
+    && git checkout ${GZWEB_TAG} \
+    && git apply ${GZWEB_PATCH}
 
 ### INSTALL DEV PKGS
 

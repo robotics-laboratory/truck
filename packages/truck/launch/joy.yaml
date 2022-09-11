@@ -2,7 +2,7 @@ launch:
 
 - node:
     pkg: "joy"
-    exec: "jo_node"
+    exec: "joy_node"
     name: "joy_node"
     output: "log"
     param:

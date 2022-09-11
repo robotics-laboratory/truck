@@ -1,0 +1,30 @@
+diff --git a/get_local_models.py b/get_local_models.py
+index c4e0ca3..8204b6a 100755
+--- a/get_local_models.py
++++ b/get_local_models.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/usr/bin/python2
+ from __future__ import print_function
+ 
+ import sys
+diff --git a/webify_models.py b/webify_models.py
+index 44efe29..7b77ba8 100755
+--- a/webify_models.py
++++ b/webify_models.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/usr/bin/python2
+ 
+ # To be deprecated and replaced by webify_models_v2.py
+ 
+diff --git a/webify_models_v2.py b/webify_models_v2.py
+index 572c0bf..876f877 100755
+--- a/webify_models_v2.py
++++ b/webify_models_v2.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/usr/bin/python2
+ 
+ # A script to update gazebo models to be web-friendly.
+ # It converts all textures to png format and make sure they are
