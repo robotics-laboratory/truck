@@ -18,7 +18,7 @@ setup:
 
 build-all: cmake-settings
 	cd packages
-	colcon build --merge-install
+	colcon build --merge-install --packages-skip-up-to $(exclude)
 
 build-one: cmake-settings
 	cd packages

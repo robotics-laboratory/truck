@@ -88,8 +88,6 @@ constexpr size_t AXE_RY = 4;
 
 }  // namespace
 
-}  // namespace
-
 void ControlProxyNode::setMode(Mode mode) {
     if (mode == mode_) {
         return;

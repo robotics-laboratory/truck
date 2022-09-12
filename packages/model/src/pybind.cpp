@@ -87,7 +87,7 @@ PYBIND11_MODULE(pymodel, m) {
         .def_property_readonly("left_steering_limits", &model::Model::leftSteeringLimits)
         .def_property_readonly("right_steering_limits", &model::Model::rightSteeringLimits)
         .def_property_readonly("base_velocity_limits", &model::Model::baseVelocityLimits)
-        .def_property_readonly("steering_velocity", &model::Model::steeringVelocity)
+        .def_property_readonly("gear_ratio", &model::Model::gearRatio)
         .def("base_to_rear_twist", &model::Model::baseToRearTwist)
         .def("rear_twist_to_steering", &model::Model::rearTwistToSteering)
         .def("rear_twist_to_wheel_velocity", &model::Model::rearTwistToWheelVelocity)
