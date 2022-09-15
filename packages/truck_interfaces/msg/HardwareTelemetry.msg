@@ -1,5 +1,5 @@
 std_msgs/Header header
 float64 current_velocity
 float64 target_velocity
-float64 motor_voltage
-float64 motor_current
+float64 battery_voltage
+float64 battery_current

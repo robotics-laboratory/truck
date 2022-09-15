@@ -1,16 +1,27 @@
 launch:
+
 - arg:
     name: "model_config"
     default: "$(find-pkg-share model)/config/model.yaml"
+
+- node:
+    pkg: "joy"
+    exec: "joy_node"
+    name: "joy_node"
+    output: "log"
+
 - node:
     pkg: "control_proxy"
     exec: "control_proxy_node"
     name: "control_proxy_node"
     output: "log"
     param:
-    # path to truck mode config
     - {name: "model_config", value: "$(var model_config)"}
-    # set mode to `off` if no commands from joypad during this time (milliseconds)
     - {name: "joypad_timeout", value: 200}
-    # set mode to `remote` if no commands from planner during this time (milliseconds)
     - {name: "control_timeout", value: 200}
+
+- node:
+    pkg: "hardware_node"
+    exec: "hardware_node"
+    name: "hardware_node"
+    output: "log"

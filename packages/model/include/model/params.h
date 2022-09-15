@@ -20,7 +20,6 @@ struct WheelBase {
 struct SteeringLimit {
     geom::Angle inner;
     geom::Angle outer;
-    geom::Angle velocity;
 };
 
 struct VehicleLimits {

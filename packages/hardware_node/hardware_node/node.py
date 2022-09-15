@@ -93,6 +93,8 @@ class HardwareNode(Node):
             self._log.info("Mode change: ANY -> OFF - Disabling motor")
             self._disable_motor()
         self._prev_mode = msg.mode
+        self._status_timer.reset()
+        self._push_status()
 
     def _enable_motor(self):
         self._axis.watchdog_feed()
@@ -109,27 +111,30 @@ class HardwareNode(Node):
             return
         self._axis.watchdog_feed()
         rpm = self._model.linear_velocity_to_motor_rps(msg.velocity)
-        self._log.info(f"Set motor speed: {rpm} rpm")
         self._axis.controller.input_vel = rpm
         twist = pymodel.Twist(msg.curvature, msg.velocity)
         twist = self._model.base_to_rear_twist(twist)
         steering = self._model.rear_twist_to_steering(twist)
-        self._log.info(
-            f"Set wheel angles: "
-            f"{steering.left.degrees:.1f} deg | {steering.right.degrees:.1f} deg"
-        )
         self._teensy.push(steering.left.radians, steering.right.radians)
 
     def _push_status(self):
-        # TODO
         armed = self._axis.current_state != odrive.enums.AXIS_STATE_IDLE
         errors = []
+        if self._odrive.error or self._axis.error:
+            # TODO: Prettify
+            message = odrive.utils.format_errors(self._odrive)
+            errors.extend(repr(message).split("\n"))
         status = HardwareStatus(armed=armed, errors=errors)
         self._status_pub.publish(status)
 
     def _push_telemetry(self):
-        # TODO
-        pass
+        telemetry = HardwareTelemetry(
+            current_velocity=self._axis.encoder.vel_estimate,
+            target_velocity=self._axis.controller.input_vel,
+            battery_voltage=self._odrive.vbus_voltage,
+            battery_current=self._odrive.ibus,
+        )
+        self._telemetry_pub.publish(telemetry)
 
     def _get_default_accel(self):
         return self._model.linear_velocity_to_motor_rps(self.DEFAULT_LINEAR_ACCEL)

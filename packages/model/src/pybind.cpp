@@ -16,7 +16,7 @@ std::string to_string<double>(const double &obj) {
 template<>
 std::string to_string<geom::Angle>(const geom::Angle &obj) {
     return boost::str(
-        boost::format("Angle(degrees=%.5f, radians=%.5f)")
+        boost::format("Angle(%.1f deg)")
         % obj.degrees() % obj.radians()
     );
 }

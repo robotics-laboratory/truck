@@ -7,8 +7,7 @@ namespace {
 SteeringLimit toSteeringLimits(const YAML::Node& node) {
     return {
         geom::Angle::fromDegrees(node["inner"].as<double>()),
-        geom::Angle::fromDegrees(node["outer"].as<double>()),
-        geom::Angle::fromDegrees(node["velocity"].as<double>())};
+        geom::Angle::fromDegrees(node["outer"].as<double>())};
 }
 
 template <typename T>
@@ -38,7 +37,6 @@ VehicleLimits::VehicleLimits(const YAML::Node& node)
     BOOST_VERIFY(max_abs_curvature >= 0);
     BOOST_VERIFY(steering.inner >= 0_deg && steering.inner < 90_deg);
     BOOST_VERIFY(steering.outer >= 0_deg && steering.outer < 90_deg);
-    // BOOST_VERIFY(velocity.min >= 0);  // forbid back movement
 }
 
 Params::Params(const YAML::Node& node)

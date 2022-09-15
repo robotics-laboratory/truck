@@ -18,7 +18,7 @@ setup(
     zip_safe=True,
     entry_points={
         "console_scripts": [
-            "main = hardware_node.node:main",
+            "hardware_node = hardware_node.node:main",
         ],
     },
 )
