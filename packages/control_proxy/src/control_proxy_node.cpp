@@ -198,7 +198,7 @@ void ControlProxyNode::watchdog() {
         return std::chrono::nanoseconds((now() - msg.header.stamp).nanoseconds());
     };
 
-    if (mode_ == Mode::Remote && get_delay(*prev_joypad_command_) > joypad_timeout_) {
+    if (mode_ != Mode::Off && get_delay(*prev_joypad_command_) > joypad_timeout_) {
         RCLCPP_ERROR(this->get_logger(), "Lost joypad, stop!");
         setMode(Mode::Off);
         prev_joypad_command_ = nullptr;
