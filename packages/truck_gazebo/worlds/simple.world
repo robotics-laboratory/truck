@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<sdf version="1.5">
+<sdf version="1.7">
   <world name="simple">
     <gravity>0.0 0.0 -9.81</gravity>
     <physics type="ode">
@@ -27,23 +27,20 @@
         </track_visual>
       </camera>
     </gui>
+    <scene>
+      <shadows>true</shadows>
+      <grid>false</grid>
+    </scene>
     <include>
-      <uri>model://ground_plane</uri>
+      <uri>model://light</uri>
+      <pose>0 0 3 0 0 0</pose>
     </include>
     <include>
-      <uri>model://sun</uri>
+      <uri>model://plane</uri>
     </include>
     <include>
       <uri>model://truck</uri>
       <pose>0 0 0.08 0 0 0</pose>
-    </include>
-    <include>
-      <uri>model://beer</uri>
-      <pose>1.26138 0.580289 0.114998 0 0 0</pose>
-    </include>
-    <include>
-      <uri>model://bookshelf</uri>
-      <pose>-0.592102 1.28886 0 0 -0 0</pose>
     </include>
   </world>
 </sdf>
