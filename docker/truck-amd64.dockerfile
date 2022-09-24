@@ -358,14 +358,11 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | b
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         bluez \
-        gfortran \
         clang-format \
+        gdb \
         file \
-        hdf5-tools \
         htop \
         httpie \
-        libatlas-base-dev \
-        libhdf5-serial-dev \
         nlohmann-json3-dev \
         tree \
         ssh \

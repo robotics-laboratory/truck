@@ -1,4 +1,6 @@
-FROM nvcr.io/nvidia/l4t-jetpack:r35.1.0
+FROM nvcr.io/nvidia/l4t-base:r35.1.0
+
+
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CUDA_HOME="/usr/local/cuda"
@@ -41,6 +43,14 @@ RUN apt-get update -q && \
         tar \
         tmux \
         wget \
+    && rm -rf /var/lib/apt/lists/* && apt-get clean
+
+### INSTALL NVIDIA
+
+RUN apt-get update -q && \
+    apt-get install -yq --no-install-recommends \
+        nvidia-cuda-dev \
+    && pip3 install --no-cache-dir -U jetson-stats \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### INSTALL OPENCV
@@ -370,11 +380,10 @@ RUN cd ${ROS_TMP} \
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
-RUN printf "export ROS_ROOT=${ROS_ROOT}\n" \
-    "export ROS_DISTRO=${ROS_DISTRO}\n" \
-    "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" \
-    "source ${ROS_ROOT}/setup.bash\n" \
-    >> /root/.bashrc
+RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
+    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc \
+    && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
+    && printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc
 
 RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
     && cd sllidar_ros2 \
@@ -386,40 +395,19 @@ RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
-ENV GZWEB_TAG="gzweb_1.4.1"
-ENV GZWEB_PATH=/opt/gzweb
-ENV GZWEB_PATCH=/tmp/patch/gzweb.patch
-
-ADD patch/gzweb.patch ${GZWEB_PATCH}
-
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
-    && source ${HOME}/.nvm/nvm.sh \
-    && nvm install 11 \
-    && mkdir -p ${GZWEB_PATH} \
-    && git clone https://github.com/osrf/gzweb.git ${GZWEB_PATH} \
-    && cd ${GZWEB_PATH} \
-    && git checkout ${GZWEB_TAG} \
-    && git apply ${GZWEB_PATCH}
-
 ### INSTALL DEV PKGS
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
-        bluez \
-        gfortran \
-        clang-format \
-        file \
-        gfortran \
-        file \
-        hdf5-tools \
-        htop \
-        httpie \
-        libatlas-base-dev \
-        libhdf5-serial-dev \
-        nlohmann-json3-dev \
-        tree \
-        ssh \
-    && pip3 install --no-cache-dir -U jetson-stats \
+    bluez \
+    clang-format \
+    gdb \
+    file \
+    htop \
+    httpie \
+    nlohmann-json3-dev \
+    tree \
+    ssh \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
