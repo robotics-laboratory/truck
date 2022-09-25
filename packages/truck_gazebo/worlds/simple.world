@@ -32,11 +32,22 @@
       <grid>false</grid>
     </scene>
     <include>
+      <name>light_1</name>
       <uri>model://light</uri>
-      <pose>0 0 3 0 0 0</pose>
+      <pose>20 0 7 0 0 0</pose>
     </include>
     <include>
-      <uri>model://plane</uri>
+      <name>light_2</name>
+      <uri>model://light</uri>
+      <pose>0 0 7 0 0 0</pose>
+    </include>
+    <include>
+      <name>light_3</name>
+      <uri>model://light</uri>
+      <pose>-20 0 7 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://atrium</uri>
     </include>
     <include>
       <uri>model://truck</uri>
