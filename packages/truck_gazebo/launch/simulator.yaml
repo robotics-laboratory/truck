@@ -1,0 +1,10 @@
+launch:
+- arg: {name: "world", default: "simple.world"}
+
+- executable:
+    name: "gzserver"
+    cmd: "gzserver --verbose $(find-pkg-share truck_gazebo)/worlds/$(var world) gui:=false"
+    output: "log"
+    shell: True
+    env: 
+    - {name: 'GAZEBO_MODEL_PATH', value: "$(find-pkg-share truck_gazebo)/models"}

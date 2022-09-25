@@ -1,7 +1,6 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"]
 
@@ -105,8 +104,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
         -DBUILD_TIFF=ON \
         -DBUILD_PERF_TESTS=OFF \
         -DBUILD_TESTS=OFF \
-    && make -j$(nproc) install \
-    && rm -rf /tmp/*
+    && make -j$(nproc) install && rm -rf /tmp/*
 
 # ### INSTALL REALSENSE2
 
@@ -215,15 +213,19 @@ RUN git clone https://github.com/introlab/rtabmap-release.git \
 ### INSTALL ROS2
 
 RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
+    && wget -qO - https://packages.osrfoundation.org/gazebo.key | apt-key add - \
+    && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
 
 ENV RMW_IMPLEMENTATION="rmw_cyclonedds_cpp"
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         gazebo11 \
-        libgazebo11-dev \
+        gazebo11-common \
+        gazebo11-plugin-base \
         imagemagick \
+        libgazebo11-dev \
         libjansson-dev \
         libasio-dev \
         libboost-dev \
@@ -313,6 +315,10 @@ RUN apt-get update -q \
         --skip-keys libopencv-imgproc-dev \
         --skip-keys python3-opencv \
         --skip-keys rtabmap \
+        --skip-keys gazebo11 \
+        --skip-keys gazebo11-common \
+        --skip-keys gazebo11-plugin-base \
+        --skip-keys libgazebo11-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN cd ${ROS_TMP} \
@@ -338,21 +344,6 @@ RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
-ENV GZWEB_TAG="gzweb_1.4.1"
-ENV GZWEB_PATH=/opt/gzweb
-ENV GZWEB_PATCH=/tmp/patch/gzweb.patch
-
-ADD patch/gzweb.patch ${GZWEB_PATCH}
-
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash \
-    && source ${HOME}/.nvm/nvm.sh \
-    && nvm install 11 \
-    && mkdir -p ${GZWEB_PATH} \
-    && git clone https://github.com/osrf/gzweb.git ${GZWEB_PATH} \
-    && cd ${GZWEB_PATH} \
-    && git checkout ${GZWEB_TAG} \
-    && git apply ${GZWEB_PATCH}
-
 ### INSTALL DEV PKGS
 
 RUN apt-get update -q \
@@ -366,6 +357,7 @@ RUN apt-get update -q \
         nlohmann-json3-dev \
         tree \
         ssh \
+    && pip3 install --no-cache-dir -U pybind11 \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \

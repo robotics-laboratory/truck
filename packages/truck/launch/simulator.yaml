@@ -1,12 +1,10 @@
 launch:
 - arg: {name: "world", default: "simple.world"}
-- arg: {name: "jetson_env", default: "true"}
 
 - include:
-    file: $(find-pkg-share truck_gazebo)/launch/simulation.yaml
+    file: $(find-pkg-share truck_gazebo)/launch/simulator.yaml
     arg:
     - {name: "world", value: "$(var world)"}
-    - {name: "jetson_env", value: "$(var jetson_env)"}
 
 - include:
     file: $(find-pkg-share truck)/launch/control.yaml

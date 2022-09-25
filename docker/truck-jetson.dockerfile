@@ -1,7 +1,5 @@
 FROM nvcr.io/nvidia/l4t-base:r35.1.0
 
-
-
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CUDA_HOME="/usr/local/cuda"
 ENV PATH="/usr/local/cuda/bin:${PATH}"
@@ -50,6 +48,7 @@ RUN apt-get update -q && \
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         nvidia-cuda-dev \
+        nvidia-cudnn8-dev \
     && pip3 install --no-cache-dir -U jetson-stats \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
@@ -135,7 +134,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
 
 ### INSTALL LIBREALSENSE
 
-ARG LIBRS_VERSION="2.50.0"
+ARG LIBRS_VERSION="2.51.1"
 
 RUN apt-get update -yq \
     && apt-get install -yq --no-install-recommends \
@@ -157,10 +156,10 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
     && cmake .. \
         -DBUILD_EXAMPLES=false \
         -DCMAKE_BUILD_TYPE=release \
-        -DFORCE_RSUSB_BACKEND=true \
+        -DFORCE_RSUSB_BACKEND=false \
         -DBUILD_WITH_CUDA=true \
         -DBUILD_WITH_OPENMP=true \
-        -DBUILD_PYTHON_BINDINGS=false \
+        -DBUILD_PYTHON_BINDINGS=true \
         -DBUILD_WITH_TM2=false \
     && make -j$(($(nproc)-1)) install \
     && rm -rf /tmp/*
@@ -274,19 +273,25 @@ RUN git clone https://github.com/introlab/rtabmap-release.git \
 ### INSTALL ROS2
 
 RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
+    && wget -qO - https://packages.osrfoundation.org/gazebo.key | apt-key add - \
+    && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
 
 ENV RMW_IMPLEMENTATION="rmw_cyclonedds_cpp"
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
+        gazebo11 \
+        gazebo11-common \
+        gazebo11-plugin-base \
         imagemagick \
+        libgazebo11-dev \
         libjansson-dev \
         libasio-dev \
         libboost-dev \
-        libpython3-dev \
         libtinyxml-dev \
         locales \
+        mercurial \
         python3-bson \
         python3-colcon-common-extensions \
         python3-flake8 \
@@ -370,6 +375,10 @@ RUN apt-get update -q \
         --skip-keys libopencv-imgproc-dev \
         --skip-keys python3-opencv \
         --skip-keys rtabmap \
+        --skip-keys gazebo11 \
+        --skip-keys gazebo11-common \
+        --skip-keys gazebo11-plugin-base \
+        --skip-keys libgazebo11-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN cd ${ROS_TMP} \
@@ -399,15 +408,16 @@ RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
-    bluez \
-    clang-format \
-    gdb \
-    file \
-    htop \
-    httpie \
-    nlohmann-json3-dev \
-    tree \
-    ssh \
+        bluez \
+        clang-format \
+        gdb \
+        file \
+        htop \
+        httpie \
+        nlohmann-json3-dev \
+        tree \
+        ssh \
+    && pip3 install --no-cache-dir -U pybind11 \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
