@@ -1,21 +1,35 @@
-# Truck plugins
+# truck_gazebo_plugins
 
-## OdometryPlugin
+| [**docs**](../../doc/README.md) | [**packages**](../README.md) |
+|---------------------------------|------------------------------|
 
-### Publish:
-- /odom ([nav_msgs/Odometry](https://docs.ros.org/en/api/nav_msgs/html/msg/Odometry.html)) – position of selected link in odometry world.
-- **/tf** [[nav_msgs/Odometry](https://docs.ros.org/en/melodic/api/geometry_msgs/html/msg/Transform.html)] – transform from global world to odometric (identical in case of simulation).
 
-### Using
+## AckermannVehicle
+Implements dummy (no slippage) [ackermann model](../../doc/ackermann_vehicle.md).
+1. Truck has *constant* steering velocity and limited torque. Each wheel is moving with separate motor in bang-bang manner. Stopping point is determined with tolerance.
+2. Rear wheels has one motor with fixed torque and gear ratio is known. It is assumed that no any slippage. Angular velocity is evaluated for required linear velocity and curvature. Velocity is controlled with PD regulator.
+
+### Config example
 ```
-<plugin name="OdometryPlugin" filename="libtruck_gazebo_plugins.so">
-    <!--  name of link (required) -->
-    <link_name>base_link</link_name>
-
-    <!-- period of publishing, default 0.0 (as soon as possible) -->
-    <period>0.1</period>
-
-    <!--  offset of base point in frame of link, default without offset -->
-    <xyz_offsets>10 0 0</xyz_offsets>
+<plugin name='AckermannControlPlugin' filename='libtruck_gazebo_ackermann_model.so'>
+  <config_path>/truck/packages/model/config/model.yaml</config_path>
+  <steering>
+    <!-- stopping point error -->
+    <error>0.03</error>
+    <!-- steering velocity in degrees -->
+    <velocity>120</velocity>
+    <!-- motor torque -->
+    <torque>0.5</torque>
+    <left_joint>left_steering_joint</left_joint>
+    <right_joint>right_steering_joint</right_joint>
+  </steering>
+  <rear>
+    <!-- controller params of reguqlators -->
+    <pd>0.1 0.0</pd>
+    <!-- motor torque -->
+    <torque>10.0</torque>
+    <left_joint>left_rear_axle</left_joint>
+    <right_joint>right_rear_axle</right_joint>
+  </rear>
 </plugin>
 ```
