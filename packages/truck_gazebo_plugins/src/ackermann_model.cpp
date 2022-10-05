@@ -118,6 +118,7 @@ void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
             if (steering_diff > +steering_error_) {
                 return +steering_velocity;
             }
+
             if (steering_diff < -steering_error_) {
                 return -steering_velocity;
             }
