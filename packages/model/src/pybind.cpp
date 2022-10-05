@@ -45,6 +45,14 @@ std::string to_string<model::Twist>(const model::Twist &obj) {
     );
 }
 
+template <>
+std::string to_string<model::ServoAngles>(const model::ServoAngles &obj) {
+    return boost::str(
+        boost::format("ServoAngles(left=%s, right=%s)")
+        % to_string(obj.left) % to_string(obj.right)
+    );
+}
+
 template <typename T>
 void bind_limits_class(py::module &m, const std::string &name) {
     using Class = Limits<T>;
@@ -79,6 +87,10 @@ PYBIND11_MODULE(pymodel, m) {
         .def_readonly("curvature", &model::Twist::curvature)
         .def_readonly("velocity", &model::Twist::velocity)
         .def("__repr__", &to_string<model::Twist>);
+    py::class_<model::ServoAngles>(m, "ServoAngles")
+        .def_readonly("left", &model::ServoAngles::left)
+        .def_readonly("right", &model::ServoAngles::right)
+        .def("__repr__", &to_string<model::ServoAngles>);
     bind_limits_class<double>(m, "FloatLimits");
     bind_limits_class<geom::Angle>(m, "AngleLimits");
     py::class_<model::Model>(m, "Model")
@@ -87,6 +99,8 @@ PYBIND11_MODULE(pymodel, m) {
         .def_property_readonly("left_steering_limits", &model::Model::leftSteeringLimits)
         .def_property_readonly("right_steering_limits", &model::Model::rightSteeringLimits)
         .def_property_readonly("base_velocity_limits", &model::Model::baseVelocityLimits)
+        .def_property_readonly("base_acceleration_limits", &model::Model::baseAccelerationLimits)
+        .def_property_readonly("servo_home_angles", &model::Model::servoHomeAngles)
         .def_property_readonly("gear_ratio", &model::Model::gearRatio)
         .def("base_to_rear_twist", &model::Model::baseToRearTwist)
         .def("rear_twist_to_steering", &model::Model::rearTwistToSteering)

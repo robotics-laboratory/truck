@@ -33,6 +33,8 @@ class Model {
     Limits<geom::Angle> leftSteeringLimits() const;
     Limits<geom::Angle> rightSteeringLimits() const;
     Limits<double> baseVelocityLimits() const;
+    Limits<double> baseAccelerationLimits() const;
+    ServoAngles servoHomeAngles() const;
 
     double gearRatio() const;
 

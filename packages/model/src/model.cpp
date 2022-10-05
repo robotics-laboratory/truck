@@ -31,6 +31,10 @@ Twist Model::baseToRearTwist(Twist twist) const {
 
 Limits<double> Model::baseVelocityLimits() const { return params_.limits.velocity; }
 
+Limits<double> Model::baseAccelerationLimits() const { return params_.limits.acceleration; }
+
+ServoAngles Model::servoHomeAngles() const { return params_.servo_home_angles; }
+
 double Model::baseMaxAbsCurvature() const { return cache_.max_abs_curvature; }
 
 Limits<geom::Angle> Model::leftSteeringLimits() const {

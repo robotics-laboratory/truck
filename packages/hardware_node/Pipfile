@@ -8,14 +8,9 @@ pyyaml = "*"
 odrive = "==0.6.1.post0"
 pyserial = "*"
 numpy = "*"
-cobs = "*"
-crc8 = "*"
-msgpack = "*"
+msgpacketizer = "*"
 
 [dev-packages]
-jupyter = "*"
-pandas = "*"
-matplotlib = "*"
 
 [requires]
 python_version = "3.8"

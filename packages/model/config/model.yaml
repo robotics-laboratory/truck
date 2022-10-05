@@ -12,3 +12,4 @@ limits:
 wheel_radius: 0.055 # m
 # Motor to DIFFERENTIAL ratio. To get motor to WHEEL ratio, multiply by 0.5.
 gear_ratio: 0.105263158
+servo_home_angles: {left: 89, right: 96}  # deg

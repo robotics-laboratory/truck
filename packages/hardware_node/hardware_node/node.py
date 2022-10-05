@@ -1,10 +1,6 @@
-from pathlib import PosixPath as Path
-
 import odrive
 import pymodel
 import rclpy
-import rclpy.logging
-from ament_index_python.packages import get_package_share_directory
 from hardware_node.teensy import TeensyBridge
 from rclpy.node import Node
 from truck_interfaces.msg import Control, ControlMode, HardwareStatus, HardwareTelemetry
@@ -12,8 +8,6 @@ from truck_interfaces.msg import Control, ControlMode, HardwareStatus, HardwareT
 
 class HardwareNode(Node):
     DEFAULT_LINEAR_ACCEL = 1.0
-    DEFAULT_MODEL_CONFIG = ["model", "config/model.yaml"]
-    STEERING_CSV_PATH = ["hardware_node", "resource/steering.csv"]
 
     def __init__(self):
         super().__init__("hardware_node")
@@ -21,34 +15,46 @@ class HardwareNode(Node):
         self._init_ros_params()
         self._init_ros_topics()
         self._init_ros_timers()
+        self._model = pymodel.Model(self._model_config)
         self._teensy = TeensyBridge(
             logger=self._log,
             serial_port=self._teensy_serial_port,
             serial_speed=self._teensy_serial_speed,
-            steering_csv_path=self._get_shared_path(*self.STEERING_CSV_PATH),
+            steering_csv_path=self._steering_config,
+            servo_home_angles={
+                "left": self._model.servo_home_angles.left.radians,
+                "right": self._model.servo_home_angles.right.radians,
+            },
         )
-        self._model = pymodel.Model(self._get_shared_path(*self.DEFAULT_MODEL_CONFIG))
         self._odrive = odrive.find_any()
         self._axis = getattr(self._odrive, self._odrive_axis)
         self._axis.config.enable_watchdog = True
-        self._axis.config.watchdog_timeout = self._odrive_timeout
+        self._axis.config.watchdog_timeout = self._odrive_timeout / 1000
         self._prev_mode = ControlMode.OFF
-        self._prev_status: HardwareStatus = None
+        self._disable_motor()
         self._log.info("Hardware node initialized")
 
     def _init_ros_params(self):
+        self.declare_parameter("model_config", "")
+        self.declare_parameter("steering_config", "")
         self.declare_parameter("odrive_axis", "axis1")
-        self.declare_parameter("odrive_timeout", 0.5)
+        self.declare_parameter("odrive_timeout", 200)
         self.declare_parameter("teensy_serial_port", "/dev/ttyTHS0")
         self.declare_parameter("teensy_serial_speed", 500000)
         self.declare_parameter("status_report_rate", 1.0)
-        self.declare_parameter("telemetry_report_rate", 100.0)
+        self.declare_parameter("telemetry_report_rate", 20.0)
+        self._model_config = self._get_param("model_config", str)
+        self._steering_config = self._get_param("steering_config", str)
         self._odrive_axis = self._get_param("odrive_axis", str)
-        self._odrive_timeout = self._get_param("odrive_timeout", float)
+        self._odrive_timeout = self._get_param("odrive_timeout", int, "ms")
         self._teensy_serial_port = self._get_param("teensy_serial_port", str)
         self._teensy_serial_speed = self._get_param("teensy_serial_speed", int)
-        self._status_report_rate = self._get_param("status_report_rate", float)
-        self._telemetry_report_rate = self._get_param("telemetry_report_rate", float)
+        self._status_rate = self._get_param("status_report_rate", float, "Hz")
+        self._telemetry_rate = self._get_param("telemetry_report_rate", float, "Hz")
+        if not self._model_config:
+            raise ValueError("Model config path not set")
+        if not self._steering_config:
+            raise ValueError("Steering CSV path not set")
 
     def _init_ros_topics(self):
         self._mode_sub = self.create_subscription(
@@ -76,11 +82,11 @@ class HardwareNode(Node):
 
     def _init_ros_timers(self):
         self._status_timer = self.create_timer(
-            1 / self._status_report_rate,
+            1 / self._status_rate,
             self._push_status,
         )
         self._telemetry_timer = self.create_timer(
-            1 / self._telemetry_report_rate,
+            1 / self._telemetry_rate,
             self._push_telemetry,
         )
 
@@ -109,7 +115,7 @@ class HardwareNode(Node):
 
     def _command_callback(self, msg: Control):
         if self._prev_mode == ControlMode.OFF:
-            return
+            self._disable_motor()
         self._axis.watchdog_feed()
         rpm = self._model.linear_velocity_to_motor_rps(msg.velocity)
         self._axis.controller.input_vel = rpm
@@ -124,11 +130,38 @@ class HardwareNode(Node):
         armed = self._axis.current_state != odrive.enums.AXIS_STATE_IDLE
         errors = []
         if self._odrive.error or self._axis.error:
-            # TODO: Prettify
-            message = odrive.utils.format_errors(self._odrive)
-            errors.extend(repr(message).split("\n"))
+            errors = self._parse_odrive_errors()
         status = HardwareStatus(armed=armed, errors=errors)
+        status.header.stamp = self.get_clock().now().to_msg()
         self._status_pub.publish(status)
+
+    def _parse_odrive_errors(self):
+        root = {}
+        root_stack = []
+        curr_root = root
+        last_child = None
+        curr_level = 0
+        lines = repr(odrive.utils.format_errors(self._odrive)).split("\n")
+        for line in lines:
+            level = len(line) - len(line.lstrip())
+            name = line.split(":")[0].strip().split(".")[-1]
+            if level > curr_level:
+                curr_level = level
+                root_stack.append(curr_root)
+                curr_root = last_child
+            elif level < curr_level:
+                curr_level = level
+                curr_root = root_stack.pop(-1)
+            last_child = curr_root[name] = {}
+        errors = [f"system.{x}" for x in root["system"]]
+        axis_group = root[self._odrive_axis]
+        errors += [f"axis.{x}" for x in axis_group["axis"]]
+        errors += [f"motor.{x}" for x in axis_group["motor"]]
+        errors += [f"drv.{x}" for x in axis_group["DRV fault"]]
+        errors += [f"estimator.{x}" for x in axis_group["sensorless_estimator"]]
+        errors += [f"encoder.{x}" for x in axis_group["encoder"]]
+        errors += [f"controller.{x}" for x in axis_group["controller"]]
+        return errors
 
     def _push_telemetry(self):
         telemetry = HardwareTelemetry(
@@ -137,25 +170,24 @@ class HardwareNode(Node):
             battery_voltage=self._odrive.vbus_voltage,
             battery_current=self._odrive.ibus,
         )
+        telemetry.header.stamp = self.get_clock().now().to_msg()
         self._telemetry_pub.publish(telemetry)
 
     def _get_default_accel(self):
         return self._model.linear_velocity_to_motor_rps(self.DEFAULT_LINEAR_ACCEL)
 
-    def _get_param(self, name, type):
+    def _get_param(self, name, type, unit=""):
         value = self.get_parameter(name).get_parameter_value()
         if type == str:
-            return value.string_value
+            value = value.string_value
         elif type == float:
-            return value.double_value
+            value = value.double_value
         elif type == int:
-            return value.integer_value
+            value = value.integer_value
         else:
             raise RuntimeError(f"Unsupported type: {type}")
-
-    def _get_shared_path(self, package, path):
-        share = get_package_share_directory(package)
-        return Path(share).joinpath(path).as_posix()
+        self._log.info(f"{name.replace('_', ' ')}: {value!r} {unit}")
+        return value
 
 
 def main():

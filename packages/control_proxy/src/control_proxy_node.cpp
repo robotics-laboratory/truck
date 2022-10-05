@@ -161,7 +161,9 @@ void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr
 }
 
 bool ControlProxyNode::checkButtonPressed( sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button) {
-    if (!prev_joypad_command_ || !joypad_command) return false;
+    if (!prev_joypad_command_ || !joypad_command) {
+        return false;
+    }
     return prev_joypad_command_->buttons[joypad_button] == 0 &&
            joypad_command->buttons[joypad_button] == 1;
 }
@@ -194,21 +196,31 @@ void ControlProxyNode::publishStop() {
 }
 
 void ControlProxyNode::watchdog() {
-    auto get_delay = [this](const auto& msg) {
-        return std::chrono::nanoseconds((now() - msg.header.stamp).nanoseconds());
+    auto timeout_failed = [this](const auto& msg, const auto& timeout) {
+        if (!msg) {
+            return true;
+        } else {
+            auto duration_ns = (now() - msg->header.stamp).nanoseconds();
+            return std::chrono::nanoseconds(duration_ns) > timeout;
+        }
     };
 
-    if (mode_ != Mode::Off && get_delay(*prev_joypad_command_) > joypad_timeout_) {
+    if (mode_ == Mode::Off) {
+        publishStop();
+        return;
+    }
+
+    if (mode_ != Mode::Off && timeout_failed(prev_joypad_command_, joypad_timeout_)) {
         RCLCPP_ERROR(this->get_logger(), "Lost joypad, stop!");
         setMode(Mode::Off);
         prev_joypad_command_ = nullptr;
         publishStop();
         return;
     }
-
-    if (mode_ == Mode::Auto && get_delay(*prev_command_) > control_timeout_) {
+    
+    if (mode_ == Mode::Auto && timeout_failed(prev_command_, control_timeout_)) {
         RCLCPP_ERROR(this->get_logger(), "Lost control, stop!");
-        setMode(Mode::Remote);
+        setMode(Mode::Off);
         prev_command_ = nullptr;
         publishStop();
         return;
