@@ -22,6 +22,7 @@ class HardwareNode(Node):
         self._init_ros_topics()
         self._init_ros_timers()
         self._teensy = TeensyBridge(
+            logger=self._log,
             serial_port=self._teensy_serial_port,
             serial_speed=self._teensy_serial_speed,
             steering_csv_path=self._get_shared_path(*self.STEERING_CSV_PATH),
@@ -115,6 +116,8 @@ class HardwareNode(Node):
         twist = pymodel.Twist(msg.curvature, msg.velocity)
         twist = self._model.base_to_rear_twist(twist)
         steering = self._model.rear_twist_to_steering(twist)
+        self._log.debug(f"Center curvature: {msg.curvature:.2f}")
+        self._log.debug(f"Rear curvature: {twist.curvature:.2f}")
         self._teensy.push(steering.left.radians, steering.right.radians)
 
     def _push_status(self):

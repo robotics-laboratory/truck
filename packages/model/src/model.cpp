@@ -16,7 +16,7 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
         auto rearToBaseCurvature = [&](double C) {
-            return C / std::sqrt(1 + squared(C * cache_.width_half));
+            return C / std::sqrt(1 + squared(C * params_.wheel_base.base_to_rear));
         };
 
         cache_.max_abs_curvature =

@@ -4,8 +4,8 @@ wheel_base:
   base_to_rear: 0.2025 # m
 
 limits:
-  steering: { inner: +30.0, outer: +30.0 } # deg
-  max_abs_curvature: 1.5                   # 1/m
+  steering: { inner: 40.0, outer: 40.0 }   # deg
+  max_abs_curvature: 2.0                   # 1/m
   velocity: { min: -1.0, max: 1.0 }        # m/s
   acceleration: { min: -5.0, max: +1.0 }   # m/s^2
 
