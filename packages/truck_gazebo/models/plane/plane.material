@@ -1,0 +1,20 @@
+material Truck/Plane
+{
+  receive_shadows on
+  technique
+  {
+    pass
+    {
+      ambient 0.6 0.6 0.6 1
+      diffuse 0.5 0.5 0.5 1
+      specular 0.0 0.0 0.0 1
+      emissive 0.0 0.0 0.0 1
+
+      texture_unit
+      {
+        texture plane.png
+        scale 0.04 0.02
+      }
+    }
+  }
+}
