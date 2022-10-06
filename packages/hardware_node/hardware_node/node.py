@@ -7,8 +7,6 @@ from truck_interfaces.msg import Control, ControlMode, HardwareStatus, HardwareT
 
 
 class HardwareNode(Node):
-    DEFAULT_LINEAR_ACCEL = 1.0
-
     def __init__(self):
         super().__init__("hardware_node")
         self._log = self.get_logger()
@@ -16,22 +14,9 @@ class HardwareNode(Node):
         self._init_ros_topics()
         self._init_ros_timers()
         self._model = pymodel.Model(self._model_config)
-        self._teensy = TeensyBridge(
-            logger=self._log,
-            serial_port=self._teensy_serial_port,
-            serial_speed=self._teensy_serial_speed,
-            steering_csv_path=self._steering_config,
-            servo_home_angles={
-                "left": self._model.servo_home_angles.left.radians,
-                "right": self._model.servo_home_angles.right.radians,
-            },
-        )
-        self._odrive = odrive.find_any()
-        self._axis = getattr(self._odrive, self._odrive_axis)
-        self._axis.config.enable_watchdog = True
-        self._axis.config.watchdog_timeout = self._odrive_timeout / 1000
+        self._init_teensy()
+        self._init_odrive()
         self._prev_mode = ControlMode.OFF
-        self._disable_motor()
         self._log.info("Hardware node initialized")
 
     def _init_ros_params(self):
@@ -90,6 +75,31 @@ class HardwareNode(Node):
             self._push_telemetry,
         )
 
+    def _init_teensy(self):
+        self._teensy = TeensyBridge(
+            logger=self._log,
+            serial_port=self._teensy_serial_port,
+            serial_speed=self._teensy_serial_speed,
+            steering_csv_path=self._steering_config,
+            servo_home_angles={
+                "left": self._model.servo_home_angles.left.radians,
+                "right": self._model.servo_home_angles.right.radians,
+            },
+        )
+
+    def _init_odrive(self):
+        self._odrive = odrive.find_any()
+        self._axis = getattr(self._odrive, self._odrive_axis)
+        self._axis.config.enable_watchdog = True
+        self._axis.config.watchdog_timeout = self._odrive_timeout / 1000
+        accel_mps = self._model.base_acceleration_limits.max
+        accel_rps = self._model.linear_velocity_to_motor_rps(accel_mps)
+        self._log.info(
+            f"Max acceleration: {accel_mps:.1f} m/s^2 | {accel_rps:.1f} turns/s^2"
+        )
+        self._axis.controller.config.vel_ramp_rate = accel_rps
+        self._disable_motor()
+
     def _mode_callback(self, msg: ControlMode):
         if msg.mode == self._prev_mode:
             return
@@ -104,10 +114,8 @@ class HardwareNode(Node):
         self._push_status()
 
     def _enable_motor(self):
-        self._axis.watchdog_feed()
         self._odrive.clear_errors()
         self._axis.controller.input_vel = 0
-        self._axis.controller.config.vel_ramp_rate = self._get_default_accel()
         self._axis.requested_state = odrive.enums.AXIS_STATE_CLOSED_LOOP_CONTROL
 
     def _disable_motor(self):
@@ -173,9 +181,6 @@ class HardwareNode(Node):
         telemetry.header.stamp = self.get_clock().now().to_msg()
         self._telemetry_pub.publish(telemetry)
 
-    def _get_default_accel(self):
-        return self._model.linear_velocity_to_motor_rps(self.DEFAULT_LINEAR_ACCEL)
-
     def _get_param(self, name, type, unit=""):
         value = self.get_parameter(name).get_parameter_value()
         if type == str:
@@ -186,7 +191,8 @@ class HardwareNode(Node):
             value = value.integer_value
         else:
             raise RuntimeError(f"Unsupported type: {type}")
-        self._log.info(f"{name.replace('_', ' ')}: {value!r} {unit}")
+        readable_name = name.replace('_', ' ').capitalize()
+        self._log.info(f"{readable_name}: {value!r} {unit}")
         return value
 
 
