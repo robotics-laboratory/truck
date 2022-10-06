@@ -1,0 +1,21 @@
+launch:
+
+- arg:
+    name: "model_config"
+    default: "$(find-pkg-share model)/config/model.yaml"
+
+- arg:
+    name: "steering_config"
+    default: "$(find-pkg-share hardware_node)/resource/steering.csv"
+    
+- node:
+    pkg: "hardware_node"
+    exec: "hardware_node"
+    name: "hardware_node"
+    output: "log"
+    param:
+    - {name: "model_config", value: "$(var model_config)"}
+    - {name: "steering_config", value: "$(var steering_config)"}
+    - {name: "odrive_timeout", value: 200}  # ms
+    - {name: "status_report_rate", value: 1.0}  # Hz
+    - {name: "telemetry_report_rate", value: 20.0}  # Hz

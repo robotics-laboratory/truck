@@ -1,4 +1,4 @@
-.PHONY: all build-all build-one build-clean
+.PHONY: all build-all build-one build-up build-clean
 .SILENT:
 .ONESHELL:
 
@@ -12,6 +12,10 @@ build-all:
 	colcon build --merge-install --packages-skip-up-to $(skip)
 
 build-one:
+	cd packages
+	colcon build --merge-install --packages-select $(package)
+
+build-up:
 	cd packages
 	colcon build --merge-install --packages-up-to $(package)
 
