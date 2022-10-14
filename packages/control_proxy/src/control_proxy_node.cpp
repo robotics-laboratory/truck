@@ -160,7 +160,8 @@ void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr
     prev_joypad_command_ = std::move(joypad_command);
 }
 
-bool ControlProxyNode::checkButtonPressed( sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button) {
+bool ControlProxyNode::checkButtonPressed(
+    sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button) {
     if (!prev_joypad_command_ || !joypad_command) {
         return false;
     }
@@ -199,10 +200,9 @@ void ControlProxyNode::watchdog() {
     auto timeout_failed = [this](const auto& msg, const auto& timeout) {
         if (!msg) {
             return true;
-        } else {
-            auto duration_ns = (now() - msg->header.stamp).nanoseconds();
-            return std::chrono::nanoseconds(duration_ns) > timeout;
         }
+        auto duration_ns = (now() - msg->header.stamp).nanoseconds();
+        return std::chrono::nanoseconds(duration_ns) > timeout;
     };
 
     if (mode_ == Mode::Off) {
@@ -217,7 +217,7 @@ void ControlProxyNode::watchdog() {
         publishStop();
         return;
     }
-    
+
     if (mode_ == Mode::Auto && timeout_failed(prev_command_, control_timeout_)) {
         RCLCPP_ERROR(this->get_logger(), "Lost control, stop!");
         setMode(Mode::Off);

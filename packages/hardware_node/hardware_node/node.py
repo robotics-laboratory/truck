@@ -1,9 +1,10 @@
 import odrive
 import pymodel
 import rclpy
-from hardware_node.teensy import TeensyBridge
 from rclpy.node import Node
 from truck_interfaces.msg import Control, ControlMode, HardwareStatus, HardwareTelemetry
+
+from hardware_node.teensy import TeensyBridge
 
 
 class HardwareNode(Node):
