@@ -51,7 +51,7 @@ endif()
 ament_package()
 
 set(PYBIND11_PYTHON_VERSION "3.8")
-add_subdirectory(pybind11)
+find_package(pybind11 REQUIRED)
 pybind11_add_module(pymodel ${CMAKE_SOURCE_DIR}/src/pybind.cpp)
 target_link_libraries(pymodel PRIVATE model)
 install(TARGETS pymodel LIBRARY DESTINATION lib/python3.8/site-packages)
