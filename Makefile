@@ -1,13 +1,24 @@
-.PHONY: all build start stop
+.PHONY: all build-all build-one build-up build-clean
+.SILENT:
+.ONESHELL:
+
+SHELL := /bin/bash
 
 all:
-	echo "Please, use explicit targets"
+	echo "Please, use explicit targets" >&2
 
-build:
-	colcon build --packages-up-to truck
+build-all:
+	cd packages
+	colcon build --merge-install --packages-skip-up-to $(skip)
 
-launch:
-	. install/setup.sh && ros2 launch truck planner.yaml
+build-one:
+	cd packages
+	colcon build --merge-install --packages-select $(package)
 
-pub:
-	./scripts/pub.sh
+build-up:
+	cd packages
+	colcon build --merge-install --packages-up-to $(package)
+
+build-clean:
+	cd packages
+	rm -rf build install log

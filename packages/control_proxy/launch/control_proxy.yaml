@@ -14,6 +14,3 @@ launch:
     - {name: "joypad_timeout", value: 200}
     # set mode to `remote` if no commands from planner during this time (milliseconds)
     - {name: "control_timeout", value: 200}
-
-
-

@@ -13,6 +13,7 @@
   <depend>ros_environment</depend>
 
   <depend>control_proxy</depend>
+  <depend>hardware_node</depend>
   <depend>truck_gazebo</depend>
   <depend>truck_gazebo_plugins</depend>
 

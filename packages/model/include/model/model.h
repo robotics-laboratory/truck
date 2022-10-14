@@ -33,12 +33,15 @@ class Model {
     Limits<geom::Angle> leftSteeringLimits() const;
     Limits<geom::Angle> rightSteeringLimits() const;
     Limits<double> baseVelocityLimits() const;
+    Limits<double> baseAccelerationLimits() const;
+    ServoAngles servoHomeAngles() const;
 
     double gearRatio() const;
 
     Twist baseToRearTwist(Twist twist) const;
     Steering rearTwistToSteering(Twist twist) const;
     WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
+    double linearVelocityToMotorRPS(double velocity) const;
 
   private:
     struct Cache {

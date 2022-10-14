@@ -1,8 +1,8 @@
 launch:
 
 - include:
-    file: $(dirname)/control.yaml
+    file: $(find-pkg-share truck)/launch/remote.yaml
 - include:
-    file: $(dirname)/camera.yaml
+    file: $(find-pkg-share truck)/launch/camera.yaml
 - include:
-    file: $(dirname)/slam.yaml
+    file: $(find-pkg-share truck)/launch/slam.yaml

@@ -39,6 +39,9 @@ class ControlProxyNode : public rclcpp::Node {
 
     void handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command);
 
+    bool checkButtonPressed(
+        sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button);
+
     void watchdog();
 
     void setMode(Mode mode);

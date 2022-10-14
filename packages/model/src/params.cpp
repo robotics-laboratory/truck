@@ -35,16 +35,23 @@ VehicleLimits::VehicleLimits(const YAML::Node& node)
     , velocity{toLimits<double>(node["velocity"])}
     , acceleration{toLimits<double>(node["acceleration"])} {
     BOOST_VERIFY(max_abs_curvature >= 0);
-    BOOST_VERIFY(steering.inner >= 0_deg && steering.inner < 90_deg);
-    BOOST_VERIFY(steering.outer >= 0_deg && steering.outer < 90_deg);
-    // BOOST_VERIFY(velocity.min >= 0);  // forbid back movement
+    BOOST_VERIFY(0_deg <= steering.inner && steering.inner < 90_deg);
+    BOOST_VERIFY(0_deg <= steering.outer && steering.outer < 90_deg);
+}
+
+ServoAngles::ServoAngles(const YAML::Node& node)
+    : left(geom::Angle::fromDegrees(node["left"].as<double>()))
+    , right(geom::Angle::fromDegrees(node["right"].as<double>())) {
+    BOOST_VERIFY(0_deg <= left && left < 180_deg);
+    BOOST_VERIFY(0_deg <= right && right < 180_deg);
 }
 
 Params::Params(const YAML::Node& node)
     : wheel_base(node["wheel_base"])
     , limits(node["limits"])
     , wheel_radius(node["wheel_radius"].as<double>())
-    , gear_ratio(node["gear_ratio"].as<double>()) {
+    , gear_ratio(node["gear_ratio"].as<double>())
+    , servo_home_angles(node["servo_home_angles"]) {
     BOOST_VERIFY(wheel_radius > 0);
     BOOST_VERIFY(gear_ratio > 0);
 }

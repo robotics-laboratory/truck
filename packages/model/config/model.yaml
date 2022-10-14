@@ -1,13 +1,15 @@
 wheel_base:
-  length: 0.405      # m
-  width: 0.2130      # m
-  base_to_rear: 0.20 # m
+  length: 0.405        # m
+  width: 0.213         # m
+  base_to_rear: 0.2025 # m
 
 limits:
-  steering: { inner: +30.0, outer: +30.0 } # deg
-  max_abs_curvature: 3.0                   # 1/m
+  steering: { inner: 40.0, outer: 40.0 }   # deg
+  max_abs_curvature: 2.0                   # 1/m
   velocity: { min: -1.0, max: 1.0 }        # m/s
   acceleration: { min: -5.0, max: +1.0 }   # m/s^2
 
 wheel_radius: 0.055 # m
-gear_ratio: 0.1
+# Motor to DIFFERENTIAL ratio. To get motor to WHEEL ratio, multiply by 0.5.
+gear_ratio: 0.105263158
+servo_home_angles: {left: 89, right: 96}  # deg

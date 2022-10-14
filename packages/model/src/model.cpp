@@ -16,7 +16,7 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
         auto rearToBaseCurvature = [&](double C) {
-            return C / std::sqrt(1 + squared(C * cache_.width_half));
+            return C / std::sqrt(1 + squared(C * params_.wheel_base.base_to_rear));
         };
 
         cache_.max_abs_curvature =
@@ -30,6 +30,10 @@ Twist Model::baseToRearTwist(Twist twist) const {
 }
 
 Limits<double> Model::baseVelocityLimits() const { return params_.limits.velocity; }
+
+Limits<double> Model::baseAccelerationLimits() const { return params_.limits.acceleration; }
+
+ServoAngles Model::servoHomeAngles() const { return params_.servo_home_angles; }
 
 double Model::baseMaxAbsCurvature() const { return cache_.max_abs_curvature; }
 
@@ -56,6 +60,10 @@ WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
     return WheelVelocity {
         geom::Angle{(1 - ratio) * twist.velocity / params_.wheel_radius},
         geom::Angle{(1 + ratio) * twist.velocity / params_.wheel_radius}};
+}
+
+double Model::linearVelocityToMotorRPS(double velocity) const {
+    return velocity / params_.wheel_radius / M_PI / params_.gear_ratio;
 }
 
 double Model::gearRatio() const { return params_.gear_ratio; }

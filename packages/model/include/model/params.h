@@ -31,6 +31,13 @@ struct VehicleLimits {
     Limits<double> acceleration;
 };
 
+struct ServoAngles {
+    ServoAngles(const YAML::Node& node);
+
+    geom::Angle left;
+    geom::Angle right; 
+};
+
 struct Params {
     Params(const YAML::Node& node);
     Params(const std::string& config_path);
@@ -39,6 +46,7 @@ struct Params {
     model::VehicleLimits limits;
     double wheel_radius;
     double gear_ratio;
+    ServoAngles servo_home_angles;
 };
 
 }  // namespace truck::model

@@ -2,3 +2,10 @@
 packages/build
 packages/install
 packages/log
+.vscode
+!.vscode/c_cpp_properties.json
+!.vscode/settings.json
+.dvc
+__pycache__/
+*.py[cod]
+*$py.class

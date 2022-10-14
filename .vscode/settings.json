@@ -1,16 +1,11 @@
 {
-    "editor": {
-        "rulers": [
-            80,
-            100
-        ],
-        "formatOnPaste": true,
-        "formatOnSaveMode": "modifications",
-        "formatOnType": true,
+    "[python]": {
+        "editor.rulers": [88]
     },
     "[cpp]": {
-        "editor.defaultFormatter": "ms-vscode.cpptools"
+        "editor.defaultFormatter": "ms-vscode.cpptools",
+        "editor.rulers": [100]
     },
     "C_Cpp.clang_format_fallbackStyle": "Google",
-    "cmake.sourceDirectory": "${workspaceFolder}/packages/aruco_localization",
+    "python.formatting.provider": "black"
 }

@@ -19,6 +19,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/Point.msg
   msg/RandomSeed.msg
   msg/Scene.msg
+  msg/HardwareStatus.msg
+  msg/HardwareTelemetry.msg
   DEPENDENCIES
   builtin_interfaces
   geometry_msgs
