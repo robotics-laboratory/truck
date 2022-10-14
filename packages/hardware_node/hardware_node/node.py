@@ -24,7 +24,7 @@ class HardwareNode(Node):
         self.declare_parameter("model_config", "")
         self.declare_parameter("steering_config", "")
         self.declare_parameter("odrive_axis", "axis1")
-        self.declare_parameter("odrive_timeout", 200)
+        self.declare_parameter("odrive_timeout", 250)
         self.declare_parameter("teensy_serial_port", "/dev/ttyTHS0")
         self.declare_parameter("teensy_serial_speed", 500000)
         self.declare_parameter("status_report_rate", 1.0)
