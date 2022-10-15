@@ -20,7 +20,7 @@ T GetParam(sdf::ElementPtr sdf, const std::string& name) {
     }
 
     return value;
-};
+}
 
 sdf::ElementPtr GetElement(sdf::ElementPtr sdf, const std::string& name) {
     const auto element = sdf->GetElement(name);
