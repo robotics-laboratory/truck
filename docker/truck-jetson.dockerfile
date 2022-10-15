@@ -344,11 +344,13 @@ RUN mkdir -p ${ROS_ROOT} \
         gazebo_ros \
         geometry2 \
         joy \
+        joy_linux \
         launch_xml \
         launch_yaml \
         pcl_conversions \
         realsense2_camera \
         rmw_cyclonedds_cpp \
+        robot_localization \
         ros_base \
         rosbridge_suite \
         rtabmap_ros \
@@ -406,6 +408,8 @@ RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
 
 ### INSTALL DEV PKGS
 
+COPY requirements.txt /tmp/requirements.txt
+
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         bluez \
@@ -417,7 +421,8 @@ RUN apt-get update -q \
         nlohmann-json3-dev \
         tree \
         ssh \
-    && pip3 install --no-cache-dir -U pybind11 \
+    && python3 -m pip install --no-cache-dir -U -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
