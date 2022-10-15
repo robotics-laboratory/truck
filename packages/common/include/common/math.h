@@ -3,10 +3,11 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <cmath>
 
 namespace truck {
 
-template <typename T>
+template<typename T>
 inline double squared(const T& x) {
     return x * x;
 }
@@ -22,18 +23,24 @@ T clamp(const T& val, const T& abs_limit) {
 }
 
 template<class T>
-struct Limits { 
+struct Limits {
     Limits() = default;
 
     Limits(const T& min, const T& max) : min(min), max(max) { BOOST_VERIFY(min <= max); }
 
-    inline  bool isMet(const T& x) const { return min <= x && x <= max; }
+    bool isMet(const T& x) const { return min <= x && x <= max; }
 
-    inline  bool isStrictlyMet(const T& x) const { return min < x && x < max; }
+    bool isStrictlyMet(const T& x) const { return min < x && x < max; }
 
     T clamp(const T& t) const { return std::clamp(t, min, max); }
 
     T min, max;
 };
 
-} // namespace truck
+template<class Int, class Float>
+Int ceil(Float value) { return static_cast<Int>(std::ceil(value)); }
+
+template<class Int, class Float>
+Int floor(Float value) { return static_cast<Int>(std::floor(value)); }
+
+}  // namespace truck
