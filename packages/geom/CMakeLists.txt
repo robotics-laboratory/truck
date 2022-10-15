@@ -9,14 +9,29 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-add_library(${PROJECT_NAME} SHARED src/empty.cpp)
+find_package(common REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(Boost REQUIRED)
+
+add_library(${PROJECT_NAME} SHARED
+  src/angle.cpp
+  src/arc.cpp
+  src/circle.cpp
+  src/distance.cpp
+  src/line.cpp
+  src/transform.cpp
+  src/vector.cpp
+)
+
+ament_target_dependencies(geom common nav_msgs geometry_msgs)
 
 target_include_directories(geom PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 ament_export_targets(geom HAS_LIBRARY_TARGET)
-# ament_export_dependencies(some_dependency)
+ament_export_dependencies(common nav_msgs geometry_msgs)
 
 install(
   TARGETS geom

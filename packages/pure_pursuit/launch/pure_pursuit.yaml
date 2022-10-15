@@ -1,15 +1,11 @@
 launch:
 - arg:
-    name: "model_config_path"
-    default: "model/config/model.yaml"
+    name: "model_config"
+    default: "$(find-pkg-share model)/config/model.yaml"
 - node:
     pkg: "pure_pursuit"
     exec: "pure_pursuit_node"
     name: "pure_pursuit_node"
-    namespace: "truck"
     output: "log"
-    remap:
-    - {from: "/truck/current_state", to: "/odom"}
-    - {from: "/truck/pure_pursuit_command", to: "/truck/control_command"}
     param:
-    - {name: "model_config_path", value: "$(var model_config_path)"}
+    - {name: "model_config", value: "$(var model_config)"}

@@ -7,6 +7,8 @@ namespace truck::geom {
 
 class Angle {
   public:
+    Angle() : value_(0) {}
+
     explicit constexpr Angle(double rad) : value_(rad) {}
 
     explicit operator double() { return value_; }
@@ -43,46 +45,85 @@ class Angle {
 
     constexpr Angle zero() const { return Angle{0}; }
 
+    constexpr Angle _0_2PI() const {
+        const double result = fmod(value_, 2 * M_PI);
+        return (result < 0) ? Angle{result + 2 * M_PI} : Angle{result};
+    }
+
+    constexpr Angle _mPI_PI() const {
+        const double result = fmod(value_ + M_PI, 2 * M_PI);
+        return (result <= 0) ? Angle{result + M_PI} : Angle{result - M_PI};
+    }
+
   private:
     double value_;
 };
 
+Angle asin(double x) noexcept;
+Angle acos(double x) noexcept;
+Angle atan(double x) noexcept;
+Angle atan(double x, double y) noexcept;
+
 namespace literals {
 
-constexpr Angle operator"" _rad(unsigned long long radians) { return Angle::fromRadians(radians); }
-constexpr Angle operator"" _rad(long double radians) { return Angle::fromRadians(radians); }
+inline constexpr Angle operator"" _rad(unsigned long long radians) {
+    return Angle::fromRadians(radians);
+}
 
-constexpr Angle operator"" _deg(unsigned long long degrees) { return Angle::fromDegrees(degrees); }
-constexpr Angle operator"" _deg(long double degrees) { return Angle::fromDegrees(degrees); }
+inline constexpr Angle operator"" _rad(long double radians) { return Angle::fromRadians(radians); }
+
+inline constexpr Angle operator"" _deg(unsigned long long degrees) {
+    return Angle::fromDegrees(degrees);
+}
+
+inline constexpr Angle operator"" _deg(long double degrees) { return Angle::fromDegrees(degrees); }
 
 }  // namespace literals
 
-constexpr Angle operator/(Angle a, double v) {
-    a /= v;
-    return a;
+inline Angle asin(double x) noexcept { return Angle{std::asin(x)}; }
+
+inline Angle acos(double x) noexcept { return Angle{std::acos(x)}; }
+
+inline Angle atan(double x) noexcept { return Angle{std::atan(x)}; }
+
+inline Angle atan(double x, double y) noexcept { return Angle{std::atan2(x, y)}; }
+
+inline constexpr Angle operator+(Angle a, Angle b) noexcept {
+    return Angle{a.radians() + b.radians()};
 }
 
-inline constexpr bool operator<(Angle left, Angle right) {
+inline constexpr Angle operator-(Angle a, Angle b) noexcept {
+    return Angle{a.radians() - b.radians()};
+}
+
+inline constexpr Angle operator*(double v, Angle a) noexcept { return Angle{v * a.radians()}; }
+
+inline constexpr Angle operator*(Angle a, double v) noexcept { return v * a; }
+
+inline constexpr Angle operator/(Angle a, double v) noexcept { return Angle{a.radians() / v}; }
+
+inline constexpr bool operator<(Angle left, Angle right) noexcept {
     return left.radians() < right.radians();
 }
 
-inline constexpr bool operator<=(Angle left, Angle right) {
+inline constexpr bool operator<=(Angle left, Angle right) noexcept {
     return left.radians() <= right.radians();
 }
 
-inline constexpr bool operator>(Angle left, Angle right) {
+inline constexpr bool operator>(Angle left, Angle right) noexcept {
     return left.radians() > right.radians();
 }
 
-inline constexpr bool operator>=(Angle left, Angle right) {
+inline constexpr bool operator>=(Angle left, Angle right) noexcept {
     return left.radians() >= right.radians();
 }
 
-inline std::ostream& operator<<(std::ostream& out, const Angle& angle) {
-    return out << angle.degrees() << "deg";
-}
+std::ostream& operator<<(std::ostream& out, const Angle& angle) noexcept;
+
+bool equal(Angle a, Angle b, double eps) noexcept;
 
 constexpr Angle PI = Angle(M_PI);
+constexpr Angle PI2 = 2 * PI;
 constexpr Angle PI_2 = PI / 2;
 constexpr Angle PI_3 = PI / 3;
 constexpr Angle PI_4 = PI / 4;
