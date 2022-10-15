@@ -1,0 +1,14 @@
+launch:
+- arg:
+    name: "tf_path"
+    default: "$(find-pkg-share model)/config/tf_static.yaml"
+- node:
+    pkg: "model"
+    exec: "model_tf_node"
+    name: "model_tf_node"
+    output: "log"
+    param:
+    - {name: "tf_path", value: "$(var tf_path)"}
+    - {name: "period", value: 1000}
+ 
+

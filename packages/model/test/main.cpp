@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "geom/test/near_assert.hpp"
 #include "model/params.h"
 
 using namespace truck::model;

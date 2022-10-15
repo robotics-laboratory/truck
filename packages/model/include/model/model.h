@@ -38,6 +38,8 @@ class Model {
 
     double gearRatio() const;
 
+    const WheelBase& wheelBase() const;
+
     Twist baseToRearTwist(Twist twist) const;
     Steering rearTwistToSteering(Twist twist) const;
     WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
