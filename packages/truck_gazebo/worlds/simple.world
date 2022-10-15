@@ -3,8 +3,6 @@
   <world name="simple">
     <gravity>0.0 0.0 -9.81</gravity>
     <physics type="ode">
-      <!-- update with rate 5 kHz -->
-      <!-- need high rate for dummy steering simulation -->
       <real_time_update_rate>1000</real_time_update_rate>
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>

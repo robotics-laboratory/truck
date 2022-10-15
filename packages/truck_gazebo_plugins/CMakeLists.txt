@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.5)
 project(truck_gazebo_plugins)
 
 find_package(ament_cmake REQUIRED)
-
 find_package(gazebo_dev REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(model REQUIRED)
@@ -16,7 +15,7 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
-# add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # odometry
 
@@ -26,16 +25,7 @@ target_include_directories(truck_gazebo_odometry PUBLIC include)
 ament_target_dependencies(truck_gazebo_odometry gazebo_dev gazebo_ros nav_msgs rclcpp tf2_msgs)
 ament_export_libraries(truck_gazebo_odometry)
 
-# truck_gazebo_occupnacy_grid
-
-add_library(truck_gazebo_occupancy_grid SHARED src/occupancy_grid.cpp)
-
-target_include_directories(truck_gazebo_occupancy_grid PUBLIC include)
-ament_target_dependencies(truck_gazebo_occupancy_grid gazebo_dev gazebo_ros  nav_msgs rclcpp)
-ament_export_libraries(truck_gazebo_occupancy_grid)
-
-
-# truck_gazebo_occupnacy_grid
+# truck_gazebo_ackermann_model
 
 add_library(truck_gazebo_ackermann_model SHARED src/ackermann_model.cpp)
 
@@ -45,6 +35,15 @@ target_link_libraries(truck_gazebo_ackermann_model yaml-cpp)
 ament_export_libraries(truck_gazebo_ackermann_model)
 
 ament_export_include_directories(include)
+
+# truck_gazebo_occupnacy_grid
+
+# add_library(truck_gazebo_occupancy_grid SHARED src/occupancy_grid.cpp)
+
+# target_include_directories(truck_gazebo_occupancy_grid PUBLIC include)
+# ament_target_dependencies(truck_gazebo_occupancy_grid gazebo_dev gazebo_ros  nav_msgs rclcpp)
+# ament_export_libraries(truck_gazebo_occupancy_grid)
+
 ament_export_dependencies(common gazebo_dev gazebo_ros model truck_interfaces rclcpp yaml-cpp)
 
 install(
@@ -54,18 +53,11 @@ install(
 
 install(TARGETS
     truck_gazebo_odometry
-    truck_gazebo_occupancy_grid
     truck_gazebo_ackermann_model
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
     INCLUDES DESTINATION include
 )
-
-# if(BUILD_TESTING)
-#   find_package(ament_cmake_clang_format REQUIRED)
-#   find_file(CLANG_FORMAT .clang-format PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../..)
-#   ament_clang_format(CONFIG_FILE ${CLANG_FORMAT})
-# endif()
 
 ament_package()

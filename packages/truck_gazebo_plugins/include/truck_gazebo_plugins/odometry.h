@@ -10,6 +10,7 @@
 
 #include <sdf/sdf.hh>
 
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -29,7 +30,7 @@ class OdometryPlugin : public ModelPlugin {
     void OnUpdate(const gazebo::common::UpdateInfo& update_info);
 
   private:
-    double period_ = 0.0;
+    std::chrono::milliseconds period_ = {};
     ignition::math::Vector3d xyz_offset_{0, 0, 0};
     gazebo::physics::LinkPtr link_ = nullptr;
 

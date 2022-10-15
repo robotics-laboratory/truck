@@ -168,7 +168,7 @@ void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
         const auto now = gazebo_ros::Convert<rclcpp::Time>(info.realTime);
         const auto latency = now - command_->header.stamp;
 
-        if (latency > timeout_) {
+        if (false && latency > timeout_) {
             RCLCPP_ERROR(node_->get_logger(), "Lose control for %fs!", latency.seconds());
             set_target(0, 0);
             emergency_stop_ = true;

@@ -27,7 +27,7 @@ void OdometryPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
 
     std::string link_name = "";
 
-    period_ = sdf->Get<double>("period", period_).first;
+    period_ = std::chrono::milliseconds(sdf->Get<size_t>("period", 50).first);
     link_name = sdf->Get<std::string>("link_name");
     xyz_offset_ = sdf->Get<ignition::math::Vector3d>("xyz_offset", xyz_offset_).first;
 
@@ -41,7 +41,7 @@ void OdometryPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
     odometry_publisher_ = node_->create_publisher<nav_msgs::msg::Odometry>("/odom", 1);
     tf_publisher_ = node_->create_publisher<tf2_msgs::msg::TFMessage>("/tf", 1);
 
-    RCLCPP_INFO(node_->get_logger(), "Publish odometry on [/odom] with period %f seconds", period_);
+    RCLCPP_INFO(node_->get_logger(), "Publish odometry on [/odom] with period %zu ms", period_.count());
 
     update_ = event::Events::ConnectWorldUpdateBegin(
         std::bind(&OdometryPlugin::OnUpdate, this, std::placeholders::_1));
@@ -74,21 +74,52 @@ nav_msgs::msg::Odometry OdometryPlugin::GetOdometry(const common::Time& now) con
 }
 
 tf2_msgs::msg::TFMessage OdometryPlugin::GetTransforms(const common::Time& now) const {
-    geometry_msgs::msg::TransformStamped odom_to_world;
-
-    odom_to_world.header.frame_id = "world";
-    odom_to_world.header.stamp = gazebo_ros::Convert<builtin_interfaces::msg::Time>(now);
-    odom_to_world.child_frame_id = "odom";
-
     tf2_msgs::msg::TFMessage result;
-    result.transforms.push_back(odom_to_world);
+
+    {  // world -> odom
+        geometry_msgs::msg::TransformStamped world_to_odom;
+
+        world_to_odom.header.frame_id = "world";
+        world_to_odom.header.stamp = gazebo_ros::Convert<builtin_interfaces::msg::Time>(now);
+        world_to_odom.child_frame_id = "odom";
+
+        world_to_odom.transform.translation.x = 0;
+        world_to_odom.transform.translation.y = 0;
+        world_to_odom.transform.translation.z = 0;
+
+        world_to_odom.transform.rotation.x = 0;
+        world_to_odom.transform.rotation.y = 0;
+        world_to_odom.transform.rotation.z = 0;
+        world_to_odom.transform.rotation.w = 1;
+
+        result.transforms.push_back(world_to_odom);
+    }
+
+    {  // odom -> base
+        geometry_msgs::msg::TransformStamped odom_to_base;
+
+        ignition::math::Pose3d pose = link_->WorldPose();
+        pose.Pos() += xyz_offset_;
+
+        odom_to_base.header.frame_id = "odom";
+        odom_to_base.header.stamp = gazebo_ros::Convert<builtin_interfaces::msg::Time>(now);
+        odom_to_base.child_frame_id = "base";
+
+        odom_to_base.transform.translation =
+            gazebo_ros::Convert<geometry_msgs::msg::Vector3>(pose.Pos());
+
+        odom_to_base.transform.rotation =
+            gazebo_ros::Convert<geometry_msgs::msg::Quaternion>(pose.Rot());
+
+        result.transforms.push_back(odom_to_base);
+    }
 
     return result;
 }
 
 void OdometryPlugin::OnUpdate(const common::UpdateInfo& info) {
     const common::Time now = info.simTime;
-    if (now - last_update_time_ < period_) {
+    if (now - last_update_time_ > period_.count()) {
         return;
     }
 

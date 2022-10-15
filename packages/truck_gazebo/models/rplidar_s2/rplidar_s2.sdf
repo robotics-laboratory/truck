@@ -32,8 +32,8 @@
       </visual>
       <sensor type="ray" name="rplidar_s2">
         <always_on>true</always_on>
-        <update_rate>10</update_rate>
-        <visualize>true</visualize>
+        <update_rate>20</update_rate>
+        <visualize>false</visualize>
         <pose>0 0 0.01 0 0 0</pose>
         <plugin name="GazeboRosRaySensor" filename="libgazebo_ros_ray_sensor.so">
           <frame_name>lidar_base</frame_name>
