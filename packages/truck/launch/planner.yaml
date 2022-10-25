@@ -1,5 +1,0 @@
-launch:
-- include:
-    file: $(dirname)/rosbridge.yaml
-- include:
-    file: $(find-pkg-share planning_node)/launch/planning_node.yaml

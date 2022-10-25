@@ -15,4 +15,10 @@ Angle toYawAngle(const geometry_msgs::msg::Quaternion& q);
 
 Pose toPose(const geometry_msgs::msg::Pose& p);
 
+namespace msg {
+
+geometry_msgs::msg::Point toPoint(const Vec2& v);
+
+} // namespace msg
+
 } // namepsace truck::geom

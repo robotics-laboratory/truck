@@ -8,11 +8,11 @@
 namespace truck::geom {
 
 struct Vec2 {
-    Vec2() = default;
+    constexpr Vec2(): x(0), y(0) {}
 
-    Vec2(double x, double y) : x(x), y(y) {}
+    constexpr Vec2(double x, double y) : x(x), y(y) {}
 
-    explicit Vec2(Angle angle) : x(cos(angle)), y(sin(angle)) {}
+    constexpr explicit Vec2(Angle angle) : x(cos(angle)), y(sin(angle)) {}
 
     Vec2& operator+=(const Vec2& other) {
         x += other.x;
@@ -30,11 +30,16 @@ struct Vec2 {
 
     Vec2 operator-(const Vec2& other) const noexcept { return {x - other.x, y - other.y}; }
 
-    double lenSq() const noexcept { return x * x + y * y; }
+    constexpr double lenSq() const noexcept { return x * x + y * y; }
 
-    double len() const noexcept { return std::sqrt(lenSq()); }
+    constexpr double len() const noexcept { return std::sqrt(lenSq()); }
 
-    Vec2 operator-() const noexcept { return Vec2{-x, -y}; }
+    constexpr Vec2 unit() const noexcept {
+        const double length = len();
+        return Vec2{x / length, y / length};
+    }
+
+    constexpr Vec2 operator-() const noexcept { return Vec2{-x, -y}; }
 
     Vec2& operator*=(double c) {
         x *= c;
@@ -55,11 +60,11 @@ struct Vec2 {
         return {x * cs - y * sn, x * sn + y * cs};
     }
 
-    Vec2 left() const noexcept { return {-y, x}; }
+    constexpr Vec2 left() const noexcept { return {-y, x}; }
 
-    Vec2 right() const noexcept { return {y, -x}; }
+    constexpr Vec2 right() const noexcept { return {y, -x}; }
 
-    Angle angle() const { return atan(y, x); }
+    constexpr Angle angle() const { return atan(y, x); }
 
     double x, y;
 };
@@ -75,6 +80,8 @@ bool equal(const Vec2& a, const Vec2& b, double eps = 0) noexcept;
 double dot(const Vec2& a, const Vec2& b) noexcept;
 
 double cross(const Vec2& a, const Vec2& b) noexcept;
+
+Angle angleBetween(const Vec2& from, const Vec2& to);
 
 std::ostream& operator<<(std::ostream& out, const Vec2& v);
 

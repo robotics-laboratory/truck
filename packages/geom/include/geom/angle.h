@@ -7,7 +7,7 @@ namespace truck::geom {
 
 class Angle {
   public:
-    Angle() : value_(0) {}
+    constexpr Angle() : value_(0) {}
 
     explicit constexpr Angle(double rad) : value_(rad) {}
 
@@ -59,11 +59,6 @@ class Angle {
     double value_;
 };
 
-Angle asin(double x) noexcept;
-Angle acos(double x) noexcept;
-Angle atan(double x) noexcept;
-Angle atan(double x, double y) noexcept;
-
 namespace literals {
 
 inline constexpr Angle operator"" _rad(unsigned long long radians) {
@@ -80,13 +75,13 @@ inline constexpr Angle operator"" _deg(long double degrees) { return Angle::from
 
 }  // namespace literals
 
-inline Angle asin(double x) noexcept { return Angle{std::asin(x)}; }
+inline constexpr  Angle asin(double x) noexcept { return Angle{std::asin(x)}; }
 
-inline Angle acos(double x) noexcept { return Angle{std::acos(x)}; }
+inline constexpr Angle acos(double x) noexcept { return Angle{std::acos(x)}; }
 
-inline Angle atan(double x) noexcept { return Angle{std::atan(x)}; }
+inline constexpr Angle atan(double x) noexcept { return Angle{std::atan(x)}; }
 
-inline Angle atan(double x, double y) noexcept { return Angle{std::atan2(x, y)}; }
+inline constexpr Angle atan(double x, double y) noexcept { return Angle{std::atan2(x, y)}; }
 
 inline constexpr Angle operator+(Angle a, Angle b) noexcept {
     return Angle{a.radians() + b.radians()};

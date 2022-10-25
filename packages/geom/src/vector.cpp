@@ -17,6 +17,10 @@ double dot(const Vec2& a, const Vec2& b) noexcept { return a.x * b.x + a.y * b.y
 
 double cross(const Vec2& a, const Vec2& b) noexcept { return a.x * b.y - a.y * b.x; }
 
+Angle angleBetween(const Vec2& from, const Vec2& to) {
+    return acos(dot(from, to) / std::sqrt(from.lenSq() * to.lenSq()));
+}
+
 std::ostream& operator<<(std::ostream& out, const Vec2& v) {
     return out << "(" << v.x << ", " << v.y << ")";
 }

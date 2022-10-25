@@ -19,4 +19,7 @@ launch:
     file: $(find-pkg-share visualization)/launch/visualization.yaml
 
 # - include:
+#     file: $(find-pkg-share truck)/launch/slam.yaml
+
+# - include:
 #     file: $(find-pkg-share truck)/launch/rosbridge.yaml

@@ -14,4 +14,17 @@ Pose toPose(const geometry_msgs::msg::Pose& p) {
     return Pose {toPosition(p.position), toYawDir(p.orientation)};
 }
 
+namespace msg {
+
+geometry_msgs::msg::Point toPoint(const Vec2& v) {
+    geometry_msgs::msg::Point msg;
+
+    msg.x = v.x;
+    msg.y = v.y;
+
+    return msg;
+}
+
+}  // namespace msg
+
 }  // namespace truck::geom
