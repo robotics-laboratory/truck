@@ -2,10 +2,14 @@ launch:
 - arg:
     name: "model_config"
     default: "$(find-pkg-share model)/config/model.yaml"
+- arg:
+    name: "simulation"
+    default: "false"
 - node:
     pkg: "pure_pursuit"
     exec: "pure_pursuit_node"
     name: "pure_pursuit_node"
     output: "log"
     param:
+    - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "model_config", value: "$(var model_config)"}

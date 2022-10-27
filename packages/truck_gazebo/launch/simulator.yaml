@@ -3,7 +3,7 @@ launch:
 
 - executable:
     name: "gzserver"
-    cmd: "gzserver --verbose $(find-pkg-share truck_gazebo)/worlds/$(var world) gui:=false"
+    cmd: "gzserver --verbose $(find-pkg-share truck_gazebo)/worlds/$(var world) -s libgazebo_ros_init.so --ros-args --params-file /truck/packages/params.yaml"
     output: "log"
     shell: True
     env: 

@@ -38,8 +38,8 @@ void OdometryPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
         return;
     }
 
-    odometry_publisher_ = node_->create_publisher<nav_msgs::msg::Odometry>("/odom", 1);
-    tf_publisher_ = node_->create_publisher<tf2_msgs::msg::TFMessage>("/tf", 1);
+    odometry_publisher_ = node_->create_publisher<nav_msgs::msg::Odometry>("/simulation/odom", 1);
+    tf_publisher_ = node_->create_publisher<tf2_msgs::msg::TFMessage>("/simulation/tf", 1);
 
     RCLCPP_INFO(node_->get_logger(), "Publish odometry on [/odom] with period %zu ms", period_.count());
 

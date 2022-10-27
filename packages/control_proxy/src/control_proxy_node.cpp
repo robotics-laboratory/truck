@@ -30,12 +30,14 @@ ControlProxyNode::ControlProxyNode()
     , model_(Node::declare_parameter<std::string>("model_config", "model.yaml"))
     , frame_id_("base_link")
     , mode_(Mode::Off) {
-    RCLCPP_INFO(this->get_logger(), "Model acquired,");
+    RCLCPP_INFO(this->get_logger(), "Model acquired...");
+
     RCLCPP_INFO(
         this->get_logger(),
         "max velocity: %f, min velocity: %f",
         model_.baseVelocityLimits().max,
         model_.baseVelocityLimits().min);
+
     RCLCPP_INFO(this->get_logger(), "max abs curvature: %f", model_.baseMaxAbsCurvature());
 
     joypad_timeout_ =

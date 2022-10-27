@@ -11,7 +11,7 @@ namespace truck::visualization {
 VisualizationNode::VisualizationNode()
     : Node("visualization_node")
     , model_(Node::declare_parameter<std::string>("model_config", "model.yaml")) {
-    RCLCPP_INFO(this->get_logger(), "Model acquired,");
+    RCLCPP_INFO(this->get_logger(), "Model acquired...");
 
     odometry_slot_ = Node::create_subscription<nav_msgs::msg::Odometry>(
         "/odom", 1, std::bind(&VisualizationNode::handleOdometry, this, std::placeholders::_1));

@@ -2,12 +2,17 @@ launch:
 - arg:
     name: "model_config"
     default: "$(find-pkg-share model)/config/model.yaml"
+- arg:
+    name: "simulation"
+    default: "false"
 - node:
     pkg: "control_proxy"
     exec: "control_proxy_node"
     name: "control_proxy_node"
     output: "log"
     param:
+    # use /clock topic time
+    - {name: "use_sim_time", value: "$(var simulation)"}
     # path to truck mode config
     - {name: "model_config", value: "$(var model_config)"}
     # set mode to `off` if no commands from joypad during this time (milliseconds)

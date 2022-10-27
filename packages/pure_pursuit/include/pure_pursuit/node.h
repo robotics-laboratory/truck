@@ -27,6 +27,8 @@ class PurePursuitNode : public rclcpp::Node {
             .velocity_factor = this->declare_parameter<double>("velocity_factor", 0.2),
         };
 
+        RCLCPP_INFO(this->get_logger(), "Model acquired...");
+
         controller_ = std::make_unique<Controller>(params);
 
         path_slot_ = this->create_subscription<nav_msgs::msg::Path>(
