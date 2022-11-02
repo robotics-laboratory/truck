@@ -1,0 +1,4 @@
+gazebo:
+    ros__parameters:
+        publish_rate: 50.0
+        gui: False

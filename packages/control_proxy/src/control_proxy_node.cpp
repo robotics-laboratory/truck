@@ -28,7 +28,7 @@ std::string toString(Mode mode) {
 ControlProxyNode::ControlProxyNode()
     : Node("control_proxy_node")
     , model_(Node::declare_parameter<std::string>("model_config", "model.yaml"))
-    , frame_id_("base_link")
+    , frame_id_("base")
     , mode_(Mode::Off) {
     RCLCPP_INFO(this->get_logger(), "Model acquired...");
 
@@ -69,9 +69,9 @@ ControlProxyNode::ControlProxyNode()
 
     mode_feedback_signal_ =
         Node::create_publisher<sensor_msgs::msg::JoyFeedback>("/joy/set_feedback", 1);
-    command_signal_ = Node::create_publisher<truck_interfaces::msg::Control>("/control/command", 1);
     mode_signal_ = Node::create_publisher<truck_interfaces::msg::ControlMode>("/control/mode", 1);
-    twist_signal_ = Node::create_publisher<geometry_msgs::msg::TwistStamped>("/control/twist", 1);
+    command_signal_ = Node::create_publisher<truck_interfaces::msg::Control>("/control/command", 1);
+    twist_signal_ = Node::create_publisher<geometry_msgs::msg::Twist>("/control/twist", 1);
 
     RCLCPP_INFO(this->get_logger(), "Mode: Off");
 }
@@ -108,16 +108,16 @@ void ControlProxyNode::setMode(Mode mode) {
 }
 
 truck_interfaces::msg::Control ControlProxyNode::makeControlCommand(
-    sensor_msgs::msg::Joy::ConstSharedPtr command) {
+    const sensor_msgs::msg::Joy& command) {
     truck_interfaces::msg::Control result;
 
-    result.header.stamp = now();
+    result.header.stamp = command.header.stamp;
     result.header.frame_id = frame_id_;
 
-    result.curvature = command->axes[AXE_LX] * model_.baseMaxAbsCurvature();
+    result.curvature = command.axes[AXE_LX] * model_.baseMaxAbsCurvature();
 
     result.velocity = [&] {
-        const double ratio = command->axes[AXE_RY];
+        const double ratio = command.axes[AXE_RY];
         return ratio >= 0 ? ratio * model_.baseVelocityLimits().max
                           : -ratio * model_.baseVelocityLimits().min;
     }();
@@ -125,25 +125,23 @@ truck_interfaces::msg::Control ControlProxyNode::makeControlCommand(
     return result;
 }
 
-geometry_msgs::msg::TwistStamped ControlProxyNode::turnControlToTwist(
-    truck_interfaces::msg::Control command) {
-    geometry_msgs::msg::TwistStamped twist;
+geometry_msgs::msg::Twist ControlProxyNode::transformToTwist(
+    const truck_interfaces::msg::Control& command) const {
+    geometry_msgs::msg::Twist twist;
 
-    twist.header.stamp = now();
-    twist.header.frame_id = frame_id_;
+    twist.linear.x = command.velocity;
+    twist.linear.y = 0;
+    twist.linear.z = 0;
 
-    twist.twist.angular.x = 0;
-    twist.twist.angular.y = 0;
-    twist.twist.angular.z = command.velocity * command.curvature;
-
-    twist.twist.linear.x = command.velocity;
-    twist.twist.linear.y = 0;
-    twist.twist.linear.z = 0;
+    twist.angular.x = 0;
+    twist.angular.y = 0;
+    twist.angular.z = command.velocity * command.curvature;
 
     return twist;
 }
 
-void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
+void ControlProxyNode::handleJoypadCommand(
+    sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
     if (checkButtonPressed(joypad_command, BUTTON_CROSS)) {
         setMode(Mode::Off);
     } else if (checkButtonPressed(joypad_command, BUTTON_CIRCLE)) {
@@ -153,10 +151,9 @@ void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr
     }
 
     if (mode_ == Mode::Remote) {
-        const auto command = makeControlCommand(joypad_command);
-        command_signal_->publish(command);
+        const auto command = makeControlCommand(*joypad_command);
+        publishCommand(command);
         prev_command_ = std::make_shared<truck_interfaces::msg::Control>(command);
-        twist_signal_->publish(turnControlToTwist(command));
     }
 
     prev_joypad_command_ = std::move(joypad_command);
@@ -195,7 +192,7 @@ void ControlProxyNode::publishStop() {
         return result;
     }();
 
-    command_signal_->publish(stop);
+    publishCommand(stop);
 }
 
 void ControlProxyNode::watchdog() {
@@ -229,12 +226,16 @@ void ControlProxyNode::watchdog() {
     }
 }
 
+void ControlProxyNode::publishCommand(const truck_interfaces::msg::Control& command) {
+    command_signal_->publish(command);
+    twist_signal_->publish(transformToTwist(command));
+}
+
 void ControlProxyNode::forwardControlCommand(
     truck_interfaces::msg::Control::ConstSharedPtr command) {
     if (mode_ == Mode::Auto) {
-        command_signal_->publish(*command);
+        publishCommand(*command);
         prev_command_ = command;
-        twist_signal_->publish(turnControlToTwist(*command));
     }
 }
 

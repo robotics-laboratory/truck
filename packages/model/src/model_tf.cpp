@@ -52,40 +52,31 @@ tf2_msgs::msg::TFMessage loadTf(const std::string& path) {
 class ModelTfNode : public rclcpp::Node {
   public:
     ModelTfNode() : Node("ModelTfNode") {
-        const auto period =
-            std::chrono::milliseconds(this->declare_parameter<long int>("period", 1000));
-
         const auto tf_path = this->declare_parameter<std::string>("tf_path", "tf_static.yaml");
+        const auto static_qos = rclcpp::QoS(1).transient_local();
 
-        timer_ = this->create_wall_timer(period, std::bind(&ModelTfNode::publish, this));
-        tf_signal_ = Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf", 1);
+        static_tf_signal_ = Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf_static", static_qos);
 
-        tf_ = loadTf(tf_path);
+        auto static_tf = loadTf(tf_path);
 
         RCLCPP_INFO(
             this->get_logger(),
-            "load %zu transforms  from %s",
-            tf_.transforms.size(),
+            "Load %zu static transforms from %s",
+            static_tf.transforms.size(),
             tf_path.c_str());
-    }
 
-  private:
-    void publish() {
         const auto stamp = now();
-
-        auto msg = tf_;
-        for (auto&& tf: msg.transforms) {
+        for (auto&& tf : static_tf.transforms) {
             tf.header.stamp = stamp;
         }
 
-        tf_signal_->publish(msg);
+        static_tf_signal_->publish(static_tf);
     }
 
-    tf2_msgs::msg::TFMessage tf_;
+  private:
 
     // output
-    rclcpp::TimerBase::SharedPtr timer_ = nullptr;
-    rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_signal_ = nullptr;
+    rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr static_tf_signal_ = nullptr;
 };
 
 }  // namespace truck::model

@@ -5,6 +5,9 @@ launch:
 - arg:
     name: "simulation"
     default: "false"
+- arg:
+    name: "qos"
+    default: "0"
 - node:
     pkg: "pure_pursuit"
     exec: "pure_pursuit_node"
@@ -12,4 +15,5 @@ launch:
     output: "log"
     param:
     - {name: "use_sim_time", value: "$(var simulation)"}
+    - {name: "qos", value: "$(var qos)"}
     - {name: "model_config", value: "$(var model_config)"}

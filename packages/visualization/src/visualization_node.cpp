@@ -13,17 +13,26 @@ VisualizationNode::VisualizationNode()
     , model_(Node::declare_parameter<std::string>("model_config", "model.yaml")) {
     RCLCPP_INFO(this->get_logger(), "Model acquired...");
 
-    odometry_slot_ = Node::create_subscription<nav_msgs::msg::Odometry>(
-        "/odom", 1, std::bind(&VisualizationNode::handleOdometry, this, std::placeholders::_1));
+    const auto qos = static_cast<rmw_qos_reliability_policy_t>(
+        this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
     mode_slot_ = Node::create_subscription<truck_interfaces::msg::ControlMode>(
-        "/control/mode", 1, std::bind(&VisualizationNode::handleMode, this, std::placeholders::_1));
+        "/control/mode",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleMode, this, std::placeholders::_1));
 
     control_slot_ = Node::create_subscription<truck_interfaces::msg::Control>(
-        "/control/command", 1, std::bind(&VisualizationNode::handleControl, this, std::placeholders::_1));
+        "/control/command",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleControl, this, std::placeholders::_1));
 
-    ego_signal_ = Node::create_publisher<visualization_msgs::msg::Marker>("/visualization/ego", 1);
-    arc_signal_ = Node::create_publisher<visualization_msgs::msg::Marker>("/visualization/arc", 1);
+    ego_signal_ = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/visualization/ego", rclcpp::QoS(1).reliability(qos));
+
+    arc_signal_ = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/visualization/arc", rclcpp::QoS(1).reliability(qos));
+
+    publishEgo();
 }
 
 namespace {
@@ -48,36 +57,22 @@ std_msgs::msg::ColorRGBA modeToColor(
 
 } // namespace
 
-void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom) {
-    odom_ = odom;
-
-    publishEgo();
-    publishArc();
-}
-
 void VisualizationNode::handleMode(truck_interfaces::msg::ControlMode::ConstSharedPtr msg) {
     mode_ = std::move(msg);
     publishEgo();
 }
 
 void VisualizationNode::publishEgo() const {
-    if (!odom_) {
-        visualization_msgs::msg::Marker msg;
-        msg.action = visualization_msgs::msg::Marker::DELETE;
-        ego_signal_->publish(msg);
-        return;
-    }
-
     visualization_msgs::msg::Marker msg;
-    msg.pose = odom_->pose.pose;
-    msg.header = odom_->header;
+    msg.header.stamp = now();
+    msg.header.frame_id = "base";
     msg.id = 0;
     msg.type = visualization_msgs::msg::Marker::CUBE;
     msg.action = visualization_msgs::msg::Marker::ADD;
     msg.lifetime = rclcpp::Duration::from_seconds(0);
     msg.scale.x = model_.wheelBase().length;
     msg.scale.y = model_.wheelBase().width;
-    msg.scale.z = 0.12;
+    msg.scale.z = 0.20;
     msg.color = modeToColor(mode_);
 
     ego_signal_->publish(msg);
@@ -87,14 +82,12 @@ namespace {
 
 geom::Polyline trace(const geom::Pose& pose, double length, double step) {
     const geom::Vec2& start = pose.pos;
-
-    geom::Vec2 vector = length * pose.dir.unit();
-
+ 
     static constexpr double eps = 1e-3;
     BOOST_VERIFY(eps < length);
 
     const auto step_n = ceil<size_t>(length / step);
-    vector /= step_n;
+    const geom::Vec2 vector = length / step_n * pose.dir.unit();
 
     geom::Polyline points;
     points.reserve(step_n + 1);
@@ -144,15 +137,21 @@ geom::Polyline trace(const geom::Pose& pose, double curvature) {
 }  // namespace
 
 void VisualizationNode::publishArc() const {
-    if (!odom_ || !control_) {
+    constexpr double eps = 1e-6;
+
+    if (!control_ || std::abs(control_->velocity) < eps) {
         visualization_msgs::msg::Marker msg;
+        msg.header.stamp = now();
+        msg.header.frame_id = "base";
         msg.action = visualization_msgs::msg::Marker::DELETE;
         arc_signal_->publish(msg);
         return;
     }
 
+    BOOST_VERIFY(control_->header.frame_id == "base");
+
     visualization_msgs::msg::Marker msg;
-    msg.header = odom_->header;
+    msg.header = control_->header;
     msg.id = 0;
     msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
     msg.action = visualization_msgs::msg::Marker::ADD;
@@ -161,15 +160,13 @@ void VisualizationNode::publishArc() const {
     msg.color.r = 255;
     msg.color.a = 1.0;
 
-    const geom::Pose pose = geom::toPose(odom_->pose.pose);
-    const double z = odom_->pose.pose.position.z;
+    const geom::Pose pose {geom::Vec2{0, 0}, geom::Vec2::axisX()};
     const double curvature = control_->curvature;
 
     for (const auto& point : trace(pose, curvature)) {
         geometry_msgs::msg::Point point_msg;
         point_msg.x = point.x;
         point_msg.y = point.y;
-        point_msg.z = z;
 
         msg.points.push_back(point_msg);
     }

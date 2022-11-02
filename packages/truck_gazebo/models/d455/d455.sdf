@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.7">
   <model name="d455">
-    <link name="camera_base">
+    <link name="camera_link">
       <inertial>
         <pose>-0.00845 -0.0475 0</pose>
         <mass>0.072</mass>
@@ -14,7 +14,7 @@
           <izz>0.003879257</izz>
         </inertia>
       </inertial>
-      <collision name="camera_base_collision">
+      <collision name="camera_link_collision">
         <pose>-0.00845 -0.0475 0</pose>
         <geometry>
           <box>
@@ -22,7 +22,7 @@
           </box>
         </geometry>
       </collision>
-      <visual name="camera_base_visual">
+      <visual name="camera_link_visual">
         <pose>0.0046500000000000005 -0.0475 0 1.5707963267948966 0 1.5707963267948966</pose>
         <geometry>
           <mesh>
@@ -65,8 +65,8 @@
     </link>
 
     <joint name="camera_depth_joint" type="fixed">
-      <pose relative_to="camera_base">0 0 0 0 0 0</pose>
-      <parent>camera_base</parent>
+      <pose relative_to="camera_link">0 0 0 0 0 0</pose>
+      <parent>camera_link</parent>
       <child>camera_depth_frame</child>
     </joint>
 
@@ -108,8 +108,8 @@
     </link>
 
     <joint name="camera_infra1_joint" type="fixed">
-      <pose relative_to="camera_base">0 0 0 0 0 0</pose>
-      <parent>camera_base</parent>
+      <pose relative_to="camera_link">0 0 0 0 0 0</pose>
+      <parent>camera_link</parent>
       <child>camera_infra1_frame</child>
     </joint>
 
@@ -151,8 +151,8 @@
     </link>
 
     <joint name="camera_infra2_joint" type="fixed">
-      <pose relative_to="camera_base">0 -0.095 0 0 0 0</pose>
-      <parent>camera_base</parent>
+      <pose relative_to="camera_link">0 -0.095 0 0 0 0</pose>
+      <parent>camera_link</parent>
       <child>camera_infra2_frame</child>
     </joint>
 
@@ -195,8 +195,8 @@
     </link>
 
     <joint name="camera_color_joint" type="fixed">
-      <pose relative_to="camera_base">0 -0.059 0 0 0 0</pose>
-      <parent>camera_base</parent>
+      <pose relative_to="camera_link">0 -0.059 0 0 0 0</pose>
+      <parent>camera_link</parent>
       <child>camera_color_frame</child>
     </joint>
 
@@ -285,7 +285,7 @@
         <update_rate>200</update_rate>
         <visualize>true</visualize>
         <plugin name="GazeboRosImuSensor" filename="libgazebo_ros_imu_sensor.so">
-          <frame_name>lidar_base</frame_name>
+          <frame_name>camera_imu_optical_frame</frame_name>
           <initial_orientation_as_reference>false</initial_orientation_as_reference>
           <ros>
             <namespace>/camera</namespace>
@@ -297,34 +297,34 @@
           <angular_velocity>
             <x>
               <noise type="gaussian">
-                <stddev>0.1</stddev>
+                <stddev>0.001</stddev>
               </noise>
             </x>
             <y>
               <noise type="gaussian">
-                <stddev>0.1</stddev>
+                <stddev>0.01</stddev>
               </noise>
             </y>
             <z>
               <noise type="gaussian">
-                <stddev>0.1</stddev>
+                <stddev>0.01</stddev>
               </noise>
             </z>
           </angular_velocity>
           <linear_acceleration>
             <x>
               <noise type="gaussian">
-                <stddev>0.03</stddev>
+                <stddev>0.01</stddev>
               </noise>
             </x>
             <y>
               <noise type="gaussian">
-                <stddev>0.03</stddev>
+                <stddev>0.01</stddev>
               </noise>
             </y>
             <z>
               <noise type="gaussian">
-                <stddev>0.03</stddev>
+                <stddev>0.01</stddev>
               </noise>
             </z>
           </linear_acceleration>
@@ -333,8 +333,8 @@
     </link>
 
     <joint name="camera_accel_joint" type="fixed">
-      <pose relative_to="camera_base">-0.01602 -0.03022 0.0074 0 0 0</pose>
-      <parent>camera_base</parent>
+      <pose relative_to="camera_link">-0.01602 -0.03022 0.0074 0 0 0</pose>
+      <parent>camera_link</parent>
       <child>camera_accel_frame</child>
     </joint>
 
@@ -345,8 +345,8 @@
     </joint>
 
     <joint name="camera_gyro_joint" type="fixed">
-      <pose relative_to="camera_base">-0.01602 -0.03022 0.0074 0 0 0</pose>
-      <parent>camera_base</parent>
+      <pose relative_to="camera_link">-0.01602 -0.03022 0.0074 0 0 0</pose>
+      <parent>camera_link</parent>
       <child>camera_gyro_frame</child>
     </joint>
 

@@ -31,14 +31,17 @@ class PurePursuitNode : public rclcpp::Node {
 
         controller_ = std::make_unique<Controller>(params);
 
+        const auto qos = static_cast<rmw_qos_reliability_policy_t>(
+            this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
+
         path_slot_ = this->create_subscription<nav_msgs::msg::Path>(
             "/motion/path",
             1,
             std::bind(&PurePursuitNode::handlePath, this, std::placeholders::_1));
 
         odometry_slot_ = Node::create_subscription<nav_msgs::msg::Odometry>(
-            "/odom",
-            1,
+            "/ekf/odometry/filtered",
+            rclcpp::QoS(1).reliability(qos),
             std::bind(&PurePursuitNode::handleOdometry, this, std::placeholders::_1));
 
         command_signal_ =
@@ -50,7 +53,7 @@ class PurePursuitNode : public rclcpp::Node {
         auto toMsg = [this](const Command& cmd) {
             truck_interfaces::msg::Control msg;
 
-            msg.header.frame_id = "odom";
+            msg.header.frame_id = "base";
             msg.header.stamp = now();
 
             msg.velocity = cmd.velocity;

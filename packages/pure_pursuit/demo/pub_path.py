@@ -18,13 +18,13 @@ class PathPublisher(Node):
         now = self.get_clock().now().to_msg()
 
         path = Path()
-        path.header.frame_id = 'odom'
+        path.header.frame_id = 'odom_ekf'
         path.header.stamp = now
 
         for i in range(1500):
             x = i / 100
             pose = PoseStamped()
-            pose.header.frame_id = 'odom'
+            pose.header.frame_id = 'odom_ekf'
             pose.header.stamp = now
             pose.pose.position.x = x
             pose.pose.position.y = math.sin(x)

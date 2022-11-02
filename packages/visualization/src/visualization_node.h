@@ -15,8 +15,6 @@ class VisualizationNode : public rclcpp::Node {
     VisualizationNode();
 
   private:
-    void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
-
     void handleControl(truck_interfaces::msg::Control::ConstSharedPtr control);
     void handleMode(truck_interfaces::msg::ControlMode::ConstSharedPtr msg);
 
@@ -27,10 +25,8 @@ class VisualizationNode : public rclcpp::Node {
 
     truck_interfaces::msg::ControlMode::ConstSharedPtr mode_ = nullptr;
     truck_interfaces::msg::Control::ConstSharedPtr control_ = nullptr;
-    nav_msgs::msg::Odometry::ConstSharedPtr odom_ = nullptr;
 
     // input
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_slot_ = nullptr;
     rclcpp::Subscription<truck_interfaces::msg::Control>::SharedPtr control_slot_ = nullptr;
     rclcpp::Subscription<truck_interfaces::msg::ControlMode>::SharedPtr mode_slot_ = nullptr;
 

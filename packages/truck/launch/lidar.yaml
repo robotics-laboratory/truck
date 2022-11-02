@@ -1,0 +1,17 @@
+launch:
+- node:
+    pkg: "sllidar_ros2"
+    exec: "sllidar_node"
+    name: "lidar"
+    namespace: "lidar"
+    output: "log"
+
+    param:
+    - {name: "serial_port", value: "/dev/ttyUSB0"}
+    - {name: "serial_baudrate", value: 1000000}
+    - {name: "frame_id", value: "lidar_base"}
+    - {name: "inverted", value: False}
+    - {name: "angle_compensate", value: True}
+    - {name: "scan_mode", value: "DenseBoost"}
+    - {name: "scan_frequency", value: 10.0}
+    - {name: "rpm_speed", value: 600}

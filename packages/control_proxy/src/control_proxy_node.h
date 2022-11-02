@@ -5,7 +5,7 @@
 #include <sensor_msgs/msg/joy.hpp>
 #include <sensor_msgs/msg/joy_feedback.hpp>
 
-#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -29,11 +29,12 @@ class ControlProxyNode : public rclcpp::Node {
     ControlProxyNode();
 
   private:
-    truck_interfaces::msg::Control makeControlCommand(
-        sensor_msgs::msg::Joy::ConstSharedPtr joypad_command);
+    truck_interfaces::msg::Control makeControlCommand(const sensor_msgs::msg::Joy& joypad_command);
 
-    geometry_msgs::msg::TwistStamped turnControlToTwist(
-        truck_interfaces::msg::Control command);
+    void publishCommand(const truck_interfaces::msg::Control& command);
+
+    geometry_msgs::msg::Twist transformToTwist(
+        const truck_interfaces::msg::Control& command) const;
 
     void forwardControlCommand(truck_interfaces::msg::Control::ConstSharedPtr command);
 
@@ -64,7 +65,7 @@ class ControlProxyNode : public rclcpp::Node {
     rclcpp::TimerBase::SharedPtr publish_mode_timer_ = nullptr;
     rclcpp::Publisher<truck_interfaces::msg::Control>::SharedPtr command_signal_ = nullptr;
     rclcpp::Publisher<truck_interfaces::msg::ControlMode>::SharedPtr mode_signal_ = nullptr;
-    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_signal_ = nullptr;
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr twist_signal_ = nullptr;
     rclcpp::Publisher<sensor_msgs::msg::JoyFeedback>::SharedPtr mode_feedback_signal_ = nullptr;
 
     // state

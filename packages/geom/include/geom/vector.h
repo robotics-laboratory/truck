@@ -39,6 +39,10 @@ struct Vec2 {
         return Vec2{x / length, y / length};
     }
 
+    static constexpr Vec2 axisX() noexcept { return Vec2{1, 0}; }
+
+    static constexpr Vec2 axisY() noexcept { return Vec2{0, 1}; }
+
     constexpr Vec2 operator-() const noexcept { return Vec2{-x, -y}; }
 
     Vec2& operator*=(double c) {

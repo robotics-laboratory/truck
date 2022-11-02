@@ -12,6 +12,7 @@ launch:
     file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml
     arg:
     - {name: "simulation", value: "true"}
+    - {name: "qos", value: "2"}
 - include:
     file: $(find-pkg-share truck)/launch/control.yaml
     arg:
@@ -24,8 +25,4 @@ launch:
     file: $(find-pkg-share truck)/launch/slam.yaml
     arg:
     - {name: "simulation", value: "true"}
-    - {name: "frame_id", value: "rplidar_s2::lidar_base"}
     - {name: "qos", value: "2"}
-
-# - include:
-#     file: $(find-pkg-share truck)/launch/rosbridge.yaml

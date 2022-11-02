@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.7">
   <model name="truck">
-    <link name="truck_base">
+    <link name="base">
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>2.05371</mass>
@@ -14,7 +14,7 @@
           <izz>0.04836</izz>
         </inertia>
       </inertial>
-      <visual name="truck_base_visual">
+      <visual name="base_visual">
         <pose>0 0 0 1.5708 0 1.5708</pose>
         <geometry>
           <mesh>
@@ -27,29 +27,29 @@
 
     <include>
       <uri>model://rplidar_s2</uri>
-      <pose relative_to="truck_base_to_lidar">0 0 0 0 0 0</pose>
+      <pose relative_to="base_to_lidar">0 0 0 0 0 0</pose>
     </include>
 
-    <joint name="truck_base_to_lidar" type="fixed">
-      <pose relative_to="truck_base">0 0 0.12 0 0 0</pose>
-      <parent>truck_base</parent>
-      <child>rplidar_s2::lidar_base</child>
+    <joint name="base_to_lidar" type="fixed">
+      <pose relative_to="base">0 0 0.12 0 0 0</pose>
+      <parent>base</parent>
+      <child>rplidar_s2::lidar_link</child>
     </joint>
 
-    <joint name="truck_base_to_camera" type="fixed">
-      <pose relative_to="truck_base">0.2 0 0.04 0 0 0</pose>
-      <parent>truck_base</parent>
-      <child>d455::camera_base</child>
+    <joint name="base_to_camera" type="fixed">
+      <pose relative_to="base">0.2 0 0.04 0 0 0</pose>
+      <parent>base</parent>
+      <child>d455::camera_link</child>
     </joint>
 
     <include>
       <uri>model://d455</uri>
-      <pose relative_to="truck_base_to_camera">0 0.0475 0 0 0 0</pose>
+      <pose relative_to="base_to_camera">0 0.0475 0 0 0 0</pose>
     </include>
 
     <joint name="left_rear_axle" type="revolute">
-      <pose relative_to="truck_base">-0.2025 0.11168 -0.01329 0 0 0</pose>
-      <parent>truck_base</parent>
+      <pose relative_to="base">-0.2025 0.11168 -0.01329 0 0 0</pose>
+      <parent>base</parent>
       <child>rear_left_wheel</child>
       <axis>
         <xyz>0 1 0</xyz>
@@ -91,8 +91,8 @@
     </link>
 
     <joint name="left_steering_joint" type="revolute">
-      <pose relative_to="truck_base">0.2025 0.10668 -0.01329 0 0 0</pose>
-      <parent>truck_base</parent>
+      <pose relative_to="base">0.2025 0.10668 -0.01329 0 0 0</pose>
+      <parent>base</parent>
       <child>front_left_cup</child>
       <axis>
         <xyz>0 0 1</xyz>
@@ -163,8 +163,8 @@
     </link>
 
     <joint name="right_rear_axle" type="revolute">
-      <pose relative_to="truck_base">-0.2025 -0.11168 -0.01329 0 0 0</pose>
-      <parent>truck_base</parent>
+      <pose relative_to="base">-0.2025 -0.11168 -0.01329 0 0 0</pose>
+      <parent>base</parent>
       <child>rear_right_wheel</child>
       <axis>
         <xyz>0 1 0</xyz>
@@ -206,8 +206,8 @@
     </link>
 
     <joint name="right_steering_joint" type="revolute">
-      <pose relative_to="truck_base">0.2025 -0.10668 -0.01329 0 0 0</pose>
-      <parent>truck_base</parent>
+      <pose relative_to="base">0.2025 -0.10668 -0.01329 0 0 0</pose>
+      <parent>base</parent>
       <child>front_right_cup</child>
       <axis>
         <xyz>0 0 1</xyz>
@@ -290,12 +290,12 @@
       </rear>
     </plugin>
 
-    <plugin name="OdometryPlugin" filename="libtruck_gazebo_odometry.so">
-      <link_name>rplidar_s2::lidar_base</link_name>
+    <!-- <plugin name="OdometryPlugin" filename="libtruck_gazebo_odometry.so">
+      <link_name>rplidar_s2::lidar_link</link_name>
       <period>50</period>
-      <link_name>rplidar_s2::lidar_base</link_name>
+      <link_name>rplidar_s2::lidar_link</link_name>
       <xyz_offset>0.0 0.0 0.0</xyz_offset>
-    </plugin>
+    </plugin> -->
 
   </model>
 </sdf>

@@ -5,6 +5,9 @@ launch:
 - arg:
     name: "simulation"
     default: "false"
+- arg:
+    name: "qos"
+    default: "0"
 - node:
     pkg: "visualization"
     exec: "visualization_node"
