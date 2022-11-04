@@ -1,11 +1,7 @@
 launch:
 
-- arg: {name: "localization", default: "false"}
 - arg: {name: "simulation", default: "false"}
 - arg: {name: "qos", default: "0"}
-
-- let: {name: "args", value: "--delete_db_on_start", if: "$(var localization)"}
-- let: {name: "args", value: "", unless: "$(var localization)"}
 
 - node:
     pkg: "rtabmap_ros"
@@ -42,7 +38,7 @@ launch:
     param:
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "debug", value: True}
-    - {name: "frequency", value: 30.0}
+    - {name: "frequency", value: 25.0}
     - {name: "sensor_timeout", value: 0.3}
     - {name: "two_d_mode", value: False}
     - {name: "world_frame", value: "odom_ekf"}
@@ -62,6 +58,26 @@ launch:
             False, False, False,
             False, True, False,
             False, False, False
+        ]
+    }
+
+    - {name: "odom0", value: "/rtabmap/odom"}
+    - {name: "odom0_differential", value: True}
+    - {name: "odom0_queue_size", value: 1}
+    - {name: "odom0_config", value: [
+            True, True, False,
+            False, False, False,
+            False, False, False,
+            False, False, False,
+            False, False, False,
+        ]
+    }
+
+    - {name: "use_control", value: True}
+    - {name: "control_timeout", value: 0.5}
+    - {name: "control_config", value: [
+            True, False, False,
+            False, False, True
         ]
     }
 
@@ -104,23 +120,3 @@ launch:
     #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.2
     #     ]
     # }
-
-    - {name: "odom0", value: "/rtabmap/odom"}
-    - {name: "odom0_differential", value: True}
-    - {name: "odom0_queue_size", value: 1}
-    - {name: "odom0_config", value: [
-            True, True, False,
-            False, False, False,
-            False, False, False,
-            False, False, False,
-            False, False, False,
-        ]
-    }
-
-    - {name: "use_control", value: True}
-    - {name: "control_timeout", value: 0.5}
-    - {name: "control_config", value: [
-            True, False, False,
-            False, False, True
-        ]
-    }

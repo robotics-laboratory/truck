@@ -6,8 +6,8 @@ wheel_base:
 limits:
   steering: { inner: 40.0, outer: 40.0 }   # deg
   max_abs_curvature: 2.0                   # 1/m
-  velocity: { min: -1.0, max: 1.0 }        # m/s
-  acceleration: { min: -5.0, max: +1.0 }   # m/s^2
+  velocity: { min: -0.5, max: 0.5 }        # m/s
+  acceleration: { min: -2.0, max: +0.6 }   # m/s^2
 
 wheel_radius: 0.055 # m
 # Motor to DIFFERENTIAL ratio. To get motor to WHEEL ratio, multiply by 0.5.

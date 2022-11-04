@@ -9,7 +9,7 @@ launch:
     param:
     - {name: "serial_port", value: "/dev/ttyUSB0"}
     - {name: "serial_baudrate", value: 1000000}
-    - {name: "frame_id", value: "lidar_base"}
+    - {name: "frame_id", value: "lidar_link"}
     - {name: "inverted", value: False}
     - {name: "angle_compensate", value: True}
     - {name: "scan_mode", value: "DenseBoost"}

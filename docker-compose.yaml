@@ -10,10 +10,10 @@ services:
     build:
       dockerfile: docker/truck-jetson.dockerfile
       context: .
-    # ports:
-    # - "2222:2222"
-    # - "11345:11345"
-    # - "9090:9090"
+    ports:
+    - "2222:2222"
+    - "11345:11345"
+    - "9090:9090"
     volumes:
       - "${PWD}:/truck"
       - "/dev:/dev"
@@ -28,10 +28,6 @@ services:
       dockerfile: docker/truck-amd64.dockerfile
       context: .
     network_mode: "host"
-    # ports:
-    # - "2222:2222"
-    # - "11345:11345"
-    # - "9090:9090"
     volumes:
       - "${PWD}:/truck"
       - "/dev:/dev"

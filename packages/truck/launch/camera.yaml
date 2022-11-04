@@ -9,22 +9,17 @@ launch:
 
     param:
     - {name: "initial_reset", value: True}
-    - {name: "enable_sync", value: True}
-    - {name: "publish_tf", value: True}
-    - {name: "publish_odom_tf", value: True}
-    - {name: "tf_publish_rate", value: 1.0}
+    - {name: "enable_sync", value: False}
+    - {name: "publish_tf", value: False}
 
-    - {name: "enable_color", value: True}
+    - {name: "enable_color", value: False}
     - {name: "rgb_camera.profile", value: "848x480x30"}
 
-    - {name: "enable_depth", value: True}
+    - {name: "enable_depth", value: False}
     - {name: "depth_moduel.profile", value: "848x480x30"}
 
-    - {name: "align_depth", value: True}
-    - {name: "align__cuda_.enable", value: True}
-
     - {name: "enable_accel", value: True}
-    - {name: "accel_fps", value: 63}
+    - {name: "accel_fps", value: 400}
 
     - {name: "enable_gyro", value: True}
     - {name: "gyro_fps", value: 200}
