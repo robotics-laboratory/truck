@@ -17,12 +17,17 @@ WORKDIR /tmp
 
 ### COMMON BASE
 
+ENV CLANG_VERSION=13
+
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         apt-transport-https \
         apt-utils \
-        build-essential \
         ca-certificates \
+        clang-${CLANG_VERSION}
+        clangd-${CLANG_VERSION}
+        clang-format-${CLANG_VERSION}
+        clang-tidy-${CLANG_VERSION}
         cmake \
         curl \
         git \
@@ -30,6 +35,7 @@ RUN apt-get update -q && \
         libpython3-dev \
         less \
         make \
+        lldb-${CLANG_VERSION}
         software-properties-common \
         gnupg \
         python3 \
@@ -189,7 +195,7 @@ RUN wget --no-check-certificate -qO ${PYTORCH_WHL} ${PYTORCH_URL} \
     && pip3 install --no-cache-dir ${PYTORCH_WHL} \ 
     && rm -rf /tmp/*
 
-ARG TORCHVISION_VERSION=0.12.0
+ARG TORCHVISION_VERSION=0.11.0
 
 RUN wget -qO - https://github.com/pytorch/vision/archive/refs/tags/v${TORCHVISION_VERSION}.tar.gz | tar -xz \
     && cd vision-${TORCHVISION_VERSION} \

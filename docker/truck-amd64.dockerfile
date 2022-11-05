@@ -13,18 +13,23 @@ WORKDIR /tmp
 
 ### COMMON BASE
 
+ENV CLANG_VERSION=12
+
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         apt-transport-https \
         apt-utils \
-        build-essential \
         ca-certificates \
-        cmake \
+        clang-${CLANG_VERSION} \
+        clang-format-${CLANG_VERSION} \
+        clang-tidy-${CLANG_VERSION} \
+        cmake\
         curl \
         git \
         gnupg2 \
         libpython3-dev \
         less \
+        lldb-${CLANG_VERSION} \
         make \
         software-properties-common \
         gnupg \
@@ -39,9 +44,12 @@ RUN apt-get update -q && \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
+ENV CC=/usr/bin/clang-${CLANG_VERSION}
+ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
+
 ### INSTALL OPENCV
 
-ARG OPENCV_VERSION="4.5.0"
+ENV OPENCV_VERSION="4.5.0"
 
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
@@ -353,8 +361,6 @@ COPY requirements.txt /tmp/requirements.txt
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         bluez \
-        clang-format \
-        gdb \
         file \
         htop \
         httpie \
