@@ -47,6 +47,13 @@ RUN apt-get update -q && \
 ENV CC=/usr/bin/clang-${CLANG_VERSION}
 ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
 
+RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
+    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc \
+    && printf "export CC=/usr/bin/clang-${CLANG_VERSION}\n" >> /root/.bashrc \
+    && printf "export CXX=/usr/bin/clang++-${CLANG_VERSION}\n" >> /root/.bashrc \
+    && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
+    && printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc
+
 ### INSTALL OPENCV
 
 ENV OPENCV_VERSION="4.5.0"
@@ -137,7 +144,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* apt-get clean
 
 ARG TORCH_VERSION=1.12.0
-ARG TORCHVISION_VERSION=0.12.0
+ARG TORCHVISION_VERSION=0.13.0
 
 RUN pip3 install --no-cache-dir \
     torch==${TORCH_VERSION} torchvision==${TORCHVISION_VERSION} \
@@ -339,19 +346,21 @@ RUN cd ${ROS_TMP} \
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
-RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
-    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc \
-    && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
+RUN printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
     && printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc
+
+ENV SLLIDAR_COMMIT=4bbeb1a61d08812ea8465eecd0f27030ccff92c4
+
+COPY patch/sllidar.patch /tmp/sllidar.patch
 
 RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
     && cd sllidar_ros2 \
+    && git checkout ${SLLIDAR_COMMIT} \
+    && git apply /tmp/sllidar.patch \
     && source ${ROS_ROOT}/setup.bash \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
-        --cmake-args -DBUILD_TESTING=OFF \
-        --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
 ### INSTALL DEV PKGS

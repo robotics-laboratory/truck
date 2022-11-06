@@ -1,8 +1,9 @@
 
- -i https://pypi.org/simple
- msgpacketizer==0.2.0
- numpy==1.23.3
- odrive==0.6.1.post0
- pybind11==2.10.0
- pyserial==3.5
+-i https://pypi.org/simple
+msgpacketizer==0.2.0
+numpy==1.23.3
+scipy==1.9.3
+odrive==0.6.1.post0
+pybind11==2.10.0
+pyserial==3.5
  
