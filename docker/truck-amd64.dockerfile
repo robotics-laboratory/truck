@@ -13,6 +13,9 @@ WORKDIR /tmp
 
 ### COMMON BASE
 
+RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
+    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc
+
 ENV CLANG_VERSION=12
 
 RUN apt-get update -q && \
@@ -47,12 +50,8 @@ RUN apt-get update -q && \
 ENV CC=/usr/bin/clang-${CLANG_VERSION}
 ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
 
-RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
-    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc \
-    && printf "export CC=/usr/bin/clang-${CLANG_VERSION}\n" >> /root/.bashrc \
-    && printf "export CXX=/usr/bin/clang++-${CLANG_VERSION}\n" >> /root/.bashrc \
-    && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
-    && printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc
+RUN  printf "export CC=/usr/bin/clang-${CLANG_VERSION}\n" >> /root/.bashrc \
+    && printf "export CXX=/usr/bin/clang++-${CLANG_VERSION}\n" >> /root/.bashrc
 
 ### INSTALL OPENCV
 

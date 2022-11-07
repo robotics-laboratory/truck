@@ -17,25 +17,28 @@ WORKDIR /tmp
 
 ### COMMON BASE
 
-ENV CLANG_VERSION=13
+RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
+    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc
+
+ENV CLANG_VERSION=12
 
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         apt-transport-https \
         apt-utils \
+        build-essential \
         ca-certificates \
-        clang-${CLANG_VERSION}
-        clangd-${CLANG_VERSION}
-        clang-format-${CLANG_VERSION}
-        clang-tidy-${CLANG_VERSION}
-        cmake \
+        clang-${CLANG_VERSION} \
+        clang-format-${CLANG_VERSION} \
+        clang-tidy-${CLANG_VERSION} \
+        cmake\
         curl \
         git \
         gnupg2 \
         libpython3-dev \
         less \
+        lldb-${CLANG_VERSION} \
         make \
-        lldb-${CLANG_VERSION}
         software-properties-common \
         gnupg \
         python3 \
@@ -48,6 +51,12 @@ RUN apt-get update -q && \
         tmux \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
+
+ENV CC=/usr/bin/clang-${CLANG_VERSION}
+ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
+
+RUN  printf "export CC=/usr/bin/clang-${CLANG_VERSION}\n" >> /root/.bashrc \
+    && printf "export CXX=/usr/bin/clang++-${CLANG_VERSION}\n" >> /root/.bashrc
 
 ### INSTALL NVIDIA
 
@@ -96,6 +105,9 @@ RUN apt-get update -yq && \
         pkg-config \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
+
+ENV CC=/usr/bin/gcc
+ENV CXX=/usr/bin/g++
 
 RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
@@ -171,6 +183,9 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
     && rm -rf /tmp/*
 
 ### INSTALL PYTORCH
+
+ENV CC=/usr/bin/clang-${CLANG_VERSION}
+ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -397,19 +412,21 @@ RUN cd ${ROS_TMP} \
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
-RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
-    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc \
-    && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
+RUN printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
     && printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc
+
+ENV SLLIDAR_COMMIT=4bbeb1a61d08812ea8465eecd0f27030ccff92c4
+
+COPY patch/sllidar.patch /tmp/sllidar.patch
 
 RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
     && cd sllidar_ros2 \
+    && git checkout ${SLLIDAR_COMMIT} \
+    && git apply /tmp/sllidar.patch \
     && source ${ROS_ROOT}/setup.bash \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
-        --cmake-args -DBUILD_TESTING=OFF \
-        --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
 ### INSTALL DEV PKGS
@@ -419,8 +436,6 @@ COPY requirements.txt /tmp/requirements.txt
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         bluez \
-        clang-format \
-        gdb \
         file \
         htop \
         httpie \
