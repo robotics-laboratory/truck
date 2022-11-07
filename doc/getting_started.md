@@ -11,24 +11,24 @@ All prebuild base images are stored at our registry ```cr.yandex/crp8hpfj5tuhlao
 ### Pull and run
 ```
 # dev/amd64
+docker-compose pull truck-amd64
 docker-compose up -d truck-amd64
 
 # jetson
+docker-compose pull truck-jetson
 docker-compose up -d truck-jetson
 
 # just run another shell (preferred)
 # exit doesn't stop the container
 docker exec -it truck bash
 
-# attach to running container
-# use ctrl+p+q to detach
-docker attach truck
+# also you 
 
 # stop container
 docker stop truck
 ```
 ### Build and push
-If you need to build container, follow this steps. Up version in ```docker-compose.yaml``` if orresponding dockerfile is changed.
+If you need to build container after any changes, follow this steps. Up version in ```docker-compose.yaml``` if orresponding dockerfile is changed.
 
 ```
 # dev/amd64
@@ -42,20 +42,17 @@ docker-compose push truck-jetson
 
 ## Dev
 ### Build
-To build all packages
-
+To build all packages run commands in `packages` dir.
 ```bash
 colcon build --merge-install
 ```
 
-To build you some single package
-
+To build your some single package.
 ```bash
 colcon build --merge-install --packages-up-to package_name
 ```
 
 Current installation dir is ```/truck/packages/install```. To run setup do
-
 ```bash
 source install/setup.bash
 ```
@@ -76,7 +73,6 @@ gzclient --verbose
 ```
 
 ## Connecting bluetooth gamepad
-
 Note: you should run the following commands on a host device, not in a docker container.  
 Start bluetoothctl. Enable the agent and set it as default:
 ```
@@ -107,7 +103,6 @@ Using controller MAC, make pairing...
 [bluetooth]# trust MAC_ADDR
 ```
 
-
 Make connection and quit.
 ```
 [bluetooth]# connect MAC_ADDR
@@ -117,9 +112,11 @@ Make connection and quit.
 So, job is done. For more info use `help`.
 
 ## Gamepad layout
-
 - (❌) Cross button — switch to OFF mode (stop immediately, disable motor)
 - (⭕) Circle button — switch to REMOTE mode (motion controlled via gamepad)
 - (🔺) Triangle button — switch to AUTO mode (motion controlled programmatically)
 - Left stick, horizontal axis — controls steering (left-right)
 - Right stick, vertical axis — controls velocity (forward/backward)
+
+## Foxglove
+TODO(@dasimagin)
