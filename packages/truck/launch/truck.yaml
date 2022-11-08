@@ -1,5 +1,4 @@
 launch:
-
 - include:
    file: $(find-pkg-share truck)/launch/lidar.yaml
 - include:
