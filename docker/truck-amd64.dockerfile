@@ -13,18 +13,23 @@ WORKDIR /tmp
 
 ### COMMON BASE
 
+ENV CLANG_VERSION=12
+
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         apt-transport-https \
         apt-utils \
-        build-essential \
         ca-certificates \
-        cmake \
+        clang-${CLANG_VERSION} \
+        clang-format-${CLANG_VERSION} \
+        clang-tidy-${CLANG_VERSION} \
+        cmake\
         curl \
         git \
         gnupg2 \
         libpython3-dev \
         less \
+        lldb-${CLANG_VERSION} \
         make \
         software-properties-common \
         gnupg \
@@ -39,9 +44,18 @@ RUN apt-get update -q && \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
+ENV CC=/usr/bin/clang-${CLANG_VERSION}
+ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
+ENV CXX_STANDART=20
+
+RUN printf "export CC=/usr/bin/clang-${CLANG_VERSION}\n" >> /root/.bashrc \
+    && printf "export CXX=/usr/bin/clang++-${CLANG_VERSION}\n" >> /root/.bashrc \
+    && printf "export CMAKE_CXX_STANDARD=${CXX_STANDART}" >> /root/.bashrc
+
+
 ### INSTALL OPENCV
 
-ARG OPENCV_VERSION="4.5.0"
+ENV OPENCV_VERSION="4.5.0"
 
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
@@ -129,7 +143,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* apt-get clean
 
 ARG TORCH_VERSION=1.12.0
-ARG TORCHVISION_VERSION=0.12.0
+ARG TORCHVISION_VERSION=0.13.0
 
 RUN pip3 install --no-cache-dir \
     torch==${TORCH_VERSION} torchvision==${TORCHVISION_VERSION} \
@@ -284,7 +298,6 @@ RUN mkdir -p ${ROS_ROOT} \
         gazebo_ros \
         geometry2 \
         joy \
-        joy_linux \
         launch_xml \
         launch_yaml \
         pcl_conversions \
@@ -327,7 +340,7 @@ RUN cd ${ROS_TMP} \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
-        --cmake-args -Wno -DBUILD_TESTING=OFF \ 
+        --cmake-args -DBUILD_TESTING=OFF \ 
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
@@ -336,14 +349,18 @@ RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
     && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
     && printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc
 
+ENV SLLIDAR_COMMIT=4bbeb1a61d08812ea8465eecd0f27030ccff92c4
+
+COPY patch/sllidar.patch /tmp/sllidar.patch
+
 RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
     && cd sllidar_ros2 \
+    && git checkout ${SLLIDAR_COMMIT} \
+    && git apply /tmp/sllidar.patch \
     && source ${ROS_ROOT}/setup.bash \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
-        --cmake-args -DBUILD_TESTING=OFF \
-        --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
 ### INSTALL DEV PKGS
@@ -353,13 +370,9 @@ COPY requirements.txt /tmp/requirements.txt
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
         bluez \
-        clang-format \
-        gdb \
         file \
         htop \
-        httpie \
         nlohmann-json3-dev \
-        tree \
         ssh \
     && python3 -m pip install --no-cache-dir -U -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt \

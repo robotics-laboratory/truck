@@ -1,0 +1,13 @@
+diff --git a/sdk/src/arch/linux/net_socket.cpp b/sdk/src/arch/linux/net_socket.cpp
+index 36b9bec..2a58b1a 100644
+--- a/sdk/src/arch/linux/net_socket.cpp
++++ b/sdk/src/arch/linux/net_socket.cpp
+@@ -167,7 +167,7 @@ u_result SocketAddress::getAddressAsString(char * buffer, size_t buffersize) con
+ 
+         break;
+     }
+-    return ans<=0?RESULT_OPERATION_FAIL:RESULT_OK;
++    return ans!=0?RESULT_OPERATION_FAIL:RESULT_OK;
+ }
+ 
+ 

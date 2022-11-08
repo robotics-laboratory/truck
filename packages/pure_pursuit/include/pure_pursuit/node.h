@@ -70,7 +70,7 @@ class PurePursuitNode : public rclcpp::Node {
 
         const auto result = (*controller_)(*odometry_, *path_);
         if (!result) {
-            RCLCPP_ERROR(get_logger(), toString(result.error()).data());
+            RCLCPP_ERROR(get_logger(), "%s", toString(result.error()).data());
             command_signal_->publish(toMsg(Command::stop()));
             return;
         }
