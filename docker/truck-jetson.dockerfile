@@ -1,10 +1,6 @@
 FROM nvcr.io/nvidia/l4t-base:r35.1.0
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV CUDA_HOME="/usr/local/cuda"
-ENV PATH="/usr/local/cuda/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
-
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"]
 
@@ -13,12 +9,13 @@ ENV ROS_DISTRO=galactic
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 ENV ROS_PYTHON_VERSION=3
 
+ENV CUDA_HOME="/usr/local/cuda"
+ENV PATH="/usr/local/cuda/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
+
 WORKDIR /tmp
 
 ### COMMON BASE
-
-RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
-    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc
 
 ENV CLANG_VERSION=12
 
@@ -54,9 +51,11 @@ RUN apt-get update -q && \
 
 ENV CC=/usr/bin/clang-${CLANG_VERSION}
 ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
+ENV CXX_STANDART=20
 
-RUN  printf "export CC=/usr/bin/clang-${CLANG_VERSION}\n" >> /root/.bashrc \
-    && printf "export CXX=/usr/bin/clang++-${CLANG_VERSION}\n" >> /root/.bashrc
+RUN printf "export CC=/usr/bin/clang-${CLANG_VERSION}\n" >> /root/.bashrc \
+    && printf "export CXX=/usr/bin/clang++-${CLANG_VERSION}\n" >> /root/.bashrc \
+    && printf "export CMAKE_CXX_STANDARD=${CXX_STANDART}" >> /root/.bashrc
 
 ### INSTALL NVIDIA
 
@@ -293,6 +292,11 @@ RUN git clone https://github.com/introlab/rtabmap-release.git \
 
 ### INSTALL ROS2
 
+ENV ROS_VERSION=2
+ENV ROS_DISTRO=galactic
+ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+ENV ROS_PYTHON_VERSION=3
+
 RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
     && wget -qO - https://packages.osrfoundation.org/gazebo.key | apt-key add - \
@@ -365,7 +369,6 @@ RUN mkdir -p ${ROS_ROOT} \
         gazebo_ros \
         geometry2 \
         joy \
-        joy_linux \
         launch_xml \
         launch_yaml \
         pcl_conversions \
@@ -408,11 +411,13 @@ RUN cd ${ROS_TMP} \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
-        --cmake-args -Wno -DBUILD_TESTING=OFF \ 
+        --cmake-args -DBUILD_TESTING=OFF \ 
         --catkin-skip-building-tests \
     && rm -rf /tmp/*
 
-RUN printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
+RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
+    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc \
+    && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
     && printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc
 
 ENV SLLIDAR_COMMIT=4bbeb1a61d08812ea8465eecd0f27030ccff92c4
@@ -438,9 +443,7 @@ RUN apt-get update -q \
         bluez \
         file \
         htop \
-        httpie \
         nlohmann-json3-dev \
-        tree \
         ssh \
     && python3 -m pip install --no-cache-dir -U -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt \

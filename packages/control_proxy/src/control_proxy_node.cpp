@@ -83,9 +83,9 @@ constexpr size_t BUTTON_CIRCLE = 1;
 constexpr size_t BUTTON_TRIANGLE = 2;
 
 constexpr size_t AXE_LX = 0;
-constexpr size_t AXE_LY = 1;
+// constexpr size_t AXE_LY = 1;
 
-constexpr size_t AXE_RX = 3;
+// constexpr size_t AXE_RX = 3;
 constexpr size_t AXE_RY = 4;
 
 }  // namespace
