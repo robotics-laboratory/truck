@@ -4,6 +4,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"]
 
+ENV ROS_VERSION=2
+ENV ROS_DISTRO=galactic
+ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+ENV ROS_PYTHON_VERSION=3
+
 WORKDIR /tmp
 
 ### COMMON BASE
@@ -220,11 +225,6 @@ RUN git clone https://github.com/introlab/rtabmap-release.git \
     && rm -rf /tmp/*
 
 ### INSTALL ROS2
-
-ENV ROS_VERSION=2
-ENV ROS_DISTRO=galactic
-ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
-ENV ROS_PYTHON_VERSION=3
 
 RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
