@@ -4,14 +4,11 @@
 
 #include <cstdio>
 
-extern USART_HandleTypeDef husart1;
-
 namespace as5047p {
 
 namespace {
 
 constexpr float ANGLE_TO_DEGREE = 360.0 / (1 << 14);
-constexpr uint32_t SPI_SPEED = 10'000'000;
 
 constexpr uint16_t ANGLEUNC = 0x3ffe;
 constexpr uint16_t ANGLECOM = 0x3fff;
