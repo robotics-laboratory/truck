@@ -167,6 +167,7 @@ static void MX_SPI2_Init(void) {
   if (HAL_SPI_Init(&hspi2) != HAL_OK) {
     Error_Handler();
   }
+
   /* USER CODE BEGIN SPI2_Init 2 */
 
   /* USER CODE END SPI2_Init 2 */
@@ -187,7 +188,7 @@ static void MX_USART1_Init(void) {
 
   /* USER CODE END USART1_Init 1 */
   husart1.Instance = USART1;
-  husart1.Init.BaudRate = 115200;
+  husart1.Init.BaudRate = 500000;
   husart1.Init.WordLength = USART_WORDLENGTH_8B;
   husart1.Init.StopBits = USART_STOPBITS_1;
   husart1.Init.Parity = USART_PARITY_NONE;

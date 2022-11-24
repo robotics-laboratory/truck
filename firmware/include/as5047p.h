@@ -32,8 +32,6 @@ enum Operation {
 
 class AS5047p {
  public:
-  spi::SPI _spi;
-
   AS5047p(SPI_HandleTypeDef& spi) : _spi(spi) {
     fill_command_frame(ANGLEUNC, Operation::READ, _angle_command_frame);
     fill_command_frame(DIAAGC, Operation::READ, _magnet_command_frame);
@@ -49,7 +47,7 @@ class AS5047p {
   }
 
   bool is_magnetic_field_good() {
-    ReadDataFrame diagnostic = read_register((uint8_t*)&_magnet_command_frame);
+    ReadDataFrame diagnostic = read_register(_magnet_command_frame.raw);
     return !(get_bit(diagnostic.values.data, 10) || get_bit(diagnostic.values.data, 11));
   }
 
@@ -99,20 +97,20 @@ class AS5047p {
   }
 
   uint16_t get_14bit_angle() {
-    return read_register((uint8_t*)&_angle_command_frame.raw).values.data;
+    return read_register(_angle_command_frame.raw).values.data;
   }
 
-  ReadDataFrame read_register(uint8_t* tx_data) {
+  ReadDataFrame read_register(uint16_t tx_data) {
     ReadDataFrame received_frame;
-    _spi.write_read(tx_data, (uint8_t*)&received_frame.raw, 1);
-    _spi.write_read((uint8_t*)&_noop_frame.raw, (uint8_t*)&received_frame.raw, 1);
+    _spi.write_read(tx_data, received_frame.raw, 1);
+    _spi.write_read(_noop_frame.raw, received_frame.raw, 1);
     return received_frame;
   }
 
-  void write_register(uint8_t* tx_data_1, uint8_t* tx_data_2) {
+  void write_register(uint16_t tx_data_1, uint16_t tx_data_2) {
     uint16_t rx;
-    _spi.write_read(tx_data_1, (uint8_t*)&rx, 1);
-    _spi.write_read(tx_data_2, (uint8_t*)&rx, 1);
+    _spi.write_read(tx_data_1, rx, 1);
+    _spi.write_read(tx_data_2, rx, 1);
   }
 
   void set_new_zero_angle(uint16_t angle) {
@@ -121,8 +119,8 @@ class AS5047p {
     uint16_t lsb = angle & ((1 << LSB_SIZE) - 1);
     uint16_t msb = (angle >> LSB_SIZE) & ((1 << MSB_SIZE) - 1);
 
-    write_register((uint8_t*)&_zposl_command_frame, (uint8_t*)&lsb);
-    write_register((uint8_t*)&_zposm_command_frame, (uint8_t*)&msb);
+    write_register(_zposl_command_frame.raw, lsb);
+    write_register(_zposm_command_frame.raw, msb);
   }
 
   bool get_bit(uint16_t word, uint16_t position) {
@@ -138,6 +136,8 @@ class AS5047p {
     }
     return (count % 2) != 0;
   }
+
+  spi::SPI _spi;
 
   CommandFrame _angle_command_frame;
   CommandFrame _magnet_command_frame;
