@@ -25,6 +25,7 @@ class SPI {
         } else {
             gpio::write_pin(_cs_port, _cs_pin, GPIO_PIN_SET);
         }
+        _spi.Instance->CR1 |= SPI_CR1_SPE;
     }
 
     void deselect() {
@@ -40,7 +41,6 @@ class SPI {
 
     void write_read(uint16_t tx_data, uint16_t& rx_data, uint16_t size) {
         select();
-        _spi.Instance->CR1 |= SPI_CR1_SPE;
 
         while (((_spi.Instance->SR) & (SPI_FLAG_TXE)) == 0) {
         }
