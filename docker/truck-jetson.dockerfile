@@ -23,9 +23,8 @@ RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         apt-transport-https \
         apt-utils \
-        build-essential \
         ca-certificates \
-        clang-${CLANG_VERSION} \
+        build-essential \
         clang-format-${CLANG_VERSION} \
         clang-tidy-${CLANG_VERSION} \
         cmake\
@@ -33,8 +32,6 @@ RUN apt-get update -q && \
         git \
         gnupg2 \
         libpython3-dev \
-        less \
-        lldb-${CLANG_VERSION} \
         make \
         software-properties-common \
         gnupg \
@@ -43,19 +40,13 @@ RUN apt-get update -q && \
         python3-distutils \
         python3-pip \
         python3-setuptools \
-        vim \
         tar \
-        tmux \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV CC=/usr/bin/clang-${CLANG_VERSION}
-ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
-ENV CXX_STANDART=20
-
-RUN printf "export CC=/usr/bin/clang-${CLANG_VERSION}\n" >> /root/.bashrc \
-    && printf "export CXX=/usr/bin/clang++-${CLANG_VERSION}\n" >> /root/.bashrc \
-    && printf "export CMAKE_CXX_STANDARD=${CXX_STANDART}" >> /root/.bashrc
+ENV FLAGS="-O3 -ffast-math -Wall -march=armv8.2-a+simd+crypto+predres -mtune=cortex-a57"
+ENV CFLAGS="${FLAGS}"
+ENV CXXFLAGS="${FLAGS}"
 
 ### INSTALL NVIDIA
 
@@ -78,7 +69,6 @@ RUN apt-get update -yq && \
         libavcodec-dev \
         libavformat-dev \
         libavresample-dev \
-        libcanberra-gtk3-module \
         libdc1394-22-dev \
         libeigen3-dev \
         libgstreamer-plugins-base1.0-dev \
@@ -105,16 +95,12 @@ RUN apt-get update -yq && \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV CC=/usr/bin/gcc
-ENV CXX=/usr/bin/g++
-
 RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && cd opencv-${OPENCV_VERSION} && mkdir -p build && cd build \
-    && OPENCV_MODULES=(core calib3d features2d flann highgui imgcodecs photo python stitching video videoio \
+    && OPENCV_MODULES=(core calib3d features2d flann highgui imgcodecs video videoio stitching photo \
         aruco bgsegm ccalib cudev cudaarithm cudabgsegm cudacodec cudafeatures2d cudafilters cudaimgproc \
-        cudaoptflow cudastereo cudawarping cudev optflow rgbd sfm stereo surface_matching \
-        xfeatures2d ximgproc xphoto) \
+        cudaoptflow cudawarping cudev optflow rgbd sfm xfeatures2d ximgproc xphoto) \
     && cmake .. \
         -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' ' ',') \
         -DCMAKE_BUILD_TYPE=RELEASE \
@@ -122,7 +108,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
         -DBUILD_opencv_apps=OFF \
         -DBUILD_EXAMPLES=OFF \
         -DBUILD_opencv_python2=OFF \
-        -DBUILD_opencv_python3=ON \
+        -DBUILD_opencv_python3=OFF \
         -DBUILD_opencv_java=OFF \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
         -DCUDA_ARCH_BIN=5.3,6.2,7.2 \
@@ -144,7 +130,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
         -DWITH_OPENCL=OFF \
         -DWITH_IPP=OFF \
         -DWITH_TBB=ON \
-        -DBUILD_TIFF=ON \
+        -DBUILD_TIFF=OFF \
         -DBUILD_PERF_TESTS=OFF \
         -DBUILD_TESTS=OFF \
     && make -j$(nproc) install && rm -rf /tmp/*
@@ -176,15 +162,12 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
         -DFORCE_RSUSB_BACKEND=false \
         -DBUILD_WITH_CUDA=true \
         -DBUILD_WITH_OPENMP=true \
-        -DBUILD_PYTHON_BINDINGS=true \
+        -DBUILD_PYTHON_BINDINGS=false \
         -DBUILD_WITH_TM2=false \
     && make -j$(($(nproc)-1)) install \
     && rm -rf /tmp/*
 
 ### INSTALL PYTORCH
-
-ENV CC=/usr/bin/clang-${CLANG_VERSION}
-ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -265,6 +248,9 @@ RUN wget -qO - https://github.com/ethz-asl/libnabo/archive/refs/tags/${LIBNABO_V
     && cd libnabo-${LIBNABO_VERSION} && mkdir -p build && cd build \
     && cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
+        -DLIBNABO_BUILD_TESTS=OFF \
+        -DLIBNABO_BUILD_EXAMPLES=OFF \
+        -DLIBNABO_BUILD_PYTHON=OFF \
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
@@ -274,6 +260,9 @@ RUN wget -qO - https://github.com/ethz-asl/libpointmatcher/archive/refs/tags/${L
     && cd libpointmatcher-${LIBPOINTMATCHER_VERSION} && mkdir -p build && cd build \
     && cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTS=OFF \
+        -DPOINTMATCHER_BUILD_EXAMPLES=OFF \
+        -DPOINTMATCHER_BUILD_EVALUATIONS=OFF \
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
@@ -285,7 +274,7 @@ RUN git clone https://github.com/introlab/rtabmap-release.git \
     && mkdir -p build && cd build \
     && cmake .. \
         -DBUILD_APP=OFF \
-        -DBUILD_TOOLS=ON \
+        -DBUILD_TOOLS=OFF \
         -DBUILD_EXAMPLES=OFF \
     && make -j$(nproc) install \
     && rm -rf /tmp/*
@@ -386,6 +375,8 @@ RUN apt-get update -q \
     && rosdep install -qy --ignore-src  \
         --rosdistro ${ROS_DISTRO} \
         --from-paths ${ROS_TMP} \
+        --skip-keys clang-format-${CLANG_VERSION} \
+        --skip-keys clang-tidy-${CLANG_VERSION} \
         --skip-keys fastcdr \
         --skip-keys rti-connext-dds-5.3.1 \
         --skip-keys urdfdom_headers \
@@ -438,13 +429,27 @@ RUN apt-get update -q \
         bluez \
         file \
         htop \
-        nlohmann-json3-dev \
+        lldb-${CLANG_VERSION} \
+        less \
         ssh \
+        tmux \
+        vim \
     && python3 -m pip install --no-cache-dir -U -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
+
+ENV CC="gcc-9"
+ENV CXX="g++-9"
+
+ENV CFLAGS="${FLAGS} -std=c17"
+ENV CXXFLAGS="${FLAGS} -std=c++2a"
+
+RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
+    && printf "export CXX='${CXX}'\n" >> /root/.bashrc \
+    && printf "export CFLAGS='${CFLAGS}'\n" >> /root/.bashrc \
+    && printf "export CXXFLAGS='${CXXFLAGS}'\n" >> /root/.bashrc \
+    && printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
     && echo 'root:root' | chpasswd
 
 ### SETUP ENTRYPOINT
