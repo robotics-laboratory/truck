@@ -449,6 +449,8 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export CXX='${CXX}'\n" >> /root/.bashrc \
     && printf "export CFLAGS='${CFLAGS}'\n" >> /root/.bashrc \
     && printf "export CXXFLAGS='${CXXFLAGS}'\n" >> /root/.bashrc \
+    && printf "export RCUTILS_LOGGING_BUFFERED_STREAM=1\n" >> /root/.bashrc \
+    && printf "export RCUTILS_CONSOLE_OUTPUT_FORMAT='[{severity:time}] {message}'\n" >> /root/.bashrc \
     && printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
     && echo 'root:root' | chpasswd
 
