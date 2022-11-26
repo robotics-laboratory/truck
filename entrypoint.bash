@@ -6,7 +6,8 @@ service ssh start
 echo "ROS_DISTRO: $ROS_DISTRO"
 echo "ROS_ROOT: $ROS_ROOT"
 
-echo "CCX: $CCX"
-echo "CCX_STANDART: $CCX_STANDART"
+echo "CC/CXX: $CC/$CXX"
+echo "CFLAGS: $CFLAGS"
+echo "CXXFLAGS: $CXXFLAGS"
 
 exec /bin/bash

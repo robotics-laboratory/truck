@@ -19,8 +19,8 @@ RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         apt-transport-https \
         apt-utils \
+        build-essential \
         ca-certificates \
-        clang-${CLANG_VERSION} \
         clang-format-${CLANG_VERSION} \
         clang-tidy-${CLANG_VERSION} \
         cmake\
@@ -28,8 +28,6 @@ RUN apt-get update -q && \
         git \
         gnupg2 \
         libpython3-dev \
-        less \
-        lldb-${CLANG_VERSION} \
         make \
         software-properties-common \
         gnupg \
@@ -38,20 +36,13 @@ RUN apt-get update -q && \
         python3-distutils \
         python3-pip \
         python3-setuptools \
-        vim \
         tar \
-        tmux \
         wget \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV CC=/usr/bin/clang-${CLANG_VERSION}
-ENV CXX=/usr/bin/clang++-${CLANG_VERSION}
-ENV CXX_STANDART=20
-
-RUN printf "export CC=/usr/bin/clang-${CLANG_VERSION}\n" >> /root/.bashrc \
-    && printf "export CXX=/usr/bin/clang++-${CLANG_VERSION}\n" >> /root/.bashrc \
-    && printf "export CMAKE_CXX_STANDARD=${CXX_STANDART}" >> /root/.bashrc
-
+ENV FLAGS="-O3 -ffast-math -Wall"
+ENV CFLAGS="${FLAGS}"
+ENV CXXFLAGS="${FLAGS}"
 
 ### INSTALL OPENCV
 
@@ -93,9 +84,8 @@ RUN apt-get update -q && \
 RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && cd opencv-${OPENCV_VERSION} && mkdir -p build && cd build \
-    && OPENCV_MODULES=(core calib3d features2d flann highgui imgcodecs photo \
-        stitching video videoio aruco bgsegm ccalib optflow rgbd sfm stereo \
-        surface_matching xfeatures2d ximgproc xphoto) \
+    && OPENCV_MODULES=(core calib3d features2d flann highgui imgcodecs video videoio stitching photo \
+        aruco bgsegm ccalib optflow rgbd sfm stereo xfeatures2d ximgproc xphoto) \
     && cmake .. \
         -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' '  ',') \
         -DCMAKE_BUILD_TYPE=RELEASE \
@@ -115,20 +105,42 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
         -DWITH_OPENCL=ON \
         -DWITH_IPP=OFF \
         -DWITH_TBB=ON \
-        -DBUILD_TIFF=ON \
+        -DBUILD_TIFF=OFF \
         -DBUILD_PERF_TESTS=OFF \
         -DBUILD_TESTS=OFF \
     && make -j$(nproc) install && rm -rf /tmp/*
 
 # ### INSTALL REALSENSE2
 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE \
-    && add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u \
-    && apt-get update -q \
+ARG LIBRS_VERSION="2.51.1"
+
+RUN apt-get update -yq \
     && apt-get install -yq --no-install-recommends \
-        librealsense2-dev \
+        ca-certificates \
+        libssl-dev \
+        libusb-1.0-0-dev \
+        libusb-1.0-0 \
+        libudev-dev \
+        libomp-dev \
+        pkg-config \
+        sudo \
+        udev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
+RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/v${LIBRS_VERSION}.tar.gz | tar -xz \
+    && cd librealsense-${LIBRS_VERSION} \
+    && bash scripts/setup_udev_rules.sh \
+    && mkdir -p build && cd build \
+    && cmake .. \
+        -DBUILD_EXAMPLES=false \
+        -DCMAKE_BUILD_TYPE=release \
+        -DFORCE_RSUSB_BACKEND=true \
+        -DBUILD_WITH_CUDA=false \
+        -DBUILD_WITH_OPENMP=false \
+        -DBUILD_PYTHON_BINDINGS=false \
+        -DBUILD_WITH_TM2=false \
+    && make -j$(($(nproc)-1)) install \
+    && rm -rf /tmp/*
 
 ### INSTALL PYTORCH
 
@@ -199,6 +211,9 @@ RUN wget -qO - https://github.com/ethz-asl/libnabo/archive/refs/tags/${LIBNABO_V
     && cd libnabo-${LIBNABO_VERSION} && mkdir -p build && cd build \
     && cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
+        -DLIBNABO_BUILD_TESTS=OFF \
+        -DLIBNABO_BUILD_EXAMPLES=OFF \
+        -DLIBNABO_BUILD_PYTHON=OFF \
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
@@ -208,6 +223,9 @@ RUN wget -qO - https://github.com/ethz-asl/libpointmatcher/archive/refs/tags/${L
     && cd libpointmatcher-${LIBPOINTMATCHER_VERSION} && mkdir -p build && cd build \
     && cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTS=OFF \
+        -DPOINTMATCHER_BUILD_EXAMPLES=OFF \
+        -DPOINTMATCHER_BUILD_EVALUATIONS=OFF \
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
@@ -219,7 +237,7 @@ RUN git clone https://github.com/introlab/rtabmap-release.git \
     && mkdir -p build && cd build \
     && cmake .. \
         -DBUILD_APP=OFF \
-        -DBUILD_TOOLS=ON \
+        -DBUILD_TOOLS=OFF \
         -DBUILD_EXAMPLES=OFF \
     && make -j$(nproc) install \
     && rm -rf /tmp/*
@@ -320,6 +338,8 @@ RUN apt-get update -q \
     && rosdep install -qy --ignore-src  \
         --rosdistro ${ROS_DISTRO} \
         --from-paths ${ROS_TMP} \
+        --skip-keys clang-format \
+        --skip-keys clang-tidy \
         --skip-keys fastcdr \
         --skip-keys rti-connext-dds-5.3.1 \
         --skip-keys urdfdom_headers \
@@ -372,13 +392,24 @@ RUN apt-get update -q \
         bluez \
         file \
         htop \
-        nlohmann-json3-dev \
+        lldb-${CLANG_VERSION} \
         ssh \
     && python3 -m pip install --no-cache-dir -U -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-RUN printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
+
+ENV CC="gcc-9"
+ENV CXX="g++-9"
+
+ENV CFLAGS="${FLAGS} -std=c17"
+ENV CXXFLAGS="${FLAGS} -std=c++2a"
+
+RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
+    && printf "export CXX='${CXX}'\n" >> /root/.bashrc \
+    && printf "export CFLAGS='${CFLAGS}'\n" >> /root/.bashrc \
+    && printf "export CXXFLAGS='${CXXFLAGS}'\n" >> /root/.bashrc \
+    && printf "PermitRootLogin yes\nPort 2222" >> /etc/ssh/sshd_config \
     && echo 'root:root' | chpasswd
 
 ### SETUP ENTRYPOINT

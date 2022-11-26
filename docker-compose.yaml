@@ -3,7 +3,7 @@ version: "3.5"
 services:
   truck-jetson:
     container_name: truck-jetson
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:jetson-0.6.2
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:jetson-0.6.3
     stdin_open: true
     privileged: true
     tty: true
@@ -20,7 +20,7 @@ services:
 
   truck-amd64:
     container_name: truck-amd64
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:amd64-0.6.2
+    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:amd64-0.6.3
     stdin_open: true
     privileged: true
     tty: true
