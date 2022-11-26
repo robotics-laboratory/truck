@@ -1,5 +1,7 @@
 launch:
 - arg: {name: "world", default: "simple.world"}
+- arg: {name: "control_name", default: "ps4"}
+
 - include:
     file: $(find-pkg-share model)/launch/model_tf.yaml
     arg:
@@ -17,6 +19,7 @@ launch:
     file: $(find-pkg-share truck)/launch/control.yaml
     arg:
     - {name: "simulation", value: "true"}
+    - {name: "control_name", value: "$(var control_name)"}
 - include:
     file: $(find-pkg-share visualization)/launch/visualization.yaml
     arg:

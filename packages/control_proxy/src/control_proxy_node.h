@@ -1,13 +1,11 @@
 #pragma once
 
-#include <boost/preprocessor.hpp>
-
+#include <geometry_msgs/msg/twist.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include <sensor_msgs/msg/joy_feedback.hpp>
 
-#include <geometry_msgs/msg/twist.hpp>
-
 #include <rclcpp/rclcpp.hpp>
+#include <yaml-cpp/yaml.h>
 
 #include "model/model.h"
 
@@ -24,6 +22,20 @@ enum class Mode : uint8_t { Off = 0, Remote = 1, Auto = 2 };
 
 std::string toString(Mode mode);
 
+struct ControlMap {
+    ControlMap(const YAML::Node& node);
+    ControlMap(const std::string& path);
+
+    static constexpr size_t none = -1;
+
+    const size_t velocity_axis = none;
+    const size_t curvature_axis = none;
+
+    const size_t off_button = none;
+    const size_t remote_button = none;
+    const size_t auto_button = none;
+};
+
 class ControlProxyNode : public rclcpp::Node {
   public:
     ControlProxyNode();
@@ -33,8 +45,7 @@ class ControlProxyNode : public rclcpp::Node {
 
     void publishCommand(const truck_interfaces::msg::Control& command);
 
-    geometry_msgs::msg::Twist transformToTwist(
-        const truck_interfaces::msg::Control& command) const;
+    geometry_msgs::msg::Twist transformToTwist(const truck_interfaces::msg::Control& command) const;
 
     void forwardControlCommand(truck_interfaces::msg::Control::ConstSharedPtr command);
 
@@ -49,12 +60,13 @@ class ControlProxyNode : public rclcpp::Node {
     void publishMode();
     void publishStop();
 
-    model::Model model_;
+    const model::Model model_;
+    const ControlMap control_map_;
+    const std::string frame_id_;
 
     // params
     std::chrono::milliseconds control_timeout_{200};
     std::chrono::milliseconds joypad_timeout_{200};
-    std::string frame_id_;
 
     // input
     rclcpp::Subscription<truck_interfaces::msg::Control>::SharedPtr command_slot_ = nullptr;

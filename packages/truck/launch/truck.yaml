@@ -1,4 +1,5 @@
 launch:
+- arg: {name: "control_name", default: "ps4"}
 - include:
    file: $(find-pkg-share truck)/launch/lidar.yaml
 - include:
@@ -11,6 +12,8 @@ launch:
     file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml
 - include:
     file: $(find-pkg-share truck)/launch/remote.yaml
+    arg:
+    - {name: "control_name", value: "$(var control_name)"}
 - include:
     file: $(find-pkg-share visualization)/launch/visualization.yaml
 - include:

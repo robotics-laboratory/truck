@@ -25,13 +25,41 @@ std::string toString(Mode mode) {
     }
 }
 
+ControlMap::ControlMap(const YAML::Node& node)
+    : velocity_axis(node["velocity_axis"].as<size_t>())
+    , curvature_axis(node["curvature_axis"].as<size_t>())
+    , off_button(node["off_button"].as<size_t>())
+    , remote_button(node["remote_button"].as<size_t>())
+    , auto_button(node["auto_button"].as<size_t>()) {}
+
+ControlMap::ControlMap(const std::string& path) : ControlMap(YAML::LoadFile(path)) {}
+
+namespace {
+
+auto loadModel(rclcpp::Logger logger, const std::string& path) {
+    RCLCPP_INFO(logger, "load model: %s", path.c_str());
+    return model::Model(path);
+}
+
+auto loadControlMap(rclcpp::Logger logger, const std::string& path) {
+    RCLCPP_INFO(logger, "load control map: %s", path.c_str());
+    return ControlMap(path);
+}
+
+}  // namespace
+
 ControlProxyNode::ControlProxyNode()
     : Node("control_proxy_node")
-    , model_(Node::declare_parameter<std::string>("model_config", "model.yaml"))
+    , model_(
+        loadModel(
+            this->get_logger(),
+            Node::declare_parameter<std::string>("model_config")))
+    , control_map_(
+        loadControlMap(
+            this->get_logger(),
+            Node::declare_parameter<std::string>("control_config")))
     , frame_id_("base")
     , mode_(Mode::Off) {
-    RCLCPP_INFO(this->get_logger(), "Model acquired...");
-
     RCLCPP_INFO(
         this->get_logger(),
         "max velocity: %f, min velocity: %f",
@@ -43,12 +71,12 @@ ControlProxyNode::ControlProxyNode()
     joypad_timeout_ =
         std::chrono::milliseconds(this->declare_parameter<long int>("joypad_timeout", 200));
 
-    RCLCPP_INFO(this->get_logger(), "joy pad timeout %li ms", joypad_timeout_.count());
+    RCLCPP_INFO(this->get_logger(), "joy pad timeout: %li ms", joypad_timeout_.count());
 
     control_timeout_ =
         std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 200));
 
-    RCLCPP_INFO(this->get_logger(), "control timeout %li ms", control_timeout_.count());
+    RCLCPP_INFO(this->get_logger(), "control timeout: %li ms", control_timeout_.count());
 
     // input
     command_slot_ = Node::create_subscription<truck_interfaces::msg::Control>(
@@ -73,22 +101,8 @@ ControlProxyNode::ControlProxyNode()
     command_signal_ = Node::create_publisher<truck_interfaces::msg::Control>("/control/command", 1);
     twist_signal_ = Node::create_publisher<geometry_msgs::msg::Twist>("/control/twist", 1);
 
-    RCLCPP_INFO(this->get_logger(), "Mode: Off");
+    RCLCPP_INFO(this->get_logger(), "mode: Off");
 }
-
-namespace {
-
-constexpr size_t BUTTON_CROSS = 0;
-constexpr size_t BUTTON_CIRCLE = 1;
-constexpr size_t BUTTON_TRIANGLE = 2;
-
-constexpr size_t AXE_LX = 0;
-// constexpr size_t AXE_LY = 1;
-
-// constexpr size_t AXE_RX = 3;
-constexpr size_t AXE_RY = 4;
-
-}  // namespace
 
 void ControlProxyNode::setMode(Mode mode) {
     if (mode == mode_) {
@@ -96,7 +110,7 @@ void ControlProxyNode::setMode(Mode mode) {
     }
 
     mode_ = mode;
-    RCLCPP_WARN(this->get_logger(), "Mode: %s", toString(mode).c_str());
+    RCLCPP_WARN(this->get_logger(), "mode: %s", toString(mode).c_str());
 
     sensor_msgs::msg::JoyFeedback result;
 
@@ -114,10 +128,10 @@ truck_interfaces::msg::Control ControlProxyNode::makeControlCommand(
     result.header.stamp = command.header.stamp;
     result.header.frame_id = frame_id_;
 
-    result.curvature = command.axes[AXE_LX] * model_.baseMaxAbsCurvature();
+    result.curvature = command.axes[control_map_.curvature_axis] * model_.baseMaxAbsCurvature();
 
     result.velocity = [&] {
-        const double ratio = command.axes[AXE_RY];
+        const double ratio = command.axes[control_map_.velocity_axis];
         return ratio >= 0 ? ratio * model_.baseVelocityLimits().max
                           : -ratio * model_.baseVelocityLimits().min;
     }();
@@ -140,13 +154,12 @@ geometry_msgs::msg::Twist ControlProxyNode::transformToTwist(
     return twist;
 }
 
-void ControlProxyNode::handleJoypadCommand(
-    sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
-    if (checkButtonPressed(joypad_command, BUTTON_CROSS)) {
+void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
+    if (checkButtonPressed(joypad_command, control_map_.off_button)) {
         setMode(Mode::Off);
-    } else if (checkButtonPressed(joypad_command, BUTTON_CIRCLE)) {
+    } else if (checkButtonPressed(joypad_command, control_map_.remote_button)) {
         setMode(Mode::Remote);
-    } else if (checkButtonPressed(joypad_command, BUTTON_TRIANGLE)) {
+    } else if (checkButtonPressed(joypad_command, control_map_.auto_button)) {
         setMode(Mode::Auto);
     }
 
@@ -210,7 +223,7 @@ void ControlProxyNode::watchdog() {
     }
 
     if (mode_ != Mode::Off && timeout_failed(prev_joypad_command_, joypad_timeout_)) {
-        RCLCPP_ERROR(this->get_logger(), "Lost joypad, stop!");
+        RCLCPP_ERROR(this->get_logger(), "lost joypad, stop!");
         setMode(Mode::Off);
         prev_joypad_command_ = nullptr;
         publishStop();
@@ -218,7 +231,7 @@ void ControlProxyNode::watchdog() {
     }
 
     if (mode_ == Mode::Auto && timeout_failed(prev_command_, control_timeout_)) {
-        RCLCPP_ERROR(this->get_logger(), "Lost control, stop!");
+        RCLCPP_ERROR(this->get_logger(), "lost control, stop!");
         setMode(Mode::Off);
         prev_command_ = nullptr;
         publishStop();
