@@ -1,0 +1,6 @@
+launch:
+- executable:
+    name: "video_streaming"
+    cmd: "node $(find-pkg-share video_streaming)/server.js"
+    output: "log"
+    shell: True

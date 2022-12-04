@@ -1,0 +1,13 @@
+{
+  "name": "video_streaming",
+  "version": "0.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "stream-split": "^1.1.0",
+    "ws": "^8.11.0"
+  }
+}
