@@ -1,0 +1,217 @@
+{
+  "configById": {
+    "Live Stream Panel.Live Stream!10ww6kb": {
+      "url": "ws://jetson-nx-2.local:5555",
+      "resolution": "640x480",
+      "framerate": "15",
+      "bitrate": 600
+    },
+    "Service Button Panel.Service Button!2st36iq": {
+      "label": "Reset Trajectory",
+      "service": "/control_demo/reset_path",
+      "payload": "{}"
+    },
+    "Indicator!m1e1nn": {
+      "path": "/control/mode.mode",
+      "style": "background",
+      "fallbackColor": "#a0a0a0",
+      "fallbackLabel": "???",
+      "rules": [
+        {
+          "operator": "=",
+          "rawValue": "0",
+          "color": "#e34b4b",
+          "label": "OFF"
+        },
+        {
+          "operator": "=",
+          "rawValue": "1",
+          "color": "#1590e8",
+          "label": "REMOTE"
+        },
+        {
+          "operator": "=",
+          "rawValue": "2",
+          "color": "#22f040",
+          "label": "AUTO"
+        }
+      ]
+    },
+    "Gauge!2tc5i9z": {
+      "path": "/hardware/telemetry.battery_voltage",
+      "minValue": 22.2,
+      "maxValue": 25.2,
+      "colorMap": "turbo",
+      "colorMode": "colormap",
+      "gradient": [
+        "#0054ff",
+        "#26ff00"
+      ],
+      "reverse": false
+    },
+    "Plot!aiclr3": {
+      "title": "Plot",
+      "paths": [
+        {
+          "value": "/control/twist.angular.z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/ekf/odometry/filtered.twist.twist.angular.z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "minYValue": -2,
+      "maxYValue": 2,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "followingViewWidth": 20
+    },
+    "3D!icj3pf": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 3.321667679751088,
+        "phi": 48.67634223392935,
+        "thetaOffset": 126.89376443418024,
+        "targetOffset": [
+          0.20716786911987728,
+          -0.02042262802838865,
+          2.4694535917149108e-18
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      },
+      "followMode": "follow-pose",
+      "scene": {
+        "enableStats": false,
+        "labelScaleFactor": 0.5,
+        "ignoreColladaUpAxis": false,
+        "transforms": {
+          "showLabel": true
+        }
+      },
+      "transforms": {
+        "frame:odom": {
+          "visible": true
+        },
+        "frame:odom_ekf": {
+          "visible": true
+        },
+        "frame:base": {
+          "visible": true
+        },
+        "frame:camera_link": {
+          "visible": false
+        },
+        "frame:camera_gyro_farme": {
+          "visible": false
+        },
+        "frame:camera_gyro_optical_frame": {
+          "visible": false
+        },
+        "frame:camera_imu_optical_frame": {
+          "visible": false
+        },
+        "frame:d455::camera_imu_optical_frame": {
+          "visible": false
+        },
+        "frame:lidar_link": {
+          "visible": false
+        },
+        "frame:rplidar_s2::lidar_link": {
+          "visible": false
+        }
+      },
+      "topics": {
+        "/visualization/ego": {
+          "visible": true
+        },
+        "/motion/path": {
+          "visible": true
+        },
+        "/visualization/arc": {
+          "visible": true
+        },
+        "/lidar/scan": {
+          "visible": true,
+          "colorField": "intensity",
+          "colorMode": "colormap",
+          "colorMap": "turbo"
+        }
+      },
+      "layers": {},
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "followTf": "odom_ekf"
+    },
+    "Tab!2syy45s": {
+      "activeTabIdx": 0,
+      "tabs": [
+        {
+          "title": "Trajectory",
+          "layout": {
+            "first": {
+              "first": {
+                "first": "Live Stream Panel.Live Stream!10ww6kb",
+                "second": {
+                  "first": "Service Button Panel.Service Button!2st36iq",
+                  "second": {
+                    "first": "Indicator!m1e1nn",
+                    "second": "Gauge!2tc5i9z",
+                    "direction": "column",
+                    "splitPercentage": 49.67105263157895
+                  },
+                  "direction": "column",
+                  "splitPercentage": 32.142857142857146
+                },
+                "direction": "row",
+                "splitPercentage": 79.079721776351
+              },
+              "second": "Plot!aiclr3",
+              "direction": "column"
+            },
+            "second": "3D!icj3pf",
+            "direction": "row",
+            "splitPercentage": 45.96040663456394
+          }
+        }
+      ]
+    }
+  },
+  "globalVariables": {
+    "globalVariable": 0
+  },
+  "userNodes": {},
+  "linkedGlobalVariables": [],
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": "Tab!2syy45s"
+}
