@@ -1,6 +1,7 @@
 launch:
 - arg: {name: "world", default: "simple.world"}
-- arg: {name: "control_name", default: "ps4"}
+- arg: {name: "joypad", default: "ps4"}
+- arg: {name: "rosbridge", default: "true"}
 
 - include:
     file: $(find-pkg-share model)/launch/model_tf.yaml
@@ -19,7 +20,7 @@ launch:
     file: $(find-pkg-share truck)/launch/control.yaml
     arg:
     - {name: "simulation", value: "true"}
-    - {name: "control_name", value: "$(var control_name)"}
+    - {name: "joypad", value: "$(var joypad)"}
 - include:
     file: $(find-pkg-share visualization)/launch/visualization.yaml
     arg:
@@ -31,3 +32,4 @@ launch:
     - {name: "qos", value: "2"}
 - include:
     file: $(find-pkg-share truck)/launch/rosbridge.yaml
+    if: $(var rosbridge)

@@ -1,8 +1,8 @@
 launch:
-- arg: {name: "control_name", default: "ps4"}
+- arg: {name: "joypad", default: "ps4"}
 - include:
     file: $(find-pkg-share truck)/launch/control.yaml
     arg:
-    - {name: "control_name", value: "$(var control_name)"}
+    - {name: "joypad", value: "$(var joypad)"}
 - include:
     file: $(find-pkg-share hardware_node)/launch/hardware_node.yaml

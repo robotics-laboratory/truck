@@ -1,6 +1,6 @@
 launch:
 - arg:
-    name: "control_name"
+    name: "joypad"
     default: "ps4"
 - arg:
     name: "simulation"
@@ -16,7 +16,7 @@ launch:
     # path to truck mode config
     - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
     # path to control config
-    - {name: "control_config", value: "$(find-pkg-share control_proxy)/config/$(var control_name).yaml"}
+    - {name: "control_config", value: "$(find-pkg-share control_proxy)/config/$(var joypad).yaml"}
     # set mode to `off` if no commands from joypad during this time (milliseconds)
     - {name: "joypad_timeout", value: 200}
     # set mode to `remote` if no commands from planner during this time (milliseconds)
