@@ -4,3 +4,5 @@ launch:
    file: $(find-pkg-share truck)/launch/$(var env).yaml
 - include:
    file: $(find-pkg-share control_demo)/launch/control_demo.yaml
+- include:
+   file: $(find-pkg-share video_streaming)/launch/video_streaming.yaml

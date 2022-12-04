@@ -7,6 +7,7 @@ launch:
     output: "log"
 
     param:
+    - {name: "address", value: "0.0.0.0"}
     - {name: "port", value: 9090}
     - {name: "use_compression", value: false}
     - {name: "fragment_timeout", value: 400}
