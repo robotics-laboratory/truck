@@ -1,7 +1,10 @@
 launch:
 - arg: {name: "env", default: "simulator"}
+- arg: {name: "gamepad", default: "ps4"}
 - include:
    file: $(find-pkg-share truck)/launch/$(var env).yaml
+   arg:
+    - {name: "control_name", value: "$(var gamepad)"}
 - include:
    file: $(find-pkg-share control_demo)/launch/control_demo.yaml
 - include:

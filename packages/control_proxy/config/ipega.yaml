@@ -1,6 +1,5 @@
-# TODO(@andbondstyle)
-velocity_axis: 4
+velocity_axis: 3
 curvature_axis: 0
 off_button: 0
 remote_button: 1
-auto_button: 2
+auto_button: 4
