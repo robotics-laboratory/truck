@@ -39,6 +39,7 @@ class Model {
     double gearRatio() const;
 
     const WheelBase& wheelBase() const;
+    const TruckShape& truckShape() const;
 
     Twist baseToRearTwist(Twist twist) const;
     Steering rearTwistToSteering(Twist twist) const;

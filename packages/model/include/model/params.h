@@ -17,6 +17,15 @@ struct WheelBase {
     double base_to_rear;
 };
 
+struct TruckShape {
+    TruckShape(const YAML::Node& node);
+
+    double width;
+    double length;
+    double base_to_rear;
+    int circles_count_approx_shape;
+};
+
 struct SteeringLimit {
     geom::Angle inner;
     geom::Angle outer;
@@ -43,6 +52,7 @@ struct Params {
     Params(const std::string& config_path);
 
     WheelBase wheel_base;
+    TruckShape truck_shape;
     model::VehicleLimits limits;
     double wheel_radius;
     double gear_ratio;

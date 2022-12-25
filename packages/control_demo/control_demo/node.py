@@ -79,6 +79,7 @@ class ControlDemo(Node):
             pose.header.stamp = now
             pose.pose.position.x = x
             pose.pose.position.y = y
+            pose.pose.position.z = 0.1
             path.poses.append(pose)
 
         self.path_signal.publish(path)

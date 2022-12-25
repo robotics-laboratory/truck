@@ -31,7 +31,8 @@ class VisualizationNode : public rclcpp::Node {
     rclcpp::Subscription<truck_interfaces::msg::ControlMode>::SharedPtr mode_slot_ = nullptr;
 
     // output
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego_signal_ = nullptr;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego_box_signal_ = nullptr;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego_circles_signal_ = nullptr;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc_signal_ = nullptr;
     };
 

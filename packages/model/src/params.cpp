@@ -29,6 +29,18 @@ WheelBase::WheelBase(const YAML::Node& node)
     BOOST_VERIFY(length > base_to_rear);
 }
 
+TruckShape::TruckShape(const YAML::Node& node)
+    : width(node["width"].as<double>())
+    , length(node["length"].as<double>())
+    , base_to_rear(node["base_to_rear"].as<double>())
+    , circles_count_approx_shape(node["circles_count_approx_shape"].as<int>()) {
+    BOOST_VERIFY(width > 0);
+    BOOST_VERIFY(length > 0);
+    BOOST_VERIFY(base_to_rear > 0);
+    BOOST_VERIFY(length > base_to_rear);
+    BOOST_VERIFY(circles_count_approx_shape > 0);
+}
+
 VehicleLimits::VehicleLimits(const YAML::Node& node)
     : max_abs_curvature(node["max_abs_curvature"].as<double>())
     , steering{toSteeringLimits(node["steering"])}
@@ -48,6 +60,7 @@ ServoAngles::ServoAngles(const YAML::Node& node)
 
 Params::Params(const YAML::Node& node)
     : wheel_base(node["wheel_base"])
+    , truck_shape(node["truck_shape"])
     , limits(node["limits"])
     , wheel_radius(node["wheel_radius"].as<double>())
     , gear_ratio(node["gear_ratio"].as<double>())

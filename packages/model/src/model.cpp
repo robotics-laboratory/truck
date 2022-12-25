@@ -70,4 +70,6 @@ double Model::gearRatio() const { return params_.gear_ratio; }
 
 const WheelBase& Model::wheelBase() const { return params_.wheel_base; }
 
+const TruckShape& Model::truckShape() const { return params_.truck_shape; }
+
 }  // namespace truck::model

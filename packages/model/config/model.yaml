@@ -3,6 +3,12 @@ wheel_base:
   width: 0.213         # m
   base_to_rear: 0.2025 # m
 
+truck_shape:
+  length: 0.505
+  width: 0.313
+  base_to_rear: 0.2525
+  circles_count_approx_shape: 3
+
 limits:
   steering: { inner: 40.0, outer: 40.0 }   # deg
   max_abs_curvature: 2.0                   # 1/m
