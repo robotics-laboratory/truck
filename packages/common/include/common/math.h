@@ -14,7 +14,7 @@ inline double squared(const T& x) {
 
 template<typename T>
 T clamp(const T& val, const T& low, const T& high) {
-    return std::min(std::max(val, low), high);
+    return std::clamp(val, low, high);
 }
 
 template <typename T>
@@ -32,7 +32,7 @@ struct Limits {
 
     bool isStrictlyMet(const T& x) const { return min < x && x < max; }
 
-    T clamp(const T& t) const { return std::clamp(t, min, max); }
+    T clamp(const T& t) const { return truck::clamp(t, min, max); }
 
     T min, max;
 };
