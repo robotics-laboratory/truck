@@ -52,8 +52,14 @@ ControllerResult Controller::operator()(
     bool reachable = false;
     for (auto it = path.poses.rbegin(); it != path.poses.rend(); ++it) {
         const geom::Pose goal = geom::toPose(it->pose);
-        if (geom::distance(goal.pos, pose.pos) > radius) {
+        const double dist = geom::distance(goal.pos, pose.pos);
+        if (dist > radius) {
             continue;
+        }
+
+        static constexpr double eps = 1e-3;
+        if (dist < eps) {
+            return ControllerResult(ControllerError::kImpossibleBuildArc);
         }
 
         reachable |= true;
@@ -61,7 +67,7 @@ ControllerResult Controller::operator()(
 
         Command command;
 
-        command.velocity = 0.3;
+        command.velocity = params_.velocity;
         command.curvature = arc.curvature;
 
         return ControllerResult{command};

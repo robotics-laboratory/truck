@@ -36,11 +36,6 @@ ControlMap::ControlMap(const std::string& path) : ControlMap(YAML::LoadFile(path
 
 namespace {
 
-auto loadModel(rclcpp::Logger logger, const std::string& path) {
-    RCLCPP_INFO(logger, "load model: %s", path.c_str());
-    return model::Model(path);
-}
-
 auto loadControlMap(rclcpp::Logger logger, const std::string& path) {
     RCLCPP_INFO(logger, "load control map: %s", path.c_str());
     return ControlMap(path);
@@ -51,7 +46,7 @@ auto loadControlMap(rclcpp::Logger logger, const std::string& path) {
 ControlProxyNode::ControlProxyNode()
     : Node("control_proxy_node")
     , model_(
-        loadModel(
+        model::load(
             this->get_logger(),
             Node::declare_parameter<std::string>("model_config")))
     , control_map_(
@@ -59,7 +54,7 @@ ControlProxyNode::ControlProxyNode()
             this->get_logger(),
             Node::declare_parameter<std::string>("control_config")))
     , frame_id_("base")
-    , mode_(Mode::Off) {
+    , mode_(Mode::Auto) {
     RCLCPP_INFO(
         this->get_logger(),
         "max velocity: %f, min velocity: %f",

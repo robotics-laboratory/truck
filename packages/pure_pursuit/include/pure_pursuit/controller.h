@@ -39,25 +39,27 @@ struct ControllerResultData {
 using ControllerResult = common::Result<Command, ControllerError>;
 
 struct Params {
-    std::string model_path = "";
-    Limits<double> radius = {0.1, 0.3};
-    double velocity_factor = 0.1;
-    double tolerance = 0.15;
+    Limits<double> radius = {0.15, 0.5};
+    double velocity = 0.4;
+    double velocity_factor = 0.2;
+    double tolerance = 0.1;
 };
 
 class Controller {
   public:
-    Controller(const Params& params) : params_{params}, model_(params.model_path) {}
+    Controller(const Params& params, const model::Model& model)
+        : params_{params}
+        , model_(model)
+    {}
 
-    ControllerResult operator()(
-        const nav_msgs::msg::Odometry& odometry,
-        const nav_msgs::msg::Path& path);
+    ControllerResult
+    operator()(const nav_msgs::msg::Odometry& odometry, const nav_msgs::msg::Path& path);
 
   private:
     double getRadius(double velocity) const;
 
-    Params params_;
-    model::Model model_;
+    const Params params_;
+    const model::Model model_;
 };
 
 };  // namespace truck::pure_pursuit

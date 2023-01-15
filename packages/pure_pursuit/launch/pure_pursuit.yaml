@@ -17,3 +17,8 @@ launch:
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "qos", value: "$(var qos)"}
     - {name: "model_config", value: "$(var model_config)"}
+    - {name: "radius/min", value: 0.15}
+    - {name: "radius/max", value: 0.50}
+    - {name: "velocity", value: 0.4}
+    - {name: "velocity_factor", value: 0.2}
+    - {name: "tolerance", value: 0.1}

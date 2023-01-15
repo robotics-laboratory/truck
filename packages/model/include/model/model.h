@@ -3,7 +3,9 @@
 #include "common/math.h"
 #include "geom/angle.h"
 #include "model/params.h"
-#include "yaml-cpp/yaml.h"
+
+#include <rclcpp/rclcpp.hpp>
+#include <yaml-cpp/yaml.h>
 
 #include <utility>
 
@@ -53,5 +55,10 @@ class Model {
 
     Params params_;
 };
+
+inline auto load(rclcpp::Logger logger, const std::string& path) {
+    RCLCPP_INFO(logger, "load model: %s", path.c_str());
+    return Model(path);
+}
 
 }  // namespace truck::model
