@@ -297,7 +297,7 @@
           <angular_velocity>
             <x>
               <noise type="gaussian">
-                <stddev>0.001</stddev>
+                <stddev>0.01</stddev>
               </noise>
             </x>
             <y>
