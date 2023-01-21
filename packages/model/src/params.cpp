@@ -19,6 +19,18 @@ Limits<double> toLimits(const YAML::Node& node) {
 
 using namespace geom::literals;
 
+TruckShape::TruckShape(const YAML::Node& node)
+    : width(node["width"].as<double>())
+    , length(node["length"].as<double>())
+    , base_to_rear(node["base_to_rear"].as<double>())
+    , circles_count(node["circles_count"].as<int>()) {
+    BOOST_VERIFY(width > 0);
+    BOOST_VERIFY(length > 0);
+    BOOST_VERIFY(base_to_rear > 0);
+    BOOST_VERIFY(length > base_to_rear);
+    BOOST_VERIFY(circles_count > 0);
+}
+
 WheelBase::WheelBase(const YAML::Node& node)
     : width(node["width"].as<double>())
     , length(node["length"].as<double>())
@@ -47,7 +59,8 @@ ServoAngles::ServoAngles(const YAML::Node& node)
 }
 
 Params::Params(const YAML::Node& node)
-    : wheel_base(node["wheel_base"])
+    : truck_shape(node["truck_shape"])
+    , wheel_base(node["wheel_base"])
     , limits(node["limits"])
     , wheel_radius(node["wheel_radius"].as<double>())
     , gear_ratio(node["gear_ratio"].as<double>())

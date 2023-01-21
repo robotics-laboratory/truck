@@ -9,6 +9,15 @@
 
 namespace truck::model {
 
+struct TruckShape {
+    TruckShape(const YAML::Node& node);
+
+    double width;
+    double length;
+    double base_to_rear;
+    int circles_count;
+};
+
 struct WheelBase {
     WheelBase(const YAML::Node& node);
 
@@ -42,6 +51,7 @@ struct Params {
     Params(const YAML::Node& node);
     Params(const std::string& config_path);
 
+    TruckShape truck_shape;
     WheelBase wheel_base;
     model::VehicleLimits limits;
     double wheel_radius;
