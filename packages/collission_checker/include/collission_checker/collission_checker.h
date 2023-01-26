@@ -1,36 +1,32 @@
 #pragma once
 
+#include "model/params.h"
+
+#include <visualization_msgs/msg/marker.hpp>
+#include <nav_msgs/msg/occupancy_grid.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include <cmath>
 #include <vector>
 #include <limits>
-#include <visualization_msgs/msg/marker.hpp>
-#include <std_msgs/msg/float32_multi_array.hpp>
 
-#include "model/model.h"
-
-using namespace std;
 using namespace truck;
+using namespace truck::model;
 
 class StaticCollisionChecker {
-    private:
-        model::Model model_;
-        int margin_size_meters = 10;
-        int margin_size_cells = 200;
-        float cell_size_meters = 0.05f;
-
     public:
-        StaticCollisionChecker();
+        float resolution_;
+        uint32_t width_, height_;
+        cv::Mat distance_transform_;
 
-        float distTransformOnePoint(
-            float x,
-            float y,
-            const std_msgs::msg::Float32MultiArray& dt_grid
-        );
+        void reset(const nav_msgs::msg::OccupancyGrid& grid);
+        double operator() (const geom::Pose& ego_pose) const;
 
-        float distTransform(
-            float x_origin,
-            float y_origin,
-            float yaw,
-            const std_msgs::msg::Float32MultiArray& dt_grid
-        );
+        StaticCollisionChecker(const Shape& shape);
+
+    private:
+        Shape shape_;
+        
+        // cv::Mat findDistanceTransform() const;
+        double getDistance(const geom::Vec2 point) const;
 };

@@ -1,44 +1,59 @@
 #include "collission_checker/collission_checker.h"
 
-StaticCollisionChecker::StaticCollisionChecker()
-    : model_("/truck/packages/model/config/model.yaml") {}
-
-float StaticCollisionChecker::distTransformOnePoint(
-    float x,
-    float y,
-    const std_msgs::msg::Float32MultiArray& dt_grid
-    ) {
-
-    int x_cell_index = x / (float(margin_size_meters) / margin_size_cells);
-    int y_cell_index = y / (float(margin_size_meters) / margin_size_cells);
-
-    if ((x_cell_index >= margin_size_cells) ||
-        (y_cell_index >= margin_size_cells) ||
-        (x_cell_index < 0) ||
-        (y_cell_index < 0)) {
-
-        return 0;
-    }
-
-    float dist = dt_grid.data[y_cell_index * margin_size_cells + x_cell_index];
-    dist = (dist * cell_size_meters) - (model_.truckShape().width / 2);
-
-    return dist > 0 ? dist : 0;
+StaticCollisionChecker::StaticCollisionChecker(const Shape& shape) : shape_() {
+    shape_ = shape;
 }
 
-float StaticCollisionChecker::distTransform(
-    float x_origin,
-    float y_origin,
-    float yaw,
-    const std_msgs::msg::Float32MultiArray& dt_grid) {
-    
-    float min_distance = numeric_limits<float>::max();
-    vector<geometry_msgs::msg::Point> points = model_.getCircles(x_origin, y_origin, yaw);
+void StaticCollisionChecker::reset(const nav_msgs::msg::OccupancyGrid& grid) {
+    resolution_ = grid.info.resolution;
+    width_ = grid.info.width;
+    height_ = grid.info.height;
 
-    for (const auto& p : points) {
-        float tmp = distTransformOnePoint(p.x, p.y, dt_grid);
-        min_distance = tmp < min_distance ? tmp : min_distance;
+    cv::Mat binary_grid = cv::Mat(height_, width_, CV_8UC1);
+
+    for (int i = 0; i < height_; i++) {
+        for (int j = 0; j < width_; j++) {
+            auto grid_cell = int(grid.data.at(i * height_ + j));
+
+            binary_grid.at<uchar>(i, j) =
+                grid_cell == 0
+                    ? 1
+                    : 0;
+        }
+    }
+    
+    cv::distanceTransform(binary_grid, distance_transform_, cv::DIST_L2, cv::DIST_MASK_PRECISE);
+}
+
+double StaticCollisionChecker::operator() (const geom::Pose& ego_pose) const {
+    double min_dist = std::numeric_limits<double>::max();
+    std::vector<geom::Vec2> points = shape_.getCircleDecomposition(ego_pose);
+
+    for (const geom::Vec2& point : points) {
+        double current_dist = getDistance(point);
+        min_dist = std::min(min_dist, current_dist);
     }
 
-    return min_distance;
+    return min_dist;
+}
+
+// cv::Mat findDistanceTransform() const {}
+
+double StaticCollisionChecker::getDistance(const geom::Vec2 point) const {
+    double dist;
+    int width_index = floor<int>(point.x / resolution_);
+    int height_index = floor<int>(point.y / resolution_);
+
+    if ((width_index >= width_) ||
+        (height_index >= height_) ||
+        (width_index < 0) ||
+        (height_index < 0)) {
+
+        return std::numeric_limits<double>::max();
+    }
+
+    dist = distance_transform_.at<float>(height_index, width_index);
+    dist = (dist * resolution_) - shape_.radius();
+
+    return dist > 0 ? dist : 0;
 }

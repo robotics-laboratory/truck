@@ -2,6 +2,7 @@
 
 #include "common/math.h"
 #include "geom/angle.h"
+#include "geom/pose.h"
 #include "model/params.h"
 #include "yaml-cpp/yaml.h"
 
@@ -41,15 +42,13 @@ class Model {
 
     double gearRatio() const;
 
-    const TruckShape& truckShape() const;
+    const Shape& shape() const;
     const WheelBase& wheelBase() const;
 
     Twist baseToRearTwist(Twist twist) const;
     Steering rearTwistToSteering(Twist twist) const;
     WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
     double linearVelocityToMotorRPS(double velocity) const;
-
-    std::vector<geometry_msgs::msg::Point> getCircles(float x_origin, float y_origin, float yaw) const;
 
   private:
     struct Cache {

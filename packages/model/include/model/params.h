@@ -1,5 +1,7 @@
 #pragma once
 
+#include "geom/vector.h"
+#include "geom/pose.h"
 #include "geom/angle.h"
 #include "common/math.h"
 
@@ -7,15 +9,21 @@
 
 #include <boost/assert.hpp>
 
+#include <vector>
+
 namespace truck::model {
 
-struct TruckShape {
-    TruckShape(const YAML::Node& node);
+struct Shape {
+    Shape();
+    Shape(const YAML::Node& node);
 
     double width;
     double length;
     double base_to_rear;
     int circles_count;
+
+    double radius() const;
+    std::vector<geom::Vec2> getCircleDecomposition(geom::Pose pose) const;
 };
 
 struct WheelBase {
@@ -51,7 +59,7 @@ struct Params {
     Params(const YAML::Node& node);
     Params(const std::string& config_path);
 
-    TruckShape truck_shape;
+    Shape shape;
     WheelBase wheel_base;
     model::VehicleLimits limits;
     double wheel_radius;

@@ -68,32 +68,7 @@ double Model::linearVelocityToMotorRPS(double velocity) const {
 
 double Model::gearRatio() const { return params_.gear_ratio; }
 
-std::vector<geometry_msgs::msg::Point> Model::getCircles(float x_origin, float y_origin, float yaw) const {
-    geometry_msgs::msg::Point p;
-    std::vector<geometry_msgs::msg::Point> points;
-
-    if (params_.truck_shape.circles_count == 1) {
-        p.x = x_origin;
-        p.y = y_origin;
-        points.push_back(p);
-    } else {
-        for (int i = 0; i < params_.truck_shape.circles_count; i++) {
-            double offset =
-                -0.5 * (params_.truck_shape.length - params_.truck_shape.width) +
-                i * ((params_.truck_shape.length - params_.truck_shape.width) /
-                     (params_.truck_shape.circles_count - 1));
-
-            p.x = x_origin + offset * cos(yaw);
-            p.y = y_origin + offset * sin(yaw);
-
-            points.push_back(p);
-        }
-    }
-
-    return points;
-} 
-
-const TruckShape& Model::truckShape() const { return params_.truck_shape; }
+const Shape& Model::shape() const { return params_.shape; }
 
 const WheelBase& Model::wheelBase() const { return params_.wheel_base; }
 

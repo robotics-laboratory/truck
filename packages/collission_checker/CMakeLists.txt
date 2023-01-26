@@ -7,9 +7,9 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(visualization_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(model REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
@@ -19,14 +19,14 @@ add_library(${PROJECT_NAME} SHARED
   src/collission_checker.cpp
 )
 
-ament_target_dependencies(collission_checker model visualization_msgs std_msgs)
+ament_target_dependencies(collission_checker model OpenCV nav_msgs)
 
 target_include_directories(collission_checker PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 ament_export_targets(collission_checker HAS_LIBRARY_TARGET)
-ament_export_dependencies(model visualization_msgs std_msgs)
+ament_export_dependencies(model OpenCV nav_msgs)
 
 install(
   TARGETS collission_checker
