@@ -37,24 +37,17 @@ double Shape::radius() const {
     return width / 2;
 }
 
-std::vector<geom::Vec2> Shape::getCircleDecomposition(geom::Pose ego_pose) const {
+std::vector<geom::Vec2> Shape::getCircleDecomposition(const geom::Pose& ego_pose) const {
     std::vector<geom::Vec2> points;
-    
-    double pos_first = -base_to_rear + radius();
-    double pos_step = (length - width) / (circles_count - 1);
+    const double pos_first = -base_to_rear + radius();
+    const double pos_step = (length - 2 * radius()) / (circles_count - 1);
 
     if (circles_count == 1) {
         points.push_back(ego_pose.pos);
     } else {
         for (int i = 0; i < circles_count; i++) {
-            double pos_offset = pos_first + (i * pos_step);
-
-            geom::Vec2 point(
-                ego_pose.pos.x + pos_offset * ego_pose.dir.x,
-                ego_pose.pos.y + pos_offset * ego_pose.dir.y
-            );
-
-            points.push_back(point);
+            double offset = pos_first + (i * pos_step);
+            points.push_back(ego_pose.pos + offset * ego_pose.dir);
         }
     }
 

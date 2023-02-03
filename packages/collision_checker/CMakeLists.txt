@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(collission_checker)
+project(collision_checker)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -16,21 +16,21 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 add_library(${PROJECT_NAME} SHARED
-  src/collission_checker.cpp
+  src/collision_checker.cpp
 )
 
-ament_target_dependencies(collission_checker model OpenCV nav_msgs)
+ament_target_dependencies(collision_checker model OpenCV nav_msgs)
 
-target_include_directories(collission_checker PUBLIC
+target_include_directories(collision_checker PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-ament_export_targets(collission_checker HAS_LIBRARY_TARGET)
+ament_export_targets(collision_checker HAS_LIBRARY_TARGET)
 ament_export_dependencies(model OpenCV nav_msgs)
 
 install(
-  TARGETS collission_checker
-  EXPORT collission_checker
+  TARGETS collision_checker
+  EXPORT collision_checker
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

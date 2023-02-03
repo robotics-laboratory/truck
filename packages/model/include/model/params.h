@@ -23,7 +23,7 @@ struct Shape {
     int circles_count;
 
     double radius() const;
-    std::vector<geom::Vec2> getCircleDecomposition(geom::Pose pose) const;
+    std::vector<geom::Vec2> getCircleDecomposition(const geom::Pose& ego_pose) const;
 };
 
 struct WheelBase {

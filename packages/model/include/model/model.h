@@ -2,14 +2,10 @@
 
 #include "common/math.h"
 #include "geom/angle.h"
-#include "geom/pose.h"
 #include "model/params.h"
 #include "yaml-cpp/yaml.h"
 
 #include <utility>
-#include <vector>
-
-#include <geometry_msgs/msg/pose.hpp>
 
 namespace truck::model {
 
