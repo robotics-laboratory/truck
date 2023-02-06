@@ -19,6 +19,38 @@ Limits<double> toLimits(const YAML::Node& node) {
 
 using namespace geom::literals;
 
+Shape::Shape() {}
+
+Shape::Shape(const YAML::Node& node)
+    : width(node["width"].as<double>())
+    , length(node["length"].as<double>())
+    , base_to_rear(node["base_to_rear"].as<double>())
+    , circles_count(node["circles_count"].as<int>()) {
+    BOOST_VERIFY(width > 0);
+    BOOST_VERIFY(length > 0);
+    BOOST_VERIFY(base_to_rear > 0);
+    BOOST_VERIFY(length > base_to_rear);
+    BOOST_VERIFY(circles_count * radius() > length);
+}
+
+double Shape::radius() const {
+    return width / 2;
+}
+
+std::vector<geom::Vec2> Shape::getCircleDecomposition(const geom::Pose& ego_pose) const {
+    std::vector<geom::Vec2> points;
+    const double pos_first = -base_to_rear + radius();
+    const double pos_step = (length - 2 * radius()) / (circles_count - 1);
+
+    for (int i = 0; i < circles_count; i++) {
+        double offset = pos_first + (i * pos_step);
+        // 'ego_pose' has 'base' frame, therefore we don't need to add offset to 'y' axis
+        points.push_back(geom::Vec2(ego_pose.pos.x + offset, ego_pose.pos.y));
+    }
+
+    return points;
+}
+
 WheelBase::WheelBase(const YAML::Node& node)
     : width(node["width"].as<double>())
     , length(node["length"].as<double>())
@@ -47,7 +79,8 @@ ServoAngles::ServoAngles(const YAML::Node& node)
 }
 
 Params::Params(const YAML::Node& node)
-    : wheel_base(node["wheel_base"])
+    : shape(node["shape"])
+    , wheel_base(node["wheel_base"])
     , limits(node["limits"])
     , wheel_radius(node["wheel_radius"].as<double>())
     , gear_ratio(node["gear_ratio"].as<double>())

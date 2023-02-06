@@ -40,6 +40,7 @@ class Model {
 
     double gearRatio() const;
 
+    const Shape& shape() const;
     const WheelBase& wheelBase() const;
 
     Twist baseToRearTwist(Twist twist) const;
