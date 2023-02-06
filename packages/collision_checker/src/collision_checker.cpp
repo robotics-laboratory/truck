@@ -52,7 +52,7 @@ double StaticCollisionChecker::getDistance(const geom::Vec2& base_point) const {
         grid_metadata.origin.position.z
     );
     
-    // Initialize tranformation from 'grid' frame to 'base' grid
+    // Initialize tranformation from 'grid' frame to 'base' frame
     tf2::Transform transform_from_grid_to_base(grid_quat_tf2, grid_pos_tf2);
 
     // Conver point in 'base' frame from 'geom::Vec2' to 'tf2::Vector3' type
