@@ -70,8 +70,8 @@ void VisualizationNode::publishEgo() const {
     msg.type = visualization_msgs::msg::Marker::CUBE;
     msg.action = visualization_msgs::msg::Marker::ADD;
     msg.lifetime = rclcpp::Duration::from_seconds(0);
-    msg.scale.x = model_.wheelBase().length;
-    msg.scale.y = model_.wheelBase().width;
+    msg.scale.x = model_.shape().length;
+    msg.scale.y = model_.shape().width;
     msg.scale.z = 0.20;
     msg.color = modeToColor(mode_);
 

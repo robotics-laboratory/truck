@@ -1,3 +1,9 @@
+shape:
+  length: 0.505        # m
+  width: 0.313         # m
+  base_to_rear: 0.2525 # m
+  circles_count: 5     # qnt
+
 wheel_base:
   length: 0.405        # m
   width: 0.213         # m

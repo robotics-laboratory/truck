@@ -2,6 +2,7 @@
 packages/build
 packages/install
 packages/log
+packages/planner
 .vscode
 !.vscode/c_cpp_properties.json
 !.vscode/settings.json

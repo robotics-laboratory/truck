@@ -68,6 +68,8 @@ double Model::linearVelocityToMotorRPS(double velocity) const {
 
 double Model::gearRatio() const { return params_.gear_ratio; }
 
+const Shape& Model::shape() const { return params_.shape; }
+
 const WheelBase& Model::wheelBase() const { return params_.wheel_base; }
 
 }  // namespace truck::model
