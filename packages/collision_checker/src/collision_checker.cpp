@@ -65,7 +65,7 @@ void StaticCollisionChecker::reset(const nav_msgs::msg::OccupancyGrid& grid) {
 }
 
 double StaticCollisionChecker::getDistance(const geom::Vec2& point) const {
-    // conver point from 'geom::Vec2' type to 'tf2::Vector3' type
+    // convert point from 'geom::Vec2' type to 'tf2::Vector3' type
     tf2::Vector3 point_tf2 = tf2::Vector3(
         point.x,
         point.y,
