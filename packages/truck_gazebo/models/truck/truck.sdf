@@ -31,7 +31,7 @@
     </include>
 
     <joint name="base_to_lidar" type="fixed">
-      <pose relative_to="base">0 0 0.12 0 0 0</pose>
+      <pose relative_to="base">0 0 0.30 0 0 0</pose>
       <parent>base</parent>
       <child>rplidar_s2::lidar_link</child>
     </joint>
@@ -291,9 +291,8 @@
     </plugin>
 
     <!-- <plugin name="OdometryPlugin" filename="libtruck_gazebo_odometry.so">
-      <link_name>rplidar_s2::lidar_link</link_name>
-      <period>50</period>
-      <link_name>rplidar_s2::lidar_link</link_name>
+      <link_name>base</link_name>
+      <period>10</period>
       <xyz_offset>0.0 0.0 0.0</xyz_offset>
     </plugin> -->
 
