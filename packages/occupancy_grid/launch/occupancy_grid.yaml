@@ -1,0 +1,17 @@
+launch:
+- arg:
+    name: "simulation"
+    default: "false"
+- arg:
+    name: "qos"
+    default: "0"
+- node:
+    pkg: "occupancy_grid"
+    exec: "occupancy_grid_node"
+    name: "occupancy_grid_node"
+    output: "log"
+    param:
+    - {name: "use_sim_time", value: "$(var simulation)"}
+    - {name: "qos", value: "$(var qos)"}
+    - {name: "resolution", value: 0.2}
+    - {name: "radius", value: 15.0}
