@@ -30,7 +30,7 @@ class StaticCollisionChecker {
         model::Shape shape_;
         cv::Mat distance_transform_;
         nav_msgs::msg::MapMetaData grid_metadata_;
-        tf2::Transform transform_from_grid_to_base_;
+        tf2::Transform transform_to_grid_;
 
         double getDistance(const geom::Vec2& point) const;
 };

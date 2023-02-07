@@ -1,0 +1,45 @@
+tf_prefix is 
+map_frame is map
+odom_frame is odom_ekf
+base_link_frame is base
+base_link_output_frame is base
+world_frame is odom_ekf
+transform_time_offset is 0
+transform_timeout is 0
+frequency is 25
+sensor_timeout is 0.3
+two_d_mode is false
+smooth_lagged_data is false
+history_length is 0
+use_control is true
+control_config is (true false false false false true )
+
+control_timeout is 0.5
+acceleration_limits are (1 1 1 1 1 1 )
+
+acceleration_gains are ()
+
+deceleration_limits are (1 1 1 1 1 1 )
+
+deceleration_gains are ()
+
+initial state is [0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           ]
+
+dynamic_process_noise_covariance is false
+permit_corrected_publication is false
+print_diagnostics is false
+Subscribed to /rtabmap/odom (odom0)
+	odom0_differential is true
+	odom0_pose_rejection_threshold is 1.7977e+308
+	odom0_twist_rejection_threshold is 1.7977e+308
+	odom0 pose update vector is (true true false false false false false false false false false false false false false )
+	odom0 twist update vector is (false false false false false false false false false false false false false false false )
+Subscribed to /camera/imu (imu0)
+	imu0_differential is false
+	imu0_pose_rejection_threshold is 1.7977e+308
+	imu0_twist_rejection_threshold is 1.7977e+308
+	imu0_linear_acceleration_rejection_threshold is 1.7977e+308
+	imu0_remove_gravitational_acceleration is false
+	imu0 pose update vector is (false false false false false false false false false false false false false false false )
+	imu0 twist update vector is (false false false false false false false false false false true false false false false )
+	imu0 acceleration update vector is (false false false false false false false false false false false false false false false )

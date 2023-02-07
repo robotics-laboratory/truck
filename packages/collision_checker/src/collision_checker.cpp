@@ -10,7 +10,7 @@ const cv::Mat& StaticCollisionChecker::getDistanceTransform() const {
 
 /**
  * Find the distance to the nearest obstacle
- * @param ego_pose car pose in 'base' frame
+ * @param ego_pose car pose
  * @return min distance
  */
 double StaticCollisionChecker::operator()(const geom::Pose& ego_pose) const {   
@@ -42,8 +42,8 @@ void StaticCollisionChecker::reset(const nav_msgs::msg::OccupancyGrid& grid) {
     tf2::Quaternion grid_quat_tf2;
     tf2::fromMsg(grid_metadata_.origin.orientation, grid_quat_tf2);
 
-    // initialize transformation from 'grid' frame to 'base' frame
-    transform_from_grid_to_base_ = tf2::Transform(grid_quat_tf2, grid_pos_tf2);
+    // initialize transformation to 'grid' frame
+    transform_to_grid_ = tf2::Transform(grid_quat_tf2, grid_pos_tf2).inverse();
 
     // initialize binary grid matrix
     cv::Mat binary_grid = cv::Mat(grid_metadata_.height, grid_metadata_.width, CV_8UC1);
@@ -65,7 +65,7 @@ void StaticCollisionChecker::reset(const nav_msgs::msg::OccupancyGrid& grid) {
 }
 
 double StaticCollisionChecker::getDistance(const geom::Vec2& point) const {
-    // conver point in 'base' frame from 'geom::Vec2' type to 'tf2::Vector3' type
+    // conver point from 'geom::Vec2' type to 'tf2::Vector3' type
     tf2::Vector3 point_tf2 = tf2::Vector3(
         point.x,
         point.y,
@@ -73,7 +73,7 @@ double StaticCollisionChecker::getDistance(const geom::Vec2& point) const {
     );
 
     // get point in 'grid' frame with 'tf2::Vector3' type
-    tf2::Vector3 grid_point_tf2 = transform_from_grid_to_base_.inverse()(point_tf2);
+    tf2::Vector3 grid_point_tf2 = transform_to_grid_(point_tf2);
 
     // find relevant indices of distance transform matrix
     int width_index = floor<int>(grid_point_tf2.x() / grid_metadata_.resolution);
