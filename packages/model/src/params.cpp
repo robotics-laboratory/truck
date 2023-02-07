@@ -30,7 +30,7 @@ Shape::Shape(const YAML::Node& node)
     BOOST_VERIFY(length > 0);
     BOOST_VERIFY(base_to_rear > 0);
     BOOST_VERIFY(length > base_to_rear);
-    BOOST_VERIFY(circles_count * radius() > length);
+    BOOST_VERIFY(circles_count * 2 * radius() > length);
 }
 
 double Shape::radius() const {
@@ -44,8 +44,7 @@ std::vector<geom::Vec2> Shape::getCircleDecomposition(const geom::Pose& ego_pose
 
     for (int i = 0; i < circles_count; i++) {
         double offset = pos_first + (i * pos_step);
-        // 'ego_pose' has 'base' frame, therefore we don't need to add offset to 'y' axis
-        points.push_back(geom::Vec2(ego_pose.pos.x + offset, ego_pose.pos.y));
+        points.push_back(ego_pose.pos + offset * ego_pose.dir);
     }
 
     return points;

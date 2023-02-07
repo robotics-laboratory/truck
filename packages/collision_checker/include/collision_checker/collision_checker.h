@@ -13,6 +13,10 @@
 
 namespace truck::collision_checker {
 
+/**
+ * StaticCollisionChecker library
+ * @attention occupancy grid and query points must be in the same coordinate system
+ */
 class StaticCollisionChecker {
     public:
         const cv::Mat& getDistanceTransform() const;
@@ -25,9 +29,10 @@ class StaticCollisionChecker {
         double max_dist_;        
         model::Shape shape_;
         cv::Mat distance_transform_;
-        nav_msgs::msg::MapMetaData grid_metadata;
+        nav_msgs::msg::MapMetaData grid_metadata_;
+        tf2::Transform transform_from_grid_to_base_;
 
-        double getDistance(const geom::Vec2& ekf_point) const;
+        double getDistance(const geom::Vec2& point) const;
 };
 
-}
+} // namespace truck::collision_checker
