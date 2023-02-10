@@ -1,0 +1,11 @@
+launch:
+- node:
+    pkg: "laser_scan_matcher"
+    exec: "laser_scan_matcher"
+    name: "laser_scan_matcher"
+    namespace: "cmt"
+    output: "log"
+
+    param:
+    - {name: "base_frame", value: "rplidar_s2::lidar_base"}
+    - {name: "scan_topic", value: "/lidar/scan"}

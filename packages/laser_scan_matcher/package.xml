@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>cloud_match_visualizer</name>
-  <version>0.2.0</version>
-  <description>A demo package that was developed as a way to explore the possibilities of underlying libraries.</description>
+  <name>laser_scan_matcher</name>
+  <version>0.3.0</version>
+  <description>rock and stone</description>
   <maintainer email="depressingsupremacy@outlook.com">Isa Gadaev</maintainer>
   <license>MIT</license>
 
@@ -16,6 +16,7 @@
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>rosbag2_cpp</depend>
+  <depend>nav_msgs</depend>
   <depend>rosbag2_storage</depend>
   <depend>laser_geometry</depend>
   <depend>common_interfaces</depend>

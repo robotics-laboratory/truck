@@ -17,10 +17,10 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
-#include "cloud_match_visualizer/cloud_matcher.hpp"
-#include "cloud_match_visualizer/bag_cloud_extractor.hpp"
+#include "laser_scan_matcher/cloud_matching.hpp"
+#include "laser_scan_matcher/bag_cloud_extractor.hpp"
 
-namespace truck {
+namespace cmt {
     class VisualizationSpinner : public rclcpp::Node {
 public:
         explicit VisualizationSpinner() 
@@ -113,38 +113,58 @@ public:
 
             reader.read(filepath, drain);
 
-            sensor_msgs::msg::LaserScan source = (*drain)[idx1_];
-            sensor_msgs::msg::LaserScan target = (*drain)[idx2_];
+            sensor_msgs::msg::LaserScan psrc = (*drain)[idx1_];
+            sensor_msgs::msg::LaserScan ptar = (*drain)[idx2_];
 
-            RCLCPP_INFO(this->get_logger(), "The timestamp of the source cloud: %d.%u", source.header.stamp.sec, source.header.stamp.nanosec);
-            RCLCPP_INFO(this->get_logger(), "The timestamp of the target cloud: %d.%u", target.header.stamp.sec, source.header.stamp.nanosec);
+            PCLCloud source = PCLCloudFromROS(psrc);
+            PCLCloud target = PCLCloudFromROS(ptar);
 
-            CloudMatcher processor(source, target);
-            if(!processor.align(pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>())))
+            RCLCPP_INFO(this->get_logger(), "The timestamp of the source cloud: %d.%u", psrc.header.stamp.sec, psrc.header.stamp.nanosec);
+            RCLCPP_INFO(this->get_logger(), "The timestamp of the target cloud: %d.%u", ptar.header.stamp.sec, ptar.header.stamp.nanosec);
+
+            Eigen::Matrix4f transform;
+            CloudMatcher processor;
+
+            if(!processor.ICPMotionEstimation(transform, source, target))
             {
                 RCLCPP_ERROR(this->get_logger(), "this was not supposed to happen tbh");
                 return;
             }
             //giganigga.visualize();
 
-            RCLCPP_INFO(this->get_logger(), "The ICP score is: %f", processor.score());
+            RCLCPP_INFO(this->get_logger(), "The ICP score is: %f", processor.getScore());
 
             std::stringstream ss;
-            ss << processor.transform();
+            ss << transform;
 
             RCLCPP_INFO(this->get_logger(), "The transform for this ICP iteration is: \n[%s]", ss.str().c_str());
 
-            PCLPointCloudToROS(*(processor.source_), source_);
-            PCLPointCloudToROS(*(processor.target_), target_);
-            PCLPointCloudToROS(*(processor.result_), aligned_);
+            PCLCloud aligned;
+            processor.getAlignedScan(aligned);
+
+            PCLCloudToROS(source, source_);
+            PCLCloudToROS(target, target_);
+            PCLCloudToROS(aligned, aligned_);
         }
 
-        inline void PCLPointCloudToROS(pcl::PointCloud<pcl::PointXYZ>& src, sensor_msgs::msg::PointCloud2& tar)
+        inline void PCLCloudToROS(pcl::PointCloud<pcl::PointXYZ> src, sensor_msgs::msg::PointCloud2& tar)
         {
             pcl::PCLPointCloud2 src_temp;
             pcl::toPCLPointCloud2(src, src_temp);
             pcl_conversions::fromPCL(src_temp, tar);
             return;
+        }
+
+        PCLCloud PCLCloudFromROS(sensor_msgs::msg::LaserScan prototype)
+        {
+            PCLCloud::Ptr output(new PCLCloud);
+            sensor_msgs::msg::PointCloud2 mold;
+            laser_geometry::LaserProjection projector;
+
+            projector.projectLaser(prototype, mold);
+            pcl::fromROSMsg(mold, *output);
+
+            return *output;
         }
 
         void publishClouds() {
