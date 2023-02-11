@@ -35,22 +35,36 @@ namespace cmt {
         , odom_frame_("odom")
         , base_frame_("base_link")
         , show_path_(0)
+        , icp_max_corr_dist_(0.05)
+        , icp_max_inter_dist_(1)
+        , icp_tf_threshold_(1e-8)
+        , icp_iter_threshold_(50)
         , odom_qos_profile_(rmw_qos_profile_sensor_data)
         , pose_(Eigen::Matrix4f::Identity()) //a temporary solution i guess
         {
             RCLCPP_INFO(this->get_logger(), "The node is initializing...");
-
             scan_topic_ = this->declare_parameter("scan_topic", scan_topic_);
             odom_topic_ = this->declare_parameter("odom_topic", odom_topic_);
             odom_frame_ = this->declare_parameter("odom_frame", odom_frame_);
             base_frame_ = this->declare_parameter("base_frame", base_frame_);
-            show_path_ = this->declare_parameter<bool>("show_path", show_path_);
+            show_path_ = this->declare_parameter<bool>("show_path", show_path_); //not usable yet
+
+            icp_tf_threshold_ = this->declare_parameter<double>("icp_tf_threshold", icp_tf_threshold_);
+            icp_max_corr_dist_ = this->declare_parameter<double>("icp_max_corr_dist", icp_max_corr_dist_);
+            icp_max_inter_dist_ = this->declare_parameter<double>("icp_max_inter_dist", icp_max_inter_dist_);
+            icp_iter_threshold_ = this->declare_parameter<int>("icp_iter_threshold", icp_iter_threshold_);
 
             RCLCPP_INFO(this->get_logger(), "Input scan topic: %s", scan_topic_.c_str());
             RCLCPP_INFO(this->get_logger(), "Base frame: %s", base_frame_.c_str());
             RCLCPP_INFO(this->get_logger(), "Output odometry topic: %s", odom_topic_.c_str());
             RCLCPP_INFO(this->get_logger(), "Specified odometry frame: %s", odom_frame_.c_str());
             RCLCPP_INFO(this->get_logger(), "Publish odometry path: %s", show_path_ ? "true" : "false");
+            RCLCPP_INFO(this->get_logger(), "Max distance between correspondent points: %f", icp_max_corr_dist_);
+            RCLCPP_INFO(this->get_logger(), "Max allowed transformation distance: %f", icp_tf_threshold_);
+            RCLCPP_INFO(this->get_logger(), "Max number of ICP iterations: %d", icp_iter_threshold_);
+            RCLCPP_INFO(this->get_logger(), "Max allowed correspondence MSE change: %f", icp_max_inter_dist_);
+
+            cm = CloudMatcher(icp_max_corr_dist_, icp_max_inter_dist_, icp_tf_threshold_, icp_iter_threshold_);
 
             odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>(
                 odom_topic_,
@@ -92,7 +106,7 @@ namespace cmt {
         {
             Eigen::Matrix4f extract; 
             
-            bool ok = cm.ICPMotionEstimation(extract, scan, last_scan_);
+            bool ok = cm.ICPMotionEstimation(extract, last_scan_, scan);
 
             if(!ok)
                 {
@@ -160,13 +174,13 @@ namespace cmt {
 
             RCLCPP_INFO(this->get_logger(), "Scan acquired at %d.%u", msg->header.stamp.sec, msg->header.stamp.nanosec);
 
-            //a check that allows for the correct conversion of the scan into a pointcloud
-            if(!obtainTransform(
+            //outdated check
+            /*if(!obtainTransform(
                 base_frame_, 
                 msg->header.frame_id, 
                 rclcpp::Time(msg->header.stamp.sec, msg->header.stamp.nanosec) 
                     + rclcpp::Duration::from_seconds(msg->ranges.size()*msg->time_increment)))
-                RCLCPP_ERROR(this->get_logger(), "Scan processing failed, aborting odometry update.");
+                RCLCPP_ERROR(this->get_logger(), "Scan processing failed, aborting odometry update.");*/
 
             //maybe represent it as a kd tree?
             PCLCloud scancloud = PCLCloudFromROS(msg);
@@ -210,9 +224,9 @@ namespace cmt {
 
             mold.twist.twist.linear.x = vx / dt;
 			mold.twist.twist.linear.y = vy / dt;
-			mold.twist.twist.linear.z = vz / dt;
-			mold.twist.twist.angular.x = vroll / dt;
-			mold.twist.twist.angular.y = vpitch / dt;
+			mold.twist.twist.linear.z = 0;
+			mold.twist.twist.angular.x = 0;
+			mold.twist.twist.angular.y = 0;
 			mold.twist.twist.angular.z = vyaw / dt;
 
             pose_ *= aff;
@@ -221,22 +235,19 @@ namespace cmt {
 
             mold.pose.pose.position.x = pose_data.translation.x;
 			mold.pose.pose.position.y = pose_data.translation.y;
-			mold.pose.pose.position.z = pose_data.translation.z;
+			mold.pose.pose.position.z = 0;
 			mold.pose.pose.orientation = pose_data.rotation;
 
             //primitive, but will do for now
             mold.pose.covariance.at(0) = 1e-3;
             mold.pose.covariance.at(7) = 1e-3;
-            mold.pose.covariance.at(14) = 1e-3;
+
             mold.pose.covariance.at(21) = 1e-3;
             mold.pose.covariance.at(28) = 1e-3;
             mold.pose.covariance.at(35) = 1e-3;
 
             mold.twist.covariance.at(0) = 1e-3;
             mold.twist.covariance.at(7) = 1e-3;
-            mold.twist.covariance.at(14) = 1e-3;
-            mold.twist.covariance.at(21) = 1e-3;
-            mold.twist.covariance.at(28) = 1e-3;
             mold.twist.covariance.at(35) = 1e-3;
 
             return mold;
@@ -249,6 +260,12 @@ namespace cmt {
         std::string odom_frame_;
         std::string base_frame_;
         bool show_path_;
+
+        //icp parameters
+        double icp_tf_threshold_; 
+        double icp_max_corr_dist_;
+        double icp_max_inter_dist_; 
+        int icp_iter_threshold_; 
 
         //objects that allow for the logic of the class
         bool callback_occured_;

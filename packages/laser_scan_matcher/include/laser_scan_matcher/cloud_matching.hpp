@@ -27,6 +27,7 @@ namespace cmt {
     class CloudMatcher {
 
     public:
+
         CloudMatcher(double icp_max_corr_dist, double icp_max_inter_dist, double icp_tf_threshold, double icp_iter_threshold)
             : icp_max_corr_dist_(icp_max_corr_dist) 
             , icp_max_inter_dist_(icp_max_inter_dist)
@@ -35,7 +36,7 @@ namespace cmt {
             , last_reg_(nullptr)
         {}
 
-        CloudMatcher() : CloudMatcher(0.05, 1, 1e-8, 50) {} //values mercilessly stolen from someone else
+        CloudMatcher() : CloudMatcher(0.05, 1, 1e-8, 50) {};
 
         bool ICPMotionEstimation(Eigen::Matrix4f& mold, PCLCloud source, PCLCloud target)
         {
@@ -45,7 +46,6 @@ namespace cmt {
             //downsample(ptar, target);
             psrc = PCLCloud::Ptr(new PCLCloud(source));
             ptar = PCLCloud::Ptr(new PCLCloud(target));
-
             preg = PCLCloud::Ptr(new PCLCloud());
 
             icp_proc_.setMaxCorrespondenceDistance(icp_max_corr_dist_);
@@ -61,7 +61,7 @@ namespace cmt {
             if(!icp_proc_.hasConverged())
                 return false;
             
-            mold = icp_proc_.getFinalTransformation().inverse();
+            mold = icp_proc_.getFinalTransformation(); //.inverse()
             last_reg_ = preg;
             return true;
         }
@@ -92,6 +92,17 @@ namespace cmt {
     {
         //fill in
         return;
+    }
+
+    sensor_msgs::msg::PointCloud2 PCLCloudToROSCloud(pcl::PointCloud<pcl::PointXYZ> src)
+    {
+        sensor_msgs::msg::PointCloud2 output;
+
+        pcl::PCLPointCloud2 src_temp;
+        pcl::toPCLPointCloud2(src, src_temp);
+        pcl_conversions::fromPCL(src_temp, output);
+
+        return output;
     }
 
     geometry_msgs::msg::Transform ROSTransformFromPCL(Eigen::Matrix4f prototype)

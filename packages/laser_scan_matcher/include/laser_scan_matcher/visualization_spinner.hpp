@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <sstream>
+#include <queue>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rmw/qos_profiles.h>
@@ -14,8 +15,6 @@
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
 #include <pcl/conversions.h>
-
-#include <pcl_conversions/pcl_conversions.h>
 
 #include "laser_scan_matcher/cloud_matching.hpp"
 #include "laser_scan_matcher/bag_cloud_extractor.hpp"
@@ -32,13 +31,16 @@ public:
             , aligned_topic_("aligned_cloud")
             , frame_id_("visualisation_view")
             , input_topic_("/lidar/scan")
-            , filepath_("")
-            , idx1_(0)
-            , idx2_(30) {
+            , filepath_("") 
+            , icp_max_corr_dist_(0.05)
+            , icp_max_inter_dist_(1)
+            , icp_tf_threshold_(1e-8)
+            , icp_iter_threshold_(50) 
+            , step_(10)
+            , publish_(0)
+        {
             RCLCPP_INFO(this->get_logger(), "The visualization node is initialized.");
             
-            idx1_ = this->declare_parameter<int>("index1", idx1_);
-            idx2_ = this->declare_parameter<int>("index2", idx2_);
             input_topic_ = this->declare_parameter("input_topic", input_topic_);
             filepath_ = this->declare_parameter("filepath", filepath_);
             if(filepath_ == "")
@@ -66,8 +68,6 @@ public:
             }
             RCLCPP_INFO(this->get_logger(), "QoS settings profile: %s", odom_qos_type_.c_str());
 
-            launchICP(filepath_);
-
             source_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
                 source_topic_, rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(odom_qos_profile_)));
             target_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
@@ -83,79 +83,97 @@ public:
             tf_loop_trigger_ = this->create_wall_timer(
                 std::chrono::duration<double>(rate_in_seconds_),
                 std::bind(&VisualizationSpinner::publishTransform, this));
+
+            icp_tf_threshold_ = this->declare_parameter<double>("icp_tf_threshold", icp_tf_threshold_);
+            icp_max_corr_dist_ = this->declare_parameter<double>("icp_max_corr_dist", icp_max_corr_dist_);
+            icp_max_inter_dist_ = this->declare_parameter<double>("icp_max_inter_dist", icp_max_inter_dist_);
+            icp_iter_threshold_ = this->declare_parameter<int>("icp_iter_threshold", icp_iter_threshold_);
+            step_ = this->declare_parameter<int>("step", step_);
+
+            RCLCPP_INFO(this->get_logger(), "Max distance between correspondent points: %f", icp_max_corr_dist_);
+            RCLCPP_INFO(this->get_logger(), "Max allowed transformation distance: %f", icp_tf_threshold_);
+            RCLCPP_INFO(this->get_logger(), "Max number of ICP iterations: %d", icp_iter_threshold_);
+            RCLCPP_INFO(this->get_logger(), "Max allowed correspondence MSE change: %f", icp_max_inter_dist_);
+            RCLCPP_INFO(this->get_logger(), "Step of iteration through the scan bag: %d", step_);
+
+            launchICP(filepath_);
         }
 
         void publishTransform()
         {
-            geometry_msgs::msg::TransformStamped t;
-            t.header.stamp = this->now();
-            t.header.frame_id = "world";
-            t.child_frame_id = frame_id_;
+            if(publish_) 
+            {
+                geometry_msgs::msg::TransformStamped t;
+                t.header.stamp = this->now();
+                t.header.frame_id = "world";
+                t.child_frame_id = frame_id_;
 
-            t.transform.translation.x = 0.0;
-            t.transform.translation.y = 0.0;
-            t.transform.translation.z = 0.0;
+                t.transform.translation.x = 0.0;
+                t.transform.translation.y = 0.0;
+                t.transform.translation.z = 0.0;
 
-            tf2::Quaternion q;
-            q.setRPY(0, 0, 0);
-            t.transform.rotation.x = q.x();
-            t.transform.rotation.y = q.y();
-            t.transform.rotation.z = q.z();
-            t.transform.rotation.w = q.w();
+                tf2::Quaternion q;
+                q.setRPY(0, 0, 0);
+                t.transform.rotation.x = q.x();
+                t.transform.rotation.y = q.y();
+                t.transform.rotation.z = q.z();
+                t.transform.rotation.w = q.w();
 
-            tf_publisher_->sendTransform(t);
+                tf_publisher_->sendTransform(t);
+            }
         }
 
         void launchICP(std::string filepath)
         {
             RosbagCloudExtractor reader(input_topic_);
+            CloudMatcher processor = CloudMatcher(icp_max_corr_dist_, icp_max_inter_dist_, icp_tf_threshold_, icp_iter_threshold_);
             std::shared_ptr<std::vector<sensor_msgs::msg::LaserScan>> drain;
 
             reader.read(filepath, drain);
 
-            sensor_msgs::msg::LaserScan psrc = (*drain)[idx1_];
-            sensor_msgs::msg::LaserScan ptar = (*drain)[idx2_];
-
-            PCLCloud source = PCLCloudFromROS(psrc);
-            PCLCloud target = PCLCloudFromROS(ptar);
-
-            RCLCPP_INFO(this->get_logger(), "The timestamp of the source cloud: %d.%u", psrc.header.stamp.sec, psrc.header.stamp.nanosec);
-            RCLCPP_INFO(this->get_logger(), "The timestamp of the target cloud: %d.%u", ptar.header.stamp.sec, ptar.header.stamp.nanosec);
-
-            Eigen::Matrix4f transform;
-            CloudMatcher processor;
-
-            if(!processor.ICPMotionEstimation(transform, source, target))
+            for(int i = step_; i < drain->size(); i += step_)
             {
-                RCLCPP_ERROR(this->get_logger(), "this was not supposed to happen tbh");
-                return;
+                sensor_msgs::msg::LaserScan psrc = (*drain)[i];
+                sensor_msgs::msg::LaserScan ptar = (*drain)[i - step_];
+
+                PCLCloud source = PCLCloudFromROSScan(psrc);
+                PCLCloud target = PCLCloudFromROSScan(ptar);
+
+                RCLCPP_INFO(this->get_logger(), "The timestamp of the source cloud: %d.%u", psrc.header.stamp.sec, psrc.header.stamp.nanosec);
+                RCLCPP_INFO(this->get_logger(), "The timestamp of the target cloud: %d.%u", ptar.header.stamp.sec, ptar.header.stamp.nanosec);
+
+                Eigen::Matrix4f transform;
+
+                if(!processor.ICPMotionEstimation(transform, source, target))
+                {
+                    RCLCPP_ERROR(this->get_logger(), "This was not supposed to happen tbh");
+
+                    source_.push(PCLCloudToROSCloud(source));
+                    target_.push(PCLCloudToROSCloud(target));
+                    aligned_.push(PCLCloudToROSCloud(PCLCloud()));
+
+                    continue;
+                }
+
+                RCLCPP_INFO(this->get_logger(), "The ICP score is: %f", processor.getScore());
+
+                std::stringstream ss;
+                ss << transform;
+
+                RCLCPP_INFO(this->get_logger(), "The transform for this ICP iteration is: \n[%s]", ss.str().c_str());
+
+                PCLCloud aligned;
+                processor.getAlignedScan(aligned);
+
+                source_.push(PCLCloudToROSCloud(source));
+                target_.push(PCLCloudToROSCloud(target));
+                aligned_.push(PCLCloudToROSCloud(aligned));
             }
-            //giganigga.visualize();
-
-            RCLCPP_INFO(this->get_logger(), "The ICP score is: %f", processor.getScore());
-
-            std::stringstream ss;
-            ss << transform;
-
-            RCLCPP_INFO(this->get_logger(), "The transform for this ICP iteration is: \n[%s]", ss.str().c_str());
-
-            PCLCloud aligned;
-            processor.getAlignedScan(aligned);
-
-            PCLCloudToROS(source, source_);
-            PCLCloudToROS(target, target_);
-            PCLCloudToROS(aligned, aligned_);
+            RCLCPP_INFO(this->get_logger(), "The bag has ended", processor.getScore());
+            publish_ = false;
         }
 
-        inline void PCLCloudToROS(pcl::PointCloud<pcl::PointXYZ> src, sensor_msgs::msg::PointCloud2& tar)
-        {
-            pcl::PCLPointCloud2 src_temp;
-            pcl::toPCLPointCloud2(src, src_temp);
-            pcl_conversions::fromPCL(src_temp, tar);
-            return;
-        }
-
-        PCLCloud PCLCloudFromROS(sensor_msgs::msg::LaserScan prototype)
+        PCLCloud PCLCloudFromROSScan(sensor_msgs::msg::LaserScan prototype)
         {
             PCLCloud::Ptr output(new PCLCloud);
             sensor_msgs::msg::PointCloud2 mold;
@@ -168,18 +186,28 @@ public:
         }
 
         void publishClouds() {
-            source_.header.stamp = this->now();
-            source_.header.frame_id = frame_id_;
+            if(!source_.size())
+                return;
+            sensor_msgs::msg::PointCloud2 src = source_.front();
+            sensor_msgs::msg::PointCloud2 tar = target_.front();
+            sensor_msgs::msg::PointCloud2 ali = aligned_.front();
 
-            target_.header.stamp = this->now();
-            target_.header.frame_id = frame_id_;
+            source_.pop();
+            target_.pop();
+            aligned_.pop();
 
-            aligned_.header.stamp = this->now();
-            aligned_.header.frame_id = frame_id_;
+            src.header.stamp = this->now();
+            src.header.frame_id = frame_id_;
 
-            source_publisher_->publish(source_);
-            target_publisher_->publish(target_);
-            aligned_publisher_->publish(aligned_);
+            tar.header.stamp = this->now();
+            tar.header.frame_id = frame_id_;
+
+            ali.header.stamp = this->now();
+            ali.header.frame_id = frame_id_;
+
+            source_publisher_->publish(src);
+            target_publisher_->publish(tar);
+            aligned_publisher_->publish(ali);
 
             RCLCPP_INFO(this->get_logger(), "Pointcloud messages published at %f", this->now().seconds());
         }
@@ -187,9 +215,9 @@ public:
         ~VisualizationSpinner() noexcept { };
 
 private:
-        sensor_msgs::msg::PointCloud2 source_;
-        sensor_msgs::msg::PointCloud2 target_;
-        sensor_msgs::msg::PointCloud2 aligned_;
+        std::queue<sensor_msgs::msg::PointCloud2> source_;
+        std::queue<sensor_msgs::msg::PointCloud2> target_;
+        std::queue<sensor_msgs::msg::PointCloud2> aligned_;
 
         rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr source_publisher_;
         rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr target_publisher_;
@@ -198,9 +226,17 @@ private:
 
         double rate_in_seconds_;
         rmw_qos_profile_t odom_qos_profile_;
+        bool publish_;
 
         rclcpp::TimerBase::SharedPtr msg_loop_trigger_;
         rclcpp::TimerBase::SharedPtr tf_loop_trigger_;
+
+        //icp parameters
+        double icp_tf_threshold_; 
+        double icp_max_corr_dist_;
+        double icp_max_inter_dist_; 
+        int icp_iter_threshold_; 
+        int step_;
 
         std::string source_topic_;
         std::string target_topic_;
@@ -210,7 +246,5 @@ private:
         std::string input_topic_;
         std::string odom_qos_type_;
         std::string filepath_;
-        int idx1_;
-        int idx2_;
     };
 }

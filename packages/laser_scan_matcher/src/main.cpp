@@ -15,15 +15,15 @@ int main(int argc, char* argv[])
 
     for(int i = 1; i < argc; i++)
     {
-        if(strcmp(argv[i], "--mode") && argc > i + 1)
+        if(strcmp(argv[i], "--mode") == 0 && argc > i + 1)
         {
-            if (argv[i+1] == "odometry_computer")
+            if (strcmp(argv[i+1], "odometry_computer") == 0)
             {
                 manual = 1;
                 std::cout << "Starting the odometry computer.";
                 rclcpp::spin(std::make_shared<cmt::OdometryComputer>());
             }
-            else if (argv[i+1] == "visualization_spinner")
+            else if (strcmp(argv[i+1], "visualization_spinner") == 0)
             {
                 manual = 1;
                 std::cout << "Starting the visualization spinner.";
