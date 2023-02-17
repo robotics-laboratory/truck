@@ -43,4 +43,7 @@ Int ceil(Float value) { return static_cast<Int>(std::ceil(value)); }
 template<class Int, class Float>
 Int floor(Float value) { return static_cast<Int>(std::floor(value)); }
 
+template<class Int, class Float>
+Int round(Float value) { return static_cast<Int>(std::round(value)); }
+
 }  // namespace truck

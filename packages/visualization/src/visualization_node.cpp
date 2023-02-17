@@ -73,6 +73,7 @@ void VisualizationNode::publishEgo() const {
     msg.scale.x = model_.shape().length;
     msg.scale.y = model_.shape().width;
     msg.scale.z = 0.20;
+    msg.pose.position.z = 0.1;
     msg.color = modeToColor(mode_);
 
     ego_signal_->publish(msg);
@@ -157,6 +158,7 @@ void VisualizationNode::publishArc() const {
     msg.action = visualization_msgs::msg::Marker::ADD;
     msg.lifetime = rclcpp::Duration::from_seconds(0);
     msg.scale.x = 0.05;
+    msg.pose.position.z = 0.1;
     msg.color.r = 255;
     msg.color.a = 1.0;
 
