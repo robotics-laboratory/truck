@@ -14,8 +14,11 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME} 
   msg/Control.msg
   msg/ControlMode.msg
+  msg/CpuStat.msg
+  msg/MemStat.msg
   msg/MetaData.msg
   msg/Path.msg
+  msg/PerfStat.msg
   msg/Point.msg
   msg/RandomSeed.msg
   msg/Scene.msg
