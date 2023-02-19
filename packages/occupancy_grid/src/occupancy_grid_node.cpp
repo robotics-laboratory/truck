@@ -62,8 +62,8 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
         const double x = range * std::cos(angle) + radius;
         const double y = range * std::sin(angle) + radius;
 
-        const auto i = clamp(round<int>(x / resolution), 0, cell_num - 1);
-        const auto j = clamp(round<int>(y / resolution), 0, cell_num - 1);
+        const auto i = clamp(static_cast<int>(x / resolution), 0, cell_num - 1);
+        const auto j = clamp(static_cast<int>(y / resolution), 0, cell_num - 1);
 
         grid.data[i + j * cell_num] = 100;
     }
