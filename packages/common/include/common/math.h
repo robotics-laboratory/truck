@@ -34,6 +34,8 @@ struct Limits {
 
     T clamp(const T& t) const { return truck::clamp(t, min, max); }
 
+    double ratio(const T& t) const { return (clamp(t) - min) / (max - min); }
+
     T min, max;
 };
 
