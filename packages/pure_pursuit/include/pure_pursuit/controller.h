@@ -62,4 +62,4 @@ class Controller {
     const model::Model model_;
 };
 
-};  // namespace truck::pure_pursuit
+}  // namespace truck::pure_pursuit

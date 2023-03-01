@@ -8,10 +8,6 @@ find_package(rclcpp REQUIRED)
 find_package(truck_interfaces REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 add_executable(visualization_node src/main.cpp src/visualization_node.cpp)

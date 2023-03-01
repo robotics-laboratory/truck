@@ -12,7 +12,7 @@ find_package(yaml_cpp_vendor REQUIRED)
 find_package(Boost REQUIRED)
 
 if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 20)
 endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)

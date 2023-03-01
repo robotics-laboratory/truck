@@ -78,4 +78,4 @@ ControllerResult Controller::operator()(
         : ControllerResult(ControllerError::kImpossibleBuildArc);
 }
 
-};  // namespace truck::pure_pursuit
+}  // namespace truck::pure_pursuit

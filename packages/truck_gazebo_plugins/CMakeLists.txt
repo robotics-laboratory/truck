@@ -11,10 +11,6 @@ find_package(tf2_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(truck_interfaces REQUIRED)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
-
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # odometry

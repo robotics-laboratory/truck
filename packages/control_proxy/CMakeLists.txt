@@ -8,9 +8,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(truck_interfaces REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 add_executable(control_proxy_node src/main.cpp src/control_proxy_node.cpp)
 

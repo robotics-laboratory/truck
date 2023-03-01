@@ -108,4 +108,4 @@ class PurePursuitNode : public rclcpp::Node {
     std::unique_ptr<Controller> controller_ = nullptr;
 };
 
-};  // namespace truck::pure_pursuit
+}  // namespace truck::pure_pursuit
