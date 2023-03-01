@@ -87,6 +87,10 @@ double cross(const Vec2& a, const Vec2& b) noexcept;
 
 Angle angleBetween(const Vec2& from, const Vec2& to);
 
+inline double lenSq(const Vec2& v) noexcept { return v.lenSq(); }
+
+inline double len(const Vec2& v) noexcept { return v.len(); }
+
 std::ostream& operator<<(std::ostream& out, const Vec2& v);
 
 }  // namespace truck::geom
