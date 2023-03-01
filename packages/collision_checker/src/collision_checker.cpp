@@ -1,19 +1,21 @@
 #include "collision_checker/collision_checker.h"
 
+#include <cstdint>
+
 namespace truck::collision_checker {
 
-StaticCollisionChecker::StaticCollisionChecker(const model::Shape& shape) : shape_(shape), max_dist_(10.0) {}
+StaticCollisionChecker::StaticCollisionChecker(const model::Shape& shape)
+    : max_dist_(10.0) 
+    , shape_(shape) {}
 
-const cv::Mat& StaticCollisionChecker::getDistanceTransform() const {
-    return distance_transform_;
-}
+const cv::Mat& StaticCollisionChecker::getDistanceTransform() const { return distance_transform_; }
 
 /**
  * Find the distance to the nearest obstacle
  * @param ego_pose car pose
  * @return min distance
  */
-double StaticCollisionChecker::operator()(const geom::Pose& ego_pose) const {   
+double StaticCollisionChecker::operator()(const geom::Pose& ego_pose) const {
     double min_dist = max_dist_;
     std::vector<geom::Vec2> points = shape_.getCircleDecomposition(ego_pose);
 
@@ -35,8 +37,7 @@ void StaticCollisionChecker::reset(const nav_msgs::msg::OccupancyGrid& grid) {
     tf2::Vector3 grid_pos_tf2(
         grid_metadata_.origin.position.x,
         grid_metadata_.origin.position.y,
-        grid_metadata_.origin.position.z
-    );
+        grid_metadata_.origin.position.z);
 
     // convert grid orientation
     tf2::Quaternion grid_quat_tf2;
@@ -49,14 +50,11 @@ void StaticCollisionChecker::reset(const nav_msgs::msg::OccupancyGrid& grid) {
     cv::Mat binary_grid = cv::Mat(grid_metadata_.height, grid_metadata_.width, CV_8UC1);
 
     // fill binary grid matrix with values based on occupancy grid values
-    for (int i = 0; i < grid.info.height; i++) {
-        for (int j = 0; j < grid_metadata_.width; j++) {
+    for (uint32_t i = 0; i < grid.info.height; i++) {
+        for (uint32_t j = 0; j < grid_metadata_.width; j++) {
             int8_t grid_cell = grid.data.at(i * grid_metadata_.width + j);
 
-            binary_grid.at<uchar>(i, j) =
-                grid_cell == 0
-                    ? 1
-                    : 0;
+            binary_grid.at<uchar>(i, j) = grid_cell == 0 ? 1 : 0;
         }
     }
 
@@ -66,11 +64,7 @@ void StaticCollisionChecker::reset(const nav_msgs::msg::OccupancyGrid& grid) {
 
 double StaticCollisionChecker::getDistance(const geom::Vec2& point) const {
     // convert point from 'geom::Vec2' type to 'tf2::Vector3' type
-    tf2::Vector3 point_tf2 = tf2::Vector3(
-        point.x,
-        point.y,
-        0.0
-    );
+    tf2::Vector3 point_tf2 = tf2::Vector3(point.x, point.y, 0.0);
 
     // get point in 'grid' frame with 'tf2::Vector3' type
     tf2::Vector3 grid_point_tf2 = transform_to_grid_(point_tf2);
@@ -80,11 +74,9 @@ double StaticCollisionChecker::getDistance(const geom::Vec2& point) const {
     int height_index = floor<int>(grid_point_tf2.y() / grid_metadata_.resolution);
 
     // check borders
-    if ((width_index >= grid_metadata_.width) ||
-        (height_index >= grid_metadata_.height) ||
-        (width_index < 0) ||
+    if ((width_index >= static_cast<int>(grid_metadata_.width)) ||
+        (height_index >= static_cast<int>(grid_metadata_.height)) || (width_index < 0) ||
         (height_index < 0)) {
-
         return max_dist_;
     }
 
@@ -94,4 +86,4 @@ double StaticCollisionChecker::getDistance(const geom::Vec2& point) const {
     return std::max(distance - shape_.radius(), 0.0);
 }
 
-} // namespace truck::collision_checker
+}  // namespace truck::collision_checker

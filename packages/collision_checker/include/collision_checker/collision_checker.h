@@ -18,21 +18,21 @@ namespace truck::collision_checker {
  * @attention occupancy grid and query points must be in the same coordinate system
  */
 class StaticCollisionChecker {
-    public:
-        const cv::Mat& getDistanceTransform() const;
-        double operator()(const geom::Pose& ego_pose) const;
-        void reset(const nav_msgs::msg::OccupancyGrid& grid);
-        
-        StaticCollisionChecker(const model::Shape& shape);
+  public:
+    const cv::Mat& getDistanceTransform() const;
+    double operator()(const geom::Pose& ego_pose) const;
+    void reset(const nav_msgs::msg::OccupancyGrid& grid);
 
-    private:
-        double max_dist_;        
-        model::Shape shape_;
-        cv::Mat distance_transform_;
-        nav_msgs::msg::MapMetaData grid_metadata_;
-        tf2::Transform transform_to_grid_;
+    StaticCollisionChecker(const model::Shape& shape);
 
-        double getDistance(const geom::Vec2& point) const;
+  private:
+    double max_dist_;
+    model::Shape shape_;
+    cv::Mat distance_transform_;
+    nav_msgs::msg::MapMetaData grid_metadata_;
+    tf2::Transform transform_to_grid_;
+
+    double getDistance(const geom::Vec2& point) const;
 };
 
-} // namespace truck::collision_checker
+}  // namespace truck::collision_checker
