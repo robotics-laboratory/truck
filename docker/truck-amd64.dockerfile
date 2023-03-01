@@ -311,6 +311,8 @@ RUN mkdir -p ${ROS_ROOT} \
         image_geometry \
         image_transport \
         image_rotate \
+        imu_filter_madgwick \
+        imu_complementary_filter\
         gazebo_dev \
         gazebo_plugins \
         gazebo_ros \

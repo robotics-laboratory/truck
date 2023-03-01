@@ -54,7 +54,7 @@ RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
         nvidia-cuda-dev \
         nvidia-cudnn8-dev \
-    && pip3 install --no-cache-dir -U jetson-stats \
+    && pip3 install --no-cache-dir -U jetson-stats==4.0.0 \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ### INSTALL OPENCV
@@ -348,6 +348,8 @@ RUN mkdir -p ${ROS_ROOT} \
         image_geometry \
         image_transport \
         image_rotate \
+        imu_filter_madgwick \
+        imu_complementary_filter\
         gazebo_dev \
         gazebo_plugins \
         gazebo_ros \
