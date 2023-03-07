@@ -29,6 +29,8 @@ Poses bezue1(const Vec2& p0, const Vec2& p1, size_t n) {
 }
 
 Poses bezue1(const Vec2& p0, const Vec2& p1, double step) {
+    BOOST_ASSERT(step > 0);
+
     const double dist = (p1 - p0).len();
     const size_t n = 1 + ceil<size_t>(dist / step);
     return bezue1(p0, p1, n);
@@ -61,6 +63,8 @@ Poses bezue2(const Vec2& p0, const Vec2& p1, const Vec2& p2, size_t n) {
 }
 
 Poses bezue2(const Vec2& p0, const Vec2& p1, const Vec2& p2, double step) {
+    BOOST_ASSERT(step > 0);
+
     const double dist = (p1 - p0).len() + (p2 - p1).len();
     const size_t n = 1 + ceil<size_t>(dist / step);
     return bezue2(p0, p1, p2, n);
@@ -97,6 +101,8 @@ Poses bezue3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, siz
 }
 
 Poses bezue3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, double step) {
+    BOOST_ASSERT(step > 0);
+
     const double dist = (p1 - p0).len() + (p2 - p1).len() + (p3 - p2).len();
     const size_t n = 1 + ceil<size_t>(dist / step);
     return bezue3(p0, p1, p2, p3, n);

@@ -4,7 +4,7 @@
 #include "geom/arc.h"
 #include "geom/pose.h"
 #include "geom/distance.h"
-#include "geom/transform.h"
+#include "geom/msg.h"
 #include "geom/vector.h"
 
 #include <algorithm>
@@ -63,19 +63,26 @@ ControllerResult Controller::operator()(
         }
 
         reachable |= true;
-        const auto arc = geom::Arc::byTwoPointsAndTangent(pose.pos, goal.pos, pose.dir);
 
         Command command;
 
-        command.velocity = params_.velocity;
-        command.curvature = arc.curvature;
+        const auto variant = geom::tryBuildArc(pose, goal.pos);
+        if (std::holds_alternative<geom::Arc>(variant)) {
+            const geom::Arc& arc = std::get<geom::Arc>(variant);
+            command.velocity = params_.velocity;
+            command.curvature = arc.curv();
+        } else if (std::holds_alternative<geom::Segment>(variant)) {
+            command.velocity = params_.velocity;
+            command.curvature = 0.0;
+        } else {
+            return ControllerResult(ControllerError::kImpossibleBuildArc);
+        }
 
         return ControllerResult{command};
     }
 
-    return reachable
-        ? ControllerResult(ControllerError::kUnreachablePath)
-        : ControllerResult(ControllerError::kImpossibleBuildArc);
+    BOOST_ASSERT(not reachable);
+    return ControllerResult(ControllerError::kUnreachablePath);
 }
 
 }  // namespace truck::pure_pursuit

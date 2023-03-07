@@ -14,21 +14,21 @@ struct Vec2 {
 
     constexpr explicit Vec2(Angle angle) : x(cos(angle)), y(sin(angle)) {}
 
-    Vec2& operator+=(const Vec2& other) {
+    Vec2& operator+=(const Vec2& other) noexcept {
         x += other.x;
         y += other.y;
         return *this;
     }
 
-    Vec2& operator-=(const Vec2& other) {
+    Vec2& operator-=(const Vec2& other) noexcept {
         x -= other.x;
         y -= other.y;
         return *this;
     }
 
-    Vec2 operator+(const Vec2& other) const noexcept { return {x + other.x, y + other.y}; }
+    constexpr Vec2 operator+(const Vec2& other) const noexcept { return {x + other.x, y + other.y}; }
 
-    Vec2 operator-(const Vec2& other) const noexcept { return {x - other.x, y - other.y}; }
+    constexpr Vec2 operator-(const Vec2& other) const noexcept { return {x - other.x, y - other.y}; }
 
     constexpr double lenSq() const noexcept { return x * x + y * y; }
 
@@ -45,19 +45,19 @@ struct Vec2 {
 
     constexpr Vec2 operator-() const noexcept { return Vec2{-x, -y}; }
 
-    Vec2& operator*=(double c) {
+    Vec2& operator*=(double c) noexcept {
         x *= c;
         y *= c;
         return *this;
     }
 
-    Vec2& operator/=(double c) {
+    Vec2& operator/=(double c) noexcept {
         x /= c;
         y /= c;
         return *this;
     }
 
-    Vec2 rotate(Angle angle) const {
+    Vec2 rotate(Angle angle) const noexcept{
         auto sn = sin(angle);
         auto cs = cos(angle);
 
@@ -68,16 +68,16 @@ struct Vec2 {
 
     constexpr Vec2 right() const noexcept { return {y, -x}; }
 
-    constexpr Angle angle() const { return atan(y, x); }
+    constexpr Angle angle() const noexcept { return atan(y, x); }
 
     double x, y;
 };
 
-Vec2 operator*(const Vec2& v, double c) noexcept;
+constexpr Vec2 operator*(const Vec2& v, double c) noexcept { return {v.x * c, v.y * c}; }
 
-Vec2 operator*(double c, const Vec2& v) noexcept;
+constexpr Vec2 operator*(double c, const Vec2& v) noexcept { return v * c; }
 
-Vec2 operator/(const Vec2& v, double c) noexcept;
+constexpr Vec2 operator/(const Vec2& v, double c) noexcept { return Vec2{v.x / c, v.y / c}; }
 
 bool equal(const Vec2& a, const Vec2& b, double eps = 0) noexcept;
 
@@ -85,7 +85,7 @@ double dot(const Vec2& a, const Vec2& b) noexcept;
 
 double cross(const Vec2& a, const Vec2& b) noexcept;
 
-Angle angleBetween(const Vec2& from, const Vec2& to);
+Angle angleBetween(const Vec2& from, const Vec2& to) noexcept;
 
 inline double lenSq(const Vec2& v) noexcept { return v.lenSq(); }
 

@@ -96,7 +96,7 @@ TEST(Line, make) {
     ASSERT_GEOM_EQUAL(l, l3);
 }
 
-TEST(Distanceance, point_point) {
+TEST(Distance, point_point) {
     const Vec2 a = {1, 1};
     const Vec2 b = {0, 2};
 
@@ -104,7 +104,7 @@ TEST(Distanceance, point_point) {
     ASSERT_GEOM_EQUAL(distance(a, b), std::sqrt(2.0), 1e-9);
 }
 
-TEST(Distanceance, line_point) {
+TEST(Distance, line_point) {
     const Line l = {1, 1, 0};
     const Vec2 a = {1, 1};
     const Vec2 b = {-1, -1};
@@ -114,6 +114,109 @@ TEST(Distanceance, line_point) {
     ASSERT_LT(denormalizedDistance(l, a) * denormalizedDistance(l, b), 0);
     ASSERT_GEOM_EQUAL(distance(a, l), std::sqrt(2.0), 1e-9);
     ASSERT_GEOM_EQUAL(distance(b, l), std::sqrt(2.0), 1e-9);
+}
+
+TEST(Arc, try_build_arc) {
+    constexpr double eps = 1e-6;
+
+    {
+        /* begin and end are to close */
+
+        const Pose begin{.pos = {0, 0}, .dir = {1, 0}};
+        const Vec2 end = {0, eps};
+
+        const auto result = tryBuildArc(begin, end);
+        ASSERT_TRUE(std::holds_alternative<std::monostate>(result));
+    }
+
+    {
+        /* begin.dir and vector (begin, end) are counterdirected  */
+
+        const Pose begin{.pos={0, 0}, .dir={-1, 0}};
+        const Vec2 end = {1, 0};
+
+        const auto result = tryBuildArc(begin, end);
+        ASSERT_TRUE(std::holds_alternative<std::monostate>(result));
+    }
+
+    {
+        /* begin.dir and vector (begin, end) are codirected  */
+
+        const Pose begin{.pos = {0, 0}, .dir = {1, 0}};
+        const Vec2 end = {1, 0};
+
+        const auto result = tryBuildArc(begin, end);
+        ASSERT_TRUE(std::holds_alternative<Segment>(result));
+        const auto& segment = std::get<Segment>(result);
+
+        ASSERT_GEOM_EQUAL(segment.begin, begin.pos);
+        ASSERT_GEOM_EQUAL(segment.end, end);
+    }
+
+    {
+        /* positive arc more less than PI */
+
+        const Pose begin{.pos={0, -1}, .dir={1, 0}};
+        const Vec2 end = {1, 0};
+
+        const auto result = tryBuildArc(begin, end);
+
+        ASSERT_TRUE(std::holds_alternative<Arc>(result));
+        const auto& arc = std::get<Arc>(result);
+
+        ASSERT_GEOM_EQUAL(arc.center, {0, 0}, eps);
+        ASSERT_GEOM_EQUAL(arc.radius, 1.0, eps);
+        ASSERT_GEOM_EQUAL(arc.begin, {0, -1}, eps);
+        ASSERT_GEOM_EQUAL(arc.delta, PI_2, eps);
+    }
+
+    {
+        /* negative arc less than PI */
+
+        const Pose from{.pos={0, 1}, .dir={1, 0}};
+        const Vec2 to = {1, 0};
+
+        const auto result = tryBuildArc(from, to);
+        ASSERT_TRUE(std::holds_alternative<Arc>(result));
+        const auto& arc = std::get<Arc>(result);
+
+        ASSERT_GEOM_EQUAL(arc.center, {0, 0}, eps);
+        ASSERT_GEOM_EQUAL(arc.radius, 1.0, eps);
+        ASSERT_GEOM_EQUAL(arc.begin, {0, 1}, eps);
+        ASSERT_GEOM_EQUAL(arc.delta, -PI_2, eps);
+    }
+
+    {
+        /* positive arc more than PI */
+
+        const Pose from{.pos = {0, -1}, .dir = {1, 0}};
+        const Vec2 to = {-1, 0};
+
+        const auto result = tryBuildArc(from, to);
+        ASSERT_TRUE(std::holds_alternative<Arc>(result));
+        const auto& arc = std::get<Arc>(result);
+
+        ASSERT_GEOM_EQUAL(arc.center, {0, 0}, eps);
+        ASSERT_GEOM_EQUAL(arc.radius, 1.0, eps);
+        ASSERT_GEOM_EQUAL(arc.begin, {0, -1}, eps);
+        ASSERT_GEOM_EQUAL(arc.delta, 3*PI_2, eps);
+    }
+
+    {
+        /* negative arc more than PI */
+
+        const Pose from{.pos = {-1, 0}, .dir = {0, 1}};
+        const Vec2 to = {0, -1};
+
+        const auto result = tryBuildArc(from, to);
+        ASSERT_TRUE(std::holds_alternative<Arc>(result));
+        const auto& arc = std::get<Arc>(result);
+
+        ASSERT_GEOM_EQUAL(arc.center, {0, 0}, eps);
+        ASSERT_GEOM_EQUAL(arc.radius, 1.0, eps);
+        ASSERT_GEOM_EQUAL(arc.begin, {-1, 0}, eps);
+        ASSERT_GEOM_EQUAL(arc.delta, -3*PI_2, eps);
+    }
 }
 
 int main(int argc, char *argv[]) {

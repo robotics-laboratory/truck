@@ -18,6 +18,7 @@ add_library(${PROJECT_NAME} SHARED
     src/distance.cpp
     src/line.cpp
     src/motion.cpp
+    src/msg.cpp
     src/segment.cpp
     src/transform.cpp
     src/vector.cpp

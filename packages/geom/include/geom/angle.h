@@ -11,29 +11,29 @@ class Angle {
 
     explicit constexpr Angle(double rad) : value_(rad) {}
 
-    explicit operator double() { return value_; }
+    explicit operator double() noexcept { return value_; }
 
-    static constexpr Angle fromRadians(double rad) { return Angle{rad}; }
+    static constexpr Angle fromRadians(double rad) noexcept { return Angle{rad}; }
 
-    static constexpr Angle fromDegrees(double deg) { return Angle{(M_PI / 180) * deg}; }
+    static constexpr Angle fromDegrees(double deg) noexcept{ return Angle{(M_PI / 180) * deg}; }
 
-    static constexpr Angle fromVector(double x, double y) { return Angle{std::atan2(x, y)}; }
+    static constexpr Angle fromVector(double x, double y) noexcept { return Angle{std::atan2(x, y)}; }
 
-    constexpr double radians() const { return value_; }
+    constexpr double radians() const noexcept { return value_; }
 
-    constexpr double degrees() const { return (180 / M_PI) * value_; }
+    constexpr double degrees() const noexcept { return (180 / M_PI) * value_; }
 
-    friend constexpr double sin(Angle angle) { return std::sin(angle.value_); }
+    friend constexpr double sin(Angle angle) noexcept { return std::sin(angle.value_); }
 
-    friend constexpr double cos(Angle angle) { return std::cos(angle.value_); }
+    friend constexpr double cos(Angle angle) noexcept { return std::cos(angle.value_); }
 
-    friend constexpr double tan(Angle angle) { return std::tan(angle.value_); }
+    friend constexpr double tan(Angle angle) noexcept { return std::tan(angle.value_); }
 
-    friend constexpr Angle abs(Angle angle) { return Angle{std::abs(angle.value_)}; }
+    friend constexpr Angle abs(Angle angle) noexcept { return Angle{std::abs(angle.value_)}; }
 
-    constexpr Angle operator-() const { return Angle{-value_}; }
+    constexpr Angle operator-() const noexcept { return Angle{-value_}; }
 
-    constexpr Angle& operator*=(double x) {
+    constexpr Angle& operator*=(double x) noexcept {
         value_ *= x;
         return *this;
     }
@@ -43,14 +43,14 @@ class Angle {
         return *this;
     }
 
-    constexpr Angle zero() const { return Angle{0}; }
+    static constexpr Angle zero() noexcept { return Angle{0}; }
 
-    constexpr Angle _0_2PI() const {
+    constexpr Angle _0_2PI() const noexcept {
         const double result = fmod(value_, 2 * M_PI);
         return (result < 0) ? Angle{result + 2 * M_PI} : Angle{result};
     }
 
-    constexpr Angle _mPI_PI() const {
+    constexpr Angle _mPI_PI() const noexcept {
         const double result = fmod(value_ + M_PI, 2 * M_PI);
         return (result <= 0) ? Angle{result + M_PI} : Angle{result - M_PI};
     }
@@ -113,9 +113,9 @@ inline constexpr bool operator>=(Angle left, Angle right) noexcept {
     return left.radians() >= right.radians();
 }
 
-std::ostream& operator<<(std::ostream& out, const Angle& angle) noexcept;
-
 bool equal(Angle a, Angle b, double eps) noexcept;
+
+std::ostream& operator<<(std::ostream& out, const Angle& angle) noexcept;
 
 constexpr Angle PI = Angle(M_PI);
 constexpr Angle PI2 = 2 * PI;
