@@ -3,12 +3,15 @@
 <package format="3">
   <name>collision_checker</name>
   <version>0.0.0</version>
-  <description>Collision checker library</description>
+  <description>Collision checker</description>
   <maintainer email="apmilko@outlook.com">Milko Andrew</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>geom</depend>
   <depend>model</depend>
+  <depend>OpenCV</depend>
+  <depend>nav_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

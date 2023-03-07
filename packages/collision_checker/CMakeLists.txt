@@ -9,18 +9,20 @@ find_package(model REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(nav_msgs REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED
+add_library(
+  ${PROJECT_NAME} SHARED
   src/collision_checker.cpp
+  src/util.cpp
 )
 
-ament_target_dependencies(collision_checker model OpenCV nav_msgs)
+ament_target_dependencies(collision_checker geom model nav_msgs OpenCV)
 
 target_include_directories(collision_checker PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 ament_export_targets(collision_checker HAS_LIBRARY_TARGET)
-ament_export_dependencies(model OpenCV nav_msgs)
+ament_export_dependencies(model geom model nav_msgs OpenCV)
 
 install(
   TARGETS collision_checker

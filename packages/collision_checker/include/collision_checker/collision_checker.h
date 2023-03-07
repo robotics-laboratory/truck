@@ -1,43 +1,46 @@
 #pragma once
 
+#include "geom/pose.h"
+#include "geom/transform.h"
+#include "geom/vector.h"
 #include "model/params.h"
 
-#include <nav_msgs/msg/occupancy_grid.hpp>
-#include <nav_msgs/msg/map_meta_data.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <tf2/impl/utils.h>
+#include <opencv2/core.hpp>
 
-#include <cmath>
-#include <vector>
-#include <limits>
+#include <optional>
 
 namespace truck::collision_checker {
 
-/**
- * StaticCollisionChecker library
- * @attention occupancy grid and query points must be in the same coordinate system
- */
+struct MapMeta {
+    // origin is in the 'map' frame, dir is x axis of the 'map' frame
+    geom::Pose origin;
+    double resolution;
+    uint32_t width;
+    uint32_t height;
+};
+
 class StaticCollisionChecker {
   public:
+    constexpr static double kMaxDistance = 10.0;
+
     StaticCollisionChecker(const model::Shape& shape);
 
-    double operator()(const geom::Pose& ego_pose) const;
-    double distance(const geom::Pose& ego_pose) const { return (*this)(ego_pose); }
+    bool initialized() const;
+    void reset(const MapMeta& meta, const cv::Mat& distance_transform);
 
-    void reset(const nav_msgs::msg::OccupancyGrid& grid);
-
-    const cv::Mat& getDistanceTransform() const;
-
-    bool isReady() const { return !distance_transform_.empty(); }
+    double distance(const geom::Pose& ego_pose) const;
+    double distance(const geom::Vec2& point) const;
 
   private:
-    double max_dist_;
     model::Shape shape_;
-    cv::Mat distance_transform_;
-    nav_msgs::msg::MapMetaData grid_metadata_;
-    tf2::Transform transform_to_grid_;
 
-    double getDistance(const geom::Vec2& point) const;
+    struct State {
+        MapMeta meta;
+        geom::Transform tf;
+        cv::Mat distance_transform;
+    };
+
+    std::optional<State> state_;
 };
 
 }  // namespace truck::collision_checker

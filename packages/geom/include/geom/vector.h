@@ -57,12 +57,11 @@ struct Vec2 {
         return *this;
     }
 
-    Vec2 rotate(Angle angle) const noexcept{
-        auto sn = sin(angle);
-        auto cs = cos(angle);
-
-        return {x * cs - y * sn, x * sn + y * cs};
+    Vec2 rotate(const Vec2& dir) const noexcept {
+        return {x * dir.x - y * dir.y, x * dir.y + y * dir.x};
     }
+
+    Vec2 rotate(Angle angle) const noexcept { return rotate(Vec2(angle)); }
 
     constexpr Vec2 left() const noexcept { return {-y, x}; }
 
