@@ -3,4 +3,9 @@ launch:
 - include:
    file: $(find-pkg-share truck)/launch/$(var env).yaml
 - include:
-   file: $(find-pkg-share control_demo)/launch/control_demo.yaml
+   file: $(find-pkg-share pure_pursuit)/launch/waypoint_follower.yaml
+   arg:
+   - {name: "simulation", value: "true"}
+
+# - include:
+#    file: $(find-pkg-share control_demo)/launch/control_demo.yaml

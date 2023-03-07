@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>common</name>
-  <version>0.1.0</version>
-  <description>Truck common utils library</description>
+  <version>0.0.0</version>
+  <description>Common utils library</description>
   <maintainer email="simagin.mail@yandex.ru">Simagin Denis</maintainer>
   <license>MIT</license>
 

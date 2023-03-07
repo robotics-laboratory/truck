@@ -8,6 +8,9 @@
 namespace truck {
 
 template<typename T>
+inline T abs(const T& x) { return std::abs(x); }
+
+template<typename T>
 inline double squared(const T& x) {
     return x * x;
 }
@@ -44,5 +47,8 @@ Int ceil(Float value) { return static_cast<Int>(std::ceil(value)); }
 
 template<class Int, class Float>
 Int floor(Float value) { return static_cast<Int>(std::floor(value)); }
+
+template <class Int, class Float>
+Int round(Float value) { return static_cast<Int>(std::round(value)); }
 
 }  // namespace truck

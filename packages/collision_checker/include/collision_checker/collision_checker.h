@@ -19,11 +19,16 @@ namespace truck::collision_checker {
  */
 class StaticCollisionChecker {
   public:
-    const cv::Mat& getDistanceTransform() const;
+    StaticCollisionChecker(const model::Shape& shape);
+
     double operator()(const geom::Pose& ego_pose) const;
+    double distance(const geom::Pose& ego_pose) const { return (*this)(ego_pose); }
+
     void reset(const nav_msgs::msg::OccupancyGrid& grid);
 
-    StaticCollisionChecker(const model::Shape& shape);
+    const cv::Mat& getDistanceTransform() const;
+
+    bool isReady() const { return !distance_transform_.empty(); }
 
   private:
     double max_dist_;

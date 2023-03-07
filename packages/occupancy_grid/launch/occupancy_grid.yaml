@@ -13,5 +13,5 @@ launch:
     param:
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "qos", value: "$(var qos)"}
-    - {name: "resolution", value: 0.2}
-    - {name: "radius", value: 15.0}
+    - {name: "resolution", value: 0.10}
+    - {name: "radius", value: 8.0}
