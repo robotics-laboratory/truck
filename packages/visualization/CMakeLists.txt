@@ -10,10 +10,18 @@ find_package(visualization_msgs REQUIRED)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-add_executable(visualization_node src/main.cpp src/visualization_node.cpp)
+add_executable(
+    visualization_node
+    src/color.cpp
+    src/main.cpp
+    src/visualization_node.cpp)
 
-ament_target_dependencies(visualization_node rclcpp model nav_msgs
-    truck_interfaces visualization_msgs)
+ament_target_dependencies(
+    visualization_node
+    rclcpp model
+    nav_msgs
+    truck_interfaces
+    visualization_msgs)
 
 install(
     TARGETS visualization_node

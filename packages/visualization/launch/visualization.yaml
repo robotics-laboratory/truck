@@ -16,6 +16,11 @@ launch:
     param:
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "model_config", value: "$(var model_config)"}
-
-
+    - {name: "ego/z_lev", value: 0.0}
+    - {name: "ego/height", value: 0.2}
+    - {name: "control/z_lev", value: 0.2}
+    - {name: "control/width", value: 0.04}
+    - {name: "control/length", value: 1.2}
+    - {name: "waypoints/z_lev", value: 0.3}
+    - {name: "waypoints/radius", value: 0.05}
 

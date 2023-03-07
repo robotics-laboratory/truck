@@ -66,8 +66,13 @@ VehicleLimits::VehicleLimits(const YAML::Node& node)
     , velocity{toLimits<double>(node["velocity"])}
     , acceleration{toLimits<double>(node["acceleration"])} {
     BOOST_VERIFY(max_abs_curvature >= 0);
+
     BOOST_VERIFY(0_deg <= steering.inner && steering.inner < 90_deg);
     BOOST_VERIFY(0_deg <= steering.outer && steering.outer < 90_deg);
+
+    BOOST_VERIFY(velocity.min <= 0);
+    BOOST_VERIFY(0 < velocity.max);
+
 }
 
 ServoAngles::ServoAngles(const YAML::Node& node)

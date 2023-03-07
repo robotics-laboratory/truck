@@ -1,7 +1,7 @@
 # Visualization
 
 ## Overview
-The node publishes all visualization topics. Color encoding for truck shape:
+The node publishes all visualization topics. Color encoding for control mode:
   - `off` - red
   - `blue` - remote
   - `green` - green
@@ -11,9 +11,11 @@ The node publishes all visualization topics. Color encoding for truck shape:
 
 ## Topics
 ### Input
-- `/control/mode` [[truck_interfecase/ControlMode](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_interfaces/msg/ControlMode.msg)] - current control mode
+- `/control/mode` [[truck_interfecase/ControlMode](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_interfaces/msg/ControlMode.msg)] - control mode
 - `/control/command` [[truck_interfecase/Control](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_interfaces/msg/Control.msg)] - target of trajectory controller
-- `/odom` [[truck_interfecase/Control](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_interfaces/msg/Control.msg)] - current localization in odometry world
+- `/waypoints` [[truck_interfecase/Control](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_interfaces/msg/Waypoints.msg)] - target waypoints to pass through
+- `/ekf/odom/filtered` [[nav_msgs/Odometry](http://docs.ros.org/en/noetic/api/nav_msgs/html/msg/Odometry.html)] - localization in odometric world
 
 ### Output
-- `/visualization/ego` [[visualization_msgs/Marker](http://docs.ros.org/en/melodic/api/visualization_msgs/html/msg/Marker.html)] - visualization of current truck pose.
+- `/visualization/ego` [[visualization_msgs/Marker](http://docs.ros.org/en/melodic/api/visualization_msgs/html/msg/Marker.html)] - pose in odometric world (color means control mode).
+- `/visualization/arc`[[visualization_msgs/Marker](http://docs.ros.org/en/melodic/api/visualization_msgs/html/msg/Marker.html)] - ccontrol command (curvature and velocity).
