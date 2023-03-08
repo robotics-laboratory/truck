@@ -1,6 +1,0 @@
-launch:
-- node:
-    pkg: "control_demo"
-    exec: "control_demo"
-    name: "control_demo"
-    output: "both"
