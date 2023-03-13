@@ -19,7 +19,8 @@ Vec2 Transform::operator()(const Vec2& v) const { return apply(v); }
 Pose Transform::operator()(const Pose& p) const { return apply(p); }
 
 Transform Transform::inv() const {
-    return Transform(-translation_, -rotation_);
+    auto r_inv = rotation_.inv();
+    return Transform(-translation_.rotate(r_inv), r_inv);
 }
 
 } // namespace truck::geom

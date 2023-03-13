@@ -2,10 +2,13 @@
 #include "color.h"
 
 #include "common/math.h"
+#include "geom/angle.h"
 #include "geom/arc.h"
+#include "geom/msg.h"
 #include "geom/pose.h"
 #include "geom/segment.h"
-#include "geom/msg.h"
+
+#include <boost/assert.hpp>
 
 #include <functional>
 #include <utility>
@@ -14,19 +17,22 @@ namespace truck::visualization {
 
 using namespace std::placeholders;
 
-VisualizationNode::VisualizationNode()
-    : Node("visualization_node")
-    , model_(Node::declare_parameter<std::string>("model_config", "model.yaml")) {
-    RCLCPP_INFO(this->get_logger(), "Model acquired...");
+using namespace geom::literals;
 
+VisualizationNode::VisualizationNode()
+    : Node("visualization")
+    , model_(model::load(
+          this->get_logger(), Node::declare_parameter<std::string>("model_config", "model.yaml"))) {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
     params_ = Parameters {
         .ego_z_lev = this->declare_parameter("ego/z_lev", 0.0),
         .ego_height = this->declare_parameter("ego/height", 0.3),
-        .control_z_lev = this->declare_parameter("control/z_lev", 0.4),
-        .control_width = this->declare_parameter("control/width", 0.1),
+        .arc_z_lev = this->declare_parameter("arc/z_lev", 0.4),
+        .arc_width = this->declare_parameter("arc/width", 0.1),
+        .arc_length = this->declare_parameter("arc/length", 0.5),
+        .target_width = this->declare_parameter("target/width", 0.2),
         .waypoints_z_lev = this->declare_parameter("waypoints/z_lev", 2.0),
         .waypoints_radius = this->declare_parameter("waypoints/radius", 0.2),
     };
@@ -62,13 +68,17 @@ VisualizationNode::VisualizationNode()
     signal_.waypoints = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/waypoints",
         rclcpp::QoS(1).reliability(qos));
+
+    signal_.target = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/visualization/target",
+        rclcpp::QoS(1).reliability(qos));
 }
 
 void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom) {
     state_.odom = std::move(odom);
 
     publishEgo();
-    publishArc();
+    publishControl();
 }
 
 namespace {
@@ -140,12 +150,18 @@ geom::Poses arcTrace(const geom::Pose& pose, double curvature, double length) {
 
 }  // namespace
 
+void VisualizationNode::publishControl() const {
+    publishArc();
+    publishTarget();
+}
+
 void VisualizationNode::publishArc() const {
-    if (not state_.odom || not state_.control) {
+    if (!state_.odom || !state_.control) {
         return;
     }
 
     constexpr double eps = 1e-6;
+
     if (std::abs(state_.control->velocity) < eps) {
         visualization_msgs::msg::Marker msg;
         msg.header.frame_id = state_.odom->header.frame_id;
@@ -160,20 +176,70 @@ void VisualizationNode::publishArc() const {
     msg.header.stamp = state_.control->header.stamp;
     msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
     msg.action = visualization_msgs::msg::Marker::ADD;
-    msg.scale.x = params_.control_width;
+    msg.scale.x = params_.arc_width;
     msg.color = velocityToColor(state_.control->velocity);
 
     const geom::Pose pose = geom::toPose(*state_.odom);
     const double curvature = state_.control->curvature;
 
-    for (const auto& point : arcTrace(pose, curvature, params_.control_length)) {
+    for (const auto& point : arcTrace(pose, curvature, params_.arc_length)) {
         geometry_msgs::msg::Point point_msg = geom::msg::toPoint(point);
-        point_msg.z = params_.control_z_lev;
+        point_msg.z = params_.arc_z_lev;
         msg.points.push_back(point_msg);
     }
 
     signal_.arc->publish(msg);
 }
+
+void VisualizationNode::publishTarget() const {
+    if (!state_.odom || !state_.control) {
+        return;
+    }
+
+    if (!state_.control->has_target) {
+        visualization_msgs::msg::Marker msg;
+        msg.header.frame_id = state_.odom->header.frame_id;
+        msg.header.stamp = state_.control->header.stamp;
+        msg.action = visualization_msgs::msg::Marker::DELETE;
+        signal_.target->publish(msg);
+        return;
+    }
+
+    const auto& odom_frame_id = state_.odom->header.frame_id;
+    const auto& target_frame_id = state_.control->target.header.frame_id;
+
+    BOOST_ASSERT(target_frame_id == odom_frame_id);
+
+    visualization_msgs::msg::Marker msg;
+    msg.header.frame_id = odom_frame_id;
+    msg.header.stamp = state_.control->header.stamp;
+    msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.scale.x = params_.target_width;
+    msg.color = velocityToColor(state_.control->velocity);
+
+    constexpr geom::Angle arc_angle = 80_deg;
+
+    const geom::Vec2 pos = geom::toVec2(*state_.odom);
+    const geom::Vec2 goal = geom::toVec2(state_.control->target); 
+    const geom::Vec2 dir = goal - pos;
+
+    const geom::Arc arc{
+        pos,
+        dir.len(),
+        dir.unit().rotate(-arc_angle / 2),
+        arc_angle,
+    };
+
+    for (const auto& point : arc.trace(0.05)) {
+        geometry_msgs::msg::Point point_msg = geom::msg::toPoint(point);
+        point_msg.z = params_.target_z_lev;
+        msg.points.push_back(point_msg);
+    }
+
+    signal_.target->publish(msg);
+}
+
 
 void VisualizationNode::handleControl(truck_interfaces::msg::Control::ConstSharedPtr control) {
     if (control->header.frame_id != "base") {
@@ -182,7 +248,7 @@ void VisualizationNode::handleControl(truck_interfaces::msg::Control::ConstShare
     }
 
     state_.control = control;
-    publishArc();
+    publishControl();
 }
 
 void VisualizationNode::publishWaypoints(const truck_interfaces::msg::Waypoints& msg) const {

@@ -2,7 +2,7 @@
 <package format="3">
   <name>common</name>
   <version>0.0.0</version>
-  <description>Common utils library</description>
+  <description>common</description>
   <maintainer email="simagin.mail@yandex.ru">Simagin Denis</maintainer>
   <license>MIT</license>
 

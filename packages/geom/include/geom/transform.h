@@ -18,6 +18,9 @@ public:
     Vec2 operator()(const Vec2& v) const;
     Pose operator()(const Pose& p) const;
 
+    const Vec2& t() const { return translation_;}
+    const Vec2& r() const { return rotation_; }
+
     Transform inv() const;
 
 private:

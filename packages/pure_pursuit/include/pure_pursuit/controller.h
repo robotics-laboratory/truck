@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <optional>
 #include <string_view>
 
 namespace truck::pure_pursuit {
@@ -27,13 +28,10 @@ std::string_view toString(ControllerError e);
 struct Command {
     double curvature = 0;
     double velocity = 0;
-    double acceleration = 0;
+
+    std::optional<geom::Vec2> target = std::nullopt;
 
     static Command stop() { return Command{}; }
-};
-
-struct ControllerResultData {
-    truck_interfaces::msg::Control cmd;
 };
 
 using ControllerResult = common::Result<Command, ControllerError>;

@@ -18,9 +18,11 @@ launch:
     - {name: "model_config", value: "$(var model_config)"}
     - {name: "ego/z_lev", value: 0.0}
     - {name: "ego/height", value: 0.2}
-    - {name: "control/z_lev", value: 0.2}
-    - {name: "control/width", value: 0.04}
-    - {name: "control/length", value: 1.2}
-    - {name: "waypoints/z_lev", value: 0.3}
-    - {name: "waypoints/radius", value: 0.05}
+    - {name: "arc/z_lev", value: 0.2}
+    - {name: "arc/width", value: 0.04}
+    - {name: "arc/length", value: 1.2}
+    - {name: "target/width", value: 0.06}
+    - {name: "target/z_lev", value: 0.0}
+    - {name: "waypoints/z_lev", value: 0.5}
+    - {name: "waypoints/radius", value: 0.10}
 

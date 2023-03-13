@@ -1,5 +1,7 @@
 #pragma once
 
+#include "collision/map.h"
+
 #include "geom/pose.h"
 #include "geom/transform.h"
 #include "geom/vector.h"
@@ -9,15 +11,7 @@
 
 #include <optional>
 
-namespace truck::collision_checker {
-
-struct MapMeta {
-    // origin is in the 'map' frame, dir is x axis of the 'map' frame
-    geom::Pose origin;
-    double resolution;
-    uint32_t width;
-    uint32_t height;
-};
+namespace truck::collision {
 
 class StaticCollisionChecker {
   public:
@@ -26,21 +20,20 @@ class StaticCollisionChecker {
     StaticCollisionChecker(const model::Shape& shape);
 
     bool initialized() const;
-    void reset(const MapMeta& meta, const cv::Mat& distance_transform);
+    void reset(Map distance_transform);
 
     double distance(const geom::Pose& ego_pose) const;
     double distance(const geom::Vec2& point) const;
 
-  private:
+  public:
     model::Shape shape_;
 
     struct State {
-        MapMeta meta;
+        Map distance_transform;
         geom::Transform tf;
-        cv::Mat distance_transform;
     };
 
-    std::optional<State> state_;
+    std::optional<State> state_ = std::nullopt;
 };
 
-}  // namespace truck::collision_checker
+}  // namespace truck::collision

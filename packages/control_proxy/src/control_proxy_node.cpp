@@ -44,7 +44,7 @@ auto loadControlMap(rclcpp::Logger logger, const std::string& path) {
 }  // namespace
 
 ControlProxyNode::ControlProxyNode()
-    : Node("control_proxy_node")
+    : Node("control_proxy")
     , model_(
         model::load(
             this->get_logger(),
@@ -195,7 +195,6 @@ void ControlProxyNode::publishStop() {
 
         result.velocity = 0.0;
         result.curvature = 0.0;
-        result.acceleration = 0.0;
 
         return result;
     }();

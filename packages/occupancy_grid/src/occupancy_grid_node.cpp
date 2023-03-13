@@ -7,7 +7,7 @@
 
 namespace truck::occupancy_grid {
 
-OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid_node") {
+OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 

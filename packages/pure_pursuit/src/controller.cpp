@@ -1,5 +1,4 @@
 #include "pure_pursuit/controller.h"
-#include "pure_pursuit/util.h"
 
 #include "geom/arc.h"
 #include "geom/pose.h"
@@ -48,41 +47,39 @@ ControllerResult Controller::operator()(
     }
 
     const double radius = getRadius(velocity.len());
-
-    bool reachable = false;
-    for (auto it = path.poses.rbegin(); it != path.poses.rend(); ++it) {
-        const geom::Pose goal = geom::toPose(it->pose);
-        const double dist = geom::distance(goal.pos, pose.pos);
-        if (dist > radius) {
-            continue;
+    const auto it = std::find_if(
+        path.poses.begin(), path.poses.end(),
+        [&](const auto& p) {
+            return geom::distance(geom::toVec2(p), pose.pos) < radius;
         }
+    );
 
-        static constexpr double eps = 1e-3;
-        if (dist < eps) {
-            return ControllerResult(ControllerError::kImpossibleBuildArc);
-        }
-
-        reachable |= true;
-
-        Command command;
-
-        const auto variant = geom::tryBuildArc(pose, goal.pos);
-        if (std::holds_alternative<geom::Arc>(variant)) {
-            const geom::Arc& arc = std::get<geom::Arc>(variant);
-            command.velocity = params_.velocity;
-            command.curvature = arc.curv();
-        } else if (std::holds_alternative<geom::Segment>(variant)) {
-            command.velocity = params_.velocity;
-            command.curvature = 0.0;
-        } else {
-            return ControllerResult(ControllerError::kImpossibleBuildArc);
-        }
-
-        return ControllerResult{command};
+    if (it == path.poses.end()) {
+        return ControllerResult(ControllerError::kUnreachablePath);
     }
 
-    BOOST_ASSERT(not reachable);
-    return ControllerResult(ControllerError::kUnreachablePath);
+    auto goal_it = std::find_if(it, path.poses.end() - 1, [&](const auto& p) {
+        return geom::distance(geom::toVec2(p), pose.pos) > radius;
+    });
+
+    const auto goal = geom::toVec2(*goal_it);
+    const auto variant = geom::tryBuildArc(pose, goal);
+
+    Command command;
+    command.target = goal;
+
+    if (std::holds_alternative<geom::Arc>(variant)) {
+        const geom::Arc& arc = std::get<geom::Arc>(variant);
+        command.velocity = params_.velocity;
+        command.curvature = arc.curv();
+    } else if (std::holds_alternative<geom::Segment>(variant)) {
+        command.velocity = params_.velocity;
+        command.curvature = 0.0;
+    } else {
+        return ControllerResult(ControllerError::kImpossibleBuildArc);
+    }
+        
+    return ControllerResult{command};
 }
 
 }  // namespace truck::pure_pursuit

@@ -2,9 +2,9 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>pure_pursuit</name>
-  <version>0.1.0</version>
-  <description>Pure Pursuit node package</description>
-  <maintainer email="erop.sergeev.00@mail.ru">root</maintainer>
+  <version>0.0.0</version>
+  <description>pure_pursuit</description>
+  <maintainer email="simagin.mail@yandex.ru">Simagin Denis</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

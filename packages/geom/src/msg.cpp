@@ -8,6 +8,10 @@ Vec2 toVec2(const geometry_msgs::msg::PointStamped& p) { return toVec2(p.point);
 
 Vec2 toVec2(const geometry_msgs::msg::Pose& p) { return toVec2(p.position); }
 
+Vec2 toVec2(const geometry_msgs::msg::PoseStamped& p) { return toVec2(p.pose); }
+
+Vec2 toVec2(const nav_msgs::msg::Odometry& odom) { return toVec2(odom.pose.pose); }
+
 Angle toAngle(const geometry_msgs::msg::Quaternion& q) {
     return Angle::fromRadians(std::copysign(2 * std::acos(q.w), q.z));
 }

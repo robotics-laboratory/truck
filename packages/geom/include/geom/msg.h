@@ -21,7 +21,11 @@ Vec2 toVec2(const geometry_msgs::msg::Point& p);
 
 Vec2 toVec2(const geometry_msgs::msg::PointStamped& p);
 
+Vec2 toVec2(const geometry_msgs::msg::PoseStamped& p);
+
 Vec2 toVec2(const geometry_msgs::msg::Pose& p);
+
+Vec2 toVec2(const nav_msgs::msg::Odometry& odom);
 
 Angle toAngle(const geometry_msgs::msg::Quaternion& q);
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "pure_pursuit/controller.h"
-#include "pure_pursuit/util.h"
 
+#include "geom/msg.h"
 #include "model/model.h"
 #include "truck_interfaces/msg/control.hpp"
 
@@ -41,17 +41,17 @@ class PurePursuitNode : public rclcpp::Node {
         const auto qos = static_cast<rmw_qos_reliability_policy_t>(
             this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
-        path_slot_ = this->create_subscription<nav_msgs::msg::Path>(
+        slot_.path = this->create_subscription<nav_msgs::msg::Path>(
             "/motion/path",
             1,
             std::bind(&PurePursuitNode::handlePath, this, std::placeholders::_1));
 
-        odometry_slot_ = Node::create_subscription<nav_msgs::msg::Odometry>(
+        slot_.odometry = Node::create_subscription<nav_msgs::msg::Odometry>(
             "/ekf/odometry/filtered",
             rclcpp::QoS(1).reliability(qos),
             std::bind(&PurePursuitNode::handleOdometry, this, std::placeholders::_1));
 
-        command_signal_ =
+        signal_.command =
             Node::create_publisher<truck_interfaces::msg::Control>("/motion/command", 1);
     }
 
@@ -64,46 +64,56 @@ class PurePursuitNode : public rclcpp::Node {
             msg.header.stamp = now();
 
             msg.velocity = cmd.velocity;
-            msg.acceleration = cmd.acceleration;
             msg.curvature = cmd.curvature;
+
+
+            msg.has_target = cmd.target.has_value();
+            if (cmd.target) {
+                msg.target.header = state_.odometry->header;
+                msg.target.point = geom::msg::toPoint(*cmd.target);
+            }
 
             return msg;
         };
 
-        if (!path_ || !odometry_) {
-            command_signal_->publish(toMsg(Command::stop()));
+        if (!state_.path || !state_.odometry) {
+            signal_.command->publish(toMsg(Command::stop()));
             return;
         }
 
-        const auto result = (*controller_)(*odometry_, *path_);
+        const auto result = (*controller_)(*state_.odometry, *state_.path);
         if (!result) {
             RCLCPP_ERROR(get_logger(), "%s", toString(result.error()).data());
-            command_signal_->publish(toMsg(Command::stop()));
+            signal_.command->publish(toMsg(Command::stop()));
             return;
         }
 
-        command_signal_->publish(toMsg(*result));
+        signal_.command->publish(toMsg(*result));
     }
 
     void handlePath(nav_msgs::msg::Path::SharedPtr path) {
-        path_ = std::move(path);
+        state_.path = std::move(path);
         publishCommand();
     }
 
     void handleOdometry(nav_msgs::msg::Odometry::SharedPtr odometry) {
-        odometry_ = std::move(odometry);
+        state_.odometry = std::move(odometry);
         publishCommand();
     }
 
-    nav_msgs::msg::Path::ConstSharedPtr path_ = nullptr;
-    nav_msgs::msg::Odometry::ConstSharedPtr odometry_ = nullptr;
+    struct State {
+        nav_msgs::msg::Path::ConstSharedPtr path = nullptr;
+        nav_msgs::msg::Odometry::ConstSharedPtr odometry = nullptr;
+    } state_;
 
-    // input
-    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_slot_ = nullptr;
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_slot_ = nullptr;
+    struct Slots {
+        rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path = nullptr;
+        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
+    } slot_;
 
-    // output
-    rclcpp::Publisher<truck_interfaces::msg::Control>::SharedPtr command_signal_ = nullptr;
+    struct Signals {
+        rclcpp::Publisher<truck_interfaces::msg::Control>::SharedPtr command = nullptr;
+    } signal_;
 
     std::unique_ptr<Controller> controller_ = nullptr;
 };

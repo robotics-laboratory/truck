@@ -18,7 +18,7 @@ launch:
     - {name: "qos", value: "$(var qos)"}
     - {name: "model_config", value: "$(var model_config)"}
     - {name: "radius/min", value: 0.30}
-    - {name: "radius/max", value: 1.0}
-    - {name: "velocity", value: 0.4}
-    - {name: "velocity_factor", value: 0.2}
+    - {name: "radius/max", value: 2.0}
+    - {name: "velocity", value: 0.8}
+    - {name: "velocity_factor", value: 2.0}
     - {name: "tolerance", value: 0.15}

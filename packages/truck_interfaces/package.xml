@@ -2,9 +2,9 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>truck_interfaces</name>
-  <version>0.1.0</version>
-  <description>Planning interfaces package</description>
-  <maintainer email="email@example.com">root</maintainer>
+  <version>0.0.0</version>
+  <description>truck_interfaces</description>
+  <maintainer email="simagin.mail@yandex.ru">Simagin Denis</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

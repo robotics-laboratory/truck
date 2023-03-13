@@ -2,5 +2,7 @@ launch:
 - arg: {name: "env", default: "simulator"}
 - include:
    file: $(find-pkg-share truck)/launch/$(var env).yaml
+- include:
+   file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml
    arg:
    - {name: "simulation", value: "true"}

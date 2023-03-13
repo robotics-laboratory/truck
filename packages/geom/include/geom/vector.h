@@ -57,9 +57,9 @@ struct Vec2 {
         return *this;
     }
 
-    Vec2 rotate(const Vec2& dir) const noexcept {
-        return {x * dir.x - y * dir.y, x * dir.y + y * dir.x};
-    }
+    Vec2 inv() const noexcept { return {x, -y}; }
+
+    Vec2 rotate(const Vec2& a) const noexcept { return {x * a.x - y * a.y, x * a.y + y * a.x}; }
 
     Vec2 rotate(Angle angle) const noexcept { return rotate(Vec2(angle)); }
 
