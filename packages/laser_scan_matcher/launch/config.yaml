@@ -1,0 +1,26 @@
+launch:
+#- executable:
+#    cmd: "ros2 bag play /truck/cumgrain/cumgrain_0.db3 --qos-profile-overrides /truck/cumgrain/qos.yaml --topics /lidar/scan"
+#    output: "log"
+
+- node:
+    pkg: "laser_scan_matcher"
+    exec: "laser_scan_matcher"
+    name: "laser_scan_matcher"
+    args: "--mode odometry_computer"
+    #--ros-args --log-level debug
+    namespace: "cmt"
+    output: "log"
+
+    param:
+    - {name: "base_frame", value: "base"}
+    - {name: "scan_topic", value: "/lidar/scan"}
+    - {name: "odom_frame", value: "cmt_odom"}
+    - {name: "use_sim_time", value: true}
+    - {name: "rosbag_mode", value: true}
+    - {name: "icp_max_corr_dist", value: 0.25}
+    - {name: "icp_iter_threshold", value: 1000000}
+    - {name: "icp_tf_threshold", value: 0.0000000001}
+    - {name: "read_step", value: 1}
+    - {name: "filepath", value: "/truck/shitpissman/shitpissman_0.db3"}
+    - {name: "scan_qos_profile", value: "SENSOR_DATA"}

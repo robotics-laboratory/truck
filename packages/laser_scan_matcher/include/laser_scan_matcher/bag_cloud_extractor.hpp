@@ -21,7 +21,7 @@ public:
         filter_.topics = std::vector<std::string>{topic};
     }
 
-    void read(std::string file_path, std::shared_ptr<std::vector<sensor_msgs::msg::LaserScan>>& drain)
+    void read(std::string file_path, std::shared_ptr<std::vector<sensor_msgs::msg::LaserScan::SharedPtr>>& drain)
     {
         rosbag2_storage::StorageOptions storage_options;
         storage_options.uri = file_path;
@@ -31,8 +31,8 @@ public:
         converter_options.input_serialization_format = "cdr";
         converter_options.output_serialization_format = "cdr";
 
-        sensor_msgs::msg::LaserScan collector;
-        drain = std::make_shared<std::vector<sensor_msgs::msg::LaserScan>>();
+        sensor_msgs::msg::LaserScan::SharedPtr collector = std::make_shared<sensor_msgs::msg::LaserScan>();
+        drain = std::make_shared<std::vector<sensor_msgs::msg::LaserScan::SharedPtr>>();
 
         reader_.open(storage_options, converter_options);
         reader_.set_filter(filter_);
@@ -55,8 +55,9 @@ public:
         {
             auto serialized_message = reader_.read_next();
             rclcpp::SerializedMessage extract(*serialized_message->serialized_data);
-            gawkgawkcrownprince69.deserialize_message(&extract, &collector);
+            gawkgawkcrownprince69.deserialize_message(&extract, collector.get());
             drain->push_back(collector);
+            collector = std::make_shared<sensor_msgs::msg::LaserScan>();
         }
 
         reader_.close();

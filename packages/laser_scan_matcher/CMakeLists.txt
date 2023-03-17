@@ -4,6 +4,7 @@ project(laser_scan_matcher)
 set(CMAKE_CXX_STANDARD 17) 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Debug)
+#colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=DEBUG --cmake-args -DCMAKE_C_FLAGS_DEBUG="-g -O0" --cmake-args -DCMAKE_CXX_FLAGS_DEBUG="-g -O0"
 
 find_package(ament_cmake REQUIRED)
 find_package(PCL 1.10 REQUIRED)

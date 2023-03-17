@@ -27,7 +27,6 @@ namespace cmt {
     class CloudMatcher {
 
     public:
-
         CloudMatcher(double icp_max_corr_dist, double icp_max_inter_dist, double icp_tf_threshold, double icp_iter_threshold)
             : icp_max_corr_dist_(icp_max_corr_dist) 
             , icp_max_inter_dist_(icp_max_inter_dist)
@@ -61,19 +60,18 @@ namespace cmt {
             if(!icp_proc_.hasConverged())
                 return false;
             
-            mold = icp_proc_.getFinalTransformation(); //.inverse()
+            mold = icp_proc_.getFinalTransformation(); 
             last_reg_ = preg;
             return true;
         }
 
-        bool getAlignedScan(PCLCloud& mold)
+        PCLCloud getAlignedScan()
         {
             if(last_reg_)
             {
-                mold = *last_reg_;
-                return 1;
+                return *last_reg_;
             }
-            return 0;
+            return PCLCloud();
         }
 
         double getScore() { return icp_proc_.getFitnessScore(); }
@@ -82,7 +80,7 @@ namespace cmt {
         pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp_proc_;
         PCLCloud::Ptr last_reg_;
 
-        double icp_tf_threshold_; //thresholf for the difference between transformations
+        double icp_tf_threshold_; //threshold for the difference between transformations
         double icp_max_corr_dist_; //comes in meters
         double icp_max_inter_dist_; //the percentage change from the previous correspondence set MSE for the current one
         int icp_iter_threshold_; //maximum number of iterations
