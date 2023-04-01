@@ -21,8 +21,9 @@ launch:
     - {name: "arc/z_lev", value: 0.2}
     - {name: "arc/width", value: 0.04}
     - {name: "arc/length", value: 1.2}
-    - {name: "target/width", value: 0.06}
+    - {name: "target/width", value: 0.03}
     - {name: "target/z_lev", value: 0.0}
     - {name: "waypoints/z_lev", value: 0.5}
     - {name: "waypoints/radius", value: 0.10}
-
+    - {name: "trajectory/z_lev", value: -0.1}
+    - {name: "trajectory/width", value: 0.1}
