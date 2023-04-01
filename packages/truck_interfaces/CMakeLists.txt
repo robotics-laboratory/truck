@@ -24,6 +24,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/Point.msg
   msg/RandomSeed.msg
   msg/Scene.msg
+  msg/Trajectory.msg
+  msg/TrajectoryState.msg
   msg/Waypoints.msg
   DEPENDENCIES
   builtin_interfaces
