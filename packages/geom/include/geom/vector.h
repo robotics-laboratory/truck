@@ -8,7 +8,7 @@
 namespace truck::geom {
 
 struct Vec2 {
-    constexpr Vec2(): x(0), y(0) {}
+    constexpr Vec2() : x(0), y(0) {}
 
     constexpr Vec2(double x, double y) : x(x), y(y) {}
 
@@ -26,9 +26,13 @@ struct Vec2 {
         return *this;
     }
 
-    constexpr Vec2 operator+(const Vec2& other) const noexcept { return {x + other.x, y + other.y}; }
+    constexpr Vec2 operator+(const Vec2& other) const noexcept {
+        return {x + other.x, y + other.y};
+    }
 
-    constexpr Vec2 operator-(const Vec2& other) const noexcept { return {x - other.x, y - other.y}; }
+    constexpr Vec2 operator-(const Vec2& other) const noexcept {
+        return {x - other.x, y - other.y};
+    }
 
     constexpr double lenSq() const noexcept { return x * x + y * y; }
 
@@ -89,6 +93,8 @@ Angle angleBetween(const Vec2& from, const Vec2& to) noexcept;
 inline double lenSq(const Vec2& v) noexcept { return v.lenSq(); }
 
 inline double len(const Vec2& v) noexcept { return v.len(); }
+
+Vec2 interpolate(const Vec2& a, const Vec2& b, double t) noexcept;
 
 std::ostream& operator<<(std::ostream& out, const Vec2& v);
 

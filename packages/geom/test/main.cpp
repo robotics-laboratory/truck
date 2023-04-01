@@ -12,11 +12,11 @@ using namespace truck::geom;
 TEST(Vector, addition) {
     const Vec2 a = {1, 2};
     const Vec2 b = {4, 8};
-    
+
     const auto c = a + b;
     ASSERT_GEOM_EQUAL(c.x, a.x + b.x);
     ASSERT_GEOM_EQUAL(c.y, a.y + b.y);
-    
+
     const auto d = a - b;
     ASSERT_GEOM_EQUAL(d.x, a.x - b.x);
     ASSERT_GEOM_EQUAL(d.y, a.y - b.y);
@@ -29,7 +29,7 @@ TEST(Vector, multiplication) {
     const auto b = a * c;
     ASSERT_GEOM_EQUAL(b.x, a.x * c);
     ASSERT_GEOM_EQUAL(b.y, a.y * c);
-    
+
     const auto d = c * a;
     ASSERT_GEOM_EQUAL(d.x, a.x * c);
     ASSERT_GEOM_EQUAL(d.y, a.y * c);
@@ -38,7 +38,7 @@ TEST(Vector, multiplication) {
 TEST(Vector, division) {
     const Vec2 a = {1, 2};
     const double c = 42;
-    
+
     const auto b = a / c;
     ASSERT_GEOM_EQUAL(b.x, a.x / c);
     ASSERT_GEOM_EQUAL(b.y, a.y / c);
@@ -47,7 +47,7 @@ TEST(Vector, division) {
 TEST(Vector, compare) {
     const Vec2 a = {1, 3};
     const Vec2 b = {1.001, 2.999};
-    
+
     ASSERT_GEOM_NOT_EQUAL(a, b);
     ASSERT_GEOM_NOT_EQUAL(a, b, 1e-5);
     ASSERT_GEOM_EQUAL(a, b, 1e-2);
@@ -132,7 +132,7 @@ TEST(Arc, try_build_arc) {
     {
         /* begin.dir and vector (begin, end) are counterdirected  */
 
-        const Pose begin{.pos={0, 0}, .dir={-1, 0}};
+        const Pose begin{.pos = {0, 0}, .dir = {-1, 0}};
         const Vec2 end = {1, 0};
 
         const auto result = tryBuildArc(begin, end);
@@ -156,7 +156,7 @@ TEST(Arc, try_build_arc) {
     {
         /* positive arc more less than PI */
 
-        const Pose begin{.pos={0, -1}, .dir={1, 0}};
+        const Pose begin{.pos = {0, -1}, .dir = {1, 0}};
         const Vec2 end = {1, 0};
 
         const auto result = tryBuildArc(begin, end);
@@ -173,7 +173,7 @@ TEST(Arc, try_build_arc) {
     {
         /* negative arc less than PI */
 
-        const Pose from{.pos={0, 1}, .dir={1, 0}};
+        const Pose from{.pos = {0, 1}, .dir = {1, 0}};
         const Vec2 to = {1, 0};
 
         const auto result = tryBuildArc(from, to);
@@ -199,7 +199,7 @@ TEST(Arc, try_build_arc) {
         ASSERT_GEOM_EQUAL(arc.center, {0, 0}, eps);
         ASSERT_GEOM_EQUAL(arc.radius, 1.0, eps);
         ASSERT_GEOM_EQUAL(arc.begin, {0, -1}, eps);
-        ASSERT_GEOM_EQUAL(arc.delta, 3*PI_2, eps);
+        ASSERT_GEOM_EQUAL(arc.delta, 3 * PI_2, eps);
     }
 
     {
@@ -215,11 +215,11 @@ TEST(Arc, try_build_arc) {
         ASSERT_GEOM_EQUAL(arc.center, {0, 0}, eps);
         ASSERT_GEOM_EQUAL(arc.radius, 1.0, eps);
         ASSERT_GEOM_EQUAL(arc.begin, {-1, 0}, eps);
-        ASSERT_GEOM_EQUAL(arc.delta, -3*PI_2, eps);
+        ASSERT_GEOM_EQUAL(arc.delta, -3 * PI_2, eps);
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

@@ -5,7 +5,7 @@
 #include "geom/vector.h"
 #include "geom/polyline.h"
 
-#include <boost/assert.hpp>
+#include "common/exception.h"
 
 #include <variant>
 
@@ -13,12 +13,8 @@ namespace truck::geom {
 
 struct Arc {
     Arc(const Vec2& center, double radius, const Vec2 begin, Angle delta)
-        : center(center)
-        , radius(radius)
-        , begin(begin)
-        , delta(delta)
-    {
-        BOOST_ASSERT(radius > 0);
+        : center(center), radius(radius), begin(begin), delta(delta) {
+        VERIFY(radius > 0);
     }
 
     int ccw() const { return delta >= Angle::zero() ? 1 : -1; };
@@ -37,6 +33,7 @@ struct Arc {
 
 std::ostream& operator<<(std::ostream& os, const Arc& arc);
 
-std::variant<std::monostate, Segment, Arc> tryBuildArc(const Pose& from, const Vec2& to);
+std::variant<std::monostate, Segment, Arc> tryBuildArc(
+    const Pose& from, const Vec2& to, double eps = 1e-3);
 
 }  // namespace truck::geom

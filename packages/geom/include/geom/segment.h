@@ -24,4 +24,4 @@ struct Segment {
     Vec2 end;
 };
 
-} // namespace truck::geom
+}  // namespace truck::geom

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geom/localization.h"
 #include "geom/pose.h"
 #include "geom/transform.h"
 #include "geom/vector.h"
@@ -43,6 +44,8 @@ Transform toTransform(const geometry_msgs::msg::Transform& t);
 
 Transform toTransform(const geometry_msgs::msg::TransformStamped& t);
 
+Localization toLocalization(const nav_msgs::msg::Odometry& odom);
+
 namespace msg {
 
 geometry_msgs::msg::Quaternion toQuaternion(const Angle& a);
@@ -57,5 +60,5 @@ geometry_msgs::msg::Pose toPose(const Pose& p);
 
 geometry_msgs::msg::PoseStamped toPoseStamped(const std_msgs::msg::Header& header, const Pose& p);
 
-} // namespace msg
-} // namepsace truck::geom
+}  // namespace msg
+}  // namespace truck::geom

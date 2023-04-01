@@ -1,6 +1,6 @@
 #include "geom/distance.h"
 
-#include "common/math.h" 
+#include "common/math.h"
 
 namespace truck::geom {
 

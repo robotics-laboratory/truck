@@ -15,9 +15,11 @@ class Angle {
 
     static constexpr Angle fromRadians(double rad) noexcept { return Angle{rad}; }
 
-    static constexpr Angle fromDegrees(double deg) noexcept{ return Angle{(M_PI / 180) * deg}; }
+    static constexpr Angle fromDegrees(double deg) noexcept { return Angle{(M_PI / 180) * deg}; }
 
-    static constexpr Angle fromVector(double x, double y) noexcept { return Angle{std::atan2(x, y)}; }
+    static constexpr Angle fromVector(double x, double y) noexcept {
+        return Angle{std::atan2(x, y)};
+    }
 
     constexpr double radians() const noexcept { return value_; }
 
@@ -75,7 +77,7 @@ inline constexpr Angle operator"" _deg(long double degrees) { return Angle::from
 
 }  // namespace literals
 
-inline constexpr  Angle asin(double x) noexcept { return Angle{std::asin(x)}; }
+inline constexpr Angle asin(double x) noexcept { return Angle{std::asin(x)}; }
 
 inline constexpr Angle acos(double x) noexcept { return Angle{std::acos(x)}; }
 
