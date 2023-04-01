@@ -31,11 +31,11 @@ class Result {
 
     auto error() && { return std::move(std::get<2>(state)); }
 
-    template <class... Args>
+    template<class... Args>
     static Result ok(Args&&... args) {
         return Value(std::forward<Args>(args)...);
     }
-    template <class... Args>
+    template<class... Args>
     static Result fail(Args&&... args) {
         return Error(std::forward<Args>(args)...);
     }
