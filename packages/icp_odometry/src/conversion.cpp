@@ -4,11 +4,9 @@ namespace truck::icp_odometry {
 
 namespace {
 
-constexpr bool isBigendian() {
-    return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__;
-}
+constexpr bool isBigendian() { return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__; }
 
-} // namespace
+}  // namespace
 
 DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
     DataPoints::Labels feature_labels;
@@ -19,11 +17,7 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
     DataPoints::Labels descriptor_labels;
 
     const size_t point_count = std::count_if(
-        scan.ranges.begin(), scan.ranges.end(),
-        [](float range) {
-            return std::isfinite(range);
-        }
-    );
+        scan.ranges.begin(), scan.ranges.end(), [](float range) { return std::isfinite(range); });
 
     DataPoints result(feature_labels, descriptor_labels, point_count);
 
@@ -43,8 +37,8 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
     return result;
 }
 
-
-sensor_msgs::msg::PointCloud2 toPointCloud2(const std_msgs::msg::Header& header, const DataPoints& data_points) {
+sensor_msgs::msg::PointCloud2 toPointCloud2(
+    const std_msgs::msg::Header& header, const DataPoints& data_points) {
     sensor_msgs::msg::PointCloud2 result;
 
     result.header = header;
@@ -78,4 +72,4 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const std_msgs::msg::Header& header,
     return result;
 }
 
-} // namespace truck::icp_odometry
+}  // namespace truck::icp_odometry

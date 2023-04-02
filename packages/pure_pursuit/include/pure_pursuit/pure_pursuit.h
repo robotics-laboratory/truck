@@ -16,7 +16,7 @@
 
 namespace truck::pure_pursuit {
 
-enum class Error: uint8_t {
+enum class Error : uint8_t {
     kUnknown = 0,
     kUnreachablePath = 1,
     kImpossibleBuildArc = 2,
@@ -41,7 +41,6 @@ using namespace std::chrono_literals;
 struct Parameters {
     std::chrono::duration<double> period = 0.1s;
     Limits<double> radius = {0.15, 0.5};
-    double velocity = 0.4;
     double velocity_factor = 0.2;
     double tolerance = 0.2;
     double max_distance = 0.30;
@@ -50,9 +49,7 @@ struct Parameters {
 class PurePursuit {
   public:
     PurePursuit(const Parameters& params, const model::Model& model)
-        : params_{params}
-        , model_(model)
-    {}
+        : params_{params}, model_(model) {}
 
     Result operator()(const geom::Localization& localization, const motion::Trajectory& trajectory);
 

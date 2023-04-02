@@ -36,8 +36,7 @@ class WaypointFollowerNode : public rclcpp::Node {
     void onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
 
     void onReset(
-        const std_srvs::srv::Empty::Request::SharedPtr,
-        std_srvs::srv::Empty::Response::SharedPtr);
+        const std_srvs::srv::Empty::Request::SharedPtr, std_srvs::srv::Empty::Response::SharedPtr);
 
     void publishTrajectory();
     void publishGridCostMap();

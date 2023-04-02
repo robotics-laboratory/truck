@@ -2,7 +2,7 @@
 #include "icp_odometry/conversion.h"
 
 #include "common/math.h"
-#include "geom/transform.h"
+#include "geom/msg.h"
 
 #include <fstream>
 #include <string>
@@ -43,8 +43,8 @@ TransformationParameters guessTransformation(
     const float dy = odometry->pose.pose.position.y - reference_odometry->pose.pose.position.y;
 
     const geom::Angle dtheta = geom::toYawAngle(odometry->pose.pose.orientation) -
-                         geom::toYawAngle(reference_odometry->pose.pose.orientation);
-  
+                               geom::toYawAngle(reference_odometry->pose.pose.orientation);
+
     // rotation
     t(0, 0) = cos(dtheta);
     t(0, 1) = -sin(dtheta);
@@ -84,7 +84,7 @@ IcpOdometryNode::IcpOdometryNode() : Node("icp_odometry_node") {
         this->create_publisher<sensor_msgs::msg::PointCloud2>("/odometry/transformed", 10);
 
     odometry_stat_signal_ =
-        this->create_publisher<truck_interfaces::msg::IcpOdometryStat>("/odometry/stat", 10);
+        this->create_publisher<truck_msgs::msg::IcpOdometryStat>("/odometry/stat", 10);
 
     odometry_signal_ = this->create_publisher<nav_msgs::msg::Odometry>("/odometry/odom", 10);
 
@@ -97,8 +97,8 @@ IcpOdometryNode::IcpOdometryNode() : Node("icp_odometry_node") {
     visualize_ = this->declare_parameter<bool>("visualize", false);
 }
 
-truck_interfaces::msg::IcpOdometryStat IcpResult::toOdometryStatMsg() const {
-    truck_interfaces::msg::IcpOdometryStat msg;
+truck_msgs::msg::IcpOdometryStat IcpResult::toOdometryStatMsg() const {
+    truck_msgs::msg::IcpOdometryStat msg;
 
     msg.header = header;
 
@@ -123,7 +123,7 @@ nav_msgs::msg::Odometry IcpResult::toOdometryMsg() const {
     const float x = t(0, 2);
     const float y = t(1, 2);
 
-    const float v = std::copysign(std::sqrt(x*x + y*y) / dt, -x);
+    const float v = std::copysign(std::sqrt(x * x + y * y) / dt, -x);
 
     msg.twist.twist.linear.x = v;
     msg.twist.twist.angular.z = std::atan2(t(1, 0), t(0, 0)) / dt;
@@ -168,14 +168,12 @@ void IcpOdometryNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstSharedPt
     auto odometry = odometry_;
 
     if (reference_cloud_) {
-        const auto init = guessTransformation(reference_odometry_ , odometry);
+        const auto init = guessTransformation(reference_odometry_, odometry);
 
         // RCLCPP_INFO(this->get_logger(), "Init matrix\n: %s", toStr(init).c_str());
 
-        const auto result = makeIcpStep(
-            scan->header, *cloud,
-            reference_scan_->header, *reference_cloud_,
-            init);
+        const auto result =
+            makeIcpStep(scan->header, *cloud, reference_scan_->header, *reference_cloud_, init);
 
         // RCLCPP_INFO(this->get_logger(), "Result matrix\n: %s", toStr(result.t).c_str());
 

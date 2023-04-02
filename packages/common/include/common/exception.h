@@ -48,9 +48,9 @@ class Exception : public std::exception {
         THROW_EXCEPTION() << ": " << #condition << "\n" << messages; \
     }
 
-#define VERIFY_FMT(condition, ...)                                           \
-    if (!(condition)) {                                                      \
-        THROW_EXCEPTION() << "\n" << #condition << "\n" << fmt(__VA_ARGS__); \
+#define VERIFY_FMT(condition, ...)                                          \
+    if (!(condition)) {                                                     \
+        THROW_EXCEPTION() << ":" << #condition << "\n" << fmt(__VA_ARGS__); \
     }
 
 }  // namespace truck

@@ -211,6 +211,8 @@ void ControlProxyNode::watchdog() {
         return std::chrono::nanoseconds(duration_ns) > timeout;
     };
 
+    return;
+
     if (mode_ == Mode::Off) {
         publishStop();
         return;

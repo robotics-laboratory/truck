@@ -1,7 +1,7 @@
 #pragma once
 
 #include "icp_odometry/common.h"
-#include "truck_interfaces/msg/icp_odometry_stat.hpp"
+#include "truck_msgs/msg/icp_odometry_stat.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
@@ -12,7 +12,7 @@
 namespace truck::icp_odometry {
 
 struct IcpResult {
-    truck_interfaces::msg::IcpOdometryStat toOdometryStatMsg() const;
+    truck_msgs::msg::IcpOdometryStat toOdometryStatMsg() const;
 
     nav_msgs::msg::Odometry toOdometryMsg() const;
 
@@ -23,7 +23,7 @@ struct IcpResult {
     TransformationParameters t;
 };
 
-class IcpOdometryNode: public rclcpp::Node {
+class IcpOdometryNode : public rclcpp::Node {
   public:
     IcpOdometryNode();
 
@@ -56,7 +56,7 @@ class IcpOdometryNode: public rclcpp::Node {
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr transformed_cloud_signal_ = nullptr;
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry_signal_ = nullptr;
-    rclcpp::Publisher<truck_interfaces::msg::IcpOdometryStat>::SharedPtr odometry_stat_signal_ = nullptr;
+    rclcpp::Publisher<truck_msgs::msg::IcpOdometryStat>::SharedPtr odometry_stat_signal_ = nullptr;
 };
 
-} // namespace truck::icp_odometry
+}  // namespace truck::icp_odometry

@@ -17,19 +17,14 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/CpuStat.msg
   msg/HardwareStatus.msg
   msg/HardwareTelemetry.msg
+  msg/IcpOdometryStat.msg
   msg/MemStat.msg
   msg/MetaData.msg
-  msg/Path.msg
   msg/PerfStat.msg
   msg/Point.msg
-  msg/RandomSeed.msg
-  msg/Scene.msg
   msg/Trajectory.msg
   msg/TrajectoryState.msg
   msg/Waypoints.msg
-  msg/HardwareStatus.msg
-  msg/HardwareTelemetry.msg
-  msg/IcpOdometryStat.msg
   DEPENDENCIES
   builtin_interfaces
   geometry_msgs

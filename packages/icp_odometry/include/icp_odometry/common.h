@@ -10,4 +10,4 @@ using DataPoints = Matcher::DataPoints;
 using Matrix = Matcher::Matrix;
 using TransformationParameters = Matcher::TransformationParameters;
 
-} // namespace truck::icp_odometry
+}  // namespace truck::icp_odometry
