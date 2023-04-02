@@ -11,9 +11,11 @@
 
   <exec_depend>ros2launch</exec_depend>
 
-  <depend>rclcpp</depend>
+  <depend>common</depend>
+  <depend>geom</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>rclcpp</depend>
   <depend>truck_msgs</depend>
  
   <export>
