@@ -1,15 +1,14 @@
 #pragma once
 
-#include "truck_interfaces/msg/control.hpp"
-
 #include "common/math.h"
 #include "common/result.h"
+#include "geom/localization.h"
 #include "model/model.h"
+#include "motion/trajectory.h"
 
 #include <nav_msgs/msg/path.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include <rclcpp/rclcpp.hpp>
 
+#include <chrono>
 #include <cstdint>
 #include <vector>
 #include <optional>
@@ -17,46 +16,54 @@
 
 namespace truck::pure_pursuit {
 
-enum class ControllerError: uint8_t {
+enum class Error: uint8_t {
     kUnknown = 0,
     kUnreachablePath = 1,
     kImpossibleBuildArc = 2,
 };
 
-std::string_view toString(ControllerError e);
+std::string_view toString(Error e);
 
 struct Command {
     double curvature = 0;
     double velocity = 0;
+    double acceleration = 0;
 
     std::optional<geom::Vec2> target = std::nullopt;
 
     static Command stop() { return Command{}; }
 };
 
-using ControllerResult = common::Result<Command, ControllerError>;
+using Result = common::Result<Command, Error>;
 
-struct Params {
+using namespace std::chrono_literals;
+
+struct Parameters {
+    std::chrono::duration<double> period = 0.1s;
     Limits<double> radius = {0.15, 0.5};
     double velocity = 0.4;
     double velocity_factor = 0.2;
-    double tolerance = 0.1;
+    double tolerance = 0.2;
+    double max_distance = 0.30;
 };
 
-class Controller {
+class PurePursuit {
   public:
-    Controller(const Params& params, const model::Model& model)
+    PurePursuit(const Parameters& params, const model::Model& model)
         : params_{params}
         , model_(model)
     {}
 
-    ControllerResult
-    operator()(const nav_msgs::msg::Odometry& odometry, const nav_msgs::msg::Path& path);
+    Result operator()(const geom::Localization& localization, const motion::Trajectory& trajectory);
+
+    Result command(const geom::Localization& localization, const motion::Trajectory& trajectory) {
+        return (*this)(localization, trajectory);
+    }
 
   private:
     double getRadius(double velocity) const;
 
-    const Params params_;
+    const Parameters params_;
     const model::Model model_;
 };
 
