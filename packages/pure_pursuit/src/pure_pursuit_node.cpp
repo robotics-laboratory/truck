@@ -10,29 +10,28 @@ PurePursuitNode::PurePursuitNode() : Node("pure_pursuit") {
 
     const Parameters params = {
         .period = std::chrono::duration<double>(this->declare_parameter<double>("period", 0.02)),
-        .radius = Limits<double>{
-            this->declare_parameter<double>("radius/min", 0.15),
-            this->declare_parameter<double>("radius/max", 0.5),
-        },
-        .velocity = this->declare_parameter<double>("velocity", 0.4),
+        .radius =
+            Limits<double>{
+                this->declare_parameter<double>("radius/min", 0.15),
+                this->declare_parameter<double>("radius/max", 0.5),
+            },
         .velocity_factor = this->declare_parameter<double>("velocity_factor", 0.2),
         .tolerance = this->declare_parameter<double>("tolerance", 0.1),
-        .max_distance = this->declare_parameter<double>("max_distance", 0.1)
-    };
+        .max_distance = this->declare_parameter<double>("max_distance", 0.1)};
 
-    RCLCPP_INFO(this->get_logger(), "period %f", params.period.count());
-    RCLCPP_INFO(this->get_logger(), "radius [%f, %f]", params.radius.min, params.radius.max);
-    RCLCPP_INFO(this->get_logger(), "velocity %f", params.velocity);
-    RCLCPP_INFO(this->get_logger(), "velocity factor %f", params.velocity_factor);
-    RCLCPP_INFO(this->get_logger(), "tolerance %f", params.tolerance);
-    RCLCPP_INFO(this->get_logger(), "max_distance %f", params.max_distance);
+    RCLCPP_INFO(this->get_logger(), "period: %.2fs", params.period.count());
+    RCLCPP_INFO(this->get_logger(), "radius: [%.2fm, %.2fm]", params.radius.min, params.radius.max);
+    RCLCPP_INFO(this->get_logger(), "velocity_factor: %.2f", params.velocity_factor);
+    RCLCPP_INFO(this->get_logger(), "tolerance: %.2fm", params.tolerance);
+    RCLCPP_INFO(this->get_logger(), "max_distance: %.2fm", params.max_distance);
 
     controller_ = std::make_unique<PurePursuit>(params, model);
 
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
-    timer_ = Node::create_wall_timer(params.period, std::bind(&PurePursuitNode::publishCommand, this));
+    timer_ =
+        Node::create_wall_timer(params.period, std::bind(&PurePursuitNode::publishCommand, this));
 
     slot_.odometry = Node::create_subscription<nav_msgs::msg::Odometry>(
         "/ekf/odometry/filtered",
@@ -75,7 +74,8 @@ void PurePursuitNode::publishCommand() {
     const auto result = controller_->command(*state_.localization, *state_.trajectory);
 
     if (!result) {
-        RCLCPP_ERROR(get_logger(), "%s", toString(result.error()).data());
+        RCLCPP_ERROR_THROTTLE(
+            get_logger(), *get_clock(), 5000, "%s", toString(result.error()).data());
         signal_.command->publish(toMsg(Command::stop()));
         return;
     }

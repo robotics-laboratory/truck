@@ -1,2 +1,0 @@
-uint64 created_at
-nav_msgs/OccupancyGrid occupancy_grid

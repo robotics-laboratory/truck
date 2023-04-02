@@ -40,6 +40,11 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
         .distance_before_obstacle = this->declare_parameter("distance_before_obstacle", 1.0),
     };
 
+    RCLCPP_INFO(this->get_logger(), "period: %.2fs", params_.period.count());
+    RCLCPP_INFO(this->get_logger(), "safety_margin: %.2fm", params_.safety_margin);
+    RCLCPP_INFO(
+        this->get_logger(), "distance_before_obstacle: %.2fm", params_.distance_before_obstacle);
+
     // TODO: change service name
     service_.reset = this->create_service<std_srvs::srv::Empty>(
         "/control_demo/reset_path", std::bind(&WaypointFollowerNode::onReset, this, _1, _2));
@@ -114,7 +119,8 @@ namespace {
 
 bool isStanding(const nav_msgs::msg::Odometry& odom) {
     const auto& twist = odom.twist.twist;
-    return std::abs(twist.linear.x) < 0.1;
+    const geom::Vec2 vel{twist.linear.x, twist.linear.y};
+    return vel.lenSq() < squared(0.01);
 }
 
 motion::Trajectory makeTrajectory(const std::deque<LinkedPose>& path) {
@@ -183,7 +189,6 @@ void WaypointFollowerNode::publishTrajectory() {
         state_.scheduled_velocity = 0.0;
     }
 
-    RCLCPP_WARN(this->get_logger(), "Scheduled velocity: %f", state_.scheduled_velocity);
     signal_.trajectory->publish(motion::msg::toTrajectory(state_.odometry->header, trajectory));
 }
 

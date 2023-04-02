@@ -18,9 +18,7 @@ namespace {
 constexpr size_t kNoIdx = -1;
 
 size_t getEgoSegmentIndex(
-        const motion::States& states,
-        const geom::Pose& ego_pose,
-        double max_distance) {
+    const motion::States& states, const geom::Pose& ego_pose, double max_distance) {
     double min_distnace_sq = squared(max_distance);
     size_t ego_segment_idx = kNoIdx;
 
@@ -46,7 +44,7 @@ size_t getEgoSegmentIndex(
     return ego_segment_idx;
 }
 
-} // namespace 
+}  // namespace
 
 std::string_view toString(Error e) {
     switch (e) {
@@ -60,12 +58,11 @@ std::string_view toString(Error e) {
 }
 
 double PurePursuit::getRadius(double velocity) const {
-     return params_.radius.clamp(std::max(0.0, velocity));
+    return params_.radius.clamp(std::max(0.0, velocity));
 }
 
 Result PurePursuit::operator()(
-        const geom::Localization& localization,
-        const motion::Trajectory& trajectory) {
+    const geom::Localization& localization, const motion::Trajectory& trajectory) {
     const auto& states = trajectory.states;
     if (states.empty()) {
         return Result(Command::stop());
@@ -79,12 +76,10 @@ Result PurePursuit::operator()(
     const double velocity = [&] {
         for (size_t i = index; i < states.size(); ++i) {
             if ((states[i].time - states[index].time) > params_.period.count()) {
-                std::cerr << "i=" << i << states[i].velocity << std::endl;
                 return states[i].velocity;
             }
         }
 
-        std::cerr << "back=" << states.back().velocity << std::endl;
         return states.back().velocity;
     }();
 
@@ -94,22 +89,17 @@ Result PurePursuit::operator()(
     }
 
     const double radius = getRadius(localization.velocity);
-    const auto it = std::find_if(states.begin(), states.end(),
-        [&](const auto& s) {
-            return geom::distance(s.pose.pos, localization.pose.pos) < radius;
-        }
-    );
+    const auto it = std::find_if(states.begin(), states.end(), [&](const auto& s) {
+        return geom::distance(s.pose.pos, localization.pose.pos) < radius;
+    });
 
     if (it == states.end()) {
         return Result(Error::kUnreachablePath);
     }
 
-    auto goal_it = std::find_if(
-        it, states.end() - 1,
-        [&](const auto& s) {
-            return geom::distance(s.pose.pos, localization.pose.pos) > radius;
-        }
-    );
+    auto goal_it = std::find_if(it, states.end() - 1, [&](const auto& s) {
+        return geom::distance(s.pose.pos, localization.pose.pos) > radius;
+    });
 
     const auto goal = goal_it->pose.pos;
     const auto variant = geom::tryBuildArc(localization.pose, goal);

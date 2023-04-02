@@ -1,5 +1,4 @@
 launch:
-
 - node:
     pkg: "realsense2_camera"
     exec: "realsense2_camera_node"
@@ -19,7 +18,7 @@ launch:
     - {name: "depth_moduel.profile", value: "848x480x30"}
 
     - {name: "enable_accel", value: True}
-    - {name: "accel_fps", value: 400}
+    - {name: "accel_fps", value: 200}
 
     - {name: "enable_gyro", value: True}
     - {name: "gyro_fps", value: 200}
@@ -33,4 +32,3 @@ launch:
     - {name: "enable_infra", value: False}
     - {name: "enable_infra1", value: False}
     - {name: "enable_infra2", value: False}
-

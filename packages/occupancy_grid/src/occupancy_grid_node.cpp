@@ -15,8 +15,8 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
 
     params_ = {this->declare_parameter("resolution", 0.1), this->declare_parameter("radius", 20.0)};
 
-    RCLCPP_INFO(this->get_logger(), "resolution %f", params_.resolution);
-    RCLCPP_INFO(this->get_logger(), "radius %f", params_.radius);
+    RCLCPP_INFO(this->get_logger(), "resolution: %.2fm", params_.resolution);
+    RCLCPP_INFO(this->get_logger(), "radius: %.2fm", params_.radius);
 
     scan_slot_ = create_subscription<sensor_msgs::msg::LaserScan>(
         "/lidar/scan",

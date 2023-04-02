@@ -283,7 +283,6 @@
       <sensor type="imu" name="imu">
         <always_on>true</always_on>
         <update_rate>200</update_rate>
-        <visualize>true</visualize>
         <plugin name="GazeboRosImuSensor" filename="libgazebo_ros_imu_sensor.so">
           <frame_name>camera_imu_optical_frame</frame_name>
           <initial_orientation_as_reference>false</initial_orientation_as_reference>
@@ -297,34 +296,34 @@
           <angular_velocity>
             <x>
               <noise type="gaussian">
-                <stddev>0.01</stddev>
+                <stddev>0.00000000000001</stddev>
               </noise>
             </x>
             <y>
               <noise type="gaussian">
-                <stddev>0.01</stddev>
+                <stddev>0.0000000000001</stddev>
               </noise>
             </y>
             <z>
               <noise type="gaussian">
-                <stddev>0.01</stddev>
+                <stddev>0.000000000001</stddev>
               </noise>
             </z>
           </angular_velocity>
           <linear_acceleration>
             <x>
               <noise type="gaussian">
-                <stddev>0.01</stddev>
+                <stddev>0.0000001</stddev>
               </noise>
             </x>
             <y>
               <noise type="gaussian">
-                <stddev>0.01</stddev>
+                <stddev>0.0000001</stddev>
               </noise>
             </y>
             <z>
               <noise type="gaussian">
-                <stddev>0.01</stddev>
+                <stddev>0.0000001</stddev>
               </noise>
             </z>
           </linear_acceleration>

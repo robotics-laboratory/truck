@@ -58,7 +58,7 @@ void throwIfAccelerationViolated(const model::Model& model, const Trajectory& tr
     }
 }
 
-inline bool eq(double a, double b, double e) { return std::abs(a - b) < e; }
+inline bool eq(double a, double b, double e=1e-6) { return std::abs(a - b) < e; }
 
 void throwIfInvalidDistance(const Trajectory& trajectory) {
     if (trajectory.empty()) {
@@ -91,42 +91,52 @@ void throwIfInvalidTime(const Trajectory& trajectory) {
         return;
     }
 
-    VERIFY_FMT(
-        trajectory.states.front().time == 0,
-        "First state has non-zero time: %f",
-        trajectory.states.front().time);
+    const auto& front = trajectory.states.front();
+    VERIFY_FMT(front.time == 0, "First state has non-zero time: %f", front.time);
+
+    if (front.collision) {
+        VERIFY_FMT(eq(front.velocity, .0),
+            "First state is a collision but has non-zero velocity: %f", front.velocity);
+
+        VERIFY_FMT(eq(front.acceleration, .0),
+            "First state is a collision but has non-zero acceleration: %f", front.acceleration);
+    }
 
     for (size_t i = 1; i < trajectory.size(); ++i) {
         const auto& prev = trajectory[i - 1];
         const auto& state = trajectory[i];
 
-        VERIFY_FMT(
-            state.time > prev.time,
-            "State %i has non-increasing time: %f <= %f",
-            i,
-            state.time,
-            prev.time);
+        if (std::isinf(state.time)) {
+            VERIFY_FMT(state.collision,
+                "State %i has infinite time, but is not a collision", i);
+
+            VERIFY_FMT(state.velocity == .0,
+                "State %i has non-zero velocity %f",  i, state.velocity);
+
+            VERIFY_FMT(state.acceleration == .0,
+                "State %i has non-zero acceleration %f", i, state.acceleration);
+
+            continue;
+        }
+
+        VERIFY_FMT(prev.time < state.time,
+            "State %i has non-increasing time: %f -> %f",
+            i, prev.time, state.time);
 
         const double dt = state.time - prev.time;
 
         const double expected_distance = state.distance - prev.distance;
         const double distance = dt * prev.velocity + 0.5 * dt * dt * prev.acceleration;
 
-        VERIFY_FMT(
-            eq(distance, expected_distance, 1e-3),
+        VERIFY_FMT(eq(distance, expected_distance, 1e-3),
             "State %i has incorrect velocity: %f != %f",
-            i,
-            distance,
-            expected_distance);
+            i, distance, expected_distance);
 
         const double expected_velocity = prev.velocity + prev.acceleration * dt;
 
-        VERIFY_FMT(
-            eq(state.velocity, expected_velocity, 1e-3),
+        VERIFY_FMT(eq(state.velocity, expected_velocity, 1e-3),
             "State %i has incorrect velocity: %f != %f",
-            i,
-            state.velocity,
-            expected_velocity);
+            i, state.velocity, expected_velocity);
     }
 }
 
