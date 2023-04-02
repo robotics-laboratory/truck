@@ -3,12 +3,14 @@
 #include "waypoint_follower/waypoint_follower.h"
 
 #include "collision/collision_checker.h"
+#include "geom/localization.h"
+#include "model/model.h"
+#include "truck_interfaces/msg/trajectory.hpp"
 #include "truck_interfaces/msg/waypoints.hpp"
 
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
-#include <nav_msgs/msg/path.hpp>
 #include <std_srvs/srv/empty.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
@@ -21,12 +23,13 @@
 
 namespace truck::waypoint_follower {
 
+using namespace std::chrono_literals;
+
 class WaypointFollowerNode : public rclcpp::Node {
+  public:
+    WaypointFollowerNode();
 
-public:
-  WaypointFollowerNode();
-
-private:
+  private:
     void onWaypoint(geometry_msgs::msg::PointStamped::SharedPtr msg);
     void onOdometry(nav_msgs::msg::Odometry::SharedPtr msg);
     void onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg);
@@ -36,7 +39,7 @@ private:
         const std_srvs::srv::Empty::Request::SharedPtr,
         std_srvs::srv::Empty::Response::SharedPtr);
 
-    void publishPath();
+    void publishTrajectory();
     void publishGridCostMap();
     void publishWaypoints();
     void publishFullState();
@@ -45,7 +48,7 @@ private:
         const std::string& source, const std::string& target);
 
     struct Parameters {
-        std::chrono::milliseconds period{100};
+        std::chrono::duration<double> period = 0.1s;
         double safety_margin = 0.3;
         double distance_before_obstacle = 1.0;
     } params_;
@@ -67,20 +70,23 @@ private:
     } slot_;
 
     struct Signals {
-        rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path = nullptr;
         rclcpp::Publisher<truck_interfaces::msg::Waypoints>::SharedPtr waypoints = nullptr;
         rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr distance_transform = nullptr;
+        rclcpp::Publisher<truck_interfaces::msg::Trajectory>::SharedPtr trajectory = nullptr;
     } signal_;
 
     struct State {
         nav_msgs::msg::Odometry::SharedPtr odometry = nullptr;
+        std::optional<geom::Localization> localization = std::nullopt;
         nav_msgs::msg::OccupancyGrid::SharedPtr grid = nullptr;
         std::shared_ptr<collision::Map> distance_transform = nullptr;
+        double scheduled_velocity = 0;
     } state_;
 
+    std::unique_ptr<model::Model> model_ = nullptr;
     std::unique_ptr<WaypointFollower> follower_ = nullptr;
     std::unique_ptr<collision::StaticCollisionChecker> checker_ = nullptr;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
 };
 
-} // namespace truck::waypoint_follower
+}  // namespace truck::waypoint_follower

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/assert.hpp>
+#include "common/exception.h"
 
 #include <algorithm>
 #include <cmath>
@@ -8,7 +8,9 @@
 namespace truck {
 
 template<typename T>
-inline T abs(const T& x) { return std::abs(x); }
+inline T abs(const T& x) {
+    return std::abs(x);
+}
 
 template<typename T>
 inline double squared(const T& x) {
@@ -20,7 +22,7 @@ T clamp(const T& val, const T& low, const T& high) {
     return std::clamp(val, low, high);
 }
 
-template <typename T>
+template<typename T>
 T clamp(const T& val, const T& abs_limit) {
     return clamp(val, -abs_limit, abs_limit);
 }
@@ -29,7 +31,7 @@ template<class T>
 struct Limits {
     Limits() = default;
 
-    Limits(const T& min, const T& max) : min(min), max(max) { BOOST_VERIFY(min <= max); }
+    Limits(const T& min, const T& max) : min(min), max(max) { VERIFY(min <= max); }
 
     bool isMet(const T& x) const { return min <= x && x <= max; }
 
@@ -43,12 +45,18 @@ struct Limits {
 };
 
 template<class Int, class Float>
-Int ceil(Float value) { return static_cast<Int>(std::ceil(value)); }
+Int ceil(Float value) {
+    return static_cast<Int>(std::ceil(value));
+}
 
 template<class Int, class Float>
-Int floor(Float value) { return static_cast<Int>(std::floor(value)); }
+Int floor(Float value) {
+    return static_cast<Int>(std::floor(value));
+}
 
-template <class Int, class Float>
-Int round(Float value) { return static_cast<Int>(std::round(value)); }
+template<class Int, class Float>
+Int round(Float value) {
+    return static_cast<Int>(std::round(value));
+}
 
 }  // namespace truck

@@ -2,7 +2,7 @@
 
 namespace truck::geom {
 
-Vec2 toVec2(const geometry_msgs::msg::Point& p) {return {p.x, p.y}; }
+Vec2 toVec2(const geometry_msgs::msg::Point& p) { return {p.x, p.y}; }
 
 Vec2 toVec2(const geometry_msgs::msg::PointStamped& p) { return toVec2(p.point); }
 
@@ -20,9 +20,7 @@ Angle toYawAngle(const geometry_msgs::msg::Quaternion& q) { return toAngle(q); }
 
 Vec2 toYawDir(const geometry_msgs::msg::Quaternion& q) { return Vec2(toYawAngle(q)); }
 
-Pose toPose(const geometry_msgs::msg::Pose& p) {
-    return Pose{toVec2(p), toYawDir(p.orientation)};
-}
+Pose toPose(const geometry_msgs::msg::Pose& p) { return Pose{toVec2(p), toYawDir(p.orientation)}; }
 
 Pose toPose(const nav_msgs::msg::Odometry& odom) { return toPose(odom.pose.pose); }
 
@@ -34,6 +32,10 @@ Transform toTransform(const geometry_msgs::msg::Transform& t) {
 
 Transform toTransform(const geometry_msgs::msg::TransformStamped& t) {
     return toTransform(t.transform);
+}
+
+Localization toLocalization(const nav_msgs::msg::Odometry& odom) {
+    return Localization{.pose = toPose(odom), .velocity = toVec2(odom.twist.twist.linear).len()};
 }
 
 namespace msg {
@@ -59,9 +61,7 @@ geometry_msgs::msg::Quaternion toQuaternion(const geom::Angle& a) {
     return msg;
 }
 
-geometry_msgs::msg::Quaternion toQuaternion(const geom::Vec2& v) {
-    return toQuaternion(v.angle());
-}
+geometry_msgs::msg::Quaternion toQuaternion(const geom::Vec2& v) { return toQuaternion(v.angle()); }
 
 geometry_msgs::msg::Pose toPose(const geom::Pose& p) {
     geometry_msgs::msg::Pose msg;
@@ -72,7 +72,8 @@ geometry_msgs::msg::Pose toPose(const geom::Pose& p) {
     return msg;
 }
 
-geometry_msgs::msg::PoseStamped toPoseStamped(const std_msgs::msg::Header& header, const geom::Pose& p) {
+geometry_msgs::msg::PoseStamped toPoseStamped(
+    const std_msgs::msg::Header& header, const geom::Pose& p) {
     geometry_msgs::msg::PoseStamped msg;
 
     msg.header = header;
@@ -81,5 +82,5 @@ geometry_msgs::msg::PoseStamped toPoseStamped(const std_msgs::msg::Header& heade
     return msg;
 }
 
-} // namespace msg
-} // namespace truck::geom
+}  // namespace msg
+}  // namespace truck::geom

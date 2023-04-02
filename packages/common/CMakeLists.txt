@@ -2,32 +2,45 @@ cmake_minimum_required(VERSION 3.5)
 project(common)
 
 find_package(ament_cmake REQUIRED)
-find_package(Boost REQUIRED)
+
+set(CMAKE_CXX_STANDARD 20)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-add_library(${PROJECT_NAME} SHARED src/empty.cpp)
-ament_target_dependencies(common Boost)
+add_library(
+    ${PROJECT_NAME} SHARED
+    src/format.cpp
+)
+
+ament_target_dependencies(${PROJECT_NAME})
 
 target_include_directories(
-  common PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+    ${PROJECT_NAME} PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-ament_export_targets(commonTargets HAS_LIBRARY_TARGET)
-ament_export_dependencies(Boost)
+ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
+# ament_export_dependencies(...)
 
 install(
-  TARGETS common
-  EXPORT commonTargets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+    TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}Targets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
 )
 
 install(
-  DIRECTORY include/
-  DESTINATION include/common
+    DIRECTORY include/
+    DESTINATION include/${PROJECT_NAME}
 )
+
+if(BUILD_TESTING)
+    find_package(ament_cmake_clang_format REQUIRED)
+    ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+
+    find_package(ament_cmake_gtest REQUIRED)
+    add_subdirectory("tests")
+endif()
 
 ament_package()

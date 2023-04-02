@@ -12,12 +12,14 @@
   <depend>common</depend>
   <depend>geom</depend>
   <depend>collision</depend>
-  <depend>nav_msgs</depend>
-  <depend>truck_interfaces</depend>
   <depend>model</depend>
+  <depend>motion</depend>
+  <depend>nav_msgs</depend>
   <depend>rclcpp</depend>
+  <depend>speed</depend>
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
+  <depend>truck_interfaces</depend>
   
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

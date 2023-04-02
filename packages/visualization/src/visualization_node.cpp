@@ -35,6 +35,8 @@ VisualizationNode::VisualizationNode()
         .target_width = this->declare_parameter("target/width", 0.2),
         .waypoints_z_lev = this->declare_parameter("waypoints/z_lev", 2.0),
         .waypoints_radius = this->declare_parameter("waypoints/radius", 0.2),
+        .trajectory_z_lev = this->declare_parameter("trajectory/z_lev", 0.0),
+        .trajectory_width = this->declare_parameter("trajectory/width", 0.4),
     };
 
     slot_.mode = Node::create_subscription<truck_interfaces::msg::ControlMode>(
@@ -57,6 +59,11 @@ VisualizationNode::VisualizationNode()
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleOdometry, this, _1));
 
+    slot_.trajectory = Node::create_subscription<truck_interfaces::msg::Trajectory>(
+        "/motion/trajectory",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleTrajectory, this, _1));
+
     signal_.ego = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/ego",
         rclcpp::QoS(1).reliability(qos));
@@ -71,6 +78,10 @@ VisualizationNode::VisualizationNode()
 
     signal_.target = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/target",
+        rclcpp::QoS(1).reliability(qos));
+
+    signal_.trajectory = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/visualization/trajectory",
         rclcpp::QoS(1).reliability(qos));
 }
 
@@ -103,7 +114,60 @@ std_msgs::msg::ColorRGBA VisualizationNode::velocityToColor(double velocity) con
         return abs(v_min) > 0  ? (velocity / v_min) : 0.0;
     }();
 
-    return color::plasma(ratio);
+    return color::plasma(1 - ratio);
+}
+
+void VisualizationNode::handleTrajectory(truck_interfaces::msg::Trajectory::ConstSharedPtr msg) {
+    publishTrajectory(*msg);
+}
+
+void VisualizationNode::publishTrajectory(const truck_interfaces::msg::Trajectory& trajectory) const {
+    visualization_msgs::msg::Marker msg;
+    msg.header = trajectory.header;
+    msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+
+    msg.scale.x = 1.0;
+    msg.scale.y = 1.0;
+    msg.scale.z = 1.0;
+
+    msg.points.reserve(trajectory.states.size()*6);
+    msg.colors.reserve(trajectory.states.size()*6);
+
+    const double w = params_.trajectory_width / 2.0;
+    const auto& states = trajectory.states;
+
+    bool collision = false;
+    for (size_t i = 1; i < states.size(); ++i) {
+        const geom::Segment segment(
+            geom::toVec2(trajectory.states[i-1].pose.position),
+            geom::toVec2(states[i].pose.position));
+
+        collision |= states[i].collision;
+        const auto color = collision ? color::gray() : velocityToColor(states[i].velocity);
+
+        const auto right = segment.dir().right();
+
+        auto add = [&](const geom::Vec2& p) {
+            auto point = geom::msg::toPoint(p);
+            point.z = params_.trajectory_z_lev;
+
+            msg.points.push_back(point);
+            msg.colors.push_back(color);
+        };
+
+        // first
+        add(segment.begin + right * w);
+        add(segment.end + right * w);
+        add(segment.begin - right * w);
+
+        //second
+        add(segment.begin - right * w);
+        add(segment.end - right * w);
+        add(segment.end + right * w);
+    }
+
+    signal_.trajectory->publish(msg);
 }
 
 void VisualizationNode::handleMode(truck_interfaces::msg::ControlMode::ConstSharedPtr msg) {

@@ -2,21 +2,19 @@
 #include "geom/common.h"
 
 #include "common/math.h"
-
-#include <boost/assert.hpp>
+#include "common/exception.h"
 
 #include <iostream>
 
 namespace truck::geom {
 
-std::variant<std::monostate, Segment, Arc> tryBuildArc(const Pose& from, const Vec2& to) {
-    constexpr double eps = 1e-3;
-
+std::variant<std::monostate, Segment, Arc> tryBuildArc(
+    const Pose& from, const Vec2& to, double eps) {
     const Vec2 chord = to - from.pos;
     const double len = chord.len();
 
     if (len < eps) {
-        return Segment{from.pos, from.pos};
+        return std::monostate();
     }
 
     const Vec2 chord_dir = chord / len;
@@ -35,26 +33,18 @@ std::variant<std::monostate, Segment, Arc> tryBuildArc(const Pose& from, const V
     const double radius = len / (2 * std::abs(cross_prod));
     const Vec2 radius_dir = cross_prod > 0 ? from.dir.left() : from.dir.right();
 
-    return Arc(
-        from.pos + radius * radius_dir,
-        radius,
-        -radius_dir,
-        2 * atan(cross_prod, dot_prod)
-    );
+    return Arc(from.pos + radius * radius_dir, radius, -radius_dir, 2 * atan(cross_prod, dot_prod));
 }
 
 std::ostream& operator<<(std::ostream& os, const Arc& arc) {
     os << "arc("
-       << "c=" << arc.center
-       << " r=" << arc.radius
-       << " b=" << arc.begin
-       << " d=" << arc.delta
+       << "c=" << arc.center << " r=" << arc.radius << " b=" << arc.begin << " d=" << arc.delta
        << ")";
     return os;
 }
 
 Poses Arc::trace(double step) const {
-    BOOST_ASSERT(step > 0);
+    VERIFY(step > 0);
 
     const size_t n = 1 + ceil<size_t>(len() / step);
     const Angle angle_step = delta / n;
@@ -74,4 +64,4 @@ Poses Arc::trace(double step) const {
     return poses;
 }
 
-} // namespace truck::geom
+}  // namespace truck::geom

@@ -1,14 +1,12 @@
 #include "geom/bezue.h"
 
+#include "common/exception.h"
 #include "common/math.h"
-
-#include <boost/assert.hpp>
-
 
 namespace truck::geom {
 
 Poses bezue1(const Vec2& p0, const Vec2& p1, size_t n) {
-    BOOST_ASSERT(n > 2);
+    VERIFY(n > 2);
 
     const Vec2 dir = (p1 - p0).unit();
 
@@ -29,7 +27,7 @@ Poses bezue1(const Vec2& p0, const Vec2& p1, size_t n) {
 }
 
 Poses bezue1(const Vec2& p0, const Vec2& p1, double step) {
-    BOOST_ASSERT(step > 0);
+    VERIFY(step > 0);
 
     const double dist = (p1 - p0).len();
     const size_t n = 1 + ceil<size_t>(dist / step);
@@ -37,7 +35,7 @@ Poses bezue1(const Vec2& p0, const Vec2& p1, double step) {
 }
 
 Poses bezue2(const Vec2& p0, const Vec2& p1, const Vec2& p2, size_t n) {
-    BOOST_ASSERT(n > 2);
+    VERIFY(n > 2);
 
     const Vec2 dir10 = (p1 - p0).unit();
     const Vec2 dir21 = (p2 - p1).unit();
@@ -47,7 +45,7 @@ Poses bezue2(const Vec2& p0, const Vec2& p1, const Vec2& p2, size_t n) {
 
     poses.emplace_back(p0, dir10);
 
-    for (size_t i = 1; i < n-1; ++i) {
+    for (size_t i = 1; i < n - 1; ++i) {
         const double t = double(i) / (n - 1);
         const double t_1 = 1 - t;
 
@@ -63,7 +61,7 @@ Poses bezue2(const Vec2& p0, const Vec2& p1, const Vec2& p2, size_t n) {
 }
 
 Poses bezue2(const Vec2& p0, const Vec2& p1, const Vec2& p2, double step) {
-    BOOST_ASSERT(step > 0);
+    VERIFY(step > 0);
 
     const double dist = (p1 - p0).len() + (p2 - p1).len();
     const size_t n = 1 + ceil<size_t>(dist / step);
@@ -71,7 +69,7 @@ Poses bezue2(const Vec2& p0, const Vec2& p1, const Vec2& p2, double step) {
 }
 
 Poses bezue3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, size_t n) {
-    BOOST_ASSERT(n > 2);
+    VERIFY(n > 2);
 
     const Vec2 dir10 = (p1 - p0).unit();
     const Vec2 dir21 = (p2 - p1).unit();
@@ -101,11 +99,11 @@ Poses bezue3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, siz
 }
 
 Poses bezue3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, double step) {
-    BOOST_ASSERT(step > 0);
+    VERIFY(step > 0);
 
     const double dist = (p1 - p0).len() + (p2 - p1).len() + (p3 - p2).len();
     const size_t n = 1 + ceil<size_t>(dist / step);
     return bezue3(p0, p1, p2, p3, n);
 }
 
-} // namespace truck::geom
+}  // namespace truck::geom

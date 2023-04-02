@@ -3,6 +3,7 @@
 #include "model/model.h"
 #include "truck_interfaces/msg/control.hpp"
 #include "truck_interfaces/msg/control_mode.hpp"
+#include "truck_interfaces/msg/trajectory.hpp"
 #include "truck_interfaces/msg/waypoints.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
@@ -28,14 +29,19 @@ class VisualizationNode : public rclcpp::Node {
 
         double waypoints_z_lev = 0.0;
         double waypoints_radius = 0.0;
+
+        double trajectory_z_lev = 0.0;
+        double trajectory_width = 0.0;
     };
 
   private:
+    void handleTrajectory(truck_interfaces::msg::Trajectory::ConstSharedPtr trajectory);
     void handleControl(truck_interfaces::msg::Control::ConstSharedPtr control);
     void handleMode(truck_interfaces::msg::ControlMode::ConstSharedPtr msg);
     void handleWaypoints(truck_interfaces::msg::Waypoints::ConstSharedPtr msg);
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
 
+    void publishTrajectory(const truck_interfaces::msg::Trajectory& trajectory) const;
     void publishEgo() const;
     void publishArc() const;
     void publishTarget() const;
@@ -54,6 +60,7 @@ class VisualizationNode : public rclcpp::Node {
     } state_;
 
     struct Slots {
+        rclcpp::Subscription<truck_interfaces::msg::Trajectory>::SharedPtr trajectory = nullptr;
         rclcpp::Subscription<truck_interfaces::msg::Control>::SharedPtr control = nullptr;
         rclcpp::Subscription<truck_interfaces::msg::ControlMode>::SharedPtr mode = nullptr;
         rclcpp::Subscription<truck_interfaces::msg::Waypoints>::SharedPtr waypoints = nullptr;
@@ -62,6 +69,7 @@ class VisualizationNode : public rclcpp::Node {
     } slot_;
 
     struct Signals {
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr trajectory = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target = nullptr;

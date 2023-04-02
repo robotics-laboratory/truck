@@ -7,7 +7,7 @@
 namespace truck::geom {
 
 struct Pose {
-    Pose(const Vec2& pos, const Vec2& dir): pos(pos), dir(dir) {}
+    Pose(const Vec2& pos, const Vec2& dir) : pos(pos), dir(dir) {}
 
     operator Vec2() const { return pos; }
 
@@ -15,6 +15,8 @@ struct Pose {
     Vec2 dir;
 };
 
+Pose interpolate(const Pose& a, const Pose& b, double t) noexcept;
+
 using Poses = std::vector<Pose>;
 
-} // namespace truck::geom
+}  // namespace truck::geom

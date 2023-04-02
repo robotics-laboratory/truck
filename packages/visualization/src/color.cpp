@@ -13,6 +13,14 @@ std_msgs::msg::ColorRGBA make(float r, float g, float b, float a) {
     return color;
 }
 
+std_msgs::msg::ColorRGBA white(float alpha) {
+    return make(1.0, 1.0, 1.0, alpha);
+}
+
+std_msgs::msg::ColorRGBA gray(float alpha) {
+    return make(0.5, 0.5, 0.5, alpha);
+}
+
 std_msgs::msg::ColorRGBA red(float alpha) {
     return make(1.0, 0.0, 0.0, alpha);
 }
@@ -59,24 +67,6 @@ std_msgs::msg::ColorRGBA plasma(float x, float alpha) {
         color.r = 1;
         color.g = 1 + 4 * (0.75 - x);
         color.b = 0;
-    }
-
-    return color;
-}
-
-std_msgs::msg::ColorRGBA spring(float x, float aplha) {
-    std_msgs::msg::ColorRGBA color;
-
-    color.a = aplha;
-
-    if (x < 0.5) {
-        color.r = 1;
-        color.g = 2 * x;
-        color.b = 1;
-    } else {
-        color.r = 2 * (1 - x);
-        color.g = 1;
-        color.b = 2 * (1 - x);
     }
 
     return color;

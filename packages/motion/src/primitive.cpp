@@ -1,5 +1,4 @@
-#include "geom/motion.h"
-
+#include "motion/primitive.h"
 #include "geom/bezue.h"
 
 namespace truck::geom {
@@ -15,4 +14,4 @@ Poses findMotion(const Pose& from, const Pose& to, double gamma, double step) {
     return bezue3(from.pos, from_ref, to_ref, to.pos, step);
 }
 
-} // namespace truck::geom
+}  // namespace truck::geom
