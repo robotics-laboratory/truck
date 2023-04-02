@@ -1,0 +1,35 @@
+# readingDataPointsFilters:
+#   - RandomSamplingDataPointsFilter:
+#       prob: 1.0
+
+# referenceDataPointsFilters:
+#   - RandomSamplingDataPointsFilter:
+#       prob: 1.0
+  # - SamplingSurfaceNormalDataPointsFilter:
+  #    knn: 5
+
+outlierFilters:
+  - TrimmedDistOutlierFilter:
+      ratio: 0.8
+
+matcher:
+  KDTreeMatcher:
+    knn: 1
+    epsilon: 0 
+
+errorMinimizer:
+  PointToPlaneErrorMinimizer
+
+transformationCheckers:
+  - CounterTransformationChecker:
+      maxIterationCount: 30
+  # - DifferentialTransformationChecker:
+  #     minDiffRotErr: 0.001
+  #     minDiffTransErr: 0.005
+  #     smoothLength: 3
+
+inspector:
+  NullInspector
+
+logger:
+  NullLogger

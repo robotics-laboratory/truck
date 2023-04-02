@@ -3,29 +3,16 @@ launch:
 - arg: {name: "simulation", default: "false"}
 - arg: {name: "qos", default: "0"}
 
-- node:
-    pkg: "rtabmap_ros"
-    exec: "icp_odometry"
-    name: "icp_odometry"
-    namespace: "rtabmap"
-    output: "log"
-    remap:
-    - {from: "scan", to: "/lidar/scan"}
-    param:
+- arg: {name: "localization", default: "false"}
+
+- let: {name: "args", value: "--delete_db_on_start", unless: "$(var localization)"}
+- let: {name: "args", value: "", if: "$(var localization)"}
+
+- include:
+    file: $(find-pkg-share icp_odometry)/launch/icp_odometry.yaml
+    arg:
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "qos", value: "$(var qos)"}
-    - {name: "frame_id", value: "base"}
-    - {name: "guess_frame_id", value: "odom_ekf"}
-    - {name: "odom_frame_id", value: "odom"}
-    - {name: "queue_size", value: 1} 
-    - {name: "publish_tf", value: True}
-    - {name: "scan_cloud_max_points", value: 64000}
-    - {name: "wait_imu_to_init", value: False} 
-    - {name: "Odom/Strategy", value: "1"}
-    - {name: "Odom/ResetCountdown", value: "25"}
-    - {name: "Odom/Holonomic", value: "false"}
-    - {name: "Icp/Strategy", value: "1"}
-    - {name: "Icp/PointToPlane", value: "true"}
 
 - node:
     pkg: "robot_localization"
@@ -33,90 +20,127 @@ launch:
     name: "ekf_node"
     namespace: "ekf"
     output: "log"
-    remap:
-    - {from: "cmd_vel", to: "/control/twist"}
     param:
     - {name: "use_sim_time", value: "$(var simulation)"}
-    - {name: "debug", value: True}
-    - {name: "frequency", value: 25.0}
+    - {name: "qos", value: "$(var qos)"}
+    - {name: "use_control", value: False}
+
+    - {name: "frequency", value: 30.0}
     - {name: "sensor_timeout", value: 0.3}
-    - {name: "two_d_mode", value: False}
     - {name: "world_frame", value: "odom_ekf"}
     - {name: "odom_frame", value: "odom_ekf"}
     - {name: "base_link_frame", value: "base"}
     - {name: "publish_tf", value: True}
     - {name: "publish_acceleration", value: False}
-    - {name: "control_timeout", value: 0.5}
     - {name: "predict_to_current_time", value: True}
+    # - {name: "smooth_lagged_data", value: True}
+    # - {name: "dynamic_process_noise_covariance", value: True}
+    # - {name: "history_length", value: 1.0}
 
     - {name: "imu0", value: "/camera/imu"}
-    - {name: "imu0_queue_size", value: 1}
+    - {name: "imu0_queue_size", value: 30}
     - {name: "imu0_remove_gravitational_acceleration", value: False}
     - {name: "imu0_config", value: [
-            False, False, False,
-            False, False, False,
-            False, False, False,
-            False, True, False,
-            False, False, False
+            False, False, False, # pos
+            False, False, False, # rot
+            False, False, False, # pos`
+            False, True, False,  # rot`
+            True, False, True  # pos``
         ]
     }
 
-    - {name: "odom0", value: "/rtabmap/odom"}
-    - {name: "odom0_differential", value: True}
+    - {name: "odom0", value: "/odometry/odom"}
+    - {name: "odom0_differential", value: False}
     - {name: "odom0_queue_size", value: 1}
     - {name: "odom0_config", value: [
-            True, True, False,
-            False, False, False,
-            False, False, False,
-            False, False, False,
-            False, False, False,
+            False, False, False,   # pos
+            False, False, False,   # rot
+            True, False, False,    # pos`
+            False, False, True,    # rot`
+            False, False, False,   # pos``
         ]
     }
 
-    - {name: "use_control", value: True}
-    - {name: "control_timeout", value: 0.5}
-    - {name: "control_config", value: [
-            True, False, False,
-            False, False, True
+    - {name: "dynamic_process_noise_covariance", value: False}
+
+    - {name: "process_noise_covariance", value:
+        [
+            0.1,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.1,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.1,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+           
+            0.0,    0.0,    0.0,    0.0001,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0001,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0001,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+           
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0000001,  0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0000001,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0000001, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.001, 0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.001, 0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.001, 0.0,    0.0,    0.0,
+
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.000000000001,  0.0,   0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.000000000001,  0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.000000000001
         ]
     }
 
-    # - {name: "process_noise_covariance", value:
+    # - {name: "initial_estimate_covariance", value:
     #     [
     #         0.0001,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
     #         0.0,    0.0001,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
     #         0.0,    0.0,    0.0001,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+           
     #         0.0,    0.0,    0.0,    0.0001,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
     #         0.0,    0.0,    0.0,    0.0,    0.0001,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
     #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0001,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0001,   0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0001,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0001,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0001,   0.0,    0.0,    0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0001,   0.0,    0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0001,   0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0001,   0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0001,   0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0001
+           
+    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0000001,  0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0000001,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0000001, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+
+    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.001, 0.0,    0.0,    0.0,    0.0,    0.0,
+    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.001, 0.0,    0.0,    0.0,    0.0,
+    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.001, 0.0,    0.0,    0.0,
+
+    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.1,  0.0,   0.0,
+    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.1,  0.0,
+    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.1
     #     ]
     # }
 
-    # - {name: "initial_estimate_covariance", value:
-    #     [
-    #         0.2,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.2,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.2,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.2,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.2,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.2,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.2,   0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.2,   0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.2,   0.0,     0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.2,    0.0,     0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.2,    0.0,     0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.2,    0.0,    0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.2,   0.0,    0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.2,   0.0,
-    #         0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.2
-    #     ]
-    # }
+
+# - node:
+#     pkg: "rtabmap_ros"
+#     exec: "rtabmap"
+#     name: "rtabmap"
+#     namespace: "rtabmap"
+#     output: "log"
+#     remap:
+#     - {from: "scan", to: "/lidar/scan"}
+#     - {from: "odom", to: "/ekf/odometry/filtered"}
+#     param:
+#     - {name: "args", value: "$(var args)"}
+#     - {name: "use_sim_time", value: "$(var simulation)"}
+#     - {name: "qos_scan", value: "$(var qos)"}
+#     - {name: "subscribe_depth", value: False}
+#     - {name: "approx_sync", value: False}
+#     - {name: "subscribe_rgb", value: False}
+#     - {name: "subscribe_scan", value: True}
+#     - {name: "frame_id", value: "base"}
+#     - {name: "odom_frame_id", value: "odom"}
+#     - {name: "map_frame_id", value: "world"}
+#     - {name: "Grid/CellSize", value: "0.1"}
+#     - {name: "Grid/3D", value: "false"}
+#     - {name: "Grid/RangeMin", value: "0.10"}
+#     - {name: "Grid/RangeMax", value: "30.0"}
+    # - {name: "Grid/RayTracing", value: "true"}
+    # - {name: "Grid/Sensor", value: "0"}
+    # - {name: "Icp/Strategy", value: "1"}
+    # - {name: "Icp/DownsamplingStep", value: "1.0"}
+    # - {name: "Icp/PointToPlane", value: "true"}
+    # - {name: "Icp/Force4DoF", value: "true"}
+
+

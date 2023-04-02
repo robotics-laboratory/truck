@@ -27,6 +27,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/Trajectory.msg
   msg/TrajectoryState.msg
   msg/Waypoints.msg
+  msg/HardwareStatus.msg
+  msg/HardwareTelemetry.msg
+  msg/IcpOdometryStat.msg
   DEPENDENCIES
   builtin_interfaces
   geometry_msgs

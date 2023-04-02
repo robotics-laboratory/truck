@@ -59,4 +59,7 @@ Int round(Float value) {
     return static_cast<Int>(std::round(value));
 }
 
+template<class Int, class Float>
+Int round(Float value) { return static_cast<Int>(std::round(value)); }
+
 }  // namespace truck

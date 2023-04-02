@@ -35,4 +35,9 @@ launch:
     - {name: "simulation", value: "true"}
     - {name: "qos", value: "2"}
 - include:
+    file: $(find-pkg-share occupancy_grid)/launch/occupancy_grid.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+    - {name: "qos", value: "2"}
+- include:
     file: $(find-pkg-share truck)/launch/rosbridge.yaml

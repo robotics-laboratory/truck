@@ -13,7 +13,9 @@
   <depend>ros_environment</depend>
 
   <depend>control_proxy</depend>
+  <depend>icp_odometry</depend>
   <depend>hardware_node</depend>
+  <depend>occupancy_grid</depend>
   <depend>pure_pursuit</depend>
   <depend>truck_gazebo</depend>
   <depend>truck_gazebo_plugins</depend>
