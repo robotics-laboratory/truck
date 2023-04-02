@@ -3,7 +3,7 @@
 #include "geom/pose.h"
 #include "model/model.h"
 
-#include "truck_interfaces/msg/trajectory.hpp"
+#include "truck_msgs/msg/trajectory.hpp"
 
 namespace truck::motion {
 
@@ -40,17 +40,17 @@ struct Trajectory {
     States states = {};
 };
 
-State toState(const truck_interfaces::msg::TrajectoryState& state);
-States toStates(const std::vector<truck_interfaces::msg::TrajectoryState>& states);
-Trajectory toTrajectory(const truck_interfaces::msg::Trajectory& trajectory);
+State toState(const truck_msgs::msg::TrajectoryState& state);
+States toStates(const std::vector<truck_msgs::msg::TrajectoryState>& states);
+Trajectory toTrajectory(const truck_msgs::msg::Trajectory& trajectory);
 
 namespace msg {
 
-truck_interfaces::msg::TrajectoryState toTrajectoryState(const State& state);
+truck_msgs::msg::TrajectoryState toTrajectoryState(const State& state);
 
-truck_interfaces::msg::Trajectory toTrajectory(const Trajectory& trajectory);
+truck_msgs::msg::Trajectory toTrajectory(const Trajectory& trajectory);
 
-truck_interfaces::msg::Trajectory toTrajectory(
+truck_msgs::msg::Trajectory toTrajectory(
     const std_msgs::msg::Header& header, const Trajectory& trajectory);
 
 }  // namespace msg

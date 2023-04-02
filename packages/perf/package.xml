@@ -11,7 +11,7 @@
   <exec_depend>ros2launch</exec_depend>
 
   <depend>rclcpp</depend>
-  <depend>truck_interfaces</depend>
+  <depend>truck_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

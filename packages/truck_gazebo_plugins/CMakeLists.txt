@@ -9,7 +9,7 @@ find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
-find_package(truck_interfaces REQUIRED)
+find_package(truck_msgs REQUIRED)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
@@ -26,7 +26,7 @@ ament_export_libraries(truck_gazebo_odometry)
 add_library(truck_gazebo_ackermann_model SHARED src/ackermann_model.cpp)
 
 target_include_directories(truck_gazebo_ackermann_model PUBLIC include)
-ament_target_dependencies(truck_gazebo_ackermann_model common gazebo_dev gazebo_ros model truck_interfaces rclcpp yaml-cpp)
+ament_target_dependencies(truck_gazebo_ackermann_model common gazebo_dev gazebo_ros model truck_msgs rclcpp yaml-cpp)
 target_link_libraries(truck_gazebo_ackermann_model yaml-cpp)
 ament_export_libraries(truck_gazebo_ackermann_model)
 
@@ -40,7 +40,7 @@ ament_export_include_directories(include)
 # ament_target_dependencies(truck_gazebo_occupancy_grid gazebo_dev gazebo_ros  nav_msgs rclcpp)
 # ament_export_libraries(truck_gazebo_occupancy_grid)
 
-ament_export_dependencies(common gazebo_dev gazebo_ros model truck_interfaces rclcpp yaml-cpp)
+ament_export_dependencies(common gazebo_dev gazebo_ros model truck_msgs rclcpp yaml-cpp)
 
 install(
   DIRECTORY include/

@@ -13,7 +13,7 @@
   <depend>geom</depend>
   <depend>geometry_msgs</depend>
   <depend>model</depend>
-  <depend>truck_interfaces</depend>
+  <depend>truck_msgs</depend>
 
   <test_depend>ament_cmake_clang_format</test_depend>
 

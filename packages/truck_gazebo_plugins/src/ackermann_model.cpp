@@ -89,8 +89,8 @@ void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
               << std::endl;
     }
 
-    command_slot_ = node_->create_subscription<truck_interfaces::msg::Control>(
-        "/control/command", 1, [this](truck_interfaces::msg::Control::ConstSharedPtr command) {
+    command_slot_ = node_->create_subscription<truck_msgs::msg::Control>(
+        "/control/command", 1, [this](truck_msgs::msg::Control::ConstSharedPtr command) {
             std::lock_guard lock(mutex_);
             command_ = std::move(command);
         });

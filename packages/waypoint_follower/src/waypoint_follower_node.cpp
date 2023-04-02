@@ -67,12 +67,12 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
     timer_.main = this->create_wall_timer(
         params_.period, std::bind(&WaypointFollowerNode::publishFullState, this));
 
-    signal_.waypoints = this->create_publisher<truck_interfaces::msg::Waypoints>("/waypoints", 10);
+    signal_.waypoints = this->create_publisher<truck_msgs::msg::Waypoints>("/waypoints", 10);
     signal_.distance_transform =
         this->create_publisher<nav_msgs::msg::OccupancyGrid>("/grid/distance_transform", 1);
 
     signal_.trajectory =
-        this->create_publisher<truck_interfaces::msg::Trajectory>("/motion/trajectory", 10);
+        this->create_publisher<truck_msgs::msg::Trajectory>("/motion/trajectory", 10);
 
     follower_ = std::make_unique<WaypointFollower>(WaypointFollower::Parameters{
         .resolution = this->declare_parameter("resolution", 0.05),
@@ -100,7 +100,7 @@ void WaypointFollowerNode::publishWaypoints() {
         return;
     }
 
-    truck_interfaces::msg::Waypoints waypoints_msg;
+    truck_msgs::msg::Waypoints waypoints_msg;
     waypoints_msg.header = state_.odometry->header;
 
     for (const auto& waypoint : follower_->waypoints()) {

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "model/model.h"
-#include "truck_interfaces/msg/control.hpp"
-#include "truck_interfaces/msg/control_mode.hpp"
-#include "truck_interfaces/msg/trajectory.hpp"
-#include "truck_interfaces/msg/waypoints.hpp"
+#include "truck_msgs/msg/control.hpp"
+#include "truck_msgs/msg/control_mode.hpp"
+#include "truck_msgs/msg/trajectory.hpp"
+#include "truck_msgs/msg/waypoints.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
@@ -35,18 +35,18 @@ class VisualizationNode : public rclcpp::Node {
     };
 
   private:
-    void handleTrajectory(truck_interfaces::msg::Trajectory::ConstSharedPtr trajectory);
-    void handleControl(truck_interfaces::msg::Control::ConstSharedPtr control);
-    void handleMode(truck_interfaces::msg::ControlMode::ConstSharedPtr msg);
-    void handleWaypoints(truck_interfaces::msg::Waypoints::ConstSharedPtr msg);
+    void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr trajectory);
+    void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
+    void handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg);
+    void handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg);
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
 
-    void publishTrajectory(const truck_interfaces::msg::Trajectory& trajectory) const;
+    void publishTrajectory(const truck_msgs::msg::Trajectory& trajectory) const;
     void publishEgo() const;
     void publishArc() const;
     void publishTarget() const;
     void publishControl() const;
-    void publishWaypoints(const truck_interfaces::msg::Waypoints& waypoints) const;
+    void publishWaypoints(const truck_msgs::msg::Waypoints& waypoints) const;
 
     std_msgs::msg::ColorRGBA velocityToColor(double speed) const;
 
@@ -54,16 +54,16 @@ class VisualizationNode : public rclcpp::Node {
     model::Model model_;
 
     struct State {
-        truck_interfaces::msg::ControlMode::ConstSharedPtr mode = nullptr;
-        truck_interfaces::msg::Control::ConstSharedPtr control = nullptr;
+        truck_msgs::msg::ControlMode::ConstSharedPtr mode = nullptr;
+        truck_msgs::msg::Control::ConstSharedPtr control = nullptr;
         nav_msgs::msg::Odometry::ConstSharedPtr odom = nullptr;
     } state_;
 
     struct Slots {
-        rclcpp::Subscription<truck_interfaces::msg::Trajectory>::SharedPtr trajectory = nullptr;
-        rclcpp::Subscription<truck_interfaces::msg::Control>::SharedPtr control = nullptr;
-        rclcpp::Subscription<truck_interfaces::msg::ControlMode>::SharedPtr mode = nullptr;
-        rclcpp::Subscription<truck_interfaces::msg::Waypoints>::SharedPtr waypoints = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::Trajectory>::SharedPtr trajectory = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::ControlMode>::SharedPtr mode = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::Waypoints>::SharedPtr waypoints = nullptr;
         // foxglove has twitching if publish ego pose in base frame, use odom for smoother result!
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
     } slot_;

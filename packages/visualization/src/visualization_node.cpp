@@ -39,17 +39,17 @@ VisualizationNode::VisualizationNode()
         .trajectory_width = this->declare_parameter("trajectory/width", 0.4),
     };
 
-    slot_.mode = Node::create_subscription<truck_interfaces::msg::ControlMode>(
+    slot_.mode = Node::create_subscription<truck_msgs::msg::ControlMode>(
         "/control/mode",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleMode, this, _1));
 
-    slot_.control = Node::create_subscription<truck_interfaces::msg::Control>(
+    slot_.control = Node::create_subscription<truck_msgs::msg::Control>(
         "/control/command",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleControl, this, _1));
 
-    slot_.waypoints = Node::create_subscription<truck_interfaces::msg::Waypoints>(
+    slot_.waypoints = Node::create_subscription<truck_msgs::msg::Waypoints>(
         "/waypoints",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleWaypoints, this, _1));
@@ -59,7 +59,7 @@ VisualizationNode::VisualizationNode()
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleOdometry, this, _1));
 
-    slot_.trajectory = Node::create_subscription<truck_interfaces::msg::Trajectory>(
+    slot_.trajectory = Node::create_subscription<truck_msgs::msg::Trajectory>(
         "/motion/trajectory",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleTrajectory, this, _1));
@@ -95,7 +95,7 @@ void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr o
 namespace {
 
 std_msgs::msg::ColorRGBA modeToColor(
-    const truck_interfaces::msg::ControlMode::ConstSharedPtr& mode) {
+    const truck_msgs::msg::ControlMode::ConstSharedPtr& mode) {
     return color::make(*mode);
 }
 
@@ -117,11 +117,11 @@ std_msgs::msg::ColorRGBA VisualizationNode::velocityToColor(double velocity) con
     return color::plasma(1 - ratio);
 }
 
-void VisualizationNode::handleTrajectory(truck_interfaces::msg::Trajectory::ConstSharedPtr msg) {
+void VisualizationNode::handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr msg) {
     publishTrajectory(*msg);
 }
 
-void VisualizationNode::publishTrajectory(const truck_interfaces::msg::Trajectory& trajectory) const {
+void VisualizationNode::publishTrajectory(const truck_msgs::msg::Trajectory& trajectory) const {
     visualization_msgs::msg::Marker msg;
     msg.header = trajectory.header;
     msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
@@ -170,7 +170,7 @@ void VisualizationNode::publishTrajectory(const truck_interfaces::msg::Trajector
     signal_.trajectory->publish(msg);
 }
 
-void VisualizationNode::handleMode(truck_interfaces::msg::ControlMode::ConstSharedPtr msg) {
+void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg) {
     state_.mode = std::move(msg);
     publishEgo();
 }
@@ -305,7 +305,7 @@ void VisualizationNode::publishTarget() const {
 }
 
 
-void VisualizationNode::handleControl(truck_interfaces::msg::Control::ConstSharedPtr control) {
+void VisualizationNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr control) {
     if (control->header.frame_id != "base") {
         RCLCPP_WARN(get_logger(), "Expected 'base' frame for cotrol, but got %s. Ignore message!", state_.control->header.frame_id.c_str());
         return;
@@ -315,7 +315,7 @@ void VisualizationNode::handleControl(truck_interfaces::msg::Control::ConstShare
     publishControl();
 }
 
-void VisualizationNode::publishWaypoints(const truck_interfaces::msg::Waypoints& msg) const {
+void VisualizationNode::publishWaypoints(const truck_msgs::msg::Waypoints& msg) const {
     const double size = 2 * params_.waypoints_radius;
 
     visualization_msgs::msg::Marker marker;
@@ -341,7 +341,7 @@ void VisualizationNode::publishWaypoints(const truck_interfaces::msg::Waypoints&
     signal_.waypoints->publish(marker);
 }
 
-void VisualizationNode::handleWaypoints(truck_interfaces::msg::Waypoints::ConstSharedPtr msg) {
+void VisualizationNode::handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg) {
     publishWaypoints(*msg);
 }
 

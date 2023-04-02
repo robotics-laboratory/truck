@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(truck_interfaces)
+project(truck_msgs)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 

@@ -9,8 +9,8 @@
 
 #include "model/model.h"
 
-#include "truck_interfaces/msg/control.hpp"
-#include "truck_interfaces/msg/control_mode.hpp"
+#include "truck_msgs/msg/control.hpp"
+#include "truck_msgs/msg/control_mode.hpp"
 
 #include <chrono>
 #include <cstdint>
@@ -41,13 +41,13 @@ class ControlProxyNode : public rclcpp::Node {
     ControlProxyNode();
 
   private:
-    truck_interfaces::msg::Control makeControlCommand(const sensor_msgs::msg::Joy& joypad_command);
+    truck_msgs::msg::Control makeControlCommand(const sensor_msgs::msg::Joy& joypad_command);
 
-    void publishCommand(const truck_interfaces::msg::Control& command);
+    void publishCommand(const truck_msgs::msg::Control& command);
 
-    geometry_msgs::msg::Twist transformToTwist(const truck_interfaces::msg::Control& command) const;
+    geometry_msgs::msg::Twist transformToTwist(const truck_msgs::msg::Control& command) const;
 
-    void forwardControlCommand(truck_interfaces::msg::Control::ConstSharedPtr command);
+    void forwardControlCommand(truck_msgs::msg::Control::ConstSharedPtr command);
 
     void handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command);
 
@@ -69,21 +69,21 @@ class ControlProxyNode : public rclcpp::Node {
     std::chrono::milliseconds joypad_timeout_{200};
 
     // input
-    rclcpp::Subscription<truck_interfaces::msg::Control>::SharedPtr command_slot_ = nullptr;
+    rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr command_slot_ = nullptr;
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joypad_slot_ = nullptr;
 
     // output
     rclcpp::TimerBase::SharedPtr watchdog_timer_ = nullptr;
     rclcpp::TimerBase::SharedPtr publish_mode_timer_ = nullptr;
-    rclcpp::Publisher<truck_interfaces::msg::Control>::SharedPtr command_signal_ = nullptr;
-    rclcpp::Publisher<truck_interfaces::msg::ControlMode>::SharedPtr mode_signal_ = nullptr;
+    rclcpp::Publisher<truck_msgs::msg::Control>::SharedPtr command_signal_ = nullptr;
+    rclcpp::Publisher<truck_msgs::msg::ControlMode>::SharedPtr mode_signal_ = nullptr;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr twist_signal_ = nullptr;
     rclcpp::Publisher<sensor_msgs::msg::JoyFeedback>::SharedPtr mode_feedback_signal_ = nullptr;
 
     // state
     Mode mode_ = Mode::Off;
     sensor_msgs::msg::Joy::ConstSharedPtr prev_joypad_command_ = nullptr;
-    truck_interfaces::msg::Control::ConstSharedPtr prev_command_ = nullptr;
+    truck_msgs::msg::Control::ConstSharedPtr prev_command_ = nullptr;
 };
 
 }  // namespace truck::control_proxy

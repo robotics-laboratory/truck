@@ -1,6 +1,6 @@
 #pragma once
 
-#include "truck_interfaces/msg/control_mode.hpp"
+#include "truck_msgs/msg/control_mode.hpp"
 
 #include <std_msgs/msg/color_rgba.hpp>
 
@@ -14,7 +14,7 @@ std_msgs::msg::ColorRGBA red(float alpha = 1.0);
 std_msgs::msg::ColorRGBA green(float alpha = 1.0);
 std_msgs::msg::ColorRGBA blue(float alpha = 1.0);
 
-std_msgs::msg::ColorRGBA make(const truck_interfaces::msg::ControlMode& mode);
+std_msgs::msg::ColorRGBA make(const truck_msgs::msg::ControlMode& mode);
 
 std_msgs::msg::ColorRGBA plasma(float x, float alpha = 1.0);
 

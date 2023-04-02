@@ -6,7 +6,7 @@
 #include <gazebo_ros/node.hpp>
 
 #include "model/model.h"
-#include "truck_interfaces/msg/control.hpp"
+#include "truck_msgs/msg/control.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <sdf/sdf.hh>
@@ -57,8 +57,8 @@ class AckermannModelPlugin : public ModelPlugin {
     bool emergency_stop_ = false;
 
     gazebo_ros::Node::SharedPtr node_ = nullptr;
-    truck_interfaces::msg::Control::ConstSharedPtr command_ = nullptr;
-    rclcpp::Subscription<truck_interfaces::msg::Control>::SharedPtr command_slot_ = nullptr;
+    truck_msgs::msg::Control::ConstSharedPtr command_ = nullptr;
+    rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr command_slot_ = nullptr;
 };
 
 }  // namespace gazebo

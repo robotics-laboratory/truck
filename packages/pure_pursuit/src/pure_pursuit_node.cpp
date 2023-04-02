@@ -39,15 +39,15 @@ PurePursuitNode::PurePursuitNode() : Node("pure_pursuit") {
         rclcpp::QoS(1).reliability(qos),
         std::bind(&PurePursuitNode::handleOdometry, this, _1));
 
-    slot_.trajectory = Node::create_subscription<truck_interfaces::msg::Trajectory>(
+    slot_.trajectory = Node::create_subscription<truck_msgs::msg::Trajectory>(
         "/motion/trajectory", 1, std::bind(&PurePursuitNode::handleTrajectory, this, _1));
 
-    signal_.command = Node::create_publisher<truck_interfaces::msg::Control>("/motion/command", 1);
+    signal_.command = Node::create_publisher<truck_msgs::msg::Control>("/motion/command", 1);
 }
 
 void PurePursuitNode::publishCommand() {
     auto toMsg = [this](const Command& cmd) {
-        truck_interfaces::msg::Control msg;
+        truck_msgs::msg::Control msg;
 
         msg.header.frame_id = "base";
         msg.header.stamp = now();
@@ -83,7 +83,7 @@ void PurePursuitNode::publishCommand() {
     signal_.command->publish(toMsg(*result));
 }
 
-void PurePursuitNode::handleTrajectory(truck_interfaces::msg::Trajectory::SharedPtr trajectory) {
+void PurePursuitNode::handleTrajectory(truck_msgs::msg::Trajectory::SharedPtr trajectory) {
     state_.trajectory = motion::toTrajectory(*trajectory);
 }
 

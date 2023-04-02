@@ -2,7 +2,7 @@
 
 #include "perf/stat.h"
 
-#include "truck_interfaces/msg/perf_stat.hpp"
+#include "truck_msgs/msg/perf_stat.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -20,7 +20,7 @@ public:
 private:
     std::optional<Stat> stat_ = {};
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
-    rclcpp::Publisher<truck_interfaces::msg::PerfStat>::SharedPtr stat_signal_ = nullptr;
+    rclcpp::Publisher<truck_msgs::msg::PerfStat>::SharedPtr stat_signal_ = nullptr;
 };
 
 } // namespace truck::perf

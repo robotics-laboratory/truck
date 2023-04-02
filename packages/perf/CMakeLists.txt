@@ -3,13 +3,13 @@ project(perf)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(truck_interfaces REQUIRED)
+find_package(truck_msgs REQUIRED)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 add_executable(perf_stat_node src/node.cpp src/stat.cpp src/main.cpp)
 
-ament_target_dependencies(perf_stat_node rclcpp truck_interfaces)
+ament_target_dependencies(perf_stat_node rclcpp truck_msgs)
 
 target_include_directories(perf_stat_node PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

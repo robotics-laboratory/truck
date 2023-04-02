@@ -74,7 +74,7 @@ ControlProxyNode::ControlProxyNode()
     RCLCPP_INFO(this->get_logger(), "control timeout: %li ms", control_timeout_.count());
 
     // input
-    command_slot_ = Node::create_subscription<truck_interfaces::msg::Control>(
+    command_slot_ = Node::create_subscription<truck_msgs::msg::Control>(
         "/motion/command", 1, std::bind(&ControlProxyNode::forwardControlCommand, this, _1));
 
     joypad_slot_ = Node::create_subscription<sensor_msgs::msg::Joy>(
@@ -92,8 +92,8 @@ ControlProxyNode::ControlProxyNode()
 
     mode_feedback_signal_ =
         Node::create_publisher<sensor_msgs::msg::JoyFeedback>("/joy/set_feedback", 1);
-    mode_signal_ = Node::create_publisher<truck_interfaces::msg::ControlMode>("/control/mode", 1);
-    command_signal_ = Node::create_publisher<truck_interfaces::msg::Control>("/control/command", 1);
+    mode_signal_ = Node::create_publisher<truck_msgs::msg::ControlMode>("/control/mode", 1);
+    command_signal_ = Node::create_publisher<truck_msgs::msg::Control>("/control/command", 1);
     twist_signal_ = Node::create_publisher<geometry_msgs::msg::Twist>("/control/twist", 1);
 
     RCLCPP_INFO(this->get_logger(), "mode: Off");
@@ -116,9 +116,9 @@ void ControlProxyNode::setMode(Mode mode) {
     mode_feedback_signal_->publish(result);
 }
 
-truck_interfaces::msg::Control ControlProxyNode::makeControlCommand(
+truck_msgs::msg::Control ControlProxyNode::makeControlCommand(
     const sensor_msgs::msg::Joy& command) {
-    truck_interfaces::msg::Control result;
+    truck_msgs::msg::Control result;
 
     result.header.stamp = command.header.stamp;
     result.header.frame_id = frame_id_;
@@ -135,7 +135,7 @@ truck_interfaces::msg::Control ControlProxyNode::makeControlCommand(
 }
 
 geometry_msgs::msg::Twist ControlProxyNode::transformToTwist(
-    const truck_interfaces::msg::Control& command) const {
+    const truck_msgs::msg::Control& command) const {
     geometry_msgs::msg::Twist twist;
 
     twist.linear.x = command.velocity;
@@ -161,7 +161,7 @@ void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr
     if (mode_ == Mode::Remote) {
         const auto command = makeControlCommand(*joypad_command);
         publishCommand(command);
-        prev_command_ = std::make_shared<truck_interfaces::msg::Control>(command);
+        prev_command_ = std::make_shared<truck_msgs::msg::Control>(command);
     }
 
     prev_joypad_command_ = std::move(joypad_command);
@@ -177,7 +177,7 @@ bool ControlProxyNode::checkButtonPressed(
 }
 
 void ControlProxyNode::publishMode() {
-    truck_interfaces::msg::ControlMode result;
+    truck_msgs::msg::ControlMode result;
 
     result.header.stamp = now();
     result.header.frame_id = frame_id_;
@@ -188,7 +188,7 @@ void ControlProxyNode::publishMode() {
 
 void ControlProxyNode::publishStop() {
     static const auto stop = [this] {
-        truck_interfaces::msg::Control result;
+        truck_msgs::msg::Control result;
 
         result.header.stamp = now();
         result.header.frame_id = frame_id_;
@@ -233,13 +233,13 @@ void ControlProxyNode::watchdog() {
     }
 }
 
-void ControlProxyNode::publishCommand(const truck_interfaces::msg::Control& command) {
+void ControlProxyNode::publishCommand(const truck_msgs::msg::Control& command) {
     command_signal_->publish(command);
     twist_signal_->publish(transformToTwist(command));
 }
 
 void ControlProxyNode::forwardControlCommand(
-    truck_interfaces::msg::Control::ConstSharedPtr command) {
+    truck_msgs::msg::Control::ConstSharedPtr command) {
     if (mode_ == Mode::Auto) {
         publishCommand(*command);
         prev_command_ = command;

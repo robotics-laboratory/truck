@@ -4,8 +4,8 @@
 
 #include "geom/msg.h"
 #include "model/model.h"
-#include "truck_interfaces/msg/control.hpp"
-#include "truck_interfaces/msg/trajectory.hpp"
+#include "truck_msgs/msg/control.hpp"
+#include "truck_msgs/msg/trajectory.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -24,7 +24,7 @@ class PurePursuitNode : public rclcpp::Node {
   private:
     void publishCommand();
 
-    void handleTrajectory(truck_interfaces::msg::Trajectory::SharedPtr trajectory);
+    void handleTrajectory(truck_msgs::msg::Trajectory::SharedPtr trajectory);
 
     void handleOdometry(nav_msgs::msg::Odometry::SharedPtr odometry);
 
@@ -37,12 +37,12 @@ class PurePursuitNode : public rclcpp::Node {
     } state_;
 
     struct Slots {
-        rclcpp::Subscription<truck_interfaces::msg::Trajectory>::SharedPtr trajectory = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::Trajectory>::SharedPtr trajectory = nullptr;
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
     } slot_;
 
     struct Signals {
-        rclcpp::Publisher<truck_interfaces::msg::Control>::SharedPtr command = nullptr;
+        rclcpp::Publisher<truck_msgs::msg::Control>::SharedPtr command = nullptr;
     } signal_;
 
     std::unique_ptr<PurePursuit> controller_ = nullptr;

@@ -3,7 +3,7 @@
 #include "common/math.h"
 #include "common/exception.h"
 #include "geom/distance.h"
-#include "geom/motion.h"
+#include "motion/primitive.h"
 
 #include <algorithm>
 

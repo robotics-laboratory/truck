@@ -18,12 +18,12 @@ This package provides a ROS node to control robot movement on real (not simulate
 ## Topics
 
 ### Input:
-- `/control/command` — current velocity and steering target ([see here](../truck_interfaces/msg/Control.msg)).
-- `/control/mode` — current mode of operation ([see here](../truck_interfaces/msg/ControlMode.msg)).
+- `/control/command` — current velocity and steering target ([see here](../truck_msgs/msg/Control.msg)).
+- `/control/mode` — current mode of operation ([see here](../truck_msgs/msg/ControlMode.msg)).
     - `OFF` = motion disabled (odrive state = IDLE, motor coils off).
     - `REMOTE` = robot is controlled via remote (gamepad).
     - `AUTO` = robot is controlled programmatically.
 
 ### Output:
-- `/hardware/status` — global status of hardware ([see here](../truck_interfaces/msg/HardwareStatus.msg)). In case of odrive failure, message will contain list of internal error codes. Published with a regular rate = `telemetry_report_rate`, also published immediatly after odrive error occurs.
-- `/hardware/telemetry` — odrive internal metrics, useful for diagnostic ([see here](../truck_interfaces/msg/HardwareTelemetry.msg)). Published with a relatively high rate = `telemetry_report_rate`.
+- `/hardware/status` — global status of hardware ([see here](../truck_msgs/msg/HardwareStatus.msg)). In case of odrive failure, message will contain list of internal error codes. Published with a regular rate = `telemetry_report_rate`, also published immediatly after odrive error occurs.
+- `/hardware/telemetry` — odrive internal metrics, useful for diagnostic ([see here](../truck_msgs/msg/HardwareTelemetry.msg)). Published with a relatively high rate = `telemetry_report_rate`.

@@ -5,7 +5,7 @@ find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(model REQUIRED)
-find_package(truck_interfaces REQUIRED)
+find_package(truck_msgs REQUIRED)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -22,7 +22,7 @@ ament_target_dependencies(
   common
   geom
   model
-  truck_interfaces)
+  truck_msgs)
 
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
@@ -30,7 +30,7 @@ target_include_directories(
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
-ament_export_dependencies(common model truck_interfaces)
+ament_export_dependencies(common model truck_msgs)
 
 install(
   TARGETS ${PROJECT_NAME}

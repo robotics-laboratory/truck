@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>truck_interfaces</name>
+  <name>truck_msgs</name>
   <version>0.0.0</version>
-  <description>truck_interfaces</description>
+  <description>truck_msgs</description>
   <maintainer email="simagin.mail@yandex.ru">Simagin Denis</maintainer>
   <license>MIT</license>
 

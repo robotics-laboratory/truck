@@ -11,9 +11,9 @@ The node publishes all visualization topics. Color encoding for control mode:
 
 ## Topics
 ### Input
-- `/control/mode` [[truck_interfecase/ControlMode](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_interfaces/msg/ControlMode.msg)] - control mode
-- `/control/command` [[truck_interfecase/Control](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_interfaces/msg/Control.msg)] - target of trajectory controller
-- `/waypoints` [[truck_interfecase/Control](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_interfaces/msg/Waypoints.msg)] - target waypoints to pass through
+- `/control/mode` [[truck_interfecase/ControlMode](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_msgs/msg/ControlMode.msg)] - control mode
+- `/control/command` [[truck_interfecase/Control](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_msgs/msg/Control.msg)] - target of trajectory controller
+- `/waypoints` [[truck_interfecase/Control](https://github.com/robotics-laboratory/truck/blob/master/packages/truck_msgs/msg/Waypoints.msg)] - target waypoints to pass through
 - `/ekf/odom/filtered` [[nav_msgs/Odometry](http://docs.ros.org/en/noetic/api/nav_msgs/html/msg/Odometry.html)] - localization in odometric world
 
 ### Output

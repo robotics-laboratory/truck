@@ -172,7 +172,7 @@ State Trajectory::operator()(double time) const {
     };
 }
 
-State toState(const truck_interfaces::msg::TrajectoryState& msg) {
+State toState(const truck_msgs::msg::TrajectoryState& msg) {
     return State{
         .pose = geom::toPose(msg.pose),
         .margin = msg.margin,
@@ -184,7 +184,7 @@ State toState(const truck_interfaces::msg::TrajectoryState& msg) {
     };
 }
 
-States toStates(const std::vector<truck_interfaces::msg::TrajectoryState>& msgs) {
+States toStates(const std::vector<truck_msgs::msg::TrajectoryState>& msgs) {
     States states;
     states.reserve(msgs.size());
     for (const auto& msg : msgs) {
@@ -193,7 +193,7 @@ States toStates(const std::vector<truck_interfaces::msg::TrajectoryState>& msgs)
     return states;
 }
 
-Trajectory toTrajectory(const truck_interfaces::msg::Trajectory& msg) {
+Trajectory toTrajectory(const truck_msgs::msg::Trajectory& msg) {
     return Trajectory{
         .overbraking = msg.overbraking,
         .states = toStates(msg.states),
@@ -202,8 +202,8 @@ Trajectory toTrajectory(const truck_interfaces::msg::Trajectory& msg) {
 
 namespace msg {
 
-truck_interfaces::msg::TrajectoryState toTrajectoryState(const State& state) {
-    truck_interfaces::msg::TrajectoryState msg;
+truck_msgs::msg::TrajectoryState toTrajectoryState(const State& state) {
+    truck_msgs::msg::TrajectoryState msg;
     msg.pose = geom::msg::toPose(state.pose);
     msg.time = state.time;
     msg.distance = state.distance;
@@ -214,9 +214,9 @@ truck_interfaces::msg::TrajectoryState toTrajectoryState(const State& state) {
     return msg;
 }
 
-truck_interfaces::msg::Trajectory toTrajectory(
+truck_msgs::msg::Trajectory toTrajectory(
     const std_msgs::msg::Header& header, const Trajectory& trajectory) {
-    truck_interfaces::msg::Trajectory msg;
+    truck_msgs::msg::Trajectory msg;
 
     msg.header = header;
     msg.overbraking = trajectory.overbraking;

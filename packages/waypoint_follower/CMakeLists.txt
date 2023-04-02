@@ -17,7 +17,7 @@ find_package(std_srvs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
-find_package(truck_interfaces REQUIRED)
+find_package(truck_msgs REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node
@@ -35,7 +35,7 @@ ament_target_dependencies(
     model
     rclcpp
     speed
-    truck_interfaces
+    truck_msgs
     tf2
     tf2_ros
     std_srvs

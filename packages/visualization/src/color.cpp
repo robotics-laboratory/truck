@@ -33,13 +33,13 @@ std_msgs::msg::ColorRGBA blue(float alpha) {
     return make(0.0, 0.0, 1.0, alpha);
 }
 
-std_msgs::msg::ColorRGBA make(const truck_interfaces::msg::ControlMode& mode) {
+std_msgs::msg::ColorRGBA make(const truck_msgs::msg::ControlMode& mode) {
     switch (mode.mode) {
-    case truck_interfaces::msg::ControlMode::OFF:
+    case truck_msgs::msg::ControlMode::OFF:
         return red(0.5);
-    case truck_interfaces::msg::ControlMode::REMOTE:
+    case truck_msgs::msg::ControlMode::REMOTE:
         return blue(0.5);
-    case truck_interfaces::msg::ControlMode::AUTO:
+    case truck_msgs::msg::ControlMode::AUTO:
         return green(0.5);
     default:
         BOOST_ASSERT_MSG(false, "Unknown mode!");

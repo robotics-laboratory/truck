@@ -5,8 +5,8 @@
 #include "collision/collision_checker.h"
 #include "geom/localization.h"
 #include "model/model.h"
-#include "truck_interfaces/msg/trajectory.hpp"
-#include "truck_interfaces/msg/waypoints.hpp"
+#include "truck_msgs/msg/trajectory.hpp"
+#include "truck_msgs/msg/waypoints.hpp"
 
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -70,9 +70,9 @@ class WaypointFollowerNode : public rclcpp::Node {
     } slot_;
 
     struct Signals {
-        rclcpp::Publisher<truck_interfaces::msg::Waypoints>::SharedPtr waypoints = nullptr;
+        rclcpp::Publisher<truck_msgs::msg::Waypoints>::SharedPtr waypoints = nullptr;
         rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr distance_transform = nullptr;
-        rclcpp::Publisher<truck_interfaces::msg::Trajectory>::SharedPtr trajectory = nullptr;
+        rclcpp::Publisher<truck_msgs::msg::Trajectory>::SharedPtr trajectory = nullptr;
     } signal_;
 
     struct State {

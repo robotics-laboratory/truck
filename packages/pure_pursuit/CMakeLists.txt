@@ -9,7 +9,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(model REQUIRED)
 find_package(motion REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(truck_interfaces REQUIRED)
+find_package(truck_msgs REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node
@@ -26,7 +26,7 @@ ament_target_dependencies(
     motion
     nav_msgs
     rclcpp
-    truck_interfaces
+    truck_msgs
     visualization_msgs
 )
 

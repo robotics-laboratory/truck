@@ -13,7 +13,7 @@
   <depend>rclcpp</depend>
   <depend>model</depend>
   <depend>nav_msgs</depend>
-  <depend>truck_interfaces</depend>
+  <depend>truck_msgs</depend>
   <depend>visualization_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
