@@ -1,0 +1,19 @@
+launch:
+- arg:
+    name: "model_config"
+    default: "$(find-pkg-share model)/config/model.yaml"
+- arg:
+    name: "json_path"
+    default: "/truck/packages/planner/data/data.json"
+- node:
+    pkg: "planner"
+    exec: "planner_node"
+    name: "planner_node"
+    output: "log"
+    param:
+    - {name: "model_config", value: "$(var model_config)"}
+    - {name: "json_path", value: "$(var json_path)"}
+    - {name: "width", value: 10}
+    - {name: "height", value: 10}
+    - {name: "resolution", value: 0.2}
+    - {name: "finish_area_radius", value: 1.5}
