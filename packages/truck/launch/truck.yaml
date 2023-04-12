@@ -1,21 +1,18 @@
 launch:
 - arg: {name: "control_name", default: "ps4"}
+
 - include:
    file: $(find-pkg-share truck)/launch/lidar.yaml
+
 - include:
     file: $(find-pkg-share truck)/launch/camera.yaml
-- include:
-    file: $(find-pkg-share truck)/launch/slam.yaml
-- include:
-    file: $(find-pkg-share model)/launch/model_tf.yaml
-- include:
-    file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml
-- include:
-    file: $(find-pkg-share truck)/launch/remote.yaml
-    arg:
-    - {name: "control_name", value: "$(var control_name)"}
-- include:
-    file: $(find-pkg-share visualization)/launch/visualization.yaml
-- include:
-    file: $(find-pkg-share truck)/launch/rosbridge.yaml
 
+- include:
+    file: $(find-pkg-share hardware_node)/launch/hardware_node.yaml
+
+- include:
+    file: $(find-pkg-share truck)/launch/common.yaml
+    arg:
+    - {name: "simulation", value: "false"}
+    - {name: "qos", value: "0"}
+    - {name: "control_name", value: "$(var control_name)"}

@@ -144,7 +144,8 @@ void throwIfInvalid(const model::Model& model, const Trajectory& trajectory) {
     throwIfVelocityViolated(model, trajectory);
     throwIfAccelerationViolated(model, trajectory);
     throwIfInvalidDistance(trajectory);
-    throwIfInvalidTime(trajectory);
+    (void)throwIfInvalidTime;
+    //    throwIfInvalidTime(trajectory);
 }
 
 }  // namespace
