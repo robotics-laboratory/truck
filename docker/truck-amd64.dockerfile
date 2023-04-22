@@ -310,7 +310,6 @@ COPY requirements.txt /tmp/requirements.txt
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
-        bluez \
         htop \
         lldb-${CLANG_VERSION} \
         less \
