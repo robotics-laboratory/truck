@@ -18,7 +18,7 @@ endif()
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 add_library(model SHARED src/params.cpp src/model.cpp)
-ament_target_dependencies(model common geom yaml_cpp_vendor)
+ament_target_dependencies(model common geom rclcpp yaml_cpp_vendor)
 
 target_include_directories(model PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -26,7 +26,7 @@ target_include_directories(model PUBLIC
 )
 
 ament_export_targets(modelTargets HAS_LIBRARY_TARGET)
-ament_export_dependencies(common geom yaml_cpp_vendor)
+ament_export_dependencies(common geom rclcpp yaml_cpp_vendor)
 
 install(
   TARGETS model

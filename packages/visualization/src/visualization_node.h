@@ -24,9 +24,6 @@ class VisualizationNode : public rclcpp::Node {
         double arc_width = 0.0;
         double arc_length = 1.0;
 
-        double target_z_lev = 0.0;
-        double target_width = 0.1;
-
         double waypoints_z_lev = 0.0;
         double waypoints_radius = 0.0;
 
@@ -44,11 +41,10 @@ class VisualizationNode : public rclcpp::Node {
     void publishTrajectory(const truck_msgs::msg::Trajectory& trajectory) const;
     void publishEgo() const;
     void publishArc() const;
-    void publishTarget() const;
     void publishControl() const;
     void publishWaypoints(const truck_msgs::msg::Waypoints& waypoints) const;
 
-    std_msgs::msg::ColorRGBA velocityToColor(double speed) const;
+    std_msgs::msg::ColorRGBA velocityToColor(double speed, double alpha=1.0) const;
 
     Parameters params_;
     model::Model model_;
@@ -72,7 +68,6 @@ class VisualizationNode : public rclcpp::Node {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr trajectory = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc = nullptr;
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr waypoints = nullptr;
     } signal_;
 };
