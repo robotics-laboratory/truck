@@ -39,5 +39,8 @@ launch:
     - {name: "simulation", value: "$(var simulation)"}
     - {name: "qos", value: "$(var qos)"}
 
+# - include:
+#     file: $(find-pkg-share truck)/launch/rosbridge.yaml
+
 - include:
-    file: $(find-pkg-share truck)/launch/rosbridge.yaml
+    file: $(find-pkg-share truck)/launch/bridge.yaml

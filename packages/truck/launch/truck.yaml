@@ -1,5 +1,5 @@
 launch:
-- arg: {name: "control_name", default: "ps4"}
+- arg: {name: "control_name", default: "ipega"}
 
 - include:
    file: $(find-pkg-share truck)/launch/lidar.yaml

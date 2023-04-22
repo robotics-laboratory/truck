@@ -9,6 +9,4 @@ launch:
     output: "log"
     param:
     - {name: "use_sim_time", value: "$(var simulation)"}
-    - {name: "autorepeat_rate", value: 0.0} # disable
-    - {name: "sticky_buttons", value: true}
     - {name: "coalesce_interval_ms", value: 20}

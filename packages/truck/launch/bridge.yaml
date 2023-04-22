@@ -1,0 +1,6 @@
+launch:
+- node:
+    pkg: "foxglove_bridge"
+    exec: "foxglove_bridge"
+    name: "foxglove_bridge"
+    output: "log"

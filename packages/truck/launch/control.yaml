@@ -1,11 +1,11 @@
 launch:
-- arg:
-    name: "simulation"
-    default: "false"
+- arg: { name: "simulation", default: "false" }
+
 - include:
     file: $(find-pkg-share truck)/launch/joy.yaml
     arg:
     - {name: "simulation", value: $(var simulation)}
+
 - include:
     file: $(find-pkg-share control_proxy)/launch/control_proxy.yaml
     arg:

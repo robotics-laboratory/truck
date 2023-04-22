@@ -3,7 +3,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <chrono>
 #include <opencv2/calib3d.hpp>
@@ -36,8 +36,9 @@ ArucoLocalization::ArucoLocalization()
     : rclcpp::Node(kArucoLocalizationNodeName),
       camera_matrix_(kCameraMatrixSize, kCameraMatrixSize, CV_64F),
       dist_coeffs_(1, kDistCoeffsCount, CV_64F),
-      detector_parameters_(cv::aruco::DetectorParameters::create()),
-      marker_dictionary_(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250)),
+      detector_parameters_(cv::makePtr<cv::aruco::DetectorParameters>()),
+      marker_dictionary_(cv::makePtr<cv::aruco::Dictionary>(
+            cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250))),
       coordinator_(kMarkerCount) {
 
     rclcpp::QoS qos(1);
@@ -67,7 +68,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     cv::aruco::detectMarkers(cv_image->image, marker_dictionary_, marker_corners, marker_ids,
                              detector_parameters_, rejected_candidates);
 
-    RCLCPP_INFO(this->get_logger(), "HandleImage detected %d markers", marker_ids.size());
+    RCLCPP_INFO(this->get_logger(), "HandleImage detected %ld markers", marker_ids.size());
 
     std::vector<cv::Vec3d> rvecs, tvecs;
 

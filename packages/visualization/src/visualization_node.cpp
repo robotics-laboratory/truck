@@ -28,15 +28,17 @@ VisualizationNode::VisualizationNode()
 
     params_ = Parameters {
         .ego_z_lev = this->declare_parameter("ego/z_lev", 0.0),
-        .ego_height = this->declare_parameter("ego/height", 0.3),
-        .arc_z_lev = this->declare_parameter("arc/z_lev", 0.4),
-        .arc_width = this->declare_parameter("arc/width", 0.1),
-        .arc_length = this->declare_parameter("arc/length", 0.5),
-        .target_width = this->declare_parameter("target/width", 0.2),
-        .waypoints_z_lev = this->declare_parameter("waypoints/z_lev", 2.0),
-        .waypoints_radius = this->declare_parameter("waypoints/radius", 0.2),
+        .ego_height = this->declare_parameter("ego/height", 0.2),
+
+        .arc_z_lev = this->declare_parameter("arc/z_lev", 0.0),
+        .arc_width = this->declare_parameter("arc/width", 0.06),
+        .arc_length = this->declare_parameter("arc/length", 1.0),
+                
+        .waypoints_z_lev = this->declare_parameter("waypoints/z_lev", 0.50),
+        .waypoints_radius = this->declare_parameter("waypoints/radius", 0.10),
+        
         .trajectory_z_lev = this->declare_parameter("trajectory/z_lev", 0.0),
-        .trajectory_width = this->declare_parameter("trajectory/width", 0.4),
+        .trajectory_width = this->declare_parameter("trajectory/width", 0.12),
     };
 
     slot_.mode = Node::create_subscription<truck_msgs::msg::ControlMode>(
@@ -76,10 +78,6 @@ VisualizationNode::VisualizationNode()
         "/visualization/waypoints",
         rclcpp::QoS(1).reliability(qos));
 
-    signal_.target = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/visualization/target",
-        rclcpp::QoS(1).reliability(qos));
-
     signal_.trajectory = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/trajectory",
         rclcpp::QoS(1).reliability(qos));
@@ -101,8 +99,7 @@ std_msgs::msg::ColorRGBA modeToColor(
 
 } // namespace
 
-
-std_msgs::msg::ColorRGBA VisualizationNode::velocityToColor(double velocity) const {
+std_msgs::msg::ColorRGBA VisualizationNode::velocityToColor(double velocity, double alpha) const {
     const auto [v_min, v_max] = model_.baseVelocityLimits();
     BOOST_ASSERT(v_min <= 0 && 0 < v_max);
 
@@ -114,7 +111,7 @@ std_msgs::msg::ColorRGBA VisualizationNode::velocityToColor(double velocity) con
         return abs(v_min) > 0  ? (velocity / v_min) : 0.0;
     }();
 
-    return color::plasma(1 - ratio);
+    return color::plasma(1 - ratio, alpha);
 }
 
 void VisualizationNode::handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr msg) {
@@ -124,47 +121,25 @@ void VisualizationNode::handleTrajectory(truck_msgs::msg::Trajectory::ConstShare
 void VisualizationNode::publishTrajectory(const truck_msgs::msg::Trajectory& trajectory) const {
     visualization_msgs::msg::Marker msg;
     msg.header = trajectory.header;
-    msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
+    msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
     msg.action = visualization_msgs::msg::Marker::ADD;
 
-    msg.scale.x = 1.0;
-    msg.scale.y = 1.0;
-    msg.scale.z = 1.0;
+    msg.scale.x = params_.trajectory_width;
+    msg.pose.position.z = params_.trajectory_z_lev;
 
-    msg.points.reserve(trajectory.states.size()*6);
-    msg.colors.reserve(trajectory.states.size()*6);
-
-    const double w = params_.trajectory_width / 2.0;
-    const auto& states = trajectory.states;
+    msg.points.reserve(trajectory.states.size());
+    msg.colors.reserve(trajectory.states.size());
 
     bool collision = false;
-    for (size_t i = 1; i < states.size(); ++i) {
-        const geom::Segment segment(
-            geom::toVec2(trajectory.states[i-1].pose.position),
-            geom::toVec2(states[i].pose.position));
+    for (const auto& state: trajectory.states) {
+        collision |= state.collision;
 
-        collision |= states[i].collision;
-        const auto color = collision ? color::gray() : velocityToColor(states[i].velocity);
+        const auto color = collision
+            ? color::gray(0.5)
+            : velocityToColor(state.velocity, 0.5);
 
-        const auto right = segment.dir().right();
-
-        auto add = [&](const geom::Vec2& p) {
-            auto point = geom::msg::toPoint(p);
-            point.z = params_.trajectory_z_lev;
-
-            msg.points.push_back(point);
-            msg.colors.push_back(color);
-        };
-
-        // first
-        add(segment.begin + right * w);
-        add(segment.end + right * w);
-        add(segment.begin - right * w);
-
-        //second
-        add(segment.begin - right * w);
-        add(segment.end - right * w);
-        add(segment.end + right * w);
+        msg.points.push_back(state.pose.position);
+        msg.colors.push_back(color);
     }
 
     signal_.trajectory->publish(msg);
@@ -216,7 +191,6 @@ geom::Poses arcTrace(const geom::Pose& pose, double curvature, double length) {
 
 void VisualizationNode::publishControl() const {
     publishArc();
-    publishTarget();
 }
 
 void VisualizationNode::publishArc() const {
@@ -224,84 +198,41 @@ void VisualizationNode::publishArc() const {
         return;
     }
 
-    constexpr double eps = 1e-6;
+    std_msgs::msg::Header header;
+    header.frame_id = state_.odom->header.frame_id;
+    header.stamp = state_.control->header.stamp;
 
+    constexpr double eps = 1e-3;
     if (std::abs(state_.control->velocity) < eps) {
         visualization_msgs::msg::Marker msg;
-        msg.header.frame_id = state_.odom->header.frame_id;
-        msg.header.stamp = state_.control->header.stamp;
+        msg.header = header;
         msg.action = visualization_msgs::msg::Marker::DELETE;
         signal_.arc->publish(msg);
         return;
     }
 
+    const auto trace = arcTrace(
+        geom::toPose(*state_.odom),
+        state_.control->curvature,
+        params_.arc_length);
+
     visualization_msgs::msg::Marker msg;
-    msg.header.frame_id = state_.odom->header.frame_id;
-    msg.header.stamp = state_.control->header.stamp;
+
+    msg.header = header;
     msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
     msg.action = visualization_msgs::msg::Marker::ADD;
+
     msg.scale.x = params_.arc_width;
-    msg.color = velocityToColor(state_.control->velocity);
+    msg.pose.position.z = params_.arc_z_lev;
 
-    const geom::Pose pose = geom::toPose(*state_.odom);
-    const double curvature = state_.control->curvature;
+    msg.points.reserve(trace.size());
+    msg.color = color::white(0.6);
 
-    for (const auto& point : arcTrace(pose, curvature, params_.arc_length)) {
-        geometry_msgs::msg::Point point_msg = geom::msg::toPoint(point);
-        point_msg.z = params_.arc_z_lev;
-        msg.points.push_back(point_msg);
+    for (const auto& pose: trace) {
+        msg.points.push_back(geom::msg::toPoint(pose.pos));
     }
 
     signal_.arc->publish(msg);
-}
-
-void VisualizationNode::publishTarget() const {
-    if (!state_.odom || !state_.control) {
-        return;
-    }
-
-    if (!state_.control->has_target) {
-        visualization_msgs::msg::Marker msg;
-        msg.header.frame_id = state_.odom->header.frame_id;
-        msg.header.stamp = state_.control->header.stamp;
-        msg.action = visualization_msgs::msg::Marker::DELETE;
-        signal_.target->publish(msg);
-        return;
-    }
-
-    const auto& odom_frame_id = state_.odom->header.frame_id;
-    const auto& target_frame_id = state_.control->target.header.frame_id;
-
-    BOOST_ASSERT(target_frame_id == odom_frame_id);
-
-    visualization_msgs::msg::Marker msg;
-    msg.header.frame_id = odom_frame_id;
-    msg.header.stamp = state_.control->header.stamp;
-    msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
-    msg.action = visualization_msgs::msg::Marker::ADD;
-    msg.scale.x = params_.target_width;
-    msg.color = velocityToColor(state_.control->velocity);
-
-    constexpr geom::Angle arc_angle = 80_deg;
-
-    const geom::Vec2 pos = geom::toVec2(*state_.odom);
-    const geom::Vec2 goal = geom::toVec2(state_.control->target); 
-    const geom::Vec2 dir = goal - pos;
-
-    const geom::Arc arc{
-        pos,
-        dir.len(),
-        dir.unit().rotate(-arc_angle / 2),
-        arc_angle,
-    };
-
-    for (const auto& point : arc.trace(0.05)) {
-        geometry_msgs::msg::Point point_msg = geom::msg::toPoint(point);
-        point_msg.z = params_.target_z_lev;
-        msg.points.push_back(point_msg);
-    }
-
-    signal_.target->publish(msg);
 }
 
 
