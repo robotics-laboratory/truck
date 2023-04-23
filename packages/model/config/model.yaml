@@ -15,7 +15,7 @@ limits:
   velocity: { min: -0.5, max: 0.5 }        # m/s
   acceleration: { min: -1.0, max: +1.0 }   # m/s^2
 
-wheel_radius: 0.055 # m
-# Motor to DIFFERENTIAL ratio. To get motor to WHEEL ratio, multiply by 0.5.
-gear_ratio: 0.105263158
+wheel_radius: 0.0525 # m
+# Motor to differential ratio. See docs/gearbox.md for more info.
+gear_ratio: 0.08421
 servo_home_angles: {left: 89, right: 96}  # deg
