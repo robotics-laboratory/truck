@@ -5,10 +5,11 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(model REQUIRED)
-find_package(OpenCV REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(OpenCV REQUIRED)
 
 add_library(
     ${PROJECT_NAME} SHARED
@@ -16,7 +17,14 @@ add_library(
     src/map.cpp
 )
 
-ament_target_dependencies(collision geom model nav_msgs OpenCV)
+ament_target_dependencies(
+    collision
+    common
+    geom
+    model
+    nav_msgs
+    OpenCV
+)
 
 target_include_directories(
     collision PUBLIC
@@ -24,7 +32,14 @@ target_include_directories(
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 ament_export_targets(collision HAS_LIBRARY_TARGET)
-ament_export_dependencies(model geom model nav_msgs OpenCV)
+
+ament_export_dependencies(
+    common
+    geom
+    model
+    nav_msgs
+    OpenCV
+)
 
 install(
     TARGETS collision

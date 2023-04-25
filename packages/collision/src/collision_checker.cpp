@@ -1,5 +1,7 @@
 #include "collision/collision_checker.h"
 
+#include "common/exception.h"
+
 #include <cstdint>
 
 namespace truck::collision {
@@ -19,7 +21,7 @@ void StaticCollisionChecker::reset(Map disntace_transform) {
 }
 
 double StaticCollisionChecker::distance(const geom::Vec2& point) const {
-    BOOST_ASSERT(initialized());
+    VERIFY(initialized());
     const auto grid_point = state_->tf(point);
 
     // find relevant indices of distance transform matrix
@@ -46,6 +48,5 @@ double StaticCollisionChecker::distance(const geom::Pose& ego_pose) const {
 
     return min_dist;
 }
-
 
 }  // namespace truck::collision
