@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <exec_depend>ros2launch</exec_depend>
 
+  <depend>common</depend>
   <depend>model</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
