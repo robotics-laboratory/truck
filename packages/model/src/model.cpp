@@ -63,7 +63,7 @@ WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
 }
 
 double Model::linearVelocityToMotorRPS(double velocity) const {
-    return velocity / params_.wheel_radius / M_PI / params_.gear_ratio;
+    return velocity / params_.wheel_radius / M_PI / params_.gear_ratio / 2;
 }
 
 double Model::gearRatio() const { return params_.gear_ratio; }

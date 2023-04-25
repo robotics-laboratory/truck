@@ -20,6 +20,8 @@
   <depend>truck_gazebo</depend>
   <depend>truck_gazebo_plugins</depend>
   <depend>visualization</depend>
+  <depend>perf</depend>
+  <depend>video_streaming</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

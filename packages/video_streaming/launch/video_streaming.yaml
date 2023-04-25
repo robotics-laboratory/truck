@@ -1,0 +1,6 @@
+launch:
+- executable:
+    name: "video_streaming"
+    cmd: "mediamtx $(find-pkg-share video_streaming)/mediamtx.yaml"
+    output: "screen"
+    shell: True

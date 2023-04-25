@@ -369,6 +369,11 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export RCUTILS_CONSOLE_OUTPUT_FORMAT='[{severity}:{time}] {message}'\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
 
+### VIDEO STREAMING SERVER (MEDIAMTX)
+
+ARG MEDIAMTX_VERSION="0.22.2"
+RUN wget -qO - https://github.com/aler9/mediamtx/releases/download/v${MEDIAMTX_VERSION}/mediamtx_v${MEDIAMTX_VERSION}_linux_arm64v8.tar.gz | tar -xz -C /usr/bin mediamtx 
+
 ### SETUP ENTRYPOINT
 
 COPY /entrypoint.bash /entrypoint.bash
