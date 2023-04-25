@@ -16,3 +16,9 @@ launch:
     - {name: "simulation", value: "false"}
     - {name: "qos", value: "0"}
     - {name: "control_name", value: "$(var control_name)"}
+
+- include:
+    file: $(find-pkg-share perf)/launch/perf_stat.yaml
+
+- include:
+    file: $(find-pkg-share video_streaming)/launch/video_streaming.yaml

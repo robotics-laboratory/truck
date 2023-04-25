@@ -53,8 +53,7 @@ ControlProxyNode::ControlProxyNode()
         loadControlMap(
             this->get_logger(),
             Node::declare_parameter<std::string>("control_config")))
-    , frame_id_("base")
-    , mode_(Mode::Auto) {
+    , frame_id_("base") {
     RCLCPP_INFO(
         this->get_logger(),
         "max velocity: %f, min velocity: %f",

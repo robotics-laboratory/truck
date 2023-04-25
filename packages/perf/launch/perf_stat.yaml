@@ -4,5 +4,3 @@ launch:
     exec: "perf_stat_node"
     name: "perf_stat_node"
     output: "log"
-- include:
-    file: $(find-pkg-share truck)/launch/rosbridge.yaml
