@@ -8,6 +8,8 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>common</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
 
   <test_depend>ament_cmake_lint_cmake</test_depend>
   <test_depend>ament_cmake_clang_format</test_depend>

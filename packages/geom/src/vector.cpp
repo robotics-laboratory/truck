@@ -1,7 +1,7 @@
 #include "geom/common.h"
 #include "geom/vector.h"
 
-#include <boost/assert.hpp>
+#include "common/exception.h"
 
 #include <iomanip>
 
@@ -20,7 +20,7 @@ geom::Angle angleBetween(const Vec2& a, const Vec2& b) noexcept {
 }
 
 Vec2 interpolate(const Vec2& a, const Vec2& b, double t) noexcept {
-    BOOST_ASSERT(0 <= t && t <= 1);
+    VERIFY(0 <= t && t <= 1);
     return a + (b - a) * t;
 }
 
