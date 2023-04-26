@@ -17,6 +17,8 @@ class TeensyBridge:
     ):
         self._log = logger
         self._serial = serial.Serial(port=serial_port, baudrate=serial_speed)
+        self._serial.reset_input_buffer()
+        self._serial.reset_output_buffer()
         # Steering mapping for RIGHT wheel generated in CAD
         # Column 0 = wheel angle (radians), column 1 = servo angle (radians)
         # Wheel angle (+) = left turn (right wheel moves clockwise, looking from top)

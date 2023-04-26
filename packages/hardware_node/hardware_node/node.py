@@ -3,6 +3,9 @@ import pymodel
 import rclpy
 from rclpy.node import Node
 from truck_msgs.msg import Control, ControlMode, HardwareStatus, HardwareTelemetry
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Vector3
+from functools import cached_property
 
 from hardware_node.teensy import TeensyBridge
 
@@ -63,6 +66,11 @@ class HardwareNode(Node):
         self._telemetry_pub = self.create_publisher(
             HardwareTelemetry,
             "/hardware/telemetry",
+            qos_profile=1,
+        )
+        self._odom_pub = self.create_publisher(
+            Odometry,
+            "/hardware/odom",
             qos_profile=1,
         )
 
@@ -173,14 +181,31 @@ class HardwareNode(Node):
         return errors
 
     def _push_telemetry(self):
+        header = Header(stamp=self.get_clock().now().to_msg(), frame_id="base")
+
         telemetry = HardwareTelemetry(
-            current_velocity=self._axis.encoder.vel_estimate,
-            target_velocity=self._axis.controller.input_vel,
+            header=header,
+            current_rps=self._axis.encoder.vel_estimate,
+            target_rps=self._axis.controller.input_vel,
             battery_voltage=self._odrive.vbus_voltage,
             battery_current=self._odrive.ibus,
         )
-        telemetry.header.stamp = self.get_clock().now().to_msg()
+
         self._telemetry_pub.publish(telemetry)
+
+        vel = self._model.motor_rps_to_linear_velocity(telemetry.current_rps)
+
+        odom = Odometry(header=header)
+        odom.twist.twist.linear = Vector3(x=vel, y=0, z=0)
+        odom.twist.covariance = self._odom_covariance()
+
+        self._odom_pub.publish(odom)
+
+    @cached_property
+    def _odom_covariance(self):
+        matrix = [[0] * 6 for _ in range(6)]
+        matrix[0][0] = 0.0001
+        return matrix
 
     def _get_param(self, name, type, unit=""):
         value = self.get_parameter(name).get_parameter_value()

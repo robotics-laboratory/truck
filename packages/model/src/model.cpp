@@ -66,6 +66,10 @@ double Model::linearVelocityToMotorRPS(double velocity) const {
     return velocity / params_.wheel_radius / M_PI / params_.gear_ratio / 2;
 }
 
+double Model::motorRPStoLinearVelocity(double rps) const {
+    return rps * params_.wheel_radius * M_PI * params_.gear_ratio * 2;
+}
+
 double Model::gearRatio() const { return params_.gear_ratio; }
 
 const Shape& Model::shape() const { return params_.shape; }

@@ -102,5 +102,6 @@ PYBIND11_MODULE(pymodel, m) {
         .def("base_to_rear_twist", &model::Model::baseToRearTwist)
         .def("rear_twist_to_steering", &model::Model::rearTwistToSteering)
         .def("rear_twist_to_wheel_velocity", &model::Model::rearTwistToWheelVelocity)
-        .def("linear_velocity_to_motor_rps", &model::Model::linearVelocityToMotorRPS);
+        .def("linear_velocity_to_motor_rps", &model::Model::linearVelocityToMotorRPS)
+        .def("motor_rps_to_linear_velocity", &model::Model::motorRPStoLinearVelocity);
 }
