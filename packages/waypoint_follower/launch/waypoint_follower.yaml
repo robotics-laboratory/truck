@@ -16,7 +16,7 @@ launch:
     - {name: "period", value: 0.1}
     - {name: "resolution", value: 0.02}
     - {name: "check_in_distance", value: 0.30}
-    - {name: "safety_margin", value: 0.05}
-    - {name: "distance_to_obstacle", value: 1.0}
+    - {name: "safety_margin", value: 0.15}
+    - {name: "distance_to_obstacle", value: 1.5}
     - {name: "acceleration/min", value: -0.5}
     - {name: "acceleration/max", value: 0.3}

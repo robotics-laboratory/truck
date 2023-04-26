@@ -5,6 +5,7 @@
 #include "geom/msg.h"
 #include "model/model.h"
 #include "truck_msgs/msg/control.hpp"
+#include "truck_msgs/msg/pure_pursuit_status.hpp"
 #include "truck_msgs/msg/trajectory.hpp"
 
 #include <rclcpp/rclcpp.hpp>
@@ -45,6 +46,7 @@ class PurePursuitNode : public rclcpp::Node {
 
     struct Signals {
         rclcpp::Publisher<truck_msgs::msg::Control>::SharedPtr command = nullptr;
+        rclcpp::Publisher<truck_msgs::msg::PurePursuitStatus>::SharedPtr status = nullptr;
     } signal_;
 
     std::chrono::duration<double> timeout_{0.20};

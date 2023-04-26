@@ -22,6 +22,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/MetaData.msg
   msg/PerfStat.msg
   msg/Point.msg
+  msg/PurePursuitStatus.msg
   msg/Trajectory.msg
   msg/TrajectoryState.msg
   msg/Waypoints.msg

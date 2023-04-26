@@ -7,7 +7,7 @@
 #include <utility>
 
 using namespace std::literals;
-using std::placeholders::_1;
+using namespace std::placeholders;
 
 namespace truck::control_proxy {
 
@@ -66,6 +66,9 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
 
     RCLCPP_INFO(this->get_logger(), "joypad timeout: %li ms", params_.joypad_timeout.count());
     RCLCPP_INFO(this->get_logger(), "control timeout: %li ms", params_.control_timeout.count());
+
+    service_.reset = this->create_service<std_srvs::srv::Empty>(
+        "/control/reset", std::bind(&ControlProxyNode::onReset, this, _1, _2));
 
     slot_.command = Node::create_subscription<truck_msgs::msg::Control>(
         "/motion/command", 1, std::bind(&ControlProxyNode::forwardControlCommand, this, _1));
@@ -175,6 +178,14 @@ void ControlProxyNode::publishStop() {
     publishCommand(stop);
 }
 
+void ControlProxyNode::reset() {
+    setMode(Mode::Off);
+    state_.prev_joypad_command = nullptr;
+    state_.prev_command = nullptr;
+    publishMode();
+    publishStop();
+}
+
 void ControlProxyNode::watchdog() {
     auto timeout_failed = [this](const auto& msg, const auto& timeout) {
         if (!msg) {
@@ -191,17 +202,13 @@ void ControlProxyNode::watchdog() {
 
     if (state_.mode != Mode::Off && timeout_failed(state_.prev_joypad_command, params_.joypad_timeout)) {
         RCLCPP_ERROR(this->get_logger(), "lost joypad, stop!");
-        setMode(Mode::Off);
-        state_.prev_joypad_command = nullptr;
-        publishStop();
+        reset();
         return;
     }
 
     if (state_.mode == Mode::Auto && timeout_failed(state_.prev_command, params_.control_timeout)) {
         RCLCPP_ERROR(this->get_logger(), "lost control, stop!");
-        setMode(Mode::Off);
-        state_.prev_command = nullptr;
-        publishStop();
+        reset();
         return;
     }
 }
@@ -216,6 +223,13 @@ void ControlProxyNode::forwardControlCommand(
         publishCommand(*command);
         state_.prev_command = command;
     }
+}
+
+void ControlProxyNode::onReset(
+    const std::shared_ptr<std_srvs::srv::Empty::Request>,
+    std::shared_ptr<std_srvs::srv::Empty::Response>) {
+    RCLCPP_WARN(this->get_logger(), "Reset!");
+    reset();
 }
 
 }  // namespace truck::control_proxy

@@ -11,6 +11,7 @@
 
 #include "truck_msgs/msg/control.hpp"
 #include "truck_msgs/msg/control_mode.hpp"
+#include <std_srvs/srv/empty.hpp>
 
 #include <chrono>
 #include <cstdint>
@@ -54,7 +55,12 @@ class ControlProxyNode : public rclcpp::Node {
     bool checkButtonPressed(
         sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button);
 
+    void onReset(
+        const std::shared_ptr<std_srvs::srv::Empty::Request>,
+        std::shared_ptr<std_srvs::srv::Empty::Response>);
+
     void watchdog();
+    void reset();
 
     void setMode(Mode mode);
     void publishMode();
@@ -70,6 +76,10 @@ class ControlProxyNode : public rclcpp::Node {
         std::chrono::milliseconds control_timeout{200};
         std::chrono::milliseconds joypad_timeout{200};
     } params_{};
+
+    struct Services {
+        rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset = nullptr;
+    } service_;
 
     struct Slots {
         rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr command = nullptr;

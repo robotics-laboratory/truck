@@ -17,10 +17,10 @@
 namespace truck::pure_pursuit {
 
 enum class Error : uint8_t {
-    kUnknown,
-    kNoProjection,
-    kUnreachableProjection,
-    kImpossibleBuildArc,
+    kUnknown = 0,
+    kNoProjection = 1,
+    kUnreachableProjection = 2,
+    kImpossibleBuildArc = 3,
 };
 
 std::string_view toString(Error e);

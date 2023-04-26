@@ -6,6 +6,7 @@ find_package(common)
 find_package(model REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 
@@ -22,6 +23,7 @@ ament_target_dependencies(
     model
     rclcpp
     sensor_msgs
+    std_srvs
     truck_msgs
     yaml_cpp_vendor
 )

@@ -4,6 +4,50 @@ namespace truck::pure_pursuit {
 
 using namespace std::placeholders;
 
+namespace {
+
+truck_msgs::msg::PurePursuitStatus toOkStatus(const std_msgs::msg::Header& header) {
+    truck_msgs::msg::PurePursuitStatus status;
+
+    status.header.stamp = header.stamp;
+    status.header.frame_id = "base";
+    status.status = truck_msgs::msg::PurePursuitStatus::OK;
+
+    return status;
+}
+
+truck_msgs::msg::PurePursuitStatus toErrorStatus(const std_msgs::msg::Header& header, Error error) {
+    truck_msgs::msg::PurePursuitStatus status;
+
+    status.header.stamp = header.stamp;
+    status.header.frame_id = "base";
+    status.status = truck_msgs::msg::PurePursuitStatus::ERROR;
+    status.error = static_cast<uint8_t>(error);
+
+    return status;
+}
+
+truck_msgs::msg::PurePursuitStatus toNoLocalizationStatus(const rclcpp::Time t) {
+    truck_msgs::msg::PurePursuitStatus status;
+
+    status.header.stamp = t;
+    status.header.frame_id = "base";
+    status.status = truck_msgs::msg::PurePursuitStatus::NO_LOCALIZATION;
+
+    return status;
+}
+
+truck_msgs::msg::PurePursuitStatus toNoTrajectoryStatus(const std_msgs::msg::Header& header) {
+    truck_msgs::msg::PurePursuitStatus status;
+
+    status.header = header;
+    status.status = truck_msgs::msg::PurePursuitStatus::NO_TRAJECTORY;
+
+    return status;
+}
+
+} // namespace
+
 PurePursuitNode::PurePursuitNode() : Node("pure_pursuit") {
     const auto model =
         model::load(this->get_logger(), Node::declare_parameter<std::string>("model_config"));
@@ -42,6 +86,9 @@ PurePursuitNode::PurePursuitNode() : Node("pure_pursuit") {
         "/motion/trajectory", 1, std::bind(&PurePursuitNode::handleTrajectory, this, _1));
 
     signal_.command = Node::create_publisher<truck_msgs::msg::Control>("/motion/command", 1);
+
+    signal_.status = Node::create_publisher<truck_msgs::msg::PurePursuitStatus>(
+        "/motion/pure_pursuit/status", 1);
 }
 
 void PurePursuitNode::publishCommand() {
@@ -67,21 +114,24 @@ void PurePursuitNode::publishCommand() {
 
     const auto now = this->now();
 
+    const bool has_localization = state_.localization && state_.localization_msg &&
+                                  (now - state_.localization_msg->header.stamp) < timeout_;
+
+    if (!has_localization) {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "missing localization");
+        signal_.command->publish(toMsg(Command::stop()));
+        signal_.status->publish(toNoLocalizationStatus(now));
+
+        return;
+    }
+
     const bool has_trajectory = state_.trajectory
         && state_.trajectory_msg && (now - state_.trajectory_msg->header.stamp) < timeout_;
 
     if (!has_trajectory) {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "missing trajectory");
         signal_.command->publish(toMsg(Command::stop()));
-        return;
-    }
-
-    const bool has_localization =  state_.localization
-        && state_.localization_msg && (now - state_.localization_msg->header.stamp) < timeout_;
-
-    if (!has_localization) {
-        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "missing localization");
-        signal_.command->publish(toMsg(Command::stop()));
+        signal_.status->publish(toNoTrajectoryStatus(state_.localization_msg->header));
         return;
     }
 
@@ -96,10 +146,12 @@ void PurePursuitNode::publishCommand() {
         const auto msg = toString(result.error());
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "%s", msg.data());
         signal_.command->publish(toMsg(Command::stop()));
+        signal_.status->publish(toErrorStatus(state_.localization_msg->header, result.error()));
         return;
     }
 
     signal_.command->publish(toMsg(*result));
+    signal_.status->publish(toOkStatus(state_.localization_msg->header));
 }
 
 void PurePursuitNode::handleTrajectory(truck_msgs::msg::Trajectory::SharedPtr trajectory) {
