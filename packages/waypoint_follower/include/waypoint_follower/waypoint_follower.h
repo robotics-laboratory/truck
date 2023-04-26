@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/math.h"
 #include "geom/pose.h"
 #include "geom/vector.h"
 
@@ -29,14 +30,15 @@ class WaypointFollower {
     struct Parameters {
         double resolution{0.05};
         double check_in_distance{0.1};
+        double min_distance{0.3};
     };
 
     WaypointFollower(const Parameters& params);
 
-    WaypointFollower& addEgoWaypoint(const geom::Pose& ego_pose);
-    WaypointFollower& addWaypoint(const geom::Vec2& waypoint);
-    WaypointFollower& update(const geom::Pose& ego_pose);
-    WaypointFollower& reset();
+    void addEgoWaypoint(const geom::Pose& ego_pose);
+    bool addWaypoint(const geom::Vec2& waypoint);
+    void update(const geom::Pose& ego_pose);
+    void reset();
 
     // Last waypoint may be removed explicitly!
     bool hasWaypoints() const;

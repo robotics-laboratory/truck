@@ -37,17 +37,29 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
     params_ = {
         .period = std::chrono::duration<double>(this->declare_parameter("period", 0.1)),
         .safety_margin = this->declare_parameter("safety_margin", 0.3),
-        .distance_before_obstacle = this->declare_parameter("distance_before_obstacle", 1.0),
     };
 
     RCLCPP_INFO(this->get_logger(), "period: %.2fs", params_.period.count());
     RCLCPP_INFO(this->get_logger(), "safety_margin: %.2fm", params_.safety_margin);
+
+    speed_params_ = {
+        Limits<double>{
+            this->declare_parameter("acceleration/min", -0.5),
+            this->declare_parameter("acceleration/max", 0.3),
+        },
+        this->declare_parameter("distance_to_obstacle", 0.7),
+    };
+
     RCLCPP_INFO(
-        this->get_logger(), "distance_before_obstacle: %.2fm", params_.distance_before_obstacle);
+        this->get_logger(), "distance_to_obstacle: %.2fm", speed_params_.distance_to_obstacle);
+
+    RCLCPP_INFO(
+        this->get_logger(), "acceleration: [%.2f, %.2f]",
+        speed_params_.acceleration.min, speed_params_.acceleration.max);
 
     // TODO: change service name
     service_.reset = this->create_service<std_srvs::srv::Empty>(
-        "/control_demo/reset_path", std::bind(&WaypointFollowerNode::onReset, this, _1, _2));
+        "/reset_path", std::bind(&WaypointFollowerNode::onReset, this, _1, _2));
 
     slot_.odometry = this->create_subscription<nav_msgs::msg::Odometry>(
         "/ekf/odometry/filtered", 1, std::bind(&WaypointFollowerNode::onOdometry, this, _1));
@@ -161,29 +173,41 @@ void WaypointFollowerNode::publishTrajectory() {
     follower_->update(ego_pose);
 
     if (follower_->isReadyToFinish(ego_pose) && isStanding(*state_.odometry)) {
+        RCLCPP_INFO(this->get_logger(), "Path finished!");
         follower_->reset();
     }
 
     checker_->reset(*state_.distance_transform);
 
     motion::Trajectory trajectory = makeTrajectory(follower_->path());
+    bool collision = false;
     for (auto& state : trajectory.states) {
         const double margin = checker_->distance(state.pose);
-        state.collision = margin < params_.safety_margin;
+        collision |= margin < params_.safety_margin;
+
+        state.collision = collision;
         state.margin = margin;
     }
 
-    speed::GreedyPlanner(speed::GreedyPlanner::Parameters{}, *model_)
+    speed::GreedyPlanner(speed_params_, *model_)
         .setScheduledVelocity(state_.scheduled_velocity)
         .fill(trajectory);
 
-    trajectory.throwIfInvalid(*model_);
+    // dirty way to drop invalid trajectories and get error message
+    try {
+        trajectory.throwIfInvalid(motion::TrajectoryValidations::enableAll(), *model_);
+    } catch (const std::exception& e) {
+        RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 5000, "%s", e.what());
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Drop invalid trajectory!");
+
+        trajectory = motion::Trajectory{};
+    }
 
     const double latency = params_.period.count();
     const auto limits = velocityLimits(*model_, state_.localization->velocity, latency);
 
     if (!trajectory.empty()) {
-        const auto scheduled_state = trajectory(latency);
+        const auto scheduled_state = trajectory.byTime(latency);
         state_.scheduled_velocity = limits.clamp(scheduled_state.velocity);
     } else {
         state_.scheduled_velocity = 0.0;
@@ -232,15 +256,18 @@ void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPt
     const auto ego = geom::toPose(*state_.odometry);
     if (!follower_->hasWaypoints()) {
         // always start from current position
-        RCLCPP_INFO(this->get_logger(), "Add esgo waypoint: (%f, %f)", ego.pos.x, ego.pos.y);
+        RCLCPP_INFO(this->get_logger(), "Add ego waypoint (%f, %f)", ego.pos.x, ego.pos.y);
         follower_->addEgoWaypoint(ego);
     }
 
     const auto waypoint = tf_opt->apply(geom::toVec2(*msg));
-    RCLCPP_INFO(this->get_logger(), "Add waypoint: (%f, %f)", waypoint.x, waypoint.y);
-    follower_->addWaypoint(waypoint);
-    follower_->update(ego);
+    if (follower_->addWaypoint(waypoint)) {
+        RCLCPP_INFO(this->get_logger(), "Waypoint (%f, %f) added!", waypoint.x, waypoint.y);
+    } else {
+        RCLCPP_INFO(this->get_logger(), "Waypoint (%f, %f) ignored!", waypoint.x, waypoint.y);
+    }
 
+    follower_->update(ego);
     publishFullState();
 }
 

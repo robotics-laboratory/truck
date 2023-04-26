@@ -57,25 +57,44 @@ void PurePursuitNode::publishCommand() {
 
         msg.has_target = cmd.target.has_value();
         if (cmd.target) {
-            msg.target.header = state_.odometry->header;
+            msg.target.header = state_.localization_msg->header;
             msg.target.point = geom::msg::toPoint(*cmd.target);
         }
 
         return msg;
     };
 
-    const bool has_trajectory = state_.trajectory && !state_.trajectory->states.empty();
-    const bool has_localization = state_.localization && state_.odometry;
 
-    if (!has_trajectory || !has_localization) {
+    const auto now = this->now();
+
+    const bool has_trajectory = state_.trajectory
+        && state_.trajectory_msg && (now - state_.trajectory_msg->header.stamp) < timeout_;
+
+    if (!has_trajectory) {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "missing trajectory");
         signal_.command->publish(toMsg(Command::stop()));
         return;
     }
-    const auto result = controller_->command(*state_.localization, *state_.trajectory);
+
+    const bool has_localization =  state_.localization
+        && state_.localization_msg && (now - state_.localization_msg->header.stamp) < timeout_;
+
+    if (!has_localization) {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "missing localization");
+        signal_.command->publish(toMsg(Command::stop()));
+        return;
+    }
+
+    Result result{Error::kUnknown};
+    try {
+        result = controller_->command(*state_.localization, *state_.trajectory);
+    } catch(const std::exception& e) {
+        RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 5000, "%s", e.what());
+    }
 
     if (!result) {
-        RCLCPP_ERROR_THROTTLE(
-            get_logger(), *get_clock(), 5000, "%s", toString(result.error()).data());
+        const auto msg = toString(result.error());
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "%s", msg.data());
         signal_.command->publish(toMsg(Command::stop()));
         return;
     }
@@ -84,12 +103,13 @@ void PurePursuitNode::publishCommand() {
 }
 
 void PurePursuitNode::handleTrajectory(truck_msgs::msg::Trajectory::SharedPtr trajectory) {
-    state_.trajectory = motion::toTrajectory(*trajectory);
+    state_.trajectory_msg = std::move(trajectory);
+    state_.trajectory = motion::toTrajectory(*state_.trajectory_msg);
 }
 
 void PurePursuitNode::handleOdometry(nav_msgs::msg::Odometry::SharedPtr odometry) {
-    state_.localization = geom::toLocalization(*odometry);
-    state_.odometry = odometry;
+    state_.localization_msg = (odometry);
+    state_.localization = geom::toLocalization(*state_.localization_msg);
 }
 
 }  // namespace truck::pure_pursuit

@@ -67,11 +67,10 @@ uint32_t cutByEgoPose(std::deque<LinkedPose>& points, const geom::Pose& ego_pose
 
 WaypointFollower::WaypointFollower(const Parameters& params) : params_(params) { reset(); }
 
-WaypointFollower& WaypointFollower::reset() {
+void WaypointFollower::reset() {
     state_.wp_seq_id = 0;
     state_.waypoints.clear();
     state_.path.clear();
-    return *this;
 }
 
 bool WaypointFollower::isReadyToFinish(const geom::Pose& ego_pose) const {
@@ -80,36 +79,37 @@ bool WaypointFollower::isReadyToFinish(const geom::Pose& ego_pose) const {
                squared(params_.check_in_distance);
 }
 
-WaypointFollower& WaypointFollower::addEgoWaypoint(const geom::Pose& ego_pose) {
+void WaypointFollower::addEgoWaypoint(const geom::Pose& ego_pose) {
     VERIFY(state_.waypoints.empty());
     VERIFY(state_.path.empty());
 
     state_.waypoints.emplace_back(state_.wp_seq_id, ego_pose.pos);
     state_.path.emplace_back(state_.wp_seq_id, ego_pose);
     ++state_.wp_seq_id;
-
-    return *this;
 }
 
-WaypointFollower& WaypointFollower::addWaypoint(const geom::Vec2& waypoint) {
+bool WaypointFollower::addWaypoint(const geom::Vec2& waypoint) {
     VERIFY(!state_.waypoints.empty());
     VERIFY(!state_.path.empty());
 
     const auto& pose = state_.path.back().pose;
 
-    const double gamma = geom::distance(waypoint, pose.pos) / 2;
-    const auto poses = geom::findMotion(pose, waypoint, gamma, params_.resolution);
+    const double dist = geom::distance(waypoint, pose.pos);
+    if (dist < params_.min_distance) {
+        return false;
+    }
 
+    const auto poses = geom::findMotion(pose, waypoint, dist / 2, params_.resolution);
     state_.waypoints.emplace_back(state_.wp_seq_id, waypoint);
     for (size_t i = 1; i < poses.size(); ++i) {
         state_.path.emplace_back(state_.wp_seq_id, poses[i]);
     }
     ++state_.wp_seq_id;
 
-    return *this;
+    return true;
 }
 
-WaypointFollower& WaypointFollower::update(const geom::Pose& ego_pose) {
+void WaypointFollower::update(const geom::Pose& ego_pose) {
     const uint32_t end_wp_id = cutByEgoPose(state_.path, ego_pose, params_.check_in_distance);
 
     if (end_wp_id != Waypoint::kNoSeqId) {
@@ -118,8 +118,6 @@ WaypointFollower& WaypointFollower::update(const geom::Pose& ego_pose) {
             state_.waypoints.pop_front();
         }
     }
-
-    return *this;
 }
 
 const std::deque<LinkedPose>& WaypointFollower::path() const { return state_.path; }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/math.h"
 #include "model/model.h"
 #include "motion/trajectory.h"
 
@@ -7,11 +8,12 @@ namespace truck::speed {
 
 class GreedyPlanner {
   public:
-    struct Parameters {
+    struct Params {
+        Limits<double> acceleration{-0.5, 0.2};
         double distance_to_obstacle = 0.7;
     };
 
-    GreedyPlanner(const Parameters& params, const model::Model& model);
+    GreedyPlanner(const Params& params, const model::Model& model);
 
     GreedyPlanner& setScheduledVelocity(double scheduled_velocity) {
         const Limits<double> limit{.0, model_.baseVelocityLimits().max};
@@ -31,7 +33,7 @@ class GreedyPlanner {
     void fill(motion::Trajectory& trajectory) const;
 
   private:
-    Parameters params_;
+    Params params_;
     model::Model model_;
     double scheduled_velocity_ = 0.0;
 };

@@ -13,47 +13,18 @@
 
 namespace truck::pure_pursuit {
 
-namespace {
-
-constexpr size_t kNoIdx = -1;
-
-size_t getEgoSegmentIndex(
-    const motion::States& states, const geom::Pose& ego_pose, double max_distance) {
-    double min_distnace_sq = squared(max_distance);
-    size_t ego_segment_idx = kNoIdx;
-
-    for (size_t end = 1; end < states.size(); ++end) {
-        const size_t begin = end - 1;
-
-        const geom::Segment segment = {states[begin].pose.pos, states[end].pose.pos};
-
-        const double distance_sq = geom::distanceSq(ego_pose.pos, segment);
-        // get closest segment
-        if (distance_sq >= min_distnace_sq) {
-            if (ego_segment_idx == kNoIdx) {
-                continue;
-            }
-
-            break;
-        }
-
-        min_distnace_sq = distance_sq;
-        ego_segment_idx = begin;
-    }
-
-    return ego_segment_idx;
-}
-
-}  // namespace
-
 std::string_view toString(Error e) {
     switch (e) {
-        case Error::kUnreachablePath:
-            return "unreachable path";
+        case Error::kUnknown:
+            return "unknown problem";
+        case Error::kNoProjection:
+            return "no projection";
+        case Error::kUnreachableProjection:
+            return "unreachable projection";
         case Error::kImpossibleBuildArc:
             return "impossible build arc";
         default:
-            return "unknown";
+            throw Exception() << "Unknown error code: " << static_cast<uint8_t>(e);
     }
 }
 
@@ -68,44 +39,25 @@ Result PurePursuit::operator()(
         return Result(Command::stop());
     }
 
-    const size_t index = getEgoSegmentIndex(states, localization.pose, params_.max_distance);
-    if (index == kNoIdx) {
-        return Result(Error::kUnreachablePath);
+
+    const auto ego_state = trajectory.byProjection(localization.pose, params_.max_distance);
+    if (!ego_state) {
+        return Result(Error::kNoProjection);
     }
 
-    const double velocity = [&] {
-        for (size_t i = index; i < states.size(); ++i) {
-            if ((states[i].time - states[index].time) > params_.period.count()) {
-                return states[i].velocity;
-            }
-        }
-
-        return states.back().velocity;
-    }();
-
-    const geom::Pose& finish = states.back().pose;
-    if (geom::distance(finish.pos, localization.pose.pos) < params_.tolerance) {
-        return Result(Command::stop());
+    if (!ego_state->reachable()) {
+        return Result(Error::kUnreachableProjection);
     }
 
     const double radius = getRadius(localization.velocity);
-    const auto it = std::find_if(states.begin(), states.end(), [&](const auto& s) {
-        return geom::distance(s.pose.pos, localization.pose.pos) < radius;
-    });
+    const auto goal_state = trajectory.byDistance(ego_state->distance + radius);
 
-    if (it == states.end()) {
-        return Result(Error::kUnreachablePath);
-    }
-
-    auto goal_it = std::find_if(it, states.end() - 1, [&](const auto& s) {
-        return geom::distance(s.pose.pos, localization.pose.pos) > radius;
-    });
-
-    const auto goal = goal_it->pose.pos;
+    const auto goal = goal_state.pose.pos;
     const auto variant = geom::tryBuildArc(localization.pose, goal);
+    const auto scheduled = trajectory.byTime(ego_state->getTime() + params_.period.count());
 
     Command command;
-    command.velocity = velocity;
+    command.velocity = scheduled.velocity;
     command.target = goal;
 
     if (std::holds_alternative<geom::Arc>(variant)) {

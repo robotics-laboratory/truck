@@ -7,6 +7,7 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 find_package(ament_cmake REQUIRED)
 find_package(collision REQUIRED)
+find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(model REQUIRED)
@@ -29,6 +30,7 @@ add_executable(
 ament_target_dependencies(
     ${PROJECT_NAME}_node
     collision
+    common
     geom
     geometry_msgs
     nav_msgs

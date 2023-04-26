@@ -12,12 +12,12 @@ find_package(yaml_cpp_vendor REQUIRED)
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 add_executable(
-    ${RPOJECT_NAME}_node
+    ${PROJECT_NAME}_node
     src/main.cpp
     src/control_proxy_node.cpp)
 
 ament_target_dependencies(
-    ${RPOJECT_NAME}_node
+    ${PROJECT_NAME}_node
     common
     model
     rclcpp
@@ -27,7 +27,7 @@ ament_target_dependencies(
 )
 
 install(
-    TARGETS ${RPOJECT_NAME}_node
+    TARGETS ${PROJECT_NAME}_node
     DESTINATION lib/${PROJECT_NAME})
 
 install(

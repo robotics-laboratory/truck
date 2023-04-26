@@ -5,6 +5,7 @@
 #include "collision/collision_checker.h"
 #include "geom/localization.h"
 #include "model/model.h"
+#include "speed/greedy_planner.h"
 #include "truck_msgs/msg/trajectory.hpp"
 #include "truck_msgs/msg/waypoints.hpp"
 
@@ -49,8 +50,9 @@ class WaypointFollowerNode : public rclcpp::Node {
     struct Parameters {
         std::chrono::duration<double> period = 0.1s;
         double safety_margin = 0.3;
-        double distance_before_obstacle = 1.0;
-    } params_;
+    } params_{};
+
+    speed::GreedyPlanner::Params speed_params_{};
 
     struct Timers {
         rclcpp::TimerBase::SharedPtr main = nullptr;

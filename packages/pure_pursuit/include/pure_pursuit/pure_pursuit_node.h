@@ -31,9 +31,11 @@ class PurePursuitNode : public rclcpp::Node {
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
     struct State {
+        nav_msgs::msg::Odometry::SharedPtr localization_msg = nullptr;
+        truck_msgs::msg::Trajectory::SharedPtr trajectory_msg = nullptr;
+
         std::optional<motion::Trajectory> trajectory = std::nullopt;
         std::optional<geom::Localization> localization = std::nullopt;
-        nav_msgs::msg::Odometry::SharedPtr odometry = nullptr;
     } state_;
 
     struct Slots {
@@ -45,6 +47,7 @@ class PurePursuitNode : public rclcpp::Node {
         rclcpp::Publisher<truck_msgs::msg::Control>::SharedPtr command = nullptr;
     } signal_;
 
+    std::chrono::duration<double> timeout_{0.20};
     std::unique_ptr<PurePursuit> controller_ = nullptr;
 };
 
