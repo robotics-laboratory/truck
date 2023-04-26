@@ -24,8 +24,6 @@ std::unique_ptr<Matcher::ICP> makeICP(rclcpp::Logger logger, const std::string& 
         icp->loadFromYaml(yaml);
     }
 
-    icp->setDefault();
-
     return icp;
 }
 
@@ -43,7 +41,7 @@ TransformationParameters guessTransformation(
     const float dy = odometry->pose.pose.position.y - reference_odometry->pose.pose.position.y;
 
     const geom::Angle dtheta = geom::toYawAngle(odometry->pose.pose.orientation) -
-                               geom::toYawAngle(reference_odometry->pose.pose.orientation);
+                                geom::toYawAngle(reference_odometry->pose.pose.orientation);
 
     // rotation
     t(0, 0) = cos(dtheta);
@@ -61,40 +59,31 @@ TransformationParameters guessTransformation(
 }  // namespace
 
 void IcpOdometryNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odometry) {
-    odometry_ = odometry;
+    state_.odometry = odometry;
 }
 
-IcpOdometryNode::IcpOdometryNode() : Node("icp_odometry_node") {
+IcpOdometryNode::IcpOdometryNode() : Node("icp_odometry") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
     RCLCPP_INFO(this->get_logger(), "qos %d", qos);
 
-    scan_slot_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+    slot_.scan = this->create_subscription<sensor_msgs::msg::LaserScan>(
         "/lidar/scan",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&IcpOdometryNode::handleLaserScan, this, std::placeholders::_1));
 
-    cloud_signal_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/odometry/cloud", 1);
-
-    reference_cloud_signal_ =
-        this->create_publisher<sensor_msgs::msg::PointCloud2>("/odometry/reference", 1);
-
-    transformed_cloud_signal_ =
-        this->create_publisher<sensor_msgs::msg::PointCloud2>("/odometry/transformed", 10);
-
-    odometry_stat_signal_ =
-        this->create_publisher<truck_msgs::msg::IcpOdometryStat>("/odometry/stat", 10);
-
-    odometry_signal_ = this->create_publisher<nav_msgs::msg::Odometry>("/odometry/odom", 10);
-
-    odometry_slot_ = this->create_subscription<nav_msgs::msg::Odometry>(
+    slot_.odometry = this->create_subscription<nav_msgs::msg::Odometry>(
         "/ekf/odometry/filtered",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&IcpOdometryNode::handleOdometry, this, std::placeholders::_1));
 
+    signal_.odometry_stat =
+        this->create_publisher<truck_msgs::msg::IcpOdometryStat>("/odometry/stat", 10);
+
+    signal_.odometry = this->create_publisher<nav_msgs::msg::Odometry>("/odometry/odom", 10);
+
     icp_ = makeICP(this->get_logger(), this->declare_parameter<std::string>("icp_config"));
-    visualize_ = this->declare_parameter<bool>("visualize", false);
 }
 
 truck_msgs::msg::IcpOdometryStat IcpResult::toOdometryStatMsg() const {
@@ -128,15 +117,15 @@ nav_msgs::msg::Odometry IcpResult::toOdometryMsg() const {
     msg.twist.twist.linear.x = v;
     msg.twist.twist.angular.z = std::atan2(t(1, 0), t(0, 0)) / dt;
 
-    constexpr double sigma = 2e-2;
-    constexpr double var = sigma * sigma;
+    const double distance_error = 0.04;
+    const double yaw_error = 0.01;
 
-    msg.twist.covariance[0] = var;
+    msg.twist.covariance[0] = squared(distance_error);
     msg.twist.covariance[7] = 0;
     msg.twist.covariance[14] = 0;
     msg.twist.covariance[21] = 0;
     msg.twist.covariance[28] = 0;
-    msg.twist.covariance[35] = var;
+    msg.twist.covariance[35] = squared(yaw_error);
 
     return msg;
 }
@@ -165,35 +154,22 @@ std::string toStr(const Eigen::Matrix3f& m) {
 
 void IcpOdometryNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstSharedPtr scan) {
     auto cloud = std::make_shared<DataPoints>(toDataPoints(*scan));
-    auto odometry = odometry_;
+    auto odometry = state_.odometry;
 
-    if (reference_cloud_) {
-        const auto init = guessTransformation(reference_odometry_, odometry);
+    if (state_.reference_cloud) {
+        const auto init = guessTransformation(state_.reference_odometry, odometry);
 
-        // RCLCPP_INFO(this->get_logger(), "Init matrix\n: %s", toStr(init).c_str());
+        const auto result = makeIcpStep(
+            scan->header, *cloud, state_.reference_scan->header, *state_.reference_cloud, init);
 
-        const auto result =
-            makeIcpStep(scan->header, *cloud, reference_scan_->header, *reference_cloud_, init);
-
-        // RCLCPP_INFO(this->get_logger(), "Result matrix\n: %s", toStr(result.t).c_str());
-
-        odometry_stat_signal_->publish(result.toOdometryStatMsg());
-        odometry_signal_->publish(result.toOdometryMsg());
-
-        // if (visualize_) {
-        //     DataPoints transformed_cloud(*reference_cloud_);
-        //     icp_->transformations.apply(transformed_cloud, result.t);
-
-        //     cloud_signal_->publish(toPointCloud2(scan->header, icp_->getReadingFiltered()));
-        //     reference_cloud_signal_->publish(toPointCloud2(scan->header, *reference_cloud_));
-        //     transformed_cloud_signal_->publish(toPointCloud2(scan->header, transformed_cloud));
-        // }
+        signal_.odometry_stat->publish(result.toOdometryStatMsg());
+        signal_.odometry->publish(result.toOdometryMsg());
     }
 
-    reference_scan_ = std::move(scan);
-    reference_cloud_ = std::move(cloud);
+    state_.reference_scan = std::move(scan);
+    state_.reference_cloud = std::move(cloud);
     if (odometry) {
-        reference_odometry_ = std::move(odometry);
+        state_.reference_odometry = std::move(odometry);
     }
 }
 

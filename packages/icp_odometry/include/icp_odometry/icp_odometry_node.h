@@ -39,24 +39,24 @@ class IcpOdometryNode : public rclcpp::Node {
 
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom);
 
-    bool visualize_ = false;
+    struct State {
+        nav_msgs::msg::Odometry::ConstSharedPtr odometry = nullptr;
+        sensor_msgs::msg::LaserScan::ConstSharedPtr reference_scan = nullptr;
+        std::shared_ptr<const DataPoints> reference_cloud = nullptr;
+        nav_msgs::msg::Odometry::ConstSharedPtr reference_odometry = nullptr;
+    } state_;
+
+    struct Slots {
+        rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan = nullptr;
+        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
+    } slot_;
+
+    struct Signal {
+        rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
+        rclcpp::Publisher<truck_msgs::msg::IcpOdometryStat>::SharedPtr odometry_stat = nullptr;
+    } signal_;
+
     std::unique_ptr<Matcher::ICP> icp_ = nullptr;
-
-    nav_msgs::msg::Odometry::ConstSharedPtr odometry_ = nullptr;
-
-    sensor_msgs::msg::LaserScan::ConstSharedPtr reference_scan_ = nullptr;
-    std::shared_ptr<const DataPoints> reference_cloud_ = nullptr;
-    nav_msgs::msg::Odometry::ConstSharedPtr reference_odometry_ = nullptr;
-
-    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_slot_ = nullptr;
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_slot_ = nullptr;
-
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_signal_ = nullptr;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr reference_cloud_signal_ = nullptr;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr transformed_cloud_signal_ = nullptr;
-
-    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry_signal_ = nullptr;
-    rclcpp::Publisher<truck_msgs::msg::IcpOdometryStat>::SharedPtr odometry_stat_signal_ = nullptr;
 };
 
 }  // namespace truck::icp_odometry

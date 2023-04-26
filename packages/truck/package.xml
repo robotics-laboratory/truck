@@ -22,6 +22,7 @@
   <depend>visualization</depend>
   <depend>perf</depend>
   <depend>video_streaming</depend>
+  <depend>waypoint_follower</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

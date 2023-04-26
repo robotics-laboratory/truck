@@ -27,9 +27,7 @@ launch:
     - {name: "publish_tf", value: True}
     - {name: "publish_acceleration", value: False}
     - {name: "predict_to_current_time", value: True}
-    # - {name: "smooth_lagged_data", value: True}
-    # - {name: "dynamic_process_noise_covariance", value: True}
-    # - {name: "history_length", value: 1.0}
+    - {name: "dynamic_process_noise_covariance", value: True}
 
     - {name: "imu0", value: "/camera/imu"}
     - {name: "imu0_queue_size", value: 30}
@@ -45,7 +43,7 @@ launch:
 
     - {name: "odom0", value: "/odometry/odom"}
     - {name: "odom0_differential", value: False}
-    - {name: "odom0_queue_size", value: 1}
+    - {name: "odom0_queue_size", value: 30}
     - {name: "odom0_config", value: [
             False, False, False,   # pos
             False, False, False,   # rot
@@ -55,4 +53,36 @@ launch:
         ]
     }
 
-    - {name: "dynamic_process_noise_covariance", value: False}
+    - {name: "odom0", value: "/hardware/odom"}
+    - {name: "odom0_differential", value: False}
+    - {name: "odom0_queue_size", value: 30}
+    - {name: "odom0_config", value: [
+            False, False, False,   # pos
+            False, False, False,   # rot
+            True, False, False,    # pos`
+            False, False, False,    # rot`
+            False, False, False,   # pos``
+        ]
+    }
+
+    - {name: "process_noise_covariance", value: [
+            0.001, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.001, 0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.001, 0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+
+            0.0,    0.0,    0.0,    0.001, 0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.001, 0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.001, 0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.002, 0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.002,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.002, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0005, 0.0,    0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0005, 0.0,    0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0005, 0.0,    0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0001, 0.0,    0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0001, 0.0,
+            0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0001
+        ]
+    }
