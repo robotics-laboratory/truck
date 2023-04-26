@@ -290,11 +290,11 @@
       </rear>
     </plugin>
 
-    <!-- <plugin name="OdometryPlugin" filename="libtruck_gazebo_odometry.so">
-      <link_name>base</link_name>
-      <period>10</period>
-      <xyz_offset>0.0 0.0 0.0</xyz_offset>
-    </plugin> -->
-
+    <plugin name="MotorOdometryPlugin" filename="libtruck_gazebo_motor_odometry.so">
+      <config_path>/truck/packages/model/config/model.yaml</config_path>
+      <left_joint>left_rear_axle</left_joint>
+      <right_joint>right_rear_axle</right_joint>
+      <period>0.02</period>
+    </plugin>
   </model>
 </sdf>

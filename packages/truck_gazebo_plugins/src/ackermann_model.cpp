@@ -1,4 +1,5 @@
 #include "truck_gazebo_plugins/ackermann_model.h"
+#include "truck_gazebo_plugins/common.h"
 
 #include <gazebo_ros/conversions/builtin_interfaces.hpp>
 #include <gazebo_ros/conversions/geometry_msgs.hpp>
@@ -9,47 +10,12 @@
 
 namespace gazebo {
 
-namespace {
-
-template <class T>
-T GetParam(sdf::ElementPtr sdf, const std::string& name) {
-    const auto [value, has_value] = sdf->Get<T>(name, T());
-    if (not has_value) {
-        gzerr << "No param '" << name << "'!" << std::endl;
-        throw std::runtime_error("Bad urdf file!");
-    }
-
-    return value;
-}
-
-sdf::ElementPtr GetElement(sdf::ElementPtr sdf, const std::string& name) {
-    const auto element = sdf->GetElement(name);
-    if (not element) {
-        gzerr << "No element '" << name << "'!" << std::endl;
-        throw std::runtime_error("Bad urdf file!");
-    }
-
-    return element;
-}
-
-physics::JointPtr GetJoint(gazebo::physics::ModelPtr model, const std::string& name) {
-    auto joint = model->GetJoint(name);
-    if (not joint) {
-        gzerr << "No joint '" << name << "'!" << std::endl;
-        throw std::runtime_error("Bad urdf file!");
-    }
-
-    return joint;
-}
-
-}  // namespace
-
 void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) {
     node_ = gazebo_ros::Node::Get(sdf);
 
-    const auto config_path = GetParam<std::string>(sdf, "config_path");
-    gzwarn << "Read model params from '" << config_path << "'..." << std::endl;
-    model_ = std::make_unique<truck::model::Model>(config_path);
+    model_ = truck::model::makeUniquePtr(
+        node_->get_logger(),
+        GetParam<std::string>(sdf, "config_path"));
 
     {  // steering
         const auto steering = GetElement(sdf, "steering");
