@@ -76,4 +76,6 @@ const Shape& Model::shape() const { return params_.shape; }
 
 const WheelBase& Model::wheelBase() const { return params_.wheel_base; }
 
+double Model::wheelRadius() const { return params_.wheel_radius; }
+
 }  // namespace truck::model

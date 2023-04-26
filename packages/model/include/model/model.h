@@ -43,6 +43,7 @@ class Model {
 
     const Shape& shape() const;
     const WheelBase& wheelBase() const;
+    double wheelRadius() const;
 
     Twist baseToRearTwist(Twist twist) const;
     Steering rearTwistToSteering(Twist twist) const;
