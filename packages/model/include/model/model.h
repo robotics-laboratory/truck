@@ -7,6 +7,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
 
+#include <memory>
 #include <utility>
 
 namespace truck::model {
@@ -61,6 +62,11 @@ class Model {
 inline auto load(rclcpp::Logger logger, const std::string& path) {
     RCLCPP_INFO(logger, "load model: %s", path.c_str());
     return Model(path);
+}
+
+inline auto makeUniquePtr(rclcpp::Logger logger, const std::string& path) {
+    RCLCPP_INFO(logger, "load model: %s", path.c_str());
+    return std::make_unique<Model>(path);
 }
 
 }  // namespace truck::model

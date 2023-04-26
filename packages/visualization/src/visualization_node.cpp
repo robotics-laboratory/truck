@@ -19,14 +19,17 @@ using namespace std::placeholders;
 
 using namespace geom::literals;
 
-VisualizationNode::VisualizationNode()
-    : Node("visualization")
-    , model_(model::load(
-          this->get_logger(), Node::declare_parameter<std::string>("model_config", "model.yaml"))) {
+VisualizationNode::VisualizationNode() : Node("visualization") {
+    model_ = model::makeUniquePtr(
+        this->get_logger(),
+        Node::declare_parameter<std::string>("model_config", "model.yaml"));
+
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
     params_ = Parameters {
+        .ttl = rclcpp::Duration::from_seconds(this->declare_parameter("ttl", 1.0)),
+
         .ego_z_lev = this->declare_parameter("ego/z_lev", 0.0),
         .ego_height = this->declare_parameter("ego/height", 0.2),
 
@@ -87,7 +90,7 @@ void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr o
     state_.odom = std::move(odom);
 
     publishEgo();
-    publishControl();
+    publishArc();
 }
 
 namespace {
@@ -100,7 +103,7 @@ std_msgs::msg::ColorRGBA modeToColor(
 } // namespace
 
 std_msgs::msg::ColorRGBA VisualizationNode::velocityToColor(double velocity, double alpha) const {
-    const auto [v_min, v_max] = model_.baseVelocityLimits();
+    const auto [v_min, v_max] = model_->baseVelocityLimits();
     BOOST_ASSERT(v_min <= 0 && 0 < v_max);
 
     const double ratio = [&]{
@@ -115,23 +118,30 @@ std_msgs::msg::ColorRGBA VisualizationNode::velocityToColor(double velocity, dou
 }
 
 void VisualizationNode::handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr msg) {
-    publishTrajectory(*msg);
+    state_.trajectory = std::move(msg);
+    publishTrajectory();
 }
 
-void VisualizationNode::publishTrajectory(const truck_msgs::msg::Trajectory& trajectory) const {
+void VisualizationNode::publishTrajectory() const {
+    if (!state_.trajectory) {
+        return;
+    }
+
     visualization_msgs::msg::Marker msg;
-    msg.header = trajectory.header;
+    msg.header = state_.trajectory->header;
     msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
     msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.frame_locked = true;
+    msg.lifetime = params_.ttl;
 
     msg.scale.x = params_.trajectory_width;
     msg.pose.position.z = params_.trajectory_z_lev;
 
-    msg.points.reserve(trajectory.states.size());
-    msg.colors.reserve(trajectory.states.size());
+    msg.points.reserve(state_.trajectory->states.size());
+    msg.colors.reserve(state_.trajectory->states.size());
 
     bool collision = false;
-    for (const auto& state: trajectory.states) {
+    for (const auto& state: state_.trajectory->states) {
         collision |= state.collision;
 
         const auto color = collision
@@ -159,8 +169,11 @@ void VisualizationNode::publishEgo() const {
     msg.header = state_.odom->header;
     msg.type = visualization_msgs::msg::Marker::CUBE;
     msg.action = visualization_msgs::msg::Marker::ADD;
-    msg.scale.x = model_.shape().length;
-    msg.scale.y = model_.shape().width;
+    msg.frame_locked = true;
+    // always keep last ego marker
+
+    msg.scale.x = model_->shape().length;
+    msg.scale.y = model_->shape().width;
     msg.scale.z = params_.ego_height;
     msg.pose = state_.odom->pose.pose;
     msg.pose.position.z = params_.ego_z_lev;
@@ -188,10 +201,6 @@ geom::Poses arcTrace(const geom::Pose& pose, double curvature, double length) {
 }
 
 }  // namespace
-
-void VisualizationNode::publishControl() const {
-    publishArc();
-}
 
 void VisualizationNode::publishArc() const {
     if (!state_.odom || !state_.control) {
@@ -221,6 +230,8 @@ void VisualizationNode::publishArc() const {
     msg.header = header;
     msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
     msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.frame_locked = true;
+    msg.lifetime = params_.ttl;
 
     msg.scale.x = params_.arc_width;
     msg.pose.position.z = params_.arc_z_lev;
@@ -235,31 +246,38 @@ void VisualizationNode::publishArc() const {
     signal_.arc->publish(msg);
 }
 
-
 void VisualizationNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr control) {
     if (control->header.frame_id != "base") {
-        RCLCPP_WARN(get_logger(), "Expected 'base' frame for cotrol, but got %s. Ignore message!", state_.control->header.frame_id.c_str());
+        RCLCPP_WARN(
+            get_logger(),
+            "Expected 'base' frame for cotrol, but got %s. Ignore message!",
+            state_.control->header.frame_id.c_str());
         return;
     }
 
-    state_.control = control;
-    publishControl();
+    // publish control only for odometry update
+    state_.control = std::move(control);
 }
 
-void VisualizationNode::publishWaypoints(const truck_msgs::msg::Waypoints& msg) const {
+void VisualizationNode::publishWaypoints() const {
+    if (!state_.waypoints) {
+        return;
+    }
+
     const double size = 2 * params_.waypoints_radius;
 
     visualization_msgs::msg::Marker marker;
 
-    marker.header = msg.header;
+    marker.header = state_.waypoints->header;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+    marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+    marker.frame_locked = true;
+    marker.lifetime = params_.ttl;
 
-    marker.points.resize(msg.waypoints.size());
-    for (size_t i = 0; i < msg.waypoints.size(); ++i) {
-        const auto& waypoint = msg.waypoints[i];
+    marker.points.resize(state_.waypoints->waypoints.size());
+    for (size_t i = 0; i < state_.waypoints->waypoints.size(); ++i) {
+        const auto& waypoint = state_.waypoints->waypoints[i];
 
-        marker.header = msg.header;
-        marker.action = visualization_msgs::msg::Marker::ADD;
-        marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
         marker.scale.x = size;
         marker.scale.y = size;
         marker.scale.z = size;
@@ -273,7 +291,8 @@ void VisualizationNode::publishWaypoints(const truck_msgs::msg::Waypoints& msg) 
 }
 
 void VisualizationNode::handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg) {
-    publishWaypoints(*msg);
+    state_.waypoints = std::move(msg);
+    publishWaypoints();
 }
 
 }  // namespace truck::control_proxy

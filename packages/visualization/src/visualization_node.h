@@ -8,7 +8,9 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp/time.hpp>
 
 namespace truck::visualization {
 
@@ -16,7 +18,23 @@ class VisualizationNode : public rclcpp::Node {
   public:
     VisualizationNode();
 
+  private:
+    void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr trajectory);
+    void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
+    void handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg);
+    void handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg);
+    void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
+
+    void publishTrajectory() const;
+    void publishEgo() const;
+    void publishArc() const;
+    void publishWaypoints() const;
+
+    std_msgs::msg::ColorRGBA velocityToColor(double speed, double alpha=1.0) const;
+
     struct Parameters {
+        rclcpp::Duration ttl = rclcpp::Duration::from_seconds(1.0);
+
         double ego_z_lev = 0.0;
         double ego_height = 0.0;
 
@@ -29,30 +47,16 @@ class VisualizationNode : public rclcpp::Node {
 
         double trajectory_z_lev = 0.0;
         double trajectory_width = 0.0;
-    };
+    } params_{};
 
-  private:
-    void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr trajectory);
-    void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
-    void handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg);
-    void handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg);
-    void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
-
-    void publishTrajectory(const truck_msgs::msg::Trajectory& trajectory) const;
-    void publishEgo() const;
-    void publishArc() const;
-    void publishControl() const;
-    void publishWaypoints(const truck_msgs::msg::Waypoints& waypoints) const;
-
-    std_msgs::msg::ColorRGBA velocityToColor(double speed, double alpha=1.0) const;
-
-    Parameters params_;
-    model::Model model_;
+    std::unique_ptr<model::Model> model_ = nullptr;
 
     struct State {
         truck_msgs::msg::ControlMode::ConstSharedPtr mode = nullptr;
         truck_msgs::msg::Control::ConstSharedPtr control = nullptr;
         nav_msgs::msg::Odometry::ConstSharedPtr odom = nullptr;
+        truck_msgs::msg::Trajectory::ConstSharedPtr trajectory = nullptr;
+        truck_msgs::msg::Waypoints::ConstSharedPtr waypoints = nullptr;
     } state_;
 
     struct Slots {

@@ -14,6 +14,8 @@ launch:
     name: "visualization_node"
     output: "log"
     param:
+    - {name: "ttl", value: 1.0}
+
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "model_config", value: "$(var model_config)"}
 
