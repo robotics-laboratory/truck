@@ -16,12 +16,14 @@ struct Segment {
 
     Vec2 dir() const { return (end - begin).unit(); }
 
-    Vec2 pos(double t) const noexcept { return begin * (1 - t) + end * t; }
+    Vec2 pos(double t) const noexcept;
 
     Poses trace(double step) const noexcept;
 
     Vec2 begin;
     Vec2 end;
 };
+
+geom::Vec2 projection(const geom::Vec2& point, const geom::Segment& segment) noexcept;
 
 }  // namespace truck::geom

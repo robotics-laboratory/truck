@@ -2,6 +2,7 @@
 
 #include "geom/vector.h"
 
+#include <ostream>
 #include <vector>
 
 namespace truck::geom {
@@ -14,6 +15,8 @@ struct Pose {
     Vec2 pos;
     Vec2 dir;
 };
+
+std::ostream& operator<<(std::ostream& out, const Pose& pose) noexcept;
 
 Pose interpolate(const Pose& a, const Pose& b, double t) noexcept;
 
