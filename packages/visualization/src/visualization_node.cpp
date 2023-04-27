@@ -27,19 +27,24 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
-    params_ = Parameters {
+    params_ = Parameters{
         .ttl = rclcpp::Duration::from_seconds(this->declare_parameter("ttl", 1.0)),
 
         .ego_z_lev = this->declare_parameter("ego/z_lev", 0.0),
         .ego_height = this->declare_parameter("ego/height", 0.2),
 
+        .ego_track_width = this->declare_parameter("ego/track/width", 0.06),
+        .ego_track_height = this->declare_parameter("ego/track/height", 0.01),
+        .ego_track_ttl =
+            rclcpp::Duration::from_seconds(this->declare_parameter("ego/track/ttl", 2.00)),
+
         .arc_z_lev = this->declare_parameter("arc/z_lev", 0.0),
         .arc_width = this->declare_parameter("arc/width", 0.06),
         .arc_length = this->declare_parameter("arc/length", 1.0),
-                
+
         .waypoints_z_lev = this->declare_parameter("waypoints/z_lev", 0.50),
         .waypoints_radius = this->declare_parameter("waypoints/radius", 0.10),
-        
+
         .trajectory_z_lev = this->declare_parameter("trajectory/z_lev", 0.0),
         .trajectory_width = this->declare_parameter("trajectory/width", 0.12),
     };
@@ -70,8 +75,10 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         std::bind(&VisualizationNode::handleTrajectory, this, _1));
 
     signal_.ego = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/visualization/ego",
-        rclcpp::QoS(1).reliability(qos));
+        "/visualization/ego", rclcpp::QoS(1).reliability(qos));
+
+    signal_.ego_track = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/visualization/ego/track", rclcpp::QoS(1).reliability(qos));
 
     signal_.arc = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/arc",
@@ -88,8 +95,10 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
 
 void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom) {
     state_.odom = std::move(odom);
+    ++state_.odom_seq_id;
 
     publishEgo();
+    publishEgoTrack();
     publishArc();
 }
 
@@ -161,7 +170,7 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
 }
 
 void VisualizationNode::publishEgo() const {
-    if (not state_.odom) {
+    if (!state_.odom) {
         return;
     }
 
@@ -180,6 +189,33 @@ void VisualizationNode::publishEgo() const {
     msg.color = modeToColor(state_.mode);
 
     signal_.ego->publish(msg);
+}
+
+void VisualizationNode::publishEgoTrack() const {
+    if (!state_.odom) {
+        return;
+    }
+
+    if (state_.odom_seq_id % params_.ego_track_rate != 0) {
+        return;
+    }
+
+    visualization_msgs::msg::Marker msg;
+    msg.id = state_.odom_seq_id;
+    msg.header = state_.odom->header;
+    msg.type = visualization_msgs::msg::Marker::SPHERE;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.frame_locked = true;
+    msg.lifetime = params_.ego_track_ttl;
+
+    msg.scale.x = params_.ego_track_width;
+    msg.scale.y = params_.ego_track_width;
+    msg.scale.z = params_.ego_track_height;
+    msg.pose = state_.odom->pose.pose;
+    msg.pose.position.z = params_.ego_z_lev;
+    msg.color = modeToColor(state_.mode);
+
+    signal_.ego_track->publish(msg);
 }
 
 namespace {

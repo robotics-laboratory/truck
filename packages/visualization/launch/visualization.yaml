@@ -21,6 +21,10 @@ launch:
 
     - {name: "ego/z_lev", value: 0.0}
     - {name: "ego/height", value: 0.2}
+    - {name: "ego/track/ttl", value: 2.0}
+    - {name: "ego/track/height", value: 0.01}
+    - {name: "ego/track/width", value: 0.06}
+    - {name: "ego/track/rate", value: 5}
 
     - {name: "arc/z_lev", value: 0.0}
     - {name: "arc/width", value: 0.04}

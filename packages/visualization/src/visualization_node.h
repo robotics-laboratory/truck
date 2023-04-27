@@ -27,6 +27,7 @@ class VisualizationNode : public rclcpp::Node {
 
     void publishTrajectory() const;
     void publishEgo() const;
+    void publishEgoTrack() const;
     void publishArc() const;
     void publishWaypoints() const;
 
@@ -37,6 +38,11 @@ class VisualizationNode : public rclcpp::Node {
 
         double ego_z_lev = 0.0;
         double ego_height = 0.0;
+
+        double ego_track_width = 0.06;
+        double ego_track_height = 0.01;
+        rclcpp::Duration ego_track_ttl = rclcpp::Duration::from_seconds(2.0);
+        size_t ego_track_rate = 5;
 
         double arc_z_lev = 0.0;
         double arc_width = 0.0;
@@ -52,6 +58,7 @@ class VisualizationNode : public rclcpp::Node {
     std::unique_ptr<model::Model> model_ = nullptr;
 
     struct State {
+        size_t odom_seq_id = 0;
         truck_msgs::msg::ControlMode::ConstSharedPtr mode = nullptr;
         truck_msgs::msg::Control::ConstSharedPtr control = nullptr;
         nav_msgs::msg::Odometry::ConstSharedPtr odom = nullptr;
@@ -71,6 +78,7 @@ class VisualizationNode : public rclcpp::Node {
     struct Signals {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr trajectory = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker> ::SharedPtr ego_track = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr waypoints = nullptr;
     } signal_;
