@@ -1,0 +1,36 @@
+launch:
+- arg:
+    name: "model_config"
+    default: "$(find-pkg-share model)/config/model.yaml"
+- arg:
+    name: "primitives_config"
+    default: "/truck/packages/planner/data/data.json"
+- node:
+    pkg: "planner"
+    exec: "planner_node"
+    name: "planner_node"
+    output: "log"
+    param:
+    - {name: "model_config", value: "$(var model_config)"}
+    - {name: "primitives_config", value: "$(var primitives_config)"}
+
+    - {name: "finish_area_radius", value: 0.5}
+    - {name: "min_obstacle_distance", value: 0.5}
+
+    - {name: "grid/nodes/width", value: 40}
+    - {name: "grid/nodes/height", value: 40}
+    - {name: "grid/resolution", value: 0.2}
+
+    - {name: "node/z-lev", value: 0.05 }
+    - {name: "node/scale", value: 0.1 }
+    
+    - {name: "node/base/color", value: [1.0, 0.2, 0.2, 0.2] }          # argb
+    - {name: "node/start/color", value: [1.0, 0.8, 0.8, 0.8] }         # argb
+    - {name: "node/finish/base/color", value: [0.3, 1.0, 1.0, 0.0] }   # argb
+    - {name: "node/finish/accent/color", value: [1.0, 1.0, 1.0, 0.0] } # argb
+    - {name: "node/collision/color", value: [0.8, 1.0, 0.0, 0.0] }     # argb
+
+    - {name: "path/z-lev", value: 0.02 }
+    - {name: "path/scale", value: 0.03 }
+
+    - {name: "path/color", value: [0.8, 1.0, 0.5, 0.7] }               # argb
