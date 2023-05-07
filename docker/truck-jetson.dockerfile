@@ -367,6 +367,8 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export CXXFLAGS='${CXXFLAGS}'\n" >> /root/.bashrc \
     && printf "export RCUTILS_LOGGING_BUFFERED_STREAM=1\n" >> /root/.bashrc \
     && printf "export RCUTILS_CONSOLE_OUTPUT_FORMAT='[{severity}:{time}] {message}'\n" >> /root/.bashrc \
+    && printf "export TRUCK_SIMULATION=false\n" >> /root/.bashrc \
+    && printf "export TRUCK_CONTROL=ipega\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
 
 ### VIDEO STREAMING SERVER (MEDIAMTX)

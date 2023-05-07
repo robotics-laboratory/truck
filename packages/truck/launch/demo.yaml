@@ -1,6 +1,6 @@
 launch:
-- arg: {name: "simulation", default: "false"}
-- arg: {name: "control_name", default: "ps4"}
+- arg: {name: "simulation", default: "$(arg TRUCK_SIMULATION)"}
+- arg: {name: "control_name", default: "$(env TRUCK_CONTROL)"}
 
 - let: {name: "env", value: "simulator", if: "$(var simulation)"}
 - let: {name: "env", value: "truck", unless: "$(var simulation)"}
