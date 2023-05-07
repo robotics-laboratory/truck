@@ -1,6 +1,6 @@
 launch:
 - arg: {name: "world", default: "simple.world"}
-- arg: {name: "control_name", default: "ps4"}
+- arg: {name: "control_name", default: "$(env TRUCK_CONTROL)"}
 
 - include:
     file: $(find-pkg-share truck_gazebo)/launch/simulator.yaml

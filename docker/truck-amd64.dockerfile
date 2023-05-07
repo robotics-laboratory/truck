@@ -313,6 +313,7 @@ RUN apt-get update -q \
         htop \
         lldb-${CLANG_VERSION} \
         less \
+        nlohmann-json3-dev \
         tmux \
         vim \
     && python3 -m pip install --no-cache-dir -U -r /tmp/requirements.txt \
@@ -328,6 +329,8 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export CXXFLAGS='${CXXFLAGS}'\n" >> /root/.bashrc \
     && printf "export RCUTILS_LOGGING_BUFFERED_STREAM=1\n" >> /root/.bashrc \
     && printf "export RCUTILS_CONSOLE_OUTPUT_FORMAT='[{severity}:{time}] {message}'\n" >> /root/.bashrc \
+    && printf "export TRUCK_SIMULATION=true\n" >> /root/.bashrc \
+    && printf "export TRUCK_CONTROL=ps4\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
 
 ### SETUP ENTRYPOINT

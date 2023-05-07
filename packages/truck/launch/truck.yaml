@@ -1,5 +1,5 @@
 launch:
-- arg: {name: "control_name", default: "ipega"}
+- arg: {name: "control_name", default: "$(env TRUCK_CONTROL)"}
 
 - include:
    file: $(find-pkg-share truck)/launch/lidar.yaml
