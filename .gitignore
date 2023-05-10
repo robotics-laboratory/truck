@@ -10,3 +10,4 @@ packages/planner
 __pycache__/
 *.py[cod]
 *$py.class
+.flakeheaven_cache/

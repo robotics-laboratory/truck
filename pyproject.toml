@@ -1,0 +1,12 @@
+# For now this file is used only to configure linters & formatters
+
+[tool.isort]
+profile = "black"
+
+[tool.flakeheaven]
+exclude = [".clang-format"]
+max_line_length = 88
+
+[tool.flakeheaven.plugins]
+pycodestyle = ["+*", "-W503"]
+pyflakes = ["+*"]
