@@ -1,5 +1,5 @@
 launch:
-- arg: {name: "simulation", default: "$(arg TRUCK_SIMULATION)"}
+- arg: {name: "simulation", default: "$(env TRUCK_SIMULATION)"}
 - arg: {name: "control_name", default: "$(env TRUCK_CONTROL)"}
 
 - let: {name: "env", value: "simulator", if: "$(var simulation)"}
