@@ -74,9 +74,9 @@ PlannerNode::PlannerNode() : Node("planner") {
 
     params_ = Parameters{
         .grid_params = grid_params,
-        .graph_params = graph_params,
-        .edge_geometry_cache =
-            search::EdgeGeometryCache(this->declare_parameter<std::string>("primitives_config"))};
+        .graph_params = graph_params};
+
+    edge_geometry_cache_ = search::EdgeGeometryCache(this->declare_parameter<std::string>("primitives_config"));
 
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
@@ -135,22 +135,16 @@ void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
 
     // update collision checker
     checker_->reset(*state_.distance_transform);
-
-    // RCLCPP_INFO(this->get_logger(), "Subscription to topic /grid ...");
 }
 
 void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
     state_.odom = msg;
-    params_.ego_pose = geom::toPose(*msg);
-
-    // RCLCPP_INFO(this->get_logger(), "Subscription to topic /ekf/odometry/filtered ...");
+    state_.ego_pose = geom::toPose(*msg);
 }
 
 void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
-    params_.finish_area = geom::Circle{
+    state_.finish_area = geom::Circle{
         .center = geom::toVec2(*msg), .radius = params_.graph_params.finish_area_radius};
-
-    // RCLCPP_INFO(this->get_logger(), "Subscription to topic /clicked_point ...");
 }
 
 void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
@@ -158,8 +152,6 @@ void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_st
     for (const auto& transform : msg->transforms) {
         tf_buffer_->setTransform(transform, authority, is_static);
     }
-
-    // RCLCPP_INFO(this->get_logger(), "Subscription to topic /tf ...");
 }
 
 std_msgs::msg::ColorRGBA PlannerNode::setNodeColor(size_t node_index, search::Grid& grid) const {
@@ -198,24 +190,21 @@ void PlannerNode::publishGrid(search::Grid& grid) {
 
     const auto& params = grid.params;
 
-    graph_nodes.scale.x = graph_nodes.scale.y = graph_nodes.scale.z = params.node_scale;
+    graph_nodes.scale.x = params.node_scale;
+    graph_nodes.scale.y = params.node_scale;
+    graph_nodes.scale.z = params.node_scale;
     graph_nodes.pose.position.z = params.node_z_lev;
 
     const std::vector<search::Node>& nodes = grid.getNodes();
 
     for (size_t i = 0; i < nodes.size(); i++) {
-        geometry_msgs::msg::Point node_point;
-        node_point.x = nodes[i].point.x;
-        node_point.y = nodes[i].point.y;
-        graph_nodes.points.push_back(node_point);
+        graph_nodes.points.push_back(geom::msg::toPoint(nodes[i].point));
 
         std_msgs::msg::ColorRGBA node_color = setNodeColor(i, grid);
         graph_nodes.colors.push_back(node_color);
     }
 
     signal_.graph->publish(graph_nodes);
-
-    // RCLCPP_INFO(this->get_logger(), "Publishing topic /graph ...");
 }
 
 void PlannerNode::publishPath(search::Searcher& searcher) {
@@ -229,20 +218,17 @@ void PlannerNode::publishPath(search::Searcher& searcher) {
 
     const auto& params = searcher.graph_->params;
 
-    path.scale.x = path.scale.y = path.scale.z = params.path_scale;
+    path.scale.x = params.path_scale;
+    path.scale.y = params.path_scale;
+    path.scale.z = params.path_scale;
     path.pose.position.z = params.path_z_lev;
     path.color = setColorRGBAfromColor(params.path_color);
 
     for (const geom::Vec2& vertex : searcher.getPath()) {
-        geometry_msgs::msg::Point p;
-        p.x = vertex.x;
-        p.y = vertex.y;
-        path.points.push_back(p);
+        path.points.push_back(geom::msg::toPoint(vertex));
     }
 
     signal_.path->publish(path);
-
-    // RCLCPP_INFO(this->get_logger(), "Publishing topic /path ...");
 }
 
 void PlannerNode::resetPath() {
@@ -268,17 +254,16 @@ std::optional<geom::Transform> PlannerNode::getLatestTranform(
 
 void PlannerNode::doPlanningLoop() {
     if (!checker_->initialized() ||
-        !params_.ego_pose.has_value() ||
-        !params_.finish_area.has_value()) {
-        // RCLCPP_INFO(this->get_logger(), "waiting for planner variables to initialize");
+        !state_.ego_pose.has_value() ||
+        !state_.finish_area.has_value()) {
         return;
     }
 
     // initialize grid
     search::Grid grid =
         search::Grid(params_.grid_params)
-            .setEgoPose(params_.ego_pose)
-            .setFinishArea(params_.finish_area)
+            .setEgoPose(state_.ego_pose)
+            .setFinishArea(state_.finish_area)
             .setCollisionChecker(checker_)
             .build();
 
@@ -288,8 +273,6 @@ void PlannerNode::doPlanningLoop() {
     if (!grid.getEndNodeIndex().has_value()) {
         // need to reset visualization of last found path
         resetPath();
-
-        // RCLCPP_INFO(this->get_logger(), "assigned end point is out of grid bounds");
         return;
     }
 
@@ -297,11 +280,11 @@ void PlannerNode::doPlanningLoop() {
     search::DynamicGraph graph =
         search::DynamicGraph(params_.graph_params)
             .setGrid(std::make_shared<search::Grid>(grid))
-            .setEdgeGeometryCache(std::make_shared<search::EdgeGeometryCache>(params_.edge_geometry_cache));
+            .setEdgeGeometryCache(std::make_shared<search::EdgeGeometryCache>(edge_geometry_cache_));
 
     // initialize searcher
     search::Searcher searcher =
-        search::Searcher(this)
+        search::Searcher()
             .setGraph(std::make_shared<search::DynamicGraph>(graph))
             .findPath();
 

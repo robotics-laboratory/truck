@@ -89,7 +89,7 @@ class Grid {
 };
 
 struct Primitive {
-    NodeId node_id;
+    NodeId shift_node_id;
     double length;
     std::vector<geom::Pose> poses;
 };
@@ -178,7 +178,7 @@ class DynamicGraph {
 
 class Searcher {
   public:
-    Searcher(const rclcpp::Node* rclcpp_node);
+    Searcher();
 
     Searcher& setGraph(std::shared_ptr<DynamicGraph> graph);
     Searcher& findPath();
@@ -195,8 +195,6 @@ class Searcher {
   private:
     std::vector<geom::Vec2> path_;
     std::set<size_t> open_set_, closed_set_;
-
-    const rclcpp::Node* rclcpp_node_;
 };
 
 }  // namespace truck::planner::search

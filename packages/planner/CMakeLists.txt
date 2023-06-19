@@ -12,6 +12,7 @@ find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node

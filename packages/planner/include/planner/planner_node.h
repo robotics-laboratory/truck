@@ -60,16 +60,16 @@ class PlannerNode : public rclcpp::Node {
         nav_msgs::msg::Odometry::SharedPtr odom = nullptr;
         nav_msgs::msg::OccupancyGrid::SharedPtr occupancy_grid = nullptr;
         std::shared_ptr<collision::Map> distance_transform = nullptr;
+        std::optional<geom::Pose> ego_pose = std::nullopt;
+        std::optional<geom::Circle> finish_area = std::nullopt;
     } state_;
 
     struct Parameters {
         search::GridParams grid_params;
         search::GraphParams graph_params;
-        search::EdgeGeometryCache edge_geometry_cache;
-        std::optional<geom::Pose> ego_pose = std::nullopt;
-        std::optional<geom::Circle> finish_area = std::nullopt;
     } params_;
 
+    search::EdgeGeometryCache edge_geometry_cache_;
     std::unique_ptr<model::Model> model_ = nullptr;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
     std::shared_ptr<collision::StaticCollisionChecker> checker_ = nullptr;

@@ -14,6 +14,3 @@ launch:
     file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml
     arg:
     - {name: "simulation", value: $(var simulation)}
-
-- include:
-    file: $(find-pkg-share planner)/launch/planner.yaml

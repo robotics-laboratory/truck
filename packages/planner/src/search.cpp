@@ -4,7 +4,7 @@ using json = nlohmann::json;
 
 namespace truck::planner::search {
 
-Grid::Grid(const GridParams& params) { this->params = params; }
+Grid::Grid(const GridParams& params) : params(params) {}
 
 Grid& Grid::setEgoPose(const std::optional<const geom::Pose>& ego_pose) {
     ego_pose_ = ego_pose;
@@ -48,7 +48,7 @@ Grid& Grid::build() {
                 .id = NodeId{j, i},
                 .point = origin_point_clipped + (geom::Vec2(j, i) * params.resolution),
                 .is_finish = insideFinishArea(node.point),
-                .collision = (checker->distance(node.point) == 0.0f) ? true : false};
+                .collision = (checker->distance(node.point) < 1e-5) ? true : false};
 
             nodes_.push_back(node);
 
@@ -124,7 +124,7 @@ EdgeGeometryCache::EdgeGeometryCache(const std::string& path) {
         std::string primitive_key = "primitive_" + std::to_string(i);
 
         Primitive primitive{
-            .node_id =
+            .shift_node_id =
                 {.x = primitives[primitive_key]["neighbor_id"]["x"],
                  .y = primitives[primitive_key]["neighbor_id"]["y"]},
             .length = primitives[primitive_key]["length"]};
@@ -186,8 +186,8 @@ bool EdgeGeometryCache::boundaryMask(
     const Primitive& primitive, const NodeId& node_id, const GridParams& grid_params) const {
 
     NodeId node_id_of_last_pose{
-        .x = node_id.x + primitive.node_id.x,
-        .y = node_id.y + primitive.node_id.y};
+        .x = node_id.x + primitive.shift_node_id.x,
+        .y = node_id.y + primitive.shift_node_id.y};
 
     if ((node_id_of_last_pose.x >= 0) &&
         (node_id_of_last_pose.y >= 0) &&
@@ -265,7 +265,7 @@ DynamicGraph& DynamicGraph::setEdgeGeometryCache(
 }
 
 
-Searcher::Searcher(const rclcpp::Node* rclcpp_node) { rclcpp_node_ = rclcpp_node; }
+Searcher::Searcher() {}
 
 Searcher& Searcher::setGraph(std::shared_ptr<DynamicGraph> graph) {
     graph_ = graph;
@@ -355,12 +355,10 @@ Searcher& Searcher::findPath() {
      *  check, if we need indeed to search a path
      */
     if (finish_area_nodes_indices.find(start_node_index) != finish_area_nodes_indices.end()) {
-        // RCLCPP_INFO(rclcpp_node_->get_logger(), "ego pose is inside finish area: no need to find a path");
         return *this;
     }
 
     if (!grid->getEndNodeIndex().has_value()) {
-        // RCLCPP_INFO(rclcpp_node_->get_logger(), "end point is out of grid bounds: can't find a path");
         return *this;
     }
 
@@ -391,7 +389,6 @@ Searcher& Searcher::findPath() {
 
         if (grid->getNodeById(vertices[cur_vertex_index].node_id).is_finish) {
             buildPath(cur_vertex_index);
-            // RCLCPP_INFO(rclcpp_node_->get_logger(), "path found");
             return *this;
         }
 
@@ -407,8 +404,8 @@ Searcher& Searcher::findPath() {
 
             // find out if neighboring vertex exists
             NodeId neighbor_node_id{
-                .x = vertices[cur_vertex_index].node_id.x + primitive.node_id.x,
-                .y = vertices[cur_vertex_index].node_id.y + primitive.node_id.y};
+                .x = vertices[cur_vertex_index].node_id.x + primitive.shift_node_id.x,
+                .y = vertices[cur_vertex_index].node_id.y + primitive.shift_node_id.y};
 
             size_t neighbor_yaw_index =
                 graph_->edge_geometry_cache->getIndexByYaw(primitive.poses.back().dir.angle());
@@ -454,7 +451,6 @@ Searcher& Searcher::findPath() {
         }
     }
 
-    // RCLCPP_INFO(rclcpp_node_->get_logger(), "path doesn't found");
     return *this;
 }
 
