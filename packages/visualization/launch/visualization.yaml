@@ -19,7 +19,7 @@ launch:
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "model_config", value: "$(var model_config)"}
 
-    - {name: "ego/z_lev", value: 0.0}
+    - {name: "ego/z_lev", value: 0.1}
     - {name: "ego/height", value: 0.2}
     - {name: "ego/track/ttl", value: 2.0}
     - {name: "ego/track/height", value: 0.01}
