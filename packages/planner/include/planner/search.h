@@ -36,6 +36,8 @@ struct GridParams {
     int width;
     int height;
     double resolution;
+    double finish_area_radius;
+    double min_obstacle_distance;
 
     double node_z_lev;
     double node_scale;
@@ -47,9 +49,6 @@ struct GridParams {
 };
 
 struct GraphParams {
-    double finish_area_radius;
-    double min_obstacle_distance;
-
     double path_z_lev;
     double path_scale;
     Color path_color;
@@ -94,10 +93,6 @@ struct Primitive {
     std::vector<geom::Pose> poses;
 };
 
-struct Vertex;
-
-class DynamicGraph;
-
 class EdgeGeometryCache {
   public:
     EdgeGeometryCache();
@@ -106,25 +101,7 @@ class EdgeGeometryCache {
     size_t getIndexByYaw(const geom::Angle& yaw) const;
     const std::vector<Primitive>& getPrimitives() const;
 
-    bool checkConstraints(
-        const Vertex* vertex,
-        const Primitive& primitive,
-        std::shared_ptr<const DynamicGraph> graph) const;
-
   private:
-    bool boundaryMask(
-      const Primitive& primitive,
-      const NodeId& node_id,
-      const GridParams& grid_params) const;
-
-    bool collisionMask(
-        const Primitive& primitive,
-        double min_obstacle_distance,
-        std::shared_ptr<const collision::StaticCollisionChecker> checker,
-        const Node& node) const;
-
-    bool yawMask(const Primitive& primitive, size_t yaw_index) const;
-
     std::vector<geom::Angle> yaws_;
     std::vector<Primitive> primitives_;
 };
@@ -145,6 +122,8 @@ struct VertexSearchState {
     // index of a primitive from previous to a current vertex
     std::optional<size_t> prev_to_cur_vertex_primitive_index = std::nullopt;
 };
+
+class DynamicGraph;
 
 struct Vertex {
     Vertex(
@@ -170,10 +149,17 @@ class DynamicGraph {
     DynamicGraph& setEdgeGeometryCache(
         std::shared_ptr<const EdgeGeometryCache> edge_geometry_cache);
 
+    bool checkConstraints(const Vertex* vertex, const Primitive& primitive) const;
+
     GraphParams params;
     std::vector<Vertex> vertices;
     std::shared_ptr<const Grid> grid = nullptr;
     std::shared_ptr<const EdgeGeometryCache> edge_geometry_cache = nullptr;
+
+  private:
+    bool yawMask(const Primitive& primitive, const Vertex* vertex) const;
+    bool boundaryMask(const Primitive& primitive, const Vertex* vertex) const;
+    bool collisionMask(const Primitive& primitive, const Vertex* vertex) const;
 };
 
 class Searcher {

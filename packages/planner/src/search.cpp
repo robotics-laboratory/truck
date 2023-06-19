@@ -165,65 +165,6 @@ size_t EdgeGeometryCache::getIndexByYaw(const geom::Angle& yaw) const {
 
 const std::vector<Primitive>& EdgeGeometryCache::getPrimitives() const { return primitives_; }
 
-bool EdgeGeometryCache::checkConstraints(
-    const Vertex* vertex,
-    const Primitive& primitive,
-    std::shared_ptr<const DynamicGraph> graph) const {
-    
-    double min_obstacle_distance = graph->params.min_obstacle_distance;
-    const auto checker = graph->grid->checker;
-    const auto& node = graph->grid->getNodeById(vertex->node_id);
-    const auto grid_params = graph->grid->params;
-
-    bool correct = boundaryMask(primitive, vertex->node_id, grid_params) &&
-                   collisionMask(primitive, min_obstacle_distance, checker, node) &&
-                   yawMask(primitive, vertex->yaw_index);
-
-    return correct;
-}
-
-bool EdgeGeometryCache::boundaryMask(
-    const Primitive& primitive, const NodeId& node_id, const GridParams& grid_params) const {
-
-    NodeId node_id_of_last_pose{
-        .x = node_id.x + primitive.shift_node_id.x,
-        .y = node_id.y + primitive.shift_node_id.y};
-
-    if ((node_id_of_last_pose.x >= 0) &&
-        (node_id_of_last_pose.y >= 0) &&
-        (node_id_of_last_pose.x < grid_params.width) &&
-        (node_id_of_last_pose.y < grid_params.height)) {
-        return true;
-    }
-
-    return false;
-}
-
-bool EdgeGeometryCache::collisionMask(
-    const Primitive& primitive,
-    double min_obstacle_distance,
-    std::shared_ptr<const collision::StaticCollisionChecker> checker,
-    const Node& node) const {
-
-    bool collision_free = true;
-
-    for (const geom::Pose& pose : primitive.poses) {
-        geom::Pose pose_global(node.point + pose.pos, pose.dir);
-
-        if (checker->distance(pose_global) < min_obstacle_distance) {
-            collision_free = false;
-        }
-    }
-
-    return collision_free;
-}
-
-bool EdgeGeometryCache::yawMask(const Primitive& primitive, size_t yaw_index) const {
-    geom::Angle start_pose_yaw = primitive.poses[0].dir.angle();
-    size_t start_pose_yaw_index = getIndexByYaw(start_pose_yaw);
-    return start_pose_yaw_index == yaw_index;
-}
-
 
 double VertexSearchState::getTotalCost() const { return start_cost + heuristic_cost; }
 
@@ -242,7 +183,7 @@ Vertex::Vertex(
 
     for (size_t i = 0; i < primitives.size(); i++) {
         // add primitive to a vertex if it satisfies the constraints
-        if (graph->edge_geometry_cache->checkConstraints(this, primitives[i], graph)) {
+        if (graph->checkConstraints(this, primitives[i])) {
             edges_indices.push_back(i);
         }
     }
@@ -262,6 +203,47 @@ DynamicGraph& DynamicGraph::setEdgeGeometryCache(
     std::shared_ptr<const EdgeGeometryCache> edge_geometry_cache) {
     this->edge_geometry_cache = edge_geometry_cache;
     return *this;
+}
+
+bool DynamicGraph::yawMask(const Primitive& primitive, const Vertex* vertex) const {
+    geom::Angle start_pose_yaw = primitive.poses[0].dir.angle();
+    size_t start_pose_yaw_index = edge_geometry_cache->getIndexByYaw(start_pose_yaw);
+
+    return start_pose_yaw_index == vertex->yaw_index;
+}
+
+bool DynamicGraph::boundaryMask(const Primitive& primitive, const Vertex* vertex) const {
+    NodeId node_id_of_last_pose{
+        .x = vertex->node_id.x + primitive.shift_node_id.x,
+        .y = vertex->node_id.y + primitive.shift_node_id.y
+    };
+
+    if ((node_id_of_last_pose.x >= 0) &&
+        (node_id_of_last_pose.y >= 0) &&
+        (node_id_of_last_pose.x < grid->params.width) &&
+        (node_id_of_last_pose.y < grid->params.height)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool DynamicGraph::collisionMask(const Primitive& primitive, const Vertex* vertex) const {
+    const auto& node = grid->getNodeById(vertex->node_id);
+
+    for (const geom::Pose& pose : primitive.poses) {
+        geom::Pose pose_global(node.point + pose.pos, pose.dir);
+
+        if (grid->checker->distance(pose_global) < grid->params.min_obstacle_distance) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool DynamicGraph::checkConstraints(const Vertex* vertex, const Primitive& primitive) const {
+    return yawMask(primitive, vertex) && boundaryMask(primitive, vertex) && collisionMask(primitive, vertex);
 }
 
 

@@ -43,6 +43,9 @@ PlannerNode::PlannerNode() : Node("planner") {
         .height = this->declare_parameter<int>("grid/nodes/height"),
         .resolution = this->declare_parameter<double>("grid/resolution"),
 
+        .finish_area_radius = this->declare_parameter<double>("finish_area_radius"),
+        .min_obstacle_distance = this->declare_parameter<double>("min_obstacle_distance"),
+
         .node_z_lev = this->declare_parameter<double>("node/z-lev"),
         .node_scale = this->declare_parameter<double>("node/scale"),
 
@@ -63,9 +66,6 @@ PlannerNode::PlannerNode() : Node("planner") {
     };
 
     search::GraphParams graph_params = search::GraphParams{
-        .finish_area_radius = this->declare_parameter<double>("finish_area_radius"),
-        .min_obstacle_distance = this->declare_parameter<double>("min_obstacle_distance"),
-
         .path_z_lev = this->declare_parameter<double>("path/z-lev"),
         .path_scale = this->declare_parameter<double>("path/scale"),
 
@@ -144,7 +144,7 @@ void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
 
 void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
     state_.finish_area = geom::Circle{
-        .center = geom::toVec2(*msg), .radius = params_.graph_params.finish_area_radius};
+        .center = geom::toVec2(*msg), .radius = params_.grid_params.finish_area_radius};
 }
 
 void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
