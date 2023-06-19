@@ -13,10 +13,6 @@
 
 namespace truck::planner::search {
 
-struct Color {
-    double a, r, g, b;
-};
-
 struct NodeId {
     int x, y;
     
@@ -38,20 +34,6 @@ struct GridParams {
     double resolution;
     double finish_area_radius;
     double min_obstacle_distance;
-
-    double node_z_lev;
-    double node_scale;
-    Color node_base_color;
-    Color node_start_color;
-    Color node_finish_base_color;
-    Color node_finish_accent_color;
-    Color node_collision_color;
-};
-
-struct GraphParams {
-    double path_z_lev;
-    double path_scale;
-    Color path_color;
 };
 
 class Grid {
@@ -72,7 +54,7 @@ class Grid {
 
     const Node& getNodeById(const NodeId& id) const;
     bool insideFinishArea(const geom::Vec2& point) const;
-    geom::Vec2 clipPoint(const geom::Vec2& point) const;
+    geom::Vec2 snapPoint(const geom::Vec2& point) const;
 
     GridParams params;
     std::shared_ptr<const collision::StaticCollisionChecker> checker = nullptr;
@@ -137,7 +119,7 @@ struct Vertex {
 
 class DynamicGraph {
   public:
-    DynamicGraph(const GraphParams& params);
+    DynamicGraph();
 
     DynamicGraph& setGrid(std::shared_ptr<const Grid> grid);
     DynamicGraph& setEdgeGeometryCache(
@@ -147,7 +129,6 @@ class DynamicGraph {
 
     Vertex buildVertex(const NodeId& node_id, size_t yaw_index, const VertexSearchState& state);
 
-    GraphParams params;
     std::vector<Vertex> vertices;
     std::shared_ptr<const Grid> grid = nullptr;
     std::shared_ptr<const EdgeGeometryCache> edge_geometry_cache = nullptr;
@@ -172,11 +153,11 @@ class Searcher {
     std::optional<size_t> getNeighborVertexIndex(const NodeId& node_id, size_t yaw_index) const;
     size_t findOptimalVertexIndex() const;
 
-    std::shared_ptr<DynamicGraph> graph_ = nullptr;
-
   private:
     std::vector<geom::Vec2> path_;
     std::set<size_t> open_set_, closed_set_;
+
+    std::shared_ptr<DynamicGraph> graph_ = nullptr;
 };
 
 }  // namespace truck::planner::search

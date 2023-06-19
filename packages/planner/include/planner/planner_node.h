@@ -18,14 +18,13 @@
 
 namespace truck::planner::visualization {
 
+using Color = std_msgs::msg::ColorRGBA;
+
 class PlannerNode : public rclcpp::Node {
   public:
     PlannerNode();
 
   private:
-    search::Color setColorFromVector(const std::vector<double>& vector) const;
-    std_msgs::msg::ColorRGBA setColorRGBAfromColor(const search::Color& color) const;
-
     void doPlanningLoop();
 
     void onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
@@ -33,10 +32,11 @@ class PlannerNode : public rclcpp::Node {
     void onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg);
     void onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
 
-    std_msgs::msg::ColorRGBA setNodeColor(size_t node_index, search::Grid& grid) const;
+    Color toColorRGBA(const std::vector<double>& vector);
+    std_msgs::msg::ColorRGBA getNodeColor(size_t node_index, const search::Grid& grid) const;
 
-    void publishGrid(search::Grid& grid);
-    void publishPath(search::Searcher& searcher);
+    void publishGrid(const search::Grid& grid);
+    void publishPath(const search::Searcher& searcher);
     
     void resetPath();
 
@@ -65,8 +65,23 @@ class PlannerNode : public rclcpp::Node {
     } state_;
 
     struct Parameters {
-        search::GridParams grid_params;
-        search::GraphParams graph_params;
+        search::GridParams grid;
+
+        struct NodeParams {
+            double z_lev;
+            double scale;
+            Color base_color;
+            Color start_color;
+            Color finish_base_color;
+            Color finish_accent_color;
+            Color collision_color;
+        } node;
+
+        struct PathParams {
+            double z_lev;
+            double scale;
+            Color color;
+        } path;
     } params_;
 
     search::EdgeGeometryCache edge_geometry_cache_;

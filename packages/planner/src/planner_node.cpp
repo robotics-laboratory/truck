@@ -42,39 +42,39 @@ PlannerNode::PlannerNode() : Node("planner") {
         .width = this->declare_parameter<int>("grid/nodes/width"),
         .height = this->declare_parameter<int>("grid/nodes/height"),
         .resolution = this->declare_parameter<double>("grid/resolution"),
-
         .finish_area_radius = this->declare_parameter<double>("finish_area_radius"),
         .min_obstacle_distance = this->declare_parameter<double>("min_obstacle_distance"),
-
-        .node_z_lev = this->declare_parameter<double>("node/z-lev"),
-        .node_scale = this->declare_parameter<double>("node/scale"),
-
-        .node_base_color =
-            setColorFromVector(this->declare_parameter<std::vector<double>>("node/base/color")),
-
-        .node_start_color =
-            setColorFromVector(this->declare_parameter<std::vector<double>>("node/start/color")),
-
-        .node_finish_base_color = setColorFromVector(
-            this->declare_parameter<std::vector<double>>("node/finish/base/color")),
-
-        .node_finish_accent_color = setColorFromVector(
-            this->declare_parameter<std::vector<double>>("node/finish/accent/color")),
-
-        .node_collision_color = setColorFromVector(
-            this->declare_parameter<std::vector<double>>("node/collision/color")),
     };
 
-    search::GraphParams graph_params = search::GraphParams{
-        .path_z_lev = this->declare_parameter<double>("path/z-lev"),
-        .path_scale = this->declare_parameter<double>("path/scale"),
-
-        .path_color =
-            setColorFromVector(this->declare_parameter<std::vector<double>>("path/color"))};
-
     params_ = Parameters{
-        .grid_params = grid_params,
-        .graph_params = graph_params};
+        .grid = grid_params,
+
+        .node = Parameters::NodeParams {
+            .z_lev = this->declare_parameter<double>("node/z-lev"),
+            .scale = this->declare_parameter<double>("node/scale"),
+
+            .base_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node/base/color")),
+
+            .start_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node/start/color")),
+
+            .finish_base_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node/finish/base/color")),
+
+            .finish_accent_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node/finish/accent/color")),
+
+            .collision_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node/collision/color")),
+        },
+
+        .path = Parameters::PathParams {
+            .z_lev = this->declare_parameter<double>("path/z-lev"),
+            .scale = this->declare_parameter<double>("path/scale"),
+            .color = toColorRGBA(this->declare_parameter<std::vector<double>>("path/color"))
+        }
+    };
 
     edge_geometry_cache_ = search::EdgeGeometryCache(this->declare_parameter<std::string>("primitives_config"));
 
@@ -89,22 +89,13 @@ PlannerNode::PlannerNode() : Node("planner") {
     timer_ = this->create_wall_timer(200ms, bind(&PlannerNode::doPlanningLoop, this));
 }
 
-search::Color PlannerNode::setColorFromVector(const std::vector<double>& vector) const {
-    return search::Color{
-        .a = vector[0],
-        .r = vector[1],
-        .g = vector[2],
-        .b = vector[3],
-    };
-}
-
-std_msgs::msg::ColorRGBA PlannerNode::setColorRGBAfromColor(const search::Color& color) const {
-    std_msgs::msg::ColorRGBA color_rgba;
-    color_rgba.a = color.a;
-    color_rgba.r = color.r;
-    color_rgba.g = color.g;
-    color_rgba.b = color.b;
-    return color_rgba;
+Color PlannerNode::toColorRGBA(const std::vector<double>& vector) {
+    Color color;
+    color.a = vector[0];
+    color.r = vector[1];
+    color.g = vector[2];
+    color.b = vector[3];
+    return color;
 }
 
 void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
@@ -144,7 +135,7 @@ void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
 
 void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
     state_.finish_area = geom::Circle{
-        .center = geom::toVec2(*msg), .radius = params_.grid_params.finish_area_radius};
+        .center = geom::toVec2(*msg), .radius = params_.grid.finish_area_radius};
 }
 
 void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
@@ -154,32 +145,31 @@ void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_st
     }
 }
 
-std_msgs::msg::ColorRGBA PlannerNode::setNodeColor(size_t node_index, search::Grid& grid) const {
-    const auto& params = grid.params;
+Color PlannerNode::getNodeColor(size_t node_index, const search::Grid& grid) const {
     const auto& node = grid.getNodes()[node_index];
 
-    std_msgs::msg::ColorRGBA node_color = setColorRGBAfromColor(params.node_base_color);
+    Color node_color = params_.node.base_color;
 
     if (node.is_finish) {
-        node_color = setColorRGBAfromColor(params.node_finish_base_color);
+        node_color = params_.node.finish_base_color;
 
         if (node_index == grid.getEndNodeIndex()) {
-            node_color = setColorRGBAfromColor(params.node_finish_accent_color);
+            node_color = params_.node.finish_accent_color;
         }
     }
 
     if (node.collision) {
-        node_color = setColorRGBAfromColor(params.node_collision_color);
+        node_color = params_.node.collision_color;
     }
 
     if (node_index == grid.getStartNodeIndex()) {
-        node_color = setColorRGBAfromColor(params.node_start_color);
+        node_color = params_.node.start_color;
     }
 
     return node_color;
 }
 
-void PlannerNode::publishGrid(search::Grid& grid) {
+void PlannerNode::publishGrid(const search::Grid& grid) {
     visualization_msgs::msg::Marker graph_nodes;
     graph_nodes.header.stamp = now();
     graph_nodes.header.frame_id = "odom_ekf";
@@ -188,26 +178,24 @@ void PlannerNode::publishGrid(search::Grid& grid) {
     graph_nodes.action = visualization_msgs::msg::Marker::ADD;
     graph_nodes.lifetime = rclcpp::Duration::from_seconds(0);
 
-    const auto& params = grid.params;
-
-    graph_nodes.scale.x = params.node_scale;
-    graph_nodes.scale.y = params.node_scale;
-    graph_nodes.scale.z = params.node_scale;
-    graph_nodes.pose.position.z = params.node_z_lev;
+    graph_nodes.scale.x = params_.node.scale;
+    graph_nodes.scale.y = params_.node.scale;
+    graph_nodes.scale.z = params_.node.scale;
+    graph_nodes.pose.position.z = params_.node.z_lev;
 
     const std::vector<search::Node>& nodes = grid.getNodes();
 
     for (size_t i = 0; i < nodes.size(); i++) {
         graph_nodes.points.push_back(geom::msg::toPoint(nodes[i].point));
 
-        std_msgs::msg::ColorRGBA node_color = setNodeColor(i, grid);
+        Color node_color = getNodeColor(i, grid);
         graph_nodes.colors.push_back(node_color);
     }
 
     signal_.graph->publish(graph_nodes);
 }
 
-void PlannerNode::publishPath(search::Searcher& searcher) {
+void PlannerNode::publishPath(const search::Searcher& searcher) {
     visualization_msgs::msg::Marker path;
     path.header.stamp = now();
     path.header.frame_id = "odom_ekf";
@@ -216,13 +204,11 @@ void PlannerNode::publishPath(search::Searcher& searcher) {
     path.type = visualization_msgs::msg::Marker::LINE_STRIP;
     path.lifetime = rclcpp::Duration::from_seconds(0);
 
-    const auto& params = searcher.graph_->params;
-
-    path.scale.x = params.path_scale;
-    path.scale.y = params.path_scale;
-    path.scale.z = params.path_scale;
-    path.pose.position.z = params.path_z_lev;
-    path.color = setColorRGBAfromColor(params.path_color);
+    path.scale.x = params_.path.scale;
+    path.scale.y = params_.path.scale;
+    path.scale.z = params_.path.scale;
+    path.pose.position.z = params_.path.z_lev;
+    path.color = params_.path.color;
 
     for (const geom::Vec2& vertex : searcher.getPath()) {
         path.points.push_back(geom::msg::toPoint(vertex));
@@ -261,7 +247,7 @@ void PlannerNode::doPlanningLoop() {
 
     // initialize grid
     search::Grid grid =
-        search::Grid(params_.grid_params)
+        search::Grid(params_.grid)
             .setEgoPose(state_.ego_pose)
             .setFinishArea(state_.finish_area)
             .setCollisionChecker(checker_)
@@ -278,7 +264,7 @@ void PlannerNode::doPlanningLoop() {
 
     // initialize graph
     search::DynamicGraph graph =
-        search::DynamicGraph(params_.graph_params)
+        search::DynamicGraph()
             .setGrid(std::make_shared<search::Grid>(grid))
             .setEdgeGeometryCache(std::make_shared<search::EdgeGeometryCache>(edge_geometry_cache_));
 

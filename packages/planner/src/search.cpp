@@ -17,21 +17,21 @@ Grid& Grid::setFinishArea(const std::optional<const geom::Circle>& finish_area) 
 }
 
 Grid& Grid::setCollisionChecker(std::shared_ptr<const collision::StaticCollisionChecker> checker) {
-    this->checker = checker;
+    this->checker = std::move(checker);
     return *this;
 }
 
 Grid& Grid::build() {
     // determining clipped ego point
-    geom::Vec2 ego_point_clipped = clipPoint(ego_pose_.value());
+    geom::Vec2 ego_point_clipped = snapPoint(ego_pose_.value());
 
     // determining clipped origin point
-    geom::Vec2 origin_point_clipped = clipPoint(
+    geom::Vec2 origin_point_clipped = snapPoint(
         ego_pose_.value().pos -
         geom::Vec2(params.width, params.height) * (params.resolution / 2));
 
     // determining clipped finish point
-    geom::Vec2 finish_point_clipped = clipPoint(finish_area_.value().center);
+    geom::Vec2 finish_point_clipped = snapPoint(finish_area_.value().center);
 
     NodeId ego_id = NodeId{
         .x = int((ego_point_clipped.x - origin_point_clipped.x) / params.resolution),
@@ -99,7 +99,7 @@ bool Grid::insideFinishArea(const geom::Vec2& point) const {
     return (finish_area_.value().center - point).lenSq() < squared(finish_area_.value().radius);
 }
 
-geom::Vec2 Grid::clipPoint(const geom::Vec2& point) const {
+geom::Vec2 Grid::snapPoint(const geom::Vec2& point) const {
     return geom::Vec2(
         round<double>(point.x / params.resolution) * params.resolution,
         round<double>(point.y / params.resolution) * params.resolution);
@@ -172,16 +172,16 @@ double VertexSearchState::getTotalCost() const { return start_cost + heuristic_c
 void Vertex::updateState(const VertexSearchState& state) { this->state = state; }
 
 
-DynamicGraph::DynamicGraph(const GraphParams& params) { this->params = params; }
+DynamicGraph::DynamicGraph() {}
 
 DynamicGraph& DynamicGraph::setGrid(std::shared_ptr<const Grid> grid) {
-    this->grid = grid;
+    this->grid = std::move(grid);
     return *this;
 }
 
 DynamicGraph& DynamicGraph::setEdgeGeometryCache(
     std::shared_ptr<const EdgeGeometryCache> edge_geometry_cache) {
-    this->edge_geometry_cache = edge_geometry_cache;
+    this->edge_geometry_cache = std::move(edge_geometry_cache);
     return *this;
 }
 
@@ -249,7 +249,7 @@ bool DynamicGraph::checkConstraints(const Vertex* vertex, const Primitive& primi
 Searcher::Searcher() {}
 
 Searcher& Searcher::setGraph(std::shared_ptr<DynamicGraph> graph) {
-    graph_ = graph;
+    graph_ = std::move(graph);
     return *this;
 }
 
@@ -338,11 +338,6 @@ Searcher& Searcher::findPath() {
     if (finish_area_nodes_indices.find(start_node_index) != finish_area_nodes_indices.end()) {
         return *this;
     }
-
-    if (!grid->getEndNodeIndex().has_value()) {
-        return *this;
-    }
-
 
     /** @details
      *  initialize searcher, create start vertex
