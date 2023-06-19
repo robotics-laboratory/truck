@@ -169,27 +169,7 @@ const std::vector<Primitive>& EdgeGeometryCache::getPrimitives() const { return 
 double VertexSearchState::getTotalCost() const { return start_cost + heuristic_cost; }
 
 
-Vertex::Vertex(
-    const NodeId& node_id,
-    size_t yaw_index,
-    const VertexSearchState& state,
-    std::shared_ptr<const DynamicGraph> graph) {
-
-    this->node_id = node_id;
-    this->yaw_index = yaw_index;
-    this->state = state;
-
-    const std::vector<Primitive>& primitives = graph->edge_geometry_cache->getPrimitives();
-
-    for (size_t i = 0; i < primitives.size(); i++) {
-        // add primitive to a vertex if it satisfies the constraints
-        if (graph->checkConstraints(this, primitives[i])) {
-            edges_indices.push_back(i);
-        }
-    }
-}
-
-void Vertex::update(const VertexSearchState& state) { this->state = state; }
+void Vertex::updateState(const VertexSearchState& state) { this->state = state; }
 
 
 DynamicGraph::DynamicGraph(const GraphParams& params) { this->params = params; }
@@ -203,6 +183,25 @@ DynamicGraph& DynamicGraph::setEdgeGeometryCache(
     std::shared_ptr<const EdgeGeometryCache> edge_geometry_cache) {
     this->edge_geometry_cache = edge_geometry_cache;
     return *this;
+}
+
+Vertex DynamicGraph::buildVertex(const NodeId& node_id, size_t yaw_index, const VertexSearchState& state) {
+    Vertex vertex{
+        .node_id = node_id,
+        .yaw_index = yaw_index,
+        .state = state
+    };
+
+    const std::vector<Primitive>& primitives = edge_geometry_cache->getPrimitives();
+
+    for (size_t i = 0; i < primitives.size(); i++) {
+        // add primitive index to a vertex if it satisfies the constraints
+        if (checkConstraints(&vertex, primitives[i])) {
+            vertex.edges_indices.push_back(i);
+        }
+    }
+
+    return vertex;
 }
 
 bool DynamicGraph::yawMask(const Primitive& primitive, const Vertex* vertex) const {
@@ -357,7 +356,7 @@ Searcher& Searcher::findPath() {
         .prev_vertex_index = std::nullopt,
         .prev_to_cur_vertex_primitive_index = std::nullopt};
 
-    Vertex start_vertex = Vertex(start_node.id, start_yaw_index, start_state, graph_);
+    Vertex start_vertex = graph_->buildVertex(start_node.id, start_yaw_index, start_state);
 
     vertices.push_back(start_vertex);
     open_set_.insert(0);
@@ -407,8 +406,7 @@ Searcher& Searcher::findPath() {
                     .prev_vertex_index = cur_vertex_index,
                     .prev_to_cur_vertex_primitive_index = primitive_index};
 
-                Vertex new_vertex =
-                    Vertex(neighbor_node_id, neighbor_yaw_index, new_vertex_state, graph_);
+                Vertex new_vertex = graph_->buildVertex(neighbor_node_id, neighbor_yaw_index, new_vertex_state);
 
                 vertices.push_back(new_vertex);
                 open_set_.insert(vertices.size() - 1);
@@ -427,7 +425,7 @@ Searcher& Searcher::findPath() {
                         .prev_vertex_index = cur_vertex_index,
                         .prev_to_cur_vertex_primitive_index = primitive_index};
 
-                    neighbor_vertex.update(new_state);
+                    neighbor_vertex.updateState(new_state);
                 }
             }
         }

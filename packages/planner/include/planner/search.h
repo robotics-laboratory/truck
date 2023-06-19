@@ -126,19 +126,13 @@ struct VertexSearchState {
 class DynamicGraph;
 
 struct Vertex {
-    Vertex(
-        const NodeId& node_id,
-        size_t yaw_index,
-        const VertexSearchState& state,
-        std::shared_ptr<const DynamicGraph> graph);
-
     NodeId node_id;
     size_t yaw_index;
     std::vector<size_t> edges_indices;
 
     VertexSearchState state;
 
-    void update(const VertexSearchState& state);
+    void updateState(const VertexSearchState& state);
 };
 
 class DynamicGraph {
@@ -150,6 +144,8 @@ class DynamicGraph {
         std::shared_ptr<const EdgeGeometryCache> edge_geometry_cache);
 
     bool checkConstraints(const Vertex* vertex, const Primitive& primitive) const;
+
+    Vertex buildVertex(const NodeId& node_id, size_t yaw_index, const VertexSearchState& state);
 
     GraphParams params;
     std::vector<Vertex> vertices;
