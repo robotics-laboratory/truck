@@ -74,17 +74,7 @@ const std::optional<size_t>& Grid::getEndNodeIndex() const { return end_node_ind
 const std::set<size_t>& Grid::getFinishAreaNodesIndices() const { return finish_area_nodes_indices_; }
 
 const Node& Grid::getNodeById(const NodeId& id) const {
-    for (const Node& cur_node : nodes_) {
-        if (cur_node.id == id) {
-            return cur_node;
-        }
-    }
-
-    /** @details: 
-     *  catch case if node wasn't found
-     *  we guarantee that this should not happen
-    */
-    VERIFY(false);
+    return nodes_.at(id.x + params.width * id.y);
 }
 
 bool Grid::insideFinishArea(const geom::Vec2& point) const {
