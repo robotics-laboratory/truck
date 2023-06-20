@@ -90,6 +90,8 @@ PlannerNode::PlannerNode() : Node("planner") {
 }
 
 Color PlannerNode::toColorRGBA(const std::vector<double>& vector) {
+    VERIFY(vector.size() == 4);
+
     Color color;
     color.a = vector[0];
     color.r = vector[1];
@@ -248,8 +250,8 @@ void PlannerNode::doPlanningLoop() {
     // initialize grid
     search::Grid grid =
         search::Grid(params_.grid)
-            .setEgoPose(state_.ego_pose)
-            .setFinishArea(state_.finish_area)
+            .setEgoPose(state_.ego_pose.value())
+            .setFinishArea(state_.finish_area.value())
             .setCollisionChecker(checker_)
             .build();
 

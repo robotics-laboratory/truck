@@ -40,39 +40,41 @@ class Grid {
   public:
     Grid(const GridParams& params);
 
-    Grid& setEgoPose(const std::optional<const geom::Pose>& ego_pose);
-    Grid& setFinishArea(const std::optional<const geom::Circle>& finish_area);
+    Grid& setEgoPose(const geom::Pose& ego_pose);
+    Grid& setFinishArea(const geom::Circle& finish_area);
     Grid& setCollisionChecker(std::shared_ptr<const collision::StaticCollisionChecker> checker);
-
     Grid& build();
 
+    const geom::Pose& getEgoPose() const;
     const std::vector<Node>& getNodes() const;
-    const std::optional<geom::Pose>& getEgoPose() const;
+    const Node& getNodeById(const NodeId& id) const;
     const std::optional<size_t>& getStartNodeIndex() const;
     const std::optional<size_t>& getEndNodeIndex() const;
     const std::set<size_t>& getFinishAreaNodesIndices() const;
 
-    const Node& getNodeById(const NodeId& id) const;
     bool insideFinishArea(const geom::Vec2& point) const;
     geom::Vec2 snapPoint(const geom::Vec2& point) const;
+    NodeId toNodeId(const geom::Vec2& point, const geom::Vec2& origin) const;
 
     GridParams params;
+
     std::shared_ptr<const collision::StaticCollisionChecker> checker = nullptr;
 
   private:
+    geom::Pose ego_pose_;
+    geom::Circle finish_area_;
+
     std::vector<Node> nodes_;
     std::set<size_t> finish_area_nodes_indices_;
 
     std::optional<size_t> start_node_index_ = std::nullopt;
     std::optional<size_t> end_node_index_ = std::nullopt;
-    std::optional<geom::Pose> ego_pose_ = std::nullopt;
-    std::optional<geom::Circle> finish_area_ = std::nullopt;
 };
 
 struct Primitive {
     NodeId shift_node_id;
     double length;
-    std::vector<geom::Pose> poses;
+    geom::Poses poses;
 };
 
 class EdgeGeometryCache {
@@ -104,8 +106,6 @@ struct VertexSearchState {
     // index of a primitive from previous to a current vertex
     std::optional<size_t> prev_to_cur_vertex_primitive_index = std::nullopt;
 };
-
-class DynamicGraph;
 
 struct Vertex {
     NodeId node_id;
@@ -148,10 +148,10 @@ class Searcher {
 
     void buildPath(size_t cur_vertex_index);
 
+    size_t getOptimalVertexIndex() const;
     const std::vector<geom::Vec2>& getPath() const;
     double getHeuristic(const geom::Vec2& from, const geom::Vec2& to) const;
     std::optional<size_t> getNeighborVertexIndex(const NodeId& node_id, size_t yaw_index) const;
-    size_t findOptimalVertexIndex() const;
 
   private:
     std::vector<geom::Vec2> path_;

@@ -6,12 +6,12 @@ namespace truck::planner::search {
 
 Grid::Grid(const GridParams& params) : params(params) {}
 
-Grid& Grid::setEgoPose(const std::optional<const geom::Pose>& ego_pose) {
+Grid& Grid::setEgoPose(const geom::Pose& ego_pose) {
     ego_pose_ = ego_pose;
     return *this;
 }
 
-Grid& Grid::setFinishArea(const std::optional<const geom::Circle>& finish_area) {
+Grid& Grid::setFinishArea(const geom::Circle& finish_area) {
     finish_area_ = finish_area;
     return *this;
 }
@@ -22,31 +22,21 @@ Grid& Grid::setCollisionChecker(std::shared_ptr<const collision::StaticCollision
 }
 
 Grid& Grid::build() {
-    // determining clipped ego point
-    geom::Vec2 ego_point_clipped = snapPoint(ego_pose_.value());
+    geom::Vec2 ego_clipped = snapPoint(ego_pose_);
+    geom::Vec2 finish_clipped = snapPoint(finish_area_.center);
 
-    // determining clipped origin point
-    geom::Vec2 origin_point_clipped = snapPoint(
-        ego_pose_.value().pos -
-        geom::Vec2(params.width, params.height) * (params.resolution / 2));
+    geom::Vec2 origin_clipped = \
+        snapPoint(ego_clipped - geom::Vec2(params.width, params.height) * (params.resolution / 2));
 
-    // determining clipped finish point
-    geom::Vec2 finish_point_clipped = snapPoint(finish_area_.value().center);
-
-    NodeId ego_id = NodeId{
-        .x = int((ego_point_clipped.x - origin_point_clipped.x) / params.resolution),
-        .y = int((ego_point_clipped.y - origin_point_clipped.y) / params.resolution)};
-
-    NodeId finish_id = NodeId{
-        .x = int((finish_point_clipped.x - origin_point_clipped.x) / params.resolution),
-        .y = int((finish_point_clipped.y - origin_point_clipped.y) / params.resolution)};
+    NodeId ego_id = toNodeId(ego_clipped, origin_clipped);
+    NodeId finish_id = toNodeId(finish_clipped, origin_clipped);
 
     for (int i = 0; i < params.height; i++) {
         for (int j = 0; j < params.width; j++) {
             // initialize node
             Node node = Node{
                 .id = NodeId{j, i},
-                .point = origin_point_clipped + (geom::Vec2(j, i) * params.resolution),
+                .point = origin_clipped + (geom::Vec2(j, i) * params.resolution),
                 .is_finish = insideFinishArea(node.point),
                 .collision = (checker->distance(node.point) < 1e-5) ? true : false};
 
@@ -73,7 +63,7 @@ Grid& Grid::build() {
     return *this;
 }
 
-const std::optional<geom::Pose>& Grid::getEgoPose() const { return ego_pose_; }
+const geom::Pose& Grid::getEgoPose() const { return ego_pose_; }
 
 const std::vector<Node>& Grid::getNodes() const { return nodes_; }
 
@@ -90,19 +80,27 @@ const Node& Grid::getNodeById(const NodeId& id) const {
         }
     }
 
-    // catch case if node wasn't found
-    // we guarantee that this should not happen
-    assert(false);
+    /** @details: 
+     *  catch case if node wasn't found
+     *  we guarantee that this should not happen
+    */
+    VERIFY(false);
 }
 
 bool Grid::insideFinishArea(const geom::Vec2& point) const {
-    return (finish_area_.value().center - point).lenSq() < squared(finish_area_.value().radius);
+    return (finish_area_.center - point).lenSq() < squared(finish_area_.radius);
 }
 
 geom::Vec2 Grid::snapPoint(const geom::Vec2& point) const {
     return geom::Vec2(
         round<double>(point.x / params.resolution) * params.resolution,
         round<double>(point.y / params.resolution) * params.resolution);
+}
+
+NodeId Grid::toNodeId(const geom::Vec2& point, const geom::Vec2& origin) const {
+    return NodeId{
+        .x = int((point.x - origin.x) / params.resolution),
+        .y = int((point.y - origin.y) / params.resolution)};
 }
 
 
@@ -116,7 +114,7 @@ EdgeGeometryCache::EdgeGeometryCache(const std::string& path) {
         yaws_.push_back(geom::Angle(yaw));
     }
 
-    assert(yaws_.size() == 12);
+    VERIFY(yaws_.size() == 12);
 
     json primitives = data["primitives"];
 
@@ -144,7 +142,7 @@ EdgeGeometryCache::EdgeGeometryCache(const std::string& path) {
         primitives_.push_back(primitive);
     }
 
-    assert(primitives_.size() == 36);
+    VERIFY(primitives_.size() == 36);
 }
 
 size_t EdgeGeometryCache::getIndexByYaw(const geom::Angle& yaw) const {
@@ -257,7 +255,7 @@ const std::vector<geom::Vec2>& Searcher::getPath() const { return path_; }
 
 double Searcher::getHeuristic(const geom::Vec2& from, const geom::Vec2& to) const { return geom::len(from - to); }
 
-size_t Searcher::findOptimalVertexIndex() const {
+size_t Searcher::getOptimalVertexIndex() const {
     size_t min_total_cost_index = *open_set_.begin();
     double min_total_cost_value = graph_->vertices[min_total_cost_index].state.getTotalCost();
 
@@ -317,11 +315,12 @@ void Searcher::buildPath(size_t cur_vertex_index) {
 }
 
 Searcher& Searcher::findPath() {
-    /** @details
-     *  let's introduce convenient names for objects' references to use
-     */
+    // let's introduce convenient names for objects' references to use
     std::shared_ptr<const Grid> grid = graph_->grid;
     std::vector<Vertex>& vertices = graph_->vertices;
+
+    VERIFY(grid->getStartNodeIndex().has_value());
+    VERIFY(grid->getEndNodeIndex().has_value());
 
     size_t start_node_index = grid->getStartNodeIndex().value();
     size_t end_node_index = grid->getEndNodeIndex().value();
@@ -331,19 +330,14 @@ Searcher& Searcher::findPath() {
     const Node& start_node = grid->getNodes()[start_node_index];
     const Node& end_node = grid->getNodes()[end_node_index];
 
-
-    /** @details
-     *  check, if we need indeed to search a path
-     */
+    // check, if we need indeed to search a path
     if (finish_area_nodes_indices.find(start_node_index) != finish_area_nodes_indices.end()) {
         return *this;
     }
 
-    /** @details
-     *  initialize searcher, create start vertex
-     */
-    size_t start_yaw_index = graph_->edge_geometry_cache->getIndexByYaw(
-        grid->getEgoPose().value().dir.angle());
+    // initialize searcher, create start vertex
+    size_t start_yaw_index = \
+        graph_->edge_geometry_cache->getIndexByYaw(grid->getEgoPose().dir.angle());
 
     VertexSearchState start_state{
         .start_cost = 0.0,
@@ -357,11 +351,9 @@ Searcher& Searcher::findPath() {
     open_set_.insert(0);
 
 
-    /** @details
-     *  loop through 'open_set' while it's not empty
-     */
+    // loop through 'open_set' while it's not empty
     while (open_set_.size() > 0) {
-        size_t cur_vertex_index = findOptimalVertexIndex();
+        size_t cur_vertex_index = getOptimalVertexIndex();
 
         if (grid->getNodeById(vertices[cur_vertex_index].node_id).is_finish) {
             buildPath(cur_vertex_index);
@@ -371,9 +363,7 @@ Searcher& Searcher::findPath() {
         closed_set_.insert(cur_vertex_index);
         open_set_.erase(cur_vertex_index);
         
-         /** @details
-         *  loop through current vertex's existing neighbors
-         */
+        // loop through current vertex's existing neighbors
         for (size_t primitive_index : vertices[cur_vertex_index].edges_indices) {
             const Primitive& primitive =
                 graph_->edge_geometry_cache->getPrimitives()[primitive_index];
@@ -391,7 +381,6 @@ Searcher& Searcher::findPath() {
 
             if (!neighboring_vertex_index.has_value()) {
                 // neighbor doesn't exist, need to create one
-
                 const Node& new_vertex_node = grid->getNodeById(neighbor_node_id);
 
                 VertexSearchState new_vertex_state{
@@ -406,14 +395,12 @@ Searcher& Searcher::findPath() {
                 vertices.push_back(new_vertex);
                 open_set_.insert(vertices.size() - 1);
             } else {
-                // neighbor exists
-                
+                // neighbor exists, check for state update
                 Vertex& neighbor_vertex = vertices[neighboring_vertex_index.value()];
-
                 double new_start_cost = vertices[cur_vertex_index].state.start_cost + primitive.length;
 
                 if (new_start_cost < neighbor_vertex.state.start_cost) {
-                    // update neighbor's state
+                    // update state
                     VertexSearchState new_state{
                         .start_cost = new_start_cost,
                         .heuristic_cost = neighbor_vertex.state.heuristic_cost,
