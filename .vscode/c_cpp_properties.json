@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/ros/galactic/**",
+                "${ROS_ROOT}/**",
                 "${workspaceFolder}/packages/build/**",
                 "/usr/local/**",
                 "/usr/include/**"
