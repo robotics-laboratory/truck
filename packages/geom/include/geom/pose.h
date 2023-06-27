@@ -8,6 +8,8 @@
 namespace truck::geom {
 
 struct Pose {
+    Pose() : pos(Vec2()), dir(Vec2()) {}
+
     Pose(const Vec2& pos, const Vec2& dir) : pos(pos), dir(dir) {}
 
     operator Vec2() const { return pos; }

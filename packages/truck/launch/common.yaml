@@ -44,3 +44,6 @@ launch:
 
 - include:
     file: $(find-pkg-share truck)/launch/bridge.yaml
+
+- include:
+    file: $(find-pkg-share planner)/launch/planner.yaml
