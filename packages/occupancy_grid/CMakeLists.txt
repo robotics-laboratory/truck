@@ -8,6 +8,9 @@ find_package(common REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(image_geometry REQUIRED)
+
 
 if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 20)
@@ -18,7 +21,7 @@ add_executable(occupancy_grid_node
   src/occupancy_grid_node.cpp
 )
 
-ament_target_dependencies(occupancy_grid_node rclcpp common nav_msgs sensor_msgs)
+ament_target_dependencies(occupancy_grid_node rclcpp common nav_msgs sensor_msgs std_msgs image_geometry)
 
 target_include_directories(${PROJECT_NAME}_node PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

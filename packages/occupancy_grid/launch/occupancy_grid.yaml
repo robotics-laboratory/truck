@@ -15,3 +15,4 @@ launch:
     - {name: "qos", value: "$(var qos)"}
     - {name: "resolution", value: 0.10}
     - {name: "radius", value: 7.0}
+    - {name: "camera_status", value: 0}

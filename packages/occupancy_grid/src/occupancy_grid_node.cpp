@@ -1,4 +1,5 @@
 #include "occupancy_grid/occupancy_grid_node.h"
+#include "occupancy_grid/conversions.hpp"
 
 #include "common/math.h"
 
@@ -24,6 +25,26 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
         std::bind(&OccupancyGridNode::handleLaserScan, this, std::placeholders::_1));
 
     grid_signal_ = create_publisher<nav_msgs::msg::OccupancyGrid>("/grid", 10);
+    
+    declare_parameter("camera_status", 0);
+    
+    int camera_status_ = this->get_parameter("camera_status").as_int();
+   
+    RCLCPP_INFO(this->get_logger(),"camera_status %d", camera_status_);
+
+    
+    if(camera_status_ == 1) {
+        depth_image_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+            "/camera/depth/image_rect_raw", qos, 
+            std::bind(&OccupancyGridNode::handleCameraScan, this, std::placeholders::_1));
+    
+        cam_info_sub_= this->create_subscription<sensor_msgs::msg::CameraInfo>(
+            "/camera/depth/camera_info", 10,
+            std::bind(&OccupancyGridNode::cameraInfo, this, std::placeholders::_1));
+    
+        pointcloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera_output/pointcloud2", 10);
+    }
+
 }
 
 void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstSharedPtr scan) {
@@ -69,6 +90,30 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
     }
 
     grid_signal_->publish(grid);
+}
+
+void OccupancyGridNode::handleCameraScan(sensor_msgs::msg::Image::ConstSharedPtr image) {
+    sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg = std::make_shared<sensor_msgs::msg::PointCloud2>(); 
+    cloud_msg->header = image->header;
+    cloud_msg->height = image->height;
+    cloud_msg->width = image->width;
+    cloud_msg->is_dense = false;
+    cloud_msg->is_bigendian = false;
+        
+    sensor_msgs::PointCloud2Modifier pcd_modifier(*cloud_msg);
+    pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
+
+    image_geometry::PinholeCameraModel model;
+    model.fromCameraInfo(cam_info);
+    
+    depth_image_proc::convertDepth<uint16_t>(image, cloud_msg, model);
+    
+    pointcloud_pub_->publish(*cloud_msg);
+
+}
+
+void OccupancyGridNode::cameraInfo(sensor_msgs::msg::CameraInfo::SharedPtr info) {
+        cam_info = info;
 }
 
 }  // namespace truck::occupancy_grid
