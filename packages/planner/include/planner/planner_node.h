@@ -18,8 +18,6 @@
 
 namespace truck::planner::visualization {
 
-using Color = std_msgs::msg::ColorRGBA;
-
 class PlannerNode : public rclcpp::Node {
   public:
     PlannerNode();
@@ -30,10 +28,9 @@ class PlannerNode : public rclcpp::Node {
     void onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg);
     void onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
 
-    Color toColorRGBA(const std::vector<double>& vector);
-    Color getNodeColor(size_t node_index, const search::Grid& grid) const;
+    std_msgs::msg::ColorRGBA getNodeColor(size_t node_index) const;
 
-    void publishGrid(const search::Grid& grid);
+    void publishGrid() const;
 
     std::optional<geom::Transform> getLatestTranform(
         const std::string& source, const std::string& target);
@@ -53,9 +50,12 @@ class PlannerNode : public rclcpp::Node {
     } signal_;
 
     struct State {
+        std::shared_ptr<search::Grid> grid = nullptr;
+        std::shared_ptr<collision::Map> distance_transform = nullptr;
+
         nav_msgs::msg::Odometry::SharedPtr odom = nullptr;
         nav_msgs::msg::OccupancyGrid::SharedPtr occupancy_grid = nullptr;
-        std::shared_ptr<collision::Map> distance_transform = nullptr;
+
         std::optional<geom::Pose> ego_pose = std::nullopt;
         std::optional<geom::Circle> finish_area = std::nullopt;
     } state_;
@@ -66,11 +66,11 @@ class PlannerNode : public rclcpp::Node {
         struct NodeParams {
             double z_lev;
             double scale;
-            Color base_color;
-            Color start_color;
-            Color finish_base_color;
-            Color finish_accent_color;
-            Color collision_color;
+            std_msgs::msg::ColorRGBA base_color;
+            std_msgs::msg::ColorRGBA start_color;
+            std_msgs::msg::ColorRGBA finish_base_color;
+            std_msgs::msg::ColorRGBA finish_accent_color;
+            std_msgs::msg::ColorRGBA collision_color;
         } node;
     } params_;
 

@@ -19,7 +19,7 @@ struct NodeId {
 struct Node {
     NodeId id;
     geom::Vec2 point;
-    bool is_finish;
+    bool finish;
     bool collision;
 };
 
@@ -33,7 +33,7 @@ struct GridParams {
 
 class Grid {
   public:
-    Grid(const GridParams& params);
+    Grid(const GridParams& params, const model::Shape& shape);
 
     Grid& setEgoPose(const geom::Pose& ego_pose);
     Grid& setFinishArea(const geom::Circle& finish_area);
@@ -53,6 +53,8 @@ class Grid {
 
   private:
     GridParams params_;
+
+    model::Shape shape_;
 
     geom::Pose ego_pose_;
     geom::Circle finish_area_;

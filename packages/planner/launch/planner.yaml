@@ -18,8 +18,8 @@ launch:
 
     - {name: "node/z-lev", value: 0.05 }
     - {name: "node/scale", value: 0.1 }
-    - {name: "node/base/color", value: [1.0, 0.2, 0.2, 0.2] }          # argb
-    - {name: "node/start/color", value: [1.0, 0.8, 0.8, 0.8] }         # argb
-    - {name: "node/finish/base/color", value: [0.3, 1.0, 1.0, 0.0] }   # argb
-    - {name: "node/finish/accent/color", value: [1.0, 1.0, 1.0, 0.0] } # argb
-    - {name: "node/collision/color", value: [0.8, 1.0, 0.0, 0.0] }     # argb
+    - {name: "node/base/color_rgba", value: [1.0, 0.2, 0.2, 0.2] }
+    - {name: "node/start/color_rgba", value: [1.0, 0.8, 0.8, 0.8] }
+    - {name: "node/finish/base/color_rgba", value: [0.3, 1.0, 1.0, 0.0] }
+    - {name: "node/finish/accent/color_rgba", value: [1.0, 1.0, 1.0, 0.0] }
+    - {name: "node/collision/color_rgba", value: [0.8, 1.0, 0.0, 0.0] }

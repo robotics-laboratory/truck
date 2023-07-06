@@ -2,7 +2,7 @@
 
 namespace truck::planner::search {
 
-Grid::Grid(const GridParams& params) : params_(params) {}
+Grid::Grid(const GridParams& params, const model::Shape& shape) : params_(params), shape_(shape) {}
 
 Grid& Grid::setEgoPose(const geom::Pose& ego_pose) {
     ego_pose_ = ego_pose;
@@ -35,10 +35,10 @@ Grid& Grid::build() {
             Node node = Node{
                 .id = NodeId{j, i},
                 .point = origin_clipped + (geom::Vec2(j, i) * params_.resolution),
-                .is_finish = insideFinishArea(node.point),
-                .collision = (checker_->distance(node.point) < 1e-5) ? true : false};
+                .finish = insideFinishArea(node.point),
+                .collision = (checker_->distance(node.point) < (shape_.width / 2)) ? true : false};
 
-            nodes_.push_back(node);
+            nodes_.emplace_back(node);
 
             size_t cur_node_index = nodes_.size() - 1;
 
@@ -52,7 +52,7 @@ Grid& Grid::build() {
                 end_node_index_ = cur_node_index;
             }
 
-            if (node.is_finish) {
+            if (node.finish) {
                 finish_area_nodes_indices_.insert(cur_node_index);
             }
         }

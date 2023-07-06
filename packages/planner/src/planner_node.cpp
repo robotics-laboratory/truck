@@ -5,6 +5,21 @@ namespace truck::planner::visualization {
 using namespace std::chrono_literals;
 using namespace std::placeholders;
 
+namespace {
+
+std_msgs::msg::ColorRGBA toColorRGBA(const std::vector<double>& vector) {
+    VERIFY(vector.size() == 4);
+
+    std_msgs::msg::ColorRGBA color;
+    color.a = vector[0];
+    color.r = vector[1];
+    color.g = vector[2];
+    color.b = vector[3];
+    return color;
+}
+
+} // namespace
+
 PlannerNode::PlannerNode() : Node("planner") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
@@ -50,20 +65,20 @@ PlannerNode::PlannerNode() : Node("planner") {
             .z_lev = this->declare_parameter<double>("node/z-lev"),
             .scale = this->declare_parameter<double>("node/scale"),
 
-            .base_color =
-                toColorRGBA(this->declare_parameter<std::vector<double>>("node/base/color")),
+            .base_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node/base/color_rgba")),
 
-            .start_color =
-                toColorRGBA(this->declare_parameter<std::vector<double>>("node/start/color")),
+            .start_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node/start/color_rgba")),
 
-            .finish_base_color =
-                toColorRGBA(this->declare_parameter<std::vector<double>>("node/finish/base/color")),
+            .finish_base_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node/finish/base/color_rgba")),
 
             .finish_accent_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/finish/accent/color")),
+                this->declare_parameter<std::vector<double>>("node/finish/accent/color_rgba")),
 
-            .collision_color =
-                toColorRGBA(this->declare_parameter<std::vector<double>>("node/collision/color")),
+            .collision_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node/collision/color_rgba")),
         }};
 
     model_ = std::make_unique<model::Model>(
@@ -124,26 +139,15 @@ void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_st
     }
 }
 
-Color PlannerNode::toColorRGBA(const std::vector<double>& vector) {
-    VERIFY(vector.size() == 4);
+std_msgs::msg::ColorRGBA PlannerNode::getNodeColor(size_t node_index) const {
+    const auto& node = state_.grid->getNodes()[node_index];
 
-    Color color;
-    color.a = vector[0];
-    color.r = vector[1];
-    color.g = vector[2];
-    color.b = vector[3];
-    return color;
-}
+    std_msgs::msg::ColorRGBA node_color = params_.node.base_color;
 
-Color PlannerNode::getNodeColor(size_t node_index, const search::Grid& grid) const {
-    const auto& node = grid.getNodes()[node_index];
-
-    Color node_color = params_.node.base_color;
-
-    if (node.is_finish) {
+    if (node.finish) {
         node_color = params_.node.finish_base_color;
 
-        if (node_index == grid.getEndNodeIndex()) {
+        if (node_index == state_.grid->getEndNodeIndex()) {
             node_color = params_.node.finish_accent_color;
         }
     }
@@ -152,14 +156,14 @@ Color PlannerNode::getNodeColor(size_t node_index, const search::Grid& grid) con
         node_color = params_.node.collision_color;
     }
 
-    if (node_index == grid.getStartNodeIndex()) {
+    if (node_index == state_.grid->getStartNodeIndex()) {
         node_color = params_.node.start_color;
     }
 
     return node_color;
 }
 
-void PlannerNode::publishGrid(const search::Grid& grid) {
+void PlannerNode::publishGrid() const {
     visualization_msgs::msg::Marker graph_nodes;
     graph_nodes.header.stamp = now();
     graph_nodes.header.frame_id = "odom_ekf";
@@ -173,11 +177,11 @@ void PlannerNode::publishGrid(const search::Grid& grid) {
     graph_nodes.scale.z = params_.node.scale;
     graph_nodes.pose.position.z = params_.node.z_lev;
 
-    const std::vector<search::Node>& nodes = grid.getNodes();
+    const std::vector<search::Node>& nodes = state_.grid->getNodes();
 
     for (size_t i = 0; i < nodes.size(); i++) {
         graph_nodes.points.push_back(geom::msg::toPoint(nodes[i].point));
-        graph_nodes.colors.push_back(getNodeColor(i, grid));
+        graph_nodes.colors.push_back(getNodeColor(i));
     }
 
     signal_.graph->publish(graph_nodes);
@@ -199,14 +203,15 @@ void PlannerNode::doPlanningLoop() {
     }
 
     // initialize grid
-    search::Grid grid = search::Grid(params_.grid)
-                            .setEgoPose(state_.ego_pose.value())
-                            .setFinishArea(state_.finish_area.value())
-                            .setCollisionChecker(checker_)
-                            .build();
+    state_.grid = std::make_shared<search::Grid>(
+        search::Grid(params_.grid, model_->shape())
+            .setEgoPose(state_.ego_pose.value())
+            .setFinishArea(state_.finish_area.value())
+            .setCollisionChecker(checker_)
+            .build());
 
     // visualize grid
-    publishGrid(grid);
+    publishGrid();
 }
 
 }  // namespace truck::planner::visualization
