@@ -25,7 +25,7 @@ class StaticCollisionChecker {
     double distance(const geom::Pose& ego_pose) const;
     double distance(const geom::Vec2& point) const;
 
-  public:
+  private:
     model::Shape shape_;
 
     struct State {
