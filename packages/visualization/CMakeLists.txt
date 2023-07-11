@@ -18,7 +18,8 @@ add_executable(
 
 ament_target_dependencies(
     visualization_node
-    rclcpp model
+    rclcpp
+    model
     nav_msgs
     truck_msgs
     visualization_msgs)

@@ -56,7 +56,8 @@ target_include_directories(
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 
-install(DIRECTORY
+install(
+  DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}
 )
