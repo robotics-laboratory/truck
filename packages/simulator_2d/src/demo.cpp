@@ -1,7 +1,6 @@
 #include "simulator_2d/demo.h"
 
 DemoNode::DemoNode() : Node("demo") {
-    //*
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
@@ -10,7 +9,6 @@ DemoNode::DemoNode() : Node("demo") {
         rclcpp::QoS(1).reliability(qos));
 
     timer_ = this->create_wall_timer(period_, std::bind(&DemoNode::timerCallback, this));
-    //*/
 }
 
 void DemoNode::timerCallback() {
