@@ -1,17 +1,19 @@
-#include "simulator_2d/demo.h"
+#include "simulator_2d/simulator_node.h"
 
-DemoNode::DemoNode() : Node("demo") {
+SimulatorNode::SimulatorNode() : Node("simulator") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
-    publisher_ = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/demo/publisher",
+    signal_.command = Node::create_publisher<truck_msgs::msg::Control>("/control/command", 1);
+    signal_.feedback = Node::create_publisher<sensor_msgs::msg::JoyFeedback>("/simulator/feedback", 1);
+    signal_.visualization = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/simulator/visualization",
         rclcpp::QoS(1).reliability(qos));
 
-    timer_ = this->create_wall_timer(period_, std::bind(&DemoNode::timerCallback, this));
+    timer_ = this->create_wall_timer(period_, std::bind(&SimulatorNode::timerCallback, this));
 }
 
-void DemoNode::timerCallback() {
+void SimulatorNode::timerCallback() {
     sphere_.header.stamp = now();
     sphere_.header.frame_id = "odom_ekf";
     sphere_.id = 0;
@@ -33,5 +35,5 @@ void DemoNode::timerCallback() {
     sphere_.color.g = 0.0;
     sphere_.color.b = 0.0;
 
-    publisher_->publish(sphere_);
+    signal_.visualization->publish(sphere_);
 }
