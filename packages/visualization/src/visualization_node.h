@@ -78,10 +78,10 @@ class VisualizationNode : public rclcpp::Node {
     struct Signals {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr trajectory = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego = nullptr;
-        rclcpp::Publisher<visualization_msgs::msg::Marker> ::SharedPtr ego_track = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego_track = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr waypoints = nullptr;
     } signal_;
 };
 
-}  // namespace truck::control_proxy
+}  // namespace truck::visualization
