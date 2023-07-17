@@ -331,4 +331,4 @@ void VisualizationNode::handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedP
     publishWaypoints();
 }
 
-}  // namespace truck::control_proxy
+}  // namespace truck::visualization

@@ -17,8 +17,7 @@ using F32GridDataPtr = GridDataPtr<float>;
 
 template<typename T>
 GridDataPtr<T> Allocate(const Size& size) noexcept {
-    GridDataPtr<T> ptr(new T[size()]);
-    return ptr;
+    return std::make_unique<T[]>(size());
 }
 
 template<typename T>
@@ -30,10 +29,8 @@ struct GridHolder {
         std::swap(this->ptr, ptr);
     }
 
-    GridHolder(GridHolder&& other) noexcept {
-        std::swap(grid, other.grid);
-        std::swap(ptr, other.ptr);
-    }
+    GridHolder(GridHolder&& other) noexcept
+        : GridHolder(std::move(other.grid), std::move(other.ptr)) {}
 
     GridHolder(const GridHolder& other) = delete;
 

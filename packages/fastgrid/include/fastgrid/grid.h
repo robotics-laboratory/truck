@@ -8,21 +8,25 @@
 namespace truck::fastgrid {
 
 struct Size {
-    constexpr size_t operator()() const noexcept { return width * height; }
+    constexpr int operator()() const noexcept { return width * height; }
 
-    size_t width = 0;
-    size_t height = 0;
+    int width = 0;
+    int height = 0;
 };
 
 template<typename T>
 struct Grid {
     Grid() = default;
 
-    Grid(
-        const Size& size, double resolution, const std::optional<geom::Pose>& origin = std::nullopt)
+    Grid(const Size& size, double resolution,
+         const std::optional<geom::Pose>& origin = std::nullopt)
         : size(size), resolution(resolution), origin(origin) {}
 
     void Reset(T* data) { this->data = data; }
+
+    T* operator[](int row) noexcept { return data + row * size.width; }
+
+    const T* operator[](int row) const noexcept { return data + row * size.width; }
 
     Size size = {};
     double resolution = 0.0;

@@ -3,7 +3,7 @@ Language: Cpp
 
 AlignTrailingComments: true
 AccessModifierOffset: -2
-AlignAfterOpenBracket: AlwaysBreak
+AlignAfterOpenBracket: Align
 AllowShortFunctionsOnASingleLine: All
 BinPackArguments: false
 BreakBeforeBraces: Attach
