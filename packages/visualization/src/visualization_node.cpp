@@ -30,23 +30,23 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
     params_ = Parameters{
         .ttl = rclcpp::Duration::from_seconds(this->declare_parameter("ttl", 1.0)),
 
-        .ego_z_lev = this->declare_parameter("ego/z_lev", 0.0),
-        .ego_height = this->declare_parameter("ego/height", 0.2),
+        .ego_z_lev = this->declare_parameter("ego.z_lev", 0.0),
+        .ego_height = this->declare_parameter("ego.height", 0.2),
 
-        .ego_track_width = this->declare_parameter("ego/track/width", 0.06),
-        .ego_track_height = this->declare_parameter("ego/track/height", 0.01),
+        .ego_track_width = this->declare_parameter("ego.track.width", 0.06),
+        .ego_track_height = this->declare_parameter("ego.track.height", 0.01),
         .ego_track_ttl =
-            rclcpp::Duration::from_seconds(this->declare_parameter("ego/track/ttl", 2.00)),
+            rclcpp::Duration::from_seconds(this->declare_parameter("ego.track.ttl", 2.00)),
 
-        .arc_z_lev = this->declare_parameter("arc/z_lev", 0.0),
-        .arc_width = this->declare_parameter("arc/width", 0.06),
-        .arc_length = this->declare_parameter("arc/length", 1.0),
+        .arc_z_lev = this->declare_parameter("arc.z_lev", 0.0),
+        .arc_width = this->declare_parameter("arc.width", 0.06),
+        .arc_length = this->declare_parameter("arc.length", 1.0),
 
-        .waypoints_z_lev = this->declare_parameter("waypoints/z_lev", 0.50),
-        .waypoints_radius = this->declare_parameter("waypoints/radius", 0.10),
+        .waypoints_z_lev = this->declare_parameter("waypoints.z_lev", 0.50),
+        .waypoints_radius = this->declare_parameter("waypoints.radius", 0.10),
 
-        .trajectory_z_lev = this->declare_parameter("trajectory/z_lev", 0.0),
-        .trajectory_width = this->declare_parameter("trajectory/width", 0.12),
+        .trajectory_z_lev = this->declare_parameter("trajectory.z_lev", 0.0),
+        .trajectory_width = this->declare_parameter("trajector.width", 0.12),
     };
 
     slot_.mode = Node::create_subscription<truck_msgs::msg::ControlMode>(
