@@ -8,6 +8,7 @@ find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(OpenCV REQUIRED)
 
+
 add_library(
     ${PROJECT_NAME} SHARED
     src/distance_transform.cpp
@@ -24,6 +25,7 @@ target_include_directories(
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(geom common OpenCV)
+
 
 install(
     TARGETS ${PROJECT_NAME}
