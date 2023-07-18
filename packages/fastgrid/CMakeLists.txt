@@ -4,7 +4,9 @@ project(fastgrid)
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 find_package(ament_cmake REQUIRED)
+find_package(common REQUIRED)
 find_package(geom REQUIRED)
+find_package(OpenCV REQUIRED)
 
 add_library(
     ${PROJECT_NAME} SHARED
@@ -12,7 +14,7 @@ add_library(
     src/manhattan_distance.cpp
 )
 
-ament_target_dependencies(${PROJECT_NAME} geom)
+ament_target_dependencies(${PROJECT_NAME} geom common  OpenCV)
 
 target_include_directories(
     ${PROJECT_NAME} PUBLIC
@@ -21,7 +23,7 @@ target_include_directories(
 )
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(geom)
+ament_export_dependencies(geom common OpenCV)
 
 install(
     TARGETS ${PROJECT_NAME}
