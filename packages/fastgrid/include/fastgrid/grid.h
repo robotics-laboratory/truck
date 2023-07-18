@@ -18,8 +18,8 @@ template<typename T>
 struct Grid {
     Grid() = default;
 
-    Grid(const Size& size, double resolution,
-         const std::optional<geom::Pose>& origin = std::nullopt)
+    Grid(
+        const Size& size, double resolution, const std::optional<geom::Pose>& origin = std::nullopt)
         : size(size), resolution(resolution), origin(origin) {}
 
     void Reset(T* data) { this->data = data; }
