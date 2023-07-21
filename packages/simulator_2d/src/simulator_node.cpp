@@ -1,9 +1,14 @@
 #include "simulator_2d/simulator_node.h"
 
+#include <boost/assert.hpp>
+
+#include <functional>
+
 SimulatorNode::SimulatorNode() : Node("simulator") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
+    /*
     slot_.control = Node::create_subscription<truck_msgs::msg::Control>(
         "/control/command",
         rclcpp::QoS(1).reliability(qos),
@@ -13,6 +18,7 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         "/simulator/odometry",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&SimulatorNode::handleOdometry, this, _1));
+    */
 
     signal_.visualization = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/simulator/visualization", 

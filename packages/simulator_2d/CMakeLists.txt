@@ -1,23 +1,23 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.5)
 project(simulator_2d)
 
-set(CMAKE_CXX_STANDARD 20)
-
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 find_package(ament_cmake REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+
 add_executable(
     ${PROJECT_NAME}_node
     src/main.cpp
-    src/demo.cpp)
+    src/simulator_node.cpp)
 
 ament_target_dependencies(
     ${PROJECT_NAME}_node
     rclcpp
+    nav_msgs
     truck_msgs
     visualization_msgs)
 

@@ -1,4 +1,4 @@
-#include "simulator_2d/demo.h"
+//#include "simulator_2d/demo.h"
 #include "simulator_2d/simulator_node.h"
 
 #include "rclcpp/rclcpp.hpp"
