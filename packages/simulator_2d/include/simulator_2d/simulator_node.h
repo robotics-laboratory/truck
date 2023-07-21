@@ -1,3 +1,4 @@
+#include "model/model.h"
 #include "truck_msgs/msg/control.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
@@ -8,6 +9,8 @@
 #include <chrono> 
 
 using namespace std::chrono_literals;
+
+namespace truck::simulator {
 
 class SimulatorNode : public rclcpp::Node {
     public:
@@ -22,6 +25,7 @@ class SimulatorNode : public rclcpp::Node {
         void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom);
 
         std::chrono::duration<double> period_ = 250ms, simulation_tick_ = 10ms;
+        std::unique_ptr<model::Model> model_ = nullptr;
         visualization_msgs::msg::Marker truck_;
         
         rclcpp::TimerBase::SharedPtr timer_ = nullptr;
@@ -41,3 +45,5 @@ class SimulatorNode : public rclcpp::Node {
             rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr visualization = nullptr;
         } signal_;
 };
+
+} // namespace truck::simulator
