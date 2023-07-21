@@ -13,12 +13,6 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
     slots_.control = Node::create_subscription<truck_msgs::msg::Control>(
-        "/control/command",
-        rclcpp::QoS(1).reliability(qos),
-        std::bind(&SimulatorNode::handleControl, this, _1));
-
-    signals_.odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/ekf/odometry/filtered", rclcpp::QoS(1).reliability(qos));
 
     signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
         "/ekf/odometry/transform", rclcpp::QoS(1).reliability(qos));
