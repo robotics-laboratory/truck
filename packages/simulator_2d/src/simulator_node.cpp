@@ -4,10 +4,18 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
-    signal_.command = Node::create_publisher<truck_msgs::msg::Control>("/control/command", 1);
-    signal_.feedback = Node::create_publisher<sensor_msgs::msg::JoyFeedback>("/simulator/feedback", 1);
+    slot_.control = Node::create_subscription<truck_msgs::msg::Control>(
+        "/control/command",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleControl, this, _1));
+
+    signal_.odom = Node::create_subscription<nav_msgs::msg::Odometry>(
+        "/simulator/odometry",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleOdometry, this, _1));
+
     signal_.visualization = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/simulator/visualization",
+        "/simulator/visualization", 
         rclcpp::QoS(1).reliability(qos));
 
     timer_ = this->create_wall_timer(period_, std::bind(&SimulatorNode::timerCallback, this));

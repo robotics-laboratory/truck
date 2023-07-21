@@ -15,14 +15,23 @@ class SimulatorNode : public rclcpp::Node {
         void timerCallback();
 
     private:
-        std::chrono::duration<double> period_ = 250ms;
+        std::chrono::duration<double> period_ = 250ms, simulation_tick_ = 10ms;
         visualization_msgs::msg::Marker sphere_;
         
         rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
+        struct State {
+            truck_msgs::msg::Control::SharedPtr control = nullptr;
+            nav_msgs::msg::Odometry::ConstShared odom = nullptr;
+        } state_;
+
+        struct Slots {
+            rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
+        } slot_;
+
         struct Signals {
-            rclcpp::Publisher<truck_msgs::msg::Control>::SharedPtr command = nullptr;
-            rclcpp::Publisher<sensor_msgs::msg::JoyFeedback>::SharedPtr feedback = nullptr;
+            rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
+            //rclcpp::Subscription<rclcpp::Clock>::SharedPtr clock = nullptr;
             rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr visualization = nullptr;
         } signal_;
 };
