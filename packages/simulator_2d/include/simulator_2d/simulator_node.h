@@ -15,6 +15,8 @@
 
 namespace truck::simulator {
 
+namespace truck::simulator {
+
 class SimulatorNode : public rclcpp::Node {
   public:
     SimulatorNode();

@@ -8,14 +8,27 @@ namespace truck::simulator {
 
 using namespace std::placeholders;
 
+namespace truck::simulator {
+
+using namespace std::placeholders;
+
 SimulatorNode::SimulatorNode() : Node("simulator") {
+    model_ = model::makeUniquePtr(
+        this->get_logger(),
+        Node::declare_parameter<std::string>("model_config", "model.yaml"));
+
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
-    slots_.control = Node::create_subscription<truck_msgs::msg::Control>(
+    slot_.control = Node::create_subscription<truck_msgs::msg::Control>(
+        "/control/command",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&SimulatorNode::handleControl, this, _1));
 
-    signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
-        "/ekf/odometry/transform", rclcpp::QoS(1).reliability(qos));
+    signal_.odom = Node::create_subscription<nav_msgs::msg::Odometry>(
+        "/simulator/odometry",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&SimulatorNode::handleOdometry, this, _1));
 
     signals_.telemetry = Node::create_publisher<truck_msgs::msg::HardwareTelemetry>(
         "/hardware/telemetry", rclcpp::QoS(1).reliability(qos));
