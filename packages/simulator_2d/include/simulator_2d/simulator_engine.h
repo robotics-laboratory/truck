@@ -28,7 +28,7 @@ class SimulatorEngine {
   private:
     typedef Eigen::Matrix<double, 6, 1> State;
 
-    State calculateStateDelta(
+    State calculate_state_delta(
         const State &state, const double acceleration,
         const double steering_velocity);
 
@@ -50,10 +50,11 @@ class SimulatorEngine {
     enum StateIndex {
         x = 0,
         y = 1,
-        rotation = 2,
-        steering = 3,
-        linear_velocity = 4,
-        angular_velocity = 5
+        rotation_cos = 2,
+        rotation_sin = 3,
+        steering = 4,
+        linear_velocity = 5,
+        angular_velocity = 6
     };
 
     State state_;
