@@ -1,7 +1,7 @@
-#include <visualization_msgs/msg/marker.hpp>
 #include "truck_msgs/msg/control.hpp"
-#include <sensor_msgs/msg/joy.hpp>
-#include <sensor_msgs/msg/joy_feedback.hpp>
+
+#include <nav_msgs/msg/odometry.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -15,14 +15,20 @@ class SimulatorNode : public rclcpp::Node {
         void timerCallback();
 
     private:
+        void createTruckMarker();
+        void updateTruckMarker();
+
+        void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
+        void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom);
+
         std::chrono::duration<double> period_ = 250ms, simulation_tick_ = 10ms;
-        visualization_msgs::msg::Marker sphere_;
+        visualization_msgs::msg::Marker truck_;
         
         rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
         struct State {
-            truck_msgs::msg::Control::SharedPtr control = nullptr;
-            nav_msgs::msg::Odometry::ConstShared odom = nullptr;
+            truck_msgs::msg::Control::ConstSharedPtr control = nullptr;
+            nav_msgs::msg::Odometry::ConstSharedPtr odom = nullptr;
         } state_;
 
         struct Slots {

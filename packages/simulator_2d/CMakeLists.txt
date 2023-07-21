@@ -7,6 +7,7 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(truck_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
 add_executable(
@@ -17,6 +18,7 @@ add_executable(
 ament_target_dependencies(
     ${PROJECT_NAME}_node
     rclcpp
+    truck_msgs
     visualization_msgs)
 
 install(
