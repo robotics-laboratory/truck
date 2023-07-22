@@ -28,11 +28,11 @@ void ManhattanDistance(
     std::fill(
         manhattan_distance.data, manhattan_distance.data + manhattan_distance.size(), unreachable);
 
-    if (*(distance_transform.data + origin_index) <= eps) {
+    if (distance_transform.data[origin_index] <= eps) {
         return;
     }
 
-    *(manhattan_distance.data + origin_index) = 0;
+    manhattan_distance.data[origin_index] = 0;
     queue_buf.Push(origin_index);
 
     while (!queue_buf.Empty()) {
@@ -44,19 +44,19 @@ void ManhattanDistance(
         for (int dt : {-1, 1}) {
             const int h_next_index = cur_index + dt;
             if ((0 <= h_next_index) && (h_next_index / width == cur_index / width) &&
-                (*(distance_transform.data + h_next_index) > eps) &&
-                (*(manhattan_distance.data + h_next_index) == unreachable)) {
-                *(manhattan_distance.data + h_next_index) =
-                    *(manhattan_distance.data + cur_index) + resolution;
+                (distance_transform.data[h_next_index] > eps) &&
+                (manhattan_distance.data[h_next_index] == unreachable)) {
+                manhattan_distance.data[h_next_index] =
+                    manhattan_distance.data[cur_index] + resolution;
                 queue_buf.Push(h_next_index);
             }
 
             const int v_next_index = cur_index + dt * width;
             if ((0 <= v_next_index) && (v_next_index < grid_size) &&
-                (*(distance_transform.data + v_next_index) > eps) &&
-                (*(manhattan_distance.data + v_next_index) == unreachable)) {
-                *(manhattan_distance.data + v_next_index) =
-                    *(manhattan_distance.data + cur_index) + resolution;
+                (distance_transform.data[v_next_index] > eps) &&
+                (manhattan_distance.data[v_next_index] == unreachable)) {
+                manhattan_distance.data[v_next_index] =
+                    manhattan_distance.data[cur_index] + resolution;
                 queue_buf.Push(v_next_index);
             }
         }
