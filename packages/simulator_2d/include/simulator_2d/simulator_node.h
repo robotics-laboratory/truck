@@ -30,6 +30,28 @@ class SimulatorNode : public rclcpp::Node {
         
         rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
+        struct Parameters {
+            rclcpp::Duration ttl = rclcpp::Duration::from_seconds(1.0);
+
+            double ego_z_lev = 0.0;
+            double ego_height = 0.0;
+
+            double ego_track_width = 0.06;
+            double ego_track_height = 0.01;
+            rclcpp::Duration ego_track_ttl = rclcpp::Duration::from_seconds(2.0);
+            size_t ego_track_rate = 5;
+
+            double arc_z_lev = 0.0;
+            double arc_width = 0.0;
+            double arc_length = 1.0;
+
+            double waypoints_z_lev = 0.0;
+            double waypoints_radius = 0.0;
+
+            double trajectory_z_lev = 0.0;
+            double trajectory_width = 0.0;
+        } params_{};
+
         struct State {
             truck_msgs::msg::Control::ConstSharedPtr control = nullptr;
             nav_msgs::msg::Odometry::ConstSharedPtr odom = nullptr;

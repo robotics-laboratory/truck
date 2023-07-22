@@ -27,6 +27,10 @@ install(
     TARGETS ${PROJECT_NAME}_node
     DESTINATION lib/${PROJECT_NAME})
 
+install(
+    DIRECTORY launch
+    DESTINATION share/${PROJECT_NAME})
+
 target_include_directories(
     ${PROJECT_NAME}_node PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

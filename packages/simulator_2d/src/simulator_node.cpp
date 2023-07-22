@@ -70,7 +70,7 @@ void SimulatorNode::createTruckMarker() {
 
     truck_.scale.x = model_->shape().length;
     truck_.scale.y = model_->shape().width;
-    truck_.scale.z = 1.0;
+    truck_.scale.z = params_.ego_height;
 
     truck_.color.a = 1.0;
     truck_.color.r = 0.0;
