@@ -128,7 +128,7 @@ TEST(ManhattanDistance, operability) {
 
     const Size sz_1 = {.width = 2, .height = 3};
     const int res_1 = 1;
-    const Pose pose_1({1, 2}, {3, 4});
+    const Pose pose_1({0, 0}, {3, 4});
     F32GridDataPtr data_1 = Allocate<float>(sz_1);
 
     F32Grid grid_1(sz_1, res_1, pose_1);
@@ -152,7 +152,7 @@ TEST(ManhattanDistance, operability) {
 
     const Size sz_2 = {.width = 2, .height = 3};
     const int res_2 = 1;
-    const Pose pose_2({1, 2}, {3, 4});
+    const Pose pose_2({0, 0}, {3, 4});
     F32GridDataPtr data_2 = Allocate<float>(sz_2);
 
     F32Grid grid_2(sz_2, res_2, pose_2);
@@ -176,7 +176,7 @@ TEST(ManhattanDistance, operability) {
 
     const Size sz_3 = {.width = 5, .height = 5};
     const int res_3 = 1;
-    const Pose pose_3({1, 2}, {3, 4});
+    const Pose pose_3({0, 0}, {3, 4});
     F32GridDataPtr data_3 = Allocate<float>(sz_3);
 
     F32Grid grid_3(sz_3, res_3, pose_3);
@@ -238,7 +238,7 @@ TEST(ManhattanDistance, operability) {
 
     const Size sz_4 = {.width = 5, .height = 5};
     const int res_4 = 1;
-    const Pose pose_4({1, 2}, {3, 4});
+    const Pose pose_4({0, 0}, {3, 4});
     F32GridDataPtr data_4 = Allocate<float>(sz_4);
 
     F32Grid grid_4(sz_4, res_4, pose_4);
@@ -398,8 +398,9 @@ TEST(BilinearInterpolation, operability) {
 
     const Size sz_1 = {.width = 2, .height = 2};
     const double res_1 = 1;
+    const Pose pose_1({0, 0}, {1, 2});
     F32GridDataPtr data_1 = Allocate<float>(sz_1);
-    F32Grid grid_1(sz_1, res_1);
+    F32Grid grid_1(sz_1, res_1, pose_1);
     grid_1.Reset(data_1.get());
 
     grid_1[0][0] = 0;
@@ -440,8 +441,9 @@ TEST(BilinearInterpolation, operability) {
 
     const Size sz_2 = {.width = 3, .height = 3};
     const double res_2 = 0.5;
+    const Pose pose_2({0, 0}, {1, 2});
     F32GridDataPtr data_2 = Allocate<float>(sz_2);
-    F32Grid grid_2(sz_2, res_2);
+    F32Grid grid_2(sz_2, res_2, pose_2);
     grid_2.Reset(data_2.get());
 
     grid_2[0][0] = 0;
@@ -480,6 +482,56 @@ TEST(BilinearInterpolation, operability) {
 
     try {
         interpolation_2_1({.x = 0.54, .y = -1});
+        FAIL();
+    } catch (const std::domain_error& err) {
+        EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
+    } catch (...) {
+        FAIL();
+    }
+
+    const Size sz_3 = {.width = 3, .height = 3};
+    const double res_3 = 0.5;
+    const Pose pose_3({1, 2}, {3, 4});
+    const F32GridDataPtr data_3 = Allocate<float>(sz_3);
+    F32Grid grid_3(sz_3, res_3, pose_3);
+    grid_3.Reset(data_3.get());
+
+    grid_3[0][0] = 0;
+    grid_3[0][1] = 0.5;
+    grid_3[0][2] = 0.75;
+    grid_3[1][0] = 0.5;
+    grid_3[1][1] = 1;
+    grid_3[1][2] = 1.5;
+    grid_3[2][0] = 0;
+    grid_3[2][1] = 1;
+    grid_3[2][2] = 2;
+
+    BilinearInterpolation<float> interpolation_3_1(grid_3);
+
+    EXPECT_NEAR(interpolation_3_1({.x = 1.15, .y = 2.25}), 0.4, eps);
+    EXPECT_NEAR(interpolation_3_1({.x = 1.65, .y = 2.25}), 0.8625, eps);
+    EXPECT_NEAR(interpolation_3_1({.x = 1.65, .y = 2.65}), 1.195, eps);
+
+    try {
+        interpolation_3_1({.x = 1, .y = 1});
+        FAIL();
+    } catch (const std::domain_error& err) {
+        EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
+    } catch (...) {
+        FAIL();
+    }
+
+    try {
+        interpolation_3_1({.x = 100, .y = 0.5});
+        FAIL();
+    } catch (const std::domain_error& err) {
+        EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
+    } catch (...) {
+        FAIL();
+    }
+
+    try {
+        interpolation_3_1({.x = 2, .y = -1});
         FAIL();
     } catch (const std::domain_error& err) {
         EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
