@@ -9,11 +9,11 @@
   rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
 
 - frame_id: "camera_link"
-  child_frame_id: "camera_gyro_farme"
+  child_frame_id: "camera_gyro_frame"
   translation: {x: -0.01602, y: -0.03022, z: 0.0074}
   rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
 
-- frame_id: "camera_gyro_farme"
+- frame_id: "camera_gyro_frame"
   child_frame_id: "camera_gyro_optical_frame"
   translation: {x: 0.0, y: 0.0, z: 0.0}
   rotation: {x: -0.5, y: 0.5, z: -0.5, w: 0.5}
@@ -22,6 +22,16 @@
   child_frame_id: "camera_imu_optical_frame"
   translation: {x: 0.0, y: 0.0, z: 0.0}
   rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+- frame_id: "camera_link"
+  child_frame_id: "camera_depth_frame"
+  translation: {x: 0.0, y: 0.0, z: 0.0}
+  rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+- frame_id: "camera_depth_frame"
+  child_frame_id: "camera_depth_optical_frame"
+  translation: {x: 0.0, y: 0.0, z: 0.0}
+  rotation: {x: -0.5, y: 0.5, z: -0.5, w: 0.5}
 
 # specific frame names for simulator
 

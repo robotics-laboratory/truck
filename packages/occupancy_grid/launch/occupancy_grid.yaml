@@ -5,6 +5,15 @@ launch:
 - arg:
     name: "qos"
     default: "0"
+- arg:
+    name:"enable_lidar_grid"
+    default: "false"
+- arg:
+    name: "enable_camera_grid"
+    default: "false"
+- arg:
+    name: "enable_camera_cloud"
+    default: "false"
 - node:
     pkg: "occupancy_grid"
     exec: "occupancy_grid_node"
@@ -15,4 +24,7 @@ launch:
     - {name: "qos", value: "$(var qos)"}
     - {name: "resolution", value: 0.10}
     - {name: "radius", value: 7.0}
-    - {name: "camera_status", value: 0}
+    - {name: "enable_camera_cloud", value: "$(var enable_camera_cloud)"}
+    - {name: "enable_lidar_grid", value "$(var enable_lidar_grid)"}
+    - {name: "enable_camera_grid", value: "$(var enable_camera_grid)"}
+    

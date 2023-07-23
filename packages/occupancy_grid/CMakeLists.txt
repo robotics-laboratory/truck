@@ -10,6 +10,14 @@ find_package(sensor_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(image_geometry REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 
 if(NOT CMAKE_CXX_STANDARD)
@@ -21,7 +29,7 @@ add_executable(occupancy_grid_node
   src/occupancy_grid_node.cpp
 )
 
-ament_target_dependencies(occupancy_grid_node rclcpp common nav_msgs sensor_msgs std_msgs image_geometry)
+ament_target_dependencies(occupancy_grid_node rclcpp common nav_msgs sensor_msgs std_msgs image_geometry cv_bridge image_transport OpenCV tf2 tf2_ros geometry_msgs Eigen3 eigen3_cmake_module)  
 
 target_include_directories(${PROJECT_NAME}_node PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
