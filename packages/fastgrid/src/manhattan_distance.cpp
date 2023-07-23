@@ -3,7 +3,6 @@
 #include "fastgrid/manhattan_distance.h"
 #include "geom/vector.h"
 
-#include <iostream>
 #include <limits>
 
 namespace truck::fastgrid {
@@ -39,8 +38,6 @@ void ManhattanDistance(
         const int cur_index = queue_buf.Front();
         queue_buf.Pop();
 
-        std::cerr << cur_index << std::endl;
-
         for (int dt : {-1, 1}) {
             const int h_next_index = cur_index + dt;
             if ((0 <= h_next_index) && (h_next_index / width == cur_index / width) &&
@@ -72,8 +69,6 @@ void ManhattanDistance(
 
 F32GridHolder ManhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps) {
-    F32Grid manhattan_distance(
-        distance_transform.size, distance_transform.resolution, distance_transform.origin);
     F32GridHolder result = MakeGridLike<float>(distance_transform);
     ManhattanDistance(distance_transform, source, eps, *result);
     return result;
