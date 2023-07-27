@@ -2,6 +2,7 @@
 
 #include <boost/assert.hpp>
 
+#include <chrono>
 #include <functional>
 
 namespace truck::simulator {
@@ -17,43 +18,27 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
     slot_.control = Node::create_subscription<truck_msgs::msg::Control>(
-        "/control/command",
+        "/motion/command",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&SimulatorNode::handleControl, this, _1));
 
-    signal_.odom = Node::create_subscription<nav_msgs::msg::Odometry>(
+    signal_.odom = Node::create_publisher<nav_msgs::msg::Odometry>(
         "/simulator/odometry",
-        rclcpp::QoS(1).reliability(qos),
-        std::bind(&SimulatorNode::handleOdometry, this, _1));
+        rclcpp::QoS(1).reliability(qos));
 
     signal_.visualization = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/simulator/visualization", 
         rclcpp::QoS(1).reliability(qos));
 
-    timer_ = this->create_wall_timer(period_, std::bind(&SimulatorNode::timerCallback, this));
+    timer_ = this->create_wall_timer(
+        std::chrono::duration<double>(params_.simulation_tick), 
+        std::bind(&SimulatorNode::updateState, this));
+
+    test_timer_ = this->create_wall_timer(
+        std::chrono::duration<double>(params_.simulation_tick),
+        std::bind(&SimulatorNode::timerCallback, this));
 
     createTruckMarker();
-}
-
-void SimulatorNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr control) {
-    if (control->header.frame_id != "base") {
-        RCLCPP_WARN(
-            get_logger(),
-            "Expected 'base' frame for cotrol, but got %s. Ignore message!",
-            state_.control->header.frame_id.c_str());
-        return;
-    }
-
-    state_.control = std::move(control);
-}
-
-void SimulatorNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom) {
-    state_.odom = std::move(odom);
-    //++state_.odom_seq_id;
-
-    //publishEgo();
-    //publishEgoTrack();
-    //publishArc();
 }
 
 void SimulatorNode::createTruckMarker() {
@@ -80,14 +65,29 @@ void SimulatorNode::createTruckMarker() {
 
 void SimulatorNode::updateTruckMarker() {
     truck_.header.stamp = now();
-
-    truck_.pose.position.x -= 0.1;
+    truck_.pose.position.x = state_.pose.pos.x;
+    truck_.pose.position.y = state_.pose.pos.y;
+    signal_.visualization->publish(truck_);
 }
 
-void SimulatorNode::timerCallback() {
+void SimulatorNode::updateState() {
+    state_.pose.pos.x = params_.simulation_tick * control_.velocity;
     updateTruckMarker();
+}
 
-    signal_.visualization->publish(truck_);
+void SimulatorNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr control) {
+    control_.velocity = control->velocity;
+    control_.acceleration = control->acceleration;
+    control_.curvature = control->curvature;
+}
+
+// For testing.
+void SimulatorNode::timerCallback() {
+    //*
+    control_.velocity = 1.0;
+    control_.acceleration = 0.0;
+    control_.curvature = 0.0;
+    //*/
 }
 
 } // namespace truck::simulator

@@ -21,7 +21,8 @@ ament_target_dependencies(
     model
     nav_msgs
     truck_msgs
-    visualization_msgs)
+    visualization_msgs
+    geom)
 
 install(
     TARGETS ${PROJECT_NAME}_node
