@@ -21,7 +21,7 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
     slots_.control = Node::create_subscription<truck_msgs::msg::Control>(
-        "/motion/command",
+        "/control/command",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&SimulatorNode::handleControl, this, _1));
 
@@ -46,6 +46,10 @@ SimulatorNode::~SimulatorNode() {
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) const {
+    RCLCPP_INFO_STREAM(this->get_logger(), 
+        std::to_string(control->velocity) + " " + std::to_string(control->acceleration) 
+            + " " + std::to_string(control->curvature));
+
     engine_->setControl(control->velocity, control->acceleration, control->curvature);
 }
 
@@ -102,7 +106,7 @@ void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::An
 }
 
 void SimulatorNode::publishSignals() {
-    //* For testing
+    /* For testing
     engine_->setControl(1.0, 0.0, 0.0);
     //*/
 

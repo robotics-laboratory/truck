@@ -5,12 +5,11 @@
 // Delete this! And logger!
 #include <rclcpp/rclcpp.hpp>
 
-#include <format>
-
 namespace truck::simulator {
 
 SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> &model) {
     model_ = std::unique_ptr<model::Model>(std::move(model));
+    
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
     isRunning_ = true;
     
@@ -46,9 +45,12 @@ void SimulatorEngine::setControl(
 }
 
 void SimulatorEngine::updateState() {
-    state_.pose.pos.x = params_.simulation_tick * control_.velocity;
-    RCLCPP_INFO(rclcpp::get_logger("simulator_logger"), 
-        std::format("{} * {} = {}", params_.simulation_tick, control_.velocity, state_.pose.pos.x));
+    state_.pose.pos.x += params_.simulation_tick * control_.velocity;
+    //RCLCPP_INFO(rclcpp::get_logger("simulator_logger"), std::format("{} * {} = {}", params_.simulation_tick, control_.velocity, state_.pose.pos.x));
+    if (control_.velocity > 0.01) {
+        RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_logger"), 
+            std::to_string(control_.velocity) + " " + std::to_string(state_.pose.pos.x));
+    }
 }
 
 void SimulatorEngine::processSimulation() {

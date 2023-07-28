@@ -10,6 +10,13 @@ launch:
     arg:
     - {name: "simulation", value: $(var simulation)}
 
+- include:
+    file: $(find-pkg-share truck)/launch/common.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+    - {name: "qos", value: "0"}
+    - {name: "control_name", value: "ps4"}
+
 - node:
     pkg: "simulator_2d"
     exec: "simulator_2d_node"
