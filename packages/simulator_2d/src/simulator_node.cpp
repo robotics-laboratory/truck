@@ -1,4 +1,5 @@
 #include "simulator_2d/simulator_node.h"
+#include "simulator_2d/simulator_engine.h"
 
 #include <boost/assert.hpp>
 
@@ -10,84 +11,101 @@ namespace truck::simulator {
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
-    model_ = model::makeUniquePtr(
-        this->get_logger(),
-        Node::declare_parameter<std::string>("model_config", "model.yaml"));
+    engine_ = new SimulatorEngine();
 
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
-    slot_.control = Node::create_subscription<truck_msgs::msg::Control>(
+    slots_.control = Node::create_subscription<truck_msgs::msg::Control>(
         "/motion/command",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&SimulatorNode::handleControl, this, _1));
 
-    signal_.odom = Node::create_publisher<nav_msgs::msg::Odometry>(
+    signals_.odom = Node::create_publisher<nav_msgs::msg::Odometry>(
         "/simulator/odometry",
         rclcpp::QoS(1).reliability(qos));
 
-    signal_.visualization = Node::create_publisher<visualization_msgs::msg::Marker>(
+    signals_.visualization = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/simulator/visualization", 
         rclcpp::QoS(1).reliability(qos));
 
     timer_ = this->create_wall_timer(
-        std::chrono::duration<double>(params_.simulation_tick), 
-        std::bind(&SimulatorNode::updateState, this));
-
-    test_timer_ = this->create_wall_timer(
-        std::chrono::duration<double>(params_.simulation_tick),
-        std::bind(&SimulatorNode::timerCallback, this));
+        params_.update_period, 
+        std::bind(&SimulatorNode::publishSignals, this));
 
     createTruckMarker();
+    createOdometryMessage();
 }
 
-void SimulatorNode::createTruckMarker() {
-    truck_.header.frame_id = "odom_ekf";
-    truck_.id = 0;
-
-    truck_.type = visualization_msgs::msg::Marker::CUBE;
-    truck_.action = visualization_msgs::msg::Marker::ADD;
-    truck_.lifetime = rclcpp::Duration::from_seconds(0);
-
-    truck_.pose.position.x = 0.0;
-    truck_.pose.position.y = 0.0;
-    truck_.pose.position.z = 0.0;
-
-    truck_.scale.x = model_->shape().length;
-    truck_.scale.y = model_->shape().width;
-    truck_.scale.z = params_.ego_height;
-
-    truck_.color.a = 1.0;
-    truck_.color.r = 0.0;
-    truck_.color.g = 0.0;
-    truck_.color.b = 1.0;
-}
-
-void SimulatorNode::updateTruckMarker() {
-    truck_.header.stamp = now();
-    truck_.pose.position.x = state_.pose.pos.x;
-    truck_.pose.position.y = state_.pose.pos.y;
-    signal_.visualization->publish(truck_);
-}
-
-void SimulatorNode::updateState() {
-    state_.pose.pos.x = params_.simulation_tick * control_.velocity;
-    updateTruckMarker();
+SimulatorNode::~SimulatorNode() {
+    delete engine_;
 }
 
 void SimulatorNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr control) {
-    control_.velocity = control->velocity;
-    control_.acceleration = control->acceleration;
-    control_.curvature = control->curvature;
+    engine_->setControl(control->velocity, control->acceleration, control->curvature);
 }
 
-// For testing.
-void SimulatorNode::timerCallback() {
-    //*
-    control_.velocity = 1.0;
-    control_.acceleration = 0.0;
-    control_.curvature = 0.0;
+void SimulatorNode::createTruckMarker() {
+    msgs_.truck.header.frame_id = "odom_ekf";
+    msgs_.truck.id = 0;
+
+    msgs_.truck.type = visualization_msgs::msg::Marker::CUBE;
+    msgs_.truck.action = visualization_msgs::msg::Marker::ADD;
+    msgs_.truck.lifetime = rclcpp::Duration::from_seconds(0);
+
+    msgs_.truck.pose.position.x = 0.0;
+    msgs_.truck.pose.position.y = 0.0;
+    msgs_.truck.pose.position.z = 0.0;
+
+    auto truck_sizes = engine_->getTruckSizes();
+    msgs_.truck.scale.x = truck_sizes.x;
+    msgs_.truck.scale.y = truck_sizes.y;
+    msgs_.truck.scale.z = params_.ego_height;
+
+    msgs_.truck.color.a = 1.0;
+    msgs_.truck.color.r = 0.0;
+    msgs_.truck.color.g = 0.0;
+    msgs_.truck.color.b = 1.0;
+}
+
+void SimulatorNode::publishTruckMarker(geom::Pose pose, geom::Angle steering) {
+    msgs_.truck.header.stamp = now();
+    msgs_.truck.pose.position.x = pose.pos.x;
+    msgs_.truck.pose.position.y = pose.pos.y;
+    signals_.visualization->publish(msgs_.truck);
+}
+
+void SimulatorNode::createOdometryMessage() {
+    msgs_.odometry.header.frame_id = "odom_ekf";
+    msgs_.odometry.pose.pose.position.z = 0.0;
+    msgs_.odometry.child_frame_id = "base_link";
+}
+
+void SimulatorNode::publishOdometryMessage(geom::Pose pose, geom::Angle steering) {
+    msgs_.odometry.header.stamp = now();
+
+    // Set the position.
+    msgs_.odometry.pose.pose.position.x = pose.pos.x;
+    msgs_.odometry.pose.pose.position.y = pose.pos.y;
+    //msgs_.odometry.pose.pose.orientation = odom_quat;
+
+    // Set the velocity.
+    //msgs_.odometry.twist.twist.linear.x = vx;
+    //msgs_.odometry.twist.twist.linear.y = vy;
+    //msgs_.odometry.twist.twist.angular.z = vth;
+
+    signals_.odom->publish(msgs_.odometry);
+}
+
+void SimulatorNode::publishSignals() {
+    //* For testing
+    engine_->setControl(1.0, 0.0, 0.0);
     //*/
+
+    auto pose = engine_->getPose();
+    auto steering = engine_->getSteering();
+    publishTruckMarker(pose, steering);
+    publishOdometryMessage(pose, steering);
 }
 
 } // namespace truck::simulator
