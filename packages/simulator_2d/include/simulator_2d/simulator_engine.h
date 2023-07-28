@@ -4,22 +4,30 @@
 #include "geom/pose.h"
 #include "geom/vector.h"
 
+#include <thread>
+
 namespace truck::simulator {
 
 class SimulatorEngine {
     public:
-        SimulatorEngine();
-        geom::Vec2 getTruckSizes();
-        geom::Pose getPose();
-        geom::Angle getSteering();
-        void setControl(double velocity, double acceleration, double curvature);
+        explicit SimulatorEngine(std::unique_ptr<model::Model> &model);
+        ~SimulatorEngine();
+        geom::Vec2 getTruckSizes() const;
+        geom::Pose getPose() const;
+        geom::Angle getSteering() const;
+        void setControl(const double velocity, const double acceleration, const double curvature);
 
     private:
         void updateState();
+        void processSimulation();
+
+        bool isRunning_ = false;
+
+        std::thread running_thread_;
 
         std::unique_ptr<model::Model> model_ = nullptr;
 
-        rclcpp::TimerBase::SharedPtr timer_ = nullptr;
+        //rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
         struct Parameters {
             double simulation_tick = 0.01;

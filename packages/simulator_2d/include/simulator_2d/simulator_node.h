@@ -1,4 +1,9 @@
+#include "simulator_2d/simulator_engine.h"
+
 #include "truck_msgs/msg/control.hpp"
+
+#include "geom/angle.h"
+#include "geom/pose.h"
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
@@ -17,11 +22,11 @@ class SimulatorNode : public rclcpp::Node {
         ~SimulatorNode();
 
     private:
-        void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
+        void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) const;
         void createTruckMarker();
-        void publishTruckMarker(geom::Pose pose, geom::Angle steering);
+        void publishTruckMarker(const geom::Pose pose, geom::Angle steering);
         void createOdometryMessage();
-        void publishOdometryMessage(geom::Pose pose, geom::Angle steering);
+        void publishOdometryMessage(const geom::Pose pose, geom::Angle steering);
         void publishSignals();
 
         SimulatorEngine *engine_ = nullptr;
@@ -29,7 +34,7 @@ class SimulatorNode : public rclcpp::Node {
         rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
         struct Parameters {
-            double ego_height = 0.0;
+            double ego_height = 0.01;
             std::chrono::duration<double> update_period = 250ms;
         } params_;
 

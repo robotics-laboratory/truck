@@ -1,5 +1,6 @@
 #include "simulator_2d/simulator_node.h"
-#include "simulator_2d/simulator_engine.h"
+
+#include "geom/vector.h"
 
 #include <boost/assert.hpp>
 
@@ -11,7 +12,10 @@ namespace truck::simulator {
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
-    engine_ = new SimulatorEngine();
+    auto model = model::makeUniquePtr(
+        this->get_logger(),
+        Node::declare_parameter<std::string>("model_config", "model.yaml"));
+    engine_ = new SimulatorEngine(model);
 
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
@@ -41,7 +45,7 @@ SimulatorNode::~SimulatorNode() {
     delete engine_;
 }
 
-void SimulatorNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr control) {
+void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) const {
     engine_->setControl(control->velocity, control->acceleration, control->curvature);
 }
 
@@ -68,9 +72,9 @@ void SimulatorNode::createTruckMarker() {
     msgs_.truck.color.b = 1.0;
 }
 
-void SimulatorNode::publishTruckMarker(geom::Pose pose, geom::Angle steering) {
+void SimulatorNode::publishTruckMarker(const geom::Pose pose, const geom::Angle steering) {
     msgs_.truck.header.stamp = now();
-    msgs_.truck.pose.position.x = pose.pos.x;
+    msgs_.truck.pose.position.x = pose.pos.x + 0 * steering.radians();
     msgs_.truck.pose.position.y = pose.pos.y;
     signals_.visualization->publish(msgs_.truck);
 }
@@ -81,11 +85,11 @@ void SimulatorNode::createOdometryMessage() {
     msgs_.odometry.child_frame_id = "base_link";
 }
 
-void SimulatorNode::publishOdometryMessage(geom::Pose pose, geom::Angle steering) {
+void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::Angle steering) {
     msgs_.odometry.header.stamp = now();
 
     // Set the position.
-    msgs_.odometry.pose.pose.position.x = pose.pos.x;
+    msgs_.odometry.pose.pose.position.x = pose.pos.x + 0 * steering.radians();
     msgs_.odometry.pose.pose.position.y = pose.pos.y;
     //msgs_.odometry.pose.pose.orientation = odom_quat;
 
