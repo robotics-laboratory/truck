@@ -7,13 +7,19 @@ launch:
     default: "0"
 - arg:
     name:"enable_lidar_grid"
-    default: "false"
+    default: "true"
 - arg:
     name: "enable_camera_grid"
     default: "false"
 - arg:
     name: "enable_camera_cloud"
     default: "false"
+- arg:
+    name: "camera_view_hmax"
+    default: "0.01"
+- arg:
+    name: "camera_view_hmin"
+    default: "-0.05"
 - node:
     pkg: "occupancy_grid"
     exec: "occupancy_grid_node"
@@ -27,4 +33,6 @@ launch:
     - {name: "enable_camera_cloud", value: "$(var enable_camera_cloud)"}
     - {name: "enable_lidar_grid", value "$(var enable_lidar_grid)"}
     - {name: "enable_camera_grid", value: "$(var enable_camera_grid)"}
+    - {name: "camera_view_hmax", value: "$(var camera_view_hmax)"}
+    - {name: "camera_view_hmin", value: "$(var camera_view_hmin)"}
     
