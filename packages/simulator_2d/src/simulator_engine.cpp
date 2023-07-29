@@ -1,6 +1,7 @@
 #include "simulator_2d/simulator_engine.h"
 
 #include <chrono>
+#include <cmath>
 
 namespace truck::simulator {
 
@@ -37,6 +38,7 @@ void SimulatorEngine::setControl(
 
 void SimulatorEngine::updateState() {
     state_.pose.pos.x += params_.simulation_tick * control_.velocity;
+    state_.pose.pos.y += params_.simulation_tick * abs(control_.velocity) * control_.curvature / 3;
 }
 
 void SimulatorEngine::processSimulation() {
