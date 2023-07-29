@@ -10,7 +10,9 @@ namespace truck::simulator {
 
 class SimulatorEngine {
     public:
-        explicit SimulatorEngine(std::unique_ptr<model::Model> &model);
+        explicit SimulatorEngine(std::unique_ptr<model::Model> &model) 
+            : SimulatorEngine(model, 0.01) {}
+        SimulatorEngine(std::unique_ptr<model::Model> &model, double simulation_tick);
         ~SimulatorEngine();
         geom::Vec2 getTruckSizes() const;
         geom::Pose getPose() const;
@@ -27,10 +29,8 @@ class SimulatorEngine {
 
         std::unique_ptr<model::Model> model_ = nullptr;
 
-        //rclcpp::TimerBase::SharedPtr timer_ = nullptr;
-
         struct Parameters {
-            double simulation_tick = 0.01;
+            double simulation_tick;
         } params_;
 
         struct State {
@@ -38,7 +38,6 @@ class SimulatorEngine {
             geom::Pose pose;
             // The position of the virtual corner in the middle (bicycle model).
             geom::Angle steering;
-            //double velocity = 0.0;
         } state_;
 
         struct Control {

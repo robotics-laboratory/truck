@@ -2,22 +2,13 @@
 
 #include <chrono>
 
-// Delete this! And logger!
-#include <rclcpp/rclcpp.hpp>
-
 namespace truck::simulator {
 
-SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> &model) {
+SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> &model, double simulation_tick) {
+    params_.simulation_tick = simulation_tick;
     model_ = std::unique_ptr<model::Model>(std::move(model));
-    
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
     isRunning_ = true;
-    
-    /*
-    timer_ = this->create_wall_timer(
-        std::chrono::duration<double>(params_.simulation_tick), 
-        std::bind(&SimulatorNode::updateState, this));
-    //*/
 }
 
 SimulatorEngine::~SimulatorEngine() {
@@ -46,11 +37,6 @@ void SimulatorEngine::setControl(
 
 void SimulatorEngine::updateState() {
     state_.pose.pos.x += params_.simulation_tick * control_.velocity;
-    //RCLCPP_INFO(rclcpp::get_logger("simulator_logger"), std::format("{} * {} = {}", params_.simulation_tick, control_.velocity, state_.pose.pos.x));
-    if (control_.velocity > 0.01) {
-        RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_logger"), 
-            std::to_string(control_.velocity) + " " + std::to_string(state_.pose.pos.x));
-    }
 }
 
 void SimulatorEngine::processSimulation() {

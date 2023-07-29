@@ -15,7 +15,15 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     auto model = model::makeUniquePtr(
         this->get_logger(),
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
-    engine_ = new SimulatorEngine(model);
+    engine_ = new SimulatorEngine(model, this->declare_parameter("simulation_tick", 0.01));
+
+    params_ = Parameters{
+        .ego_height = this->declare_parameter("ego/height", 0.2),
+        .ego_red = this->declare_parameter("ego_red", 0.0f),
+        .ego_green = this->declare_parameter("ego_green", 0.0f),
+        .ego_blue = this->declare_parameter("ego_blue", 1.0f),
+        .update_period = std::chrono::milliseconds(this->declare_parameter<long int>("update_period", 250))
+    };
 
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
@@ -71,9 +79,10 @@ void SimulatorNode::createTruckMarker() {
     msgs_.truck.scale.z = params_.ego_height;
 
     msgs_.truck.color.a = 1.0;
-    msgs_.truck.color.r = 0.0;
-    msgs_.truck.color.g = 0.0;
-    msgs_.truck.color.b = 1.0;
+    msgs_.truck.color.r = params_.ego_red;
+    msgs_.truck.color.g = params_.ego_green;
+    msgs_.truck.color.b = params_.ego_blue;
+
 }
 
 void SimulatorNode::publishTruckMarker(const geom::Pose pose, const geom::Angle steering) {
@@ -106,10 +115,6 @@ void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::An
 }
 
 void SimulatorNode::publishSignals() {
-    /* For testing
-    engine_->setControl(1.0, 0.0, 0.0);
-    //*/
-
     auto pose = engine_->getPose();
     auto steering = engine_->getSteering();
     publishTruckMarker(pose, steering);

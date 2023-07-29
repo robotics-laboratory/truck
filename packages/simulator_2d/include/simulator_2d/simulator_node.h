@@ -34,8 +34,11 @@ class SimulatorNode : public rclcpp::Node {
         rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
         struct Parameters {
-            double ego_height = 0.01;
-            std::chrono::duration<double> update_period = 250ms;
+            double ego_height;
+            double ego_red;
+            double ego_green;
+            double ego_blue;
+            std::chrono::duration<double> update_period;
         } params_;
 
         struct Slots {
@@ -48,7 +51,6 @@ class SimulatorNode : public rclcpp::Node {
         } msgs_;
 
         struct Signals {
-            //rclcpp::Publisher<rclcpp::Clock>::SharedPtr clock = nullptr;
             rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr visualization = nullptr;
             rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
         } signals_;
