@@ -19,9 +19,9 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 
     params_ = Parameters{
         .ego_height = this->declare_parameter("ego/height", 0.2),
-        .ego_red = this->declare_parameter("ego_red", 0.0f),
-        .ego_green = this->declare_parameter("ego_green", 0.0f),
-        .ego_blue = this->declare_parameter("ego_blue", 1.0f),
+        .ego_red = (float)this->declare_parameter("ego_red", 0.0),
+        .ego_green = (float)this->declare_parameter("ego_green", 0.0),
+        .ego_blue = (float)this->declare_parameter("ego_blue", 1.0),
         .update_period = std::chrono::milliseconds(this->declare_parameter<long int>("update_period", 250))
     };
 
@@ -42,15 +42,18 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         rclcpp::QoS(1).reliability(qos));
 
     timer_ = this->create_wall_timer(
-        params_.update_period, 
+        params_.update_period,
         std::bind(&SimulatorNode::publishSignals, this));
 
-    createTruckMarker();
+    auto truck_sizes = engine_->getTruckSizes();
+    msgs_.truck = new TruckMarker(signals_.visualization, truck_sizes.x, truck_sizes.y,
+        params_.ego_height, params_.ego_red, params_.ego_green, params_.ego_blue);
     createOdometryMessage();
 }
 
 SimulatorNode::~SimulatorNode() {
     delete engine_;
+    delete msgs_.truck;
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) const {
@@ -59,37 +62,6 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
             + " " + std::to_string(control->curvature));
 
     engine_->setControl(control->velocity, control->acceleration, control->curvature);
-}
-
-void SimulatorNode::createTruckMarker() {
-    msgs_.truck.header.frame_id = "odom_ekf";
-    msgs_.truck.id = 0;
-
-    msgs_.truck.type = visualization_msgs::msg::Marker::CUBE;
-    msgs_.truck.action = visualization_msgs::msg::Marker::ADD;
-    msgs_.truck.lifetime = rclcpp::Duration::from_seconds(0);
-
-    msgs_.truck.pose.position.x = 0.0;
-    msgs_.truck.pose.position.y = 0.0;
-    msgs_.truck.pose.position.z = 0.0;
-
-    auto truck_sizes = engine_->getTruckSizes();
-    msgs_.truck.scale.x = truck_sizes.x;
-    msgs_.truck.scale.y = truck_sizes.y;
-    msgs_.truck.scale.z = params_.ego_height;
-
-    msgs_.truck.color.a = 1.0;
-    msgs_.truck.color.r = params_.ego_red;
-    msgs_.truck.color.g = params_.ego_green;
-    msgs_.truck.color.b = params_.ego_blue;
-
-}
-
-void SimulatorNode::publishTruckMarker(const geom::Pose pose, const geom::Angle steering) {
-    msgs_.truck.header.stamp = now();
-    msgs_.truck.pose.position.x = pose.pos.x + 0 * steering.radians();
-    msgs_.truck.pose.position.y = pose.pos.y;
-    signals_.visualization->publish(msgs_.truck);
 }
 
 void SimulatorNode::createOdometryMessage() {
@@ -117,7 +89,7 @@ void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::An
 void SimulatorNode::publishSignals() {
     auto pose = engine_->getPose();
     auto steering = engine_->getSteering();
-    publishTruckMarker(pose, steering);
+    msgs_.truck->publish(pose, steering, now());
     publishOdometryMessage(pose, steering);
 }
 

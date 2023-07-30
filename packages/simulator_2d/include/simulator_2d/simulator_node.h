@@ -1,10 +1,10 @@
 #include "simulator_2d/simulator_engine.h"
-
-#include "truck_msgs/msg/control.hpp"
+#include "simulator_2d/truck_marker.h"
 
 #include "geom/angle.h"
 #include "geom/pose.h"
 
+#include "truck_msgs/msg/control.hpp"
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
@@ -23,8 +23,6 @@ class SimulatorNode : public rclcpp::Node {
 
     private:
         void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) const;
-        void createTruckMarker();
-        void publishTruckMarker(const geom::Pose pose, geom::Angle steering);
         void createOdometryMessage();
         void publishOdometryMessage(const geom::Pose pose, geom::Angle steering);
         void publishSignals();
@@ -35,9 +33,9 @@ class SimulatorNode : public rclcpp::Node {
 
         struct Parameters {
             double ego_height;
-            double ego_red;
-            double ego_green;
-            double ego_blue;
+            float ego_red;
+            float ego_green;
+            float ego_blue;
             std::chrono::duration<double> update_period;
         } params_;
 
@@ -46,7 +44,7 @@ class SimulatorNode : public rclcpp::Node {
         } slots_;
 
         struct Messages {
-            visualization_msgs::msg::Marker truck;
+            TruckMarker *truck;
             nav_msgs::msg::Odometry odometry;
         } msgs_;
 

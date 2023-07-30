@@ -1,22 +1,24 @@
 launch:
-- arg: {name: "simulation", default: "$(env TRUCK_SIMULATION)"}
-- arg: {name: "control_name", default: "$(env TRUCK_CONTROL)"}
-- arg: {name: "qos", default: "0"}
-
-- let: {name: "env", value: "simulator", if: "$(var simulation)"}
-- let: {name: "env", value: "truck", unless: "$(var simulation)"}
-
 - include:
     file: $(find-pkg-share truck)/launch/bridge.yaml
     arg:
-    - {name: "simulation", value: $(var simulation)}
+    - {name: "simulation", value: "true"}
 
 - include:
-    file: $(find-pkg-share truck)/launch/common.yaml
+    file: $(find-pkg-share truck)/launch/control.yaml
     arg:
     - {name: "simulation", value: "true"}
-    - {name: "qos", value: "0"}
     - {name: "control_name", value: "ps4"}
+
+- include:
+    file: $(find-pkg-share model)/launch/model_tf.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+
+- include:
+    file: $(find-pkg-share visualization)/launch/visualization.yaml
+    arg:
+    - {name: "simulation", value: "true"}
 
 - node:
     pkg: "simulator_2d"
@@ -24,11 +26,11 @@ launch:
     name: "simulator_2d_node"
     output: "log"
     param:
-    - {name: "qos", value: "$(var qos)"}
+    - {name: "qos", value: 0}
     # path to truck mode config
     - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
     # timers period (milliseconds)
-    - {name: "update_period", value: 250}
+    - {name: "update_period", value: 100}
     # simulation step (seconds)
     - {name: "simulation_tick", value: 0.01}
     # visualization marker height
