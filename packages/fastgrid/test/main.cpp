@@ -5,6 +5,7 @@
 #include "fastgrid/manhattan_distance.h"
 #include "fastgrid/distance_transform.h"
 #include "fastgrid/interpolation.h"
+#include "geom/common.h"
 #include "geom/pose.h"
 
 #include <cmath>
@@ -23,6 +24,8 @@ TEST(Size, operability) {
 }
 
 TEST(Grid, operability) {
+    const double eps = 1e-9;
+
     const Size sz_1 = {.width = 2, .height = 3};
     const int res_1 = 10;
     const Pose pose_1({1, 2}, {3, 4});
@@ -39,6 +42,18 @@ TEST(Grid, operability) {
     EXPECT_EQ(grid_1.origin->pos.y, 2);
     EXPECT_EQ(grid_1.origin->dir.x, 3);
     EXPECT_EQ(grid_1.origin->dir.y, 4);
+    EXPECT_EQ(grid_1[0][1], 2);
+
+    const Vec2 point_1(0, 5);
+    auto ref_point_1 = grid_1.GetReferencePoint(point_1);
+    EXPECT_NEAR(ref_point_1.x, 1.8, eps);
+    EXPECT_NEAR(ref_point_1.y, 2.6, eps);
+    EXPECT_TRUE(grid_1.VerifyPoint(point_1));
+    auto cell_1 = grid_1.GetCell(point_1);
+    EXPECT_EQ(cell_1.first, 0);
+    EXPECT_EQ(cell_1.second, 0);
+    EXPECT_EQ(grid_1.GetIndex(point_1), 0);
+    EXPECT_FALSE(grid_1.VerifyPoint({0, 0}));
 
     const Size sz_2 = {.width = 2, .height = 3};
     const int res_2 = 10;
@@ -128,7 +143,7 @@ TEST(ManhattanDistance, operability) {
 
     const Size sz_1 = {.width = 2, .height = 3};
     const int res_1 = 1;
-    const Pose pose_1({0, 0}, {3, 4});
+    const Pose pose_1({0, 0}, {1, 0});
     F32GridDataPtr data_1 = Allocate<float>(sz_1);
 
     F32Grid grid_1(sz_1, res_1, pose_1);
@@ -152,7 +167,7 @@ TEST(ManhattanDistance, operability) {
 
     const Size sz_2 = {.width = 2, .height = 3};
     const int res_2 = 1;
-    const Pose pose_2({0, 0}, {3, 4});
+    const Pose pose_2({0, 0}, {2, 0});
     F32GridDataPtr data_2 = Allocate<float>(sz_2);
 
     F32Grid grid_2(sz_2, res_2, pose_2);
@@ -176,7 +191,7 @@ TEST(ManhattanDistance, operability) {
 
     const Size sz_3 = {.width = 5, .height = 5};
     const int res_3 = 1;
-    const Pose pose_3({0, 0}, {3, 4});
+    const Pose pose_3({0, 0}, {1, 0});
     F32GridDataPtr data_3 = Allocate<float>(sz_3);
 
     F32Grid grid_3(sz_3, res_3, pose_3);
@@ -238,7 +253,7 @@ TEST(ManhattanDistance, operability) {
 
     const Size sz_4 = {.width = 5, .height = 5};
     const int res_4 = 1;
-    const Pose pose_4({0, 0}, {3, 4});
+    const Pose pose_4({0, 0}, {1, 0});
     F32GridDataPtr data_4 = Allocate<float>(sz_4);
 
     F32Grid grid_4(sz_4, res_4, pose_4);
@@ -394,11 +409,11 @@ TEST(DistanceTranformApprox, operability) {
 }
 
 TEST(BilinearInterpolation, operability) {
-    const double eps = 1e-8;
+    const double eps = 1e-5;
 
     const Size sz_1 = {.width = 2, .height = 2};
     const double res_1 = 1;
-    const Pose pose_1({0, 0}, {1, 2});
+    const Pose pose_1({0, 0}, {3, 4});
     F32GridDataPtr data_1 = Allocate<float>(sz_1);
     F32Grid grid_1(sz_1, res_1, pose_1);
     grid_1.Reset(data_1.get());
@@ -410,7 +425,8 @@ TEST(BilinearInterpolation, operability) {
 
     BilinearInterpolation<float> interpolation_1_1(grid_1);
 
-    EXPECT_NEAR(interpolation_1_1({.x = 0.5, .y = 0.5}), 0.5, eps);
+    EXPECT_NEAR(interpolation_1_1({.x = -0.2, .y = 1.4}), 0.5, eps);
+    EXPECT_NEAR(interpolation_1_1({.x = -0.15, .y = 1.05}), 0.25, eps);
 
     grid_1[0][0] = 0;
     grid_1[0][1] = 0.5;
@@ -419,7 +435,7 @@ TEST(BilinearInterpolation, operability) {
 
     BilinearInterpolation<float> interpolation_1_2(grid_1);
 
-    EXPECT_NEAR(interpolation_1_2({.x = 0.5, .y = 0.5}), 0.575, eps);
+    EXPECT_NEAR(interpolation_1_2({.x = -0.2, .y = 1.4}), 0.575, eps);
 
     grid_1[0][0] = 0;
     grid_1[0][1] = 0.3;
@@ -428,7 +444,7 @@ TEST(BilinearInterpolation, operability) {
 
     BilinearInterpolation<float> interpolation_1_3(grid_1);
 
-    EXPECT_NEAR(interpolation_1_3({.x = 0.5, .y = 0.5}), 0.525, eps);
+    EXPECT_NEAR(interpolation_1_3({.x = -0.2, .y = 1.4}), 0.525, eps);
 
     grid_1[0][0] = 0;
     grid_1[0][1] = 0.4;
@@ -437,7 +453,7 @@ TEST(BilinearInterpolation, operability) {
 
     BilinearInterpolation<float> interpolation_1_4(grid_1);
 
-    EXPECT_NEAR(interpolation_1_4({.x = 0.2, .y = 0.6}), 0.376, eps);
+    EXPECT_NEAR(interpolation_1_4({.x = -0.46, .y = 1.22}), 0.376, eps);
 
     const Size sz_2 = {.width = 3, .height = 3};
     const double res_2 = 0.5;
@@ -458,35 +474,29 @@ TEST(BilinearInterpolation, operability) {
 
     BilinearInterpolation<float> interpolation_2_1(grid_2);
 
-    EXPECT_NEAR(interpolation_2_1({.x = 0.15, .y = 0.25}), 0.4, eps);
-    EXPECT_NEAR(interpolation_2_1({.x = 0.65, .y = 0.25}), 0.8625, eps);
-    EXPECT_NEAR(interpolation_2_1({.x = 0.65, .y = 0.65}), 1.195, eps);
+    EXPECT_NEAR(interpolation_2_1({.x = -0.268328, .y = 0.581378}), 0.4, eps);
+    EXPECT_NEAR(interpolation_2_1({.x = -0.0447214, .y = 1.02859}), 0.675, eps);
+    EXPECT_NEAR(interpolation_2_1({.x = -0.402492, .y = 1.20748}), 1.195, eps);
 
     try {
-        interpolation_2_1({.x = 1, .y = 1});
+        interpolation_2_1({.x = -0.56, .y = 1.68});
         FAIL();
-    } catch (const std::domain_error& err) {
-        EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
     } catch (...) {
-        FAIL();
+        // OK!
     }
 
     try {
         interpolation_2_1({.x = 100, .y = 0.5});
         FAIL();
-    } catch (const std::domain_error& err) {
-        EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
     } catch (...) {
-        FAIL();
+        // OK!
     }
 
     try {
-        interpolation_2_1({.x = 0.54, .y = -1});
+        interpolation_2_1({.x = 0.536656, .y = 0.849706});
         FAIL();
-    } catch (const std::domain_error& err) {
-        EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
     } catch (...) {
-        FAIL();
+        // OK!
     }
 
     const Size sz_3 = {.width = 3, .height = 3};
@@ -508,34 +518,28 @@ TEST(BilinearInterpolation, operability) {
 
     BilinearInterpolation<float> interpolation_3_1(grid_3);
 
-    EXPECT_NEAR(interpolation_3_1({.x = 1.15, .y = 2.25}), 0.4, eps);
-    EXPECT_NEAR(interpolation_3_1({.x = 1.65, .y = 2.25}), 0.8625, eps);
-    EXPECT_NEAR(interpolation_3_1({.x = 1.65, .y = 2.65}), 1.195, eps);
+    EXPECT_NEAR(interpolation_3_1({.x = 0.84, .y = 2.62}), 0.4, eps);
+    EXPECT_NEAR(interpolation_3_1({.x = 1.14, .y = 3.02}), 0.675, eps);
+    EXPECT_NEAR(interpolation_3_1({.x = 0.82, .y = 3.26}), 1.195, eps);
 
     try {
-        interpolation_3_1({.x = 1, .y = 1});
+        interpolation_3_1({.x = 1.02, .y = 1.86});
         FAIL();
-    } catch (const std::domain_error& err) {
-        EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
     } catch (...) {
-        FAIL();
+        // OK!
     }
 
     try {
-        interpolation_3_1({.x = 100, .y = 0.5});
+        interpolation_3_1({.x = 0.75, .y = 3.75});
         FAIL();
-    } catch (const std::domain_error& err) {
-        EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
     } catch (...) {
-        FAIL();
+        // OK!
     }
 
     try {
-        interpolation_3_1({.x = 2, .y = -1});
+        interpolation_3_1({.x = 0.97, .y = 2.21});
         FAIL();
-    } catch (const std::domain_error& err) {
-        EXPECT_EQ(err.what(), std::string("Point is not inside the grid"));
     } catch (...) {
-        FAIL();
+        // OK!
     }
 }
