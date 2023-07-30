@@ -1,12 +1,12 @@
 #include "simulator_2d/truck_marker.h"
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <cmath>
 
 namespace truck::simulator {
 
-TruckMarker::TruckMarker(
+void TruckMarker::create(
     const rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr &publisher,
     const double length, const double width, const double height, const float red,
     const float green, const float blue) {
@@ -42,11 +42,10 @@ void TruckMarker::createBody(
     body_.color.b = blue;
 }
 
-void setVerticalRotation(const geometry_msgs::msg::Quaternion &original_orientation) {
+void setVerticalRotation(geometry_msgs::msg::Quaternion &original_orientation) {
     tf2::Quaternion q_original, q_rotation, q_new;
     tf2::convert(original_orientation , q_original);
-    const double r = 0.0, p = 0.0, y = M_PI / 2;
-    q_rotation.setRPY(r, p, y);
+    q_rotation.setRPY(M_PI / 2, 0.0, 0.0);
     q_new = q_rotation * q_original;    
     q_new.normalize();
     tf2::convert(q_new, original_orientation);
@@ -95,6 +94,7 @@ void TruckMarker::updateWheelsPosition(const double x, const double y,
     const double orientation_x, const double orientation_y, const rclcpp::Time time) {
     
     for (int i = 0; i < 4; ++i) {
+        wheels_[i].header.stamp = time;
         wheels_[i].pose.position.x = x;
         wheels_[i].pose.position.y = y;
         wheels_[i].pose.orientation.x = orientation_x;
