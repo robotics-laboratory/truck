@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geom/pose.h"
+#include "common/exception.h"
 
 #include <cstdint>
 #include <optional>
@@ -27,6 +28,40 @@ struct Grid {
     T* operator[](int row) noexcept { return data + row * size.width; }
 
     const T* operator[](int row) const noexcept { return data + row * size.width; }
+
+    geom::Vec2 GetReferencePoint(const geom::Vec2& point) const {
+        VERIFY(origin);
+        return (point - origin->pos).rotate(origin->dir.inv().unit());
+    }
+
+    bool VerifyReferencePoint(const geom::Vec2& ref_point) const {
+        return ref_point.x >= 0 && ref_point.x < size.width * resolution && ref_point.y >= 0 &&
+               ref_point.y < size.height * resolution;
+    }
+
+    bool VerifyPoint(const geom::Vec2& point) const {
+        const geom::Vec2 ref_point = GetReferencePoint(point);
+        return VerifyReferencePoint(ref_point);
+    }
+
+    std::pair<int, int> GetReferenceCell(const geom::Vec2& ref_point) const {
+        VERIFY(VerifyReferencePoint(ref_point));
+        return {
+            static_cast<int>(ref_point.x / resolution), static_cast<int>(ref_point.y / resolution)};
+    }
+
+    std::pair<int, int> GetCell(const geom::Vec2& point) const {
+        return GetReferenceCell(GetReferencePoint(point));
+    }
+
+    int GetReferenceIndex(const geom::Vec2& point) const {
+        std::pair<int, int> cell = GetReferenceCell(point);
+        return cell.second * size.width + cell.first;
+    }
+
+    int GetIndex(const geom::Vec2& point) const {
+        return GetReferenceIndex(GetReferencePoint(point));
+    }
 
     Size size = {};
     double resolution = 0.0;

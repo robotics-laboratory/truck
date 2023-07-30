@@ -1,46 +1,45 @@
 #pragma once
 
-#include "geom/common.h"
+#include "common/exception.h"
 #include "fastgrid/grid.h"
 
 #include <cmath>
-#include <exception>
 
 namespace truck::fastgrid {
 
 template<typename T>
 class BilinearInterpolation {
   public:
-    BilinearInterpolation(const Grid<T>& grid) : grid_(grid) {}
+    BilinearInterpolation(const Grid<T>& grid)
+        : grid_(grid)
+        , domain_(
+              {.width = grid.size.width - 1, .height = grid.size.height - 1}, grid.resolution,
+              geom::Pose(
+                  grid.origin->pos + grid.origin->dir.unit() * grid.resolution / 2 +
+                      grid.origin->dir.unit().left() * grid.resolution / 2,
+                  grid.origin->dir)) {}
 
     double operator()(const geom::Vec2& point) const {
-        if (!grid_.origin) {
-            throw std::logic_error("No grid origin defined");
-        }
-        if (point.x < grid_.origin->pos.x || point.y < grid_.origin->pos.y ||
-            point.x >= grid_.origin->pos.x + (grid_.size.width - 1) * grid_.resolution ||
-            point.y >= grid_.origin->pos.y + (grid_.size.height - 1) * grid_.resolution) {
-            throw std::domain_error("Point is not inside the grid");
-        }
-        const int col = static_cast<int>((point.x - grid_.origin->pos.x) / grid_.resolution);
-        const int row = static_cast<int>((point.y - grid_.origin->pos.y) / grid_.resolution);
+        const geom::Vec2 ref_point = domain_.GetReferencePoint(point);
+        const auto [row, col] = domain_.GetReferenceCell(ref_point);
         return (static_cast<double>(grid_[row][col]) *
-                    (grid_.origin->pos.x + grid_.resolution * (row + 1) - point.x) *
-                    (grid_.origin->pos.y + grid_.resolution * (col + 1) - point.y) +
+                    (domain_.resolution * (row + 1) - ref_point.x) *
+                    (domain_.resolution * (col + 1) - ref_point.y) +
                 static_cast<double>(grid_[row + 1][col]) *
-                    (point.x - grid_.origin->pos.x - grid_.resolution * row) *
-                    (grid_.origin->pos.y + grid_.resolution * (col + 1) - point.y) +
+                    (ref_point.x - domain_.resolution * row) *
+                    (domain_.resolution * (col + 1) - ref_point.y) +
                 static_cast<double>(grid_[row][col + 1]) *
-                    (grid_.origin->pos.x + grid_.resolution * (row + 1) - point.x) *
-                    (point.y - grid_.origin->pos.y - grid_.resolution * col) +
+                    (domain_.resolution * (row + 1) - ref_point.x) *
+                    (ref_point.y - domain_.resolution * col) +
                 static_cast<double>(grid_[row + 1][col + 1]) *
-                    (point.x - grid_.origin->pos.x - grid_.resolution * row) *
-                    (point.y - grid_.origin->pos.y - grid_.resolution * col)) /
-               std::pow(grid_.resolution, 2);
+                    (ref_point.x - domain_.resolution * row) *
+                    (ref_point.y - domain_.resolution * col)) /
+               std::pow(domain_.resolution, 2);
     }
 
   private:
-    Grid<T> grid_{};
+    Grid<T> grid_;
+    Grid<T> domain_;
 };
 
 }  // namespace truck::fastgrid
