@@ -7,6 +7,7 @@ find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
@@ -14,7 +15,8 @@ add_executable(
     ${PROJECT_NAME}_node
     src/main.cpp
     src/simulator_node.cpp
-    src/simulator_engine.cpp)
+    src/simulator_engine.cpp
+    src/truck_marker.cpp)
 
 ament_target_dependencies(
     ${PROJECT_NAME}_node
@@ -23,7 +25,8 @@ ament_target_dependencies(
     nav_msgs
     truck_msgs
     visualization_msgs
-    geom)
+    geom
+    tf2_geometry_msgs)
 
 install(
     TARGETS ${PROJECT_NAME}_node

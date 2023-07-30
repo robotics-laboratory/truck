@@ -44,7 +44,7 @@ class SimulatorNode : public rclcpp::Node {
         } slots_;
 
         struct Messages {
-            TruckMarker *truck;
+            TruckMarker truck;
             nav_msgs::msg::Odometry odometry;
         } msgs_;
 

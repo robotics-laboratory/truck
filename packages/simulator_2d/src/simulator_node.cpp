@@ -46,14 +46,13 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         std::bind(&SimulatorNode::publishSignals, this));
 
     auto truck_sizes = engine_->getTruckSizes();
-    msgs_.truck = new TruckMarker(signals_.visualization, truck_sizes.x, truck_sizes.y,
+    msgs_.truck.create(signals_.visualization, truck_sizes.x, truck_sizes.y,
         params_.ego_height, params_.ego_red, params_.ego_green, params_.ego_blue);
     createOdometryMessage();
 }
 
 SimulatorNode::~SimulatorNode() {
     delete engine_;
-    delete msgs_.truck;
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) const {
@@ -89,7 +88,7 @@ void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::An
 void SimulatorNode::publishSignals() {
     auto pose = engine_->getPose();
     auto steering = engine_->getSteering();
-    msgs_.truck->publish(pose, steering, now());
+    msgs_.truck.publish(pose, steering, now());
     publishOdometryMessage(pose, steering);
 }
 

@@ -38,6 +38,7 @@ class SimulatorEngine {
             geom::Pose pose;
             // The position of the virtual corner in the middle (bicycle model).
             geom::Angle steering;
+            double velocity = 0.0;
         } state_;
 
         struct Control {
