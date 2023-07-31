@@ -4,20 +4,21 @@
 #include "geom/circle.h"
 #include "collision/collision_checker.h"
 
-#include <rclcpp/rclcpp.hpp>
+#include <boost/geometry.hpp>
 
 #include <optional>
+#include <unordered_set>
 
 namespace truck::planner::search {
 
-struct NodeId {
-    int x, y;
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
 
-    bool operator==(const NodeId& other) const { return (x == other.x) && (y == other.y); }
-};
+using Point = bg::model::point<double, 2, bg::cs::cartesian>;
+using Value = std::pair<Point, unsigned>;
 
 struct Node {
-    NodeId id;
+    size_t index;
     geom::Vec2 point;
     bool finish;
     bool collision;
@@ -42,14 +43,13 @@ class Grid {
 
     const geom::Pose& getEgoPose() const;
     const std::vector<Node>& getNodes() const;
-    const Node& getNodeById(const NodeId& id) const;
-    const std::optional<size_t>& getStartNodeIndex() const;
-    const std::optional<size_t>& getEndNodeIndex() const;
+    const Node& getNodeByIndex(size_t index) const;
+    const std::optional<size_t>& getEgoNodeIndex() const;
+    const std::optional<size_t>& getFinishNodeIndex() const;
     const std::unordered_set<size_t>& getFinishAreaNodesIndices() const;
 
     bool insideFinishArea(const geom::Vec2& point) const;
     geom::Vec2 snapPoint(const geom::Vec2& point) const;
-    NodeId toNodeId(const geom::Vec2& point, const geom::Vec2& origin) const;
 
   private:
     GridParams params_;
@@ -60,10 +60,13 @@ class Grid {
     geom::Circle finish_area_;
 
     std::vector<Node> nodes_;
-    std::unordered_set<size_t> finish_area_nodes_indices_;
 
-    std::optional<size_t> start_node_index_ = std::nullopt;
-    std::optional<size_t> end_node_index_ = std::nullopt;
+    static const size_t max_points_count = 16;
+    bgi::rtree<Value, bgi::rstar<max_points_count>> nodes_points_;
+
+    std::optional<size_t> ego_node_index_ = std::nullopt;
+    std::optional<size_t> finish_node_index_ = std::nullopt;
+    std::unordered_set<size_t> finish_area_nodes_indices_;
 
     std::shared_ptr<const collision::StaticCollisionChecker> checker_ = nullptr;
 };

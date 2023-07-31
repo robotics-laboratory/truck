@@ -147,7 +147,7 @@ std_msgs::msg::ColorRGBA PlannerNode::getNodeColor(size_t node_index) const {
     if (node.finish) {
         node_color = params_.node.finish_base_color;
 
-        if (node_index == state_.grid->getEndNodeIndex()) {
+        if (node_index == state_.grid->getFinishNodeIndex()) {
             node_color = params_.node.finish_accent_color;
         }
     }
@@ -156,7 +156,7 @@ std_msgs::msg::ColorRGBA PlannerNode::getNodeColor(size_t node_index) const {
         node_color = params_.node.collision_color;
     }
 
-    if (node_index == state_.grid->getStartNodeIndex()) {
+    if (node_index == state_.grid->getEgoNodeIndex()) {
         node_color = params_.node.start_color;
     }
 

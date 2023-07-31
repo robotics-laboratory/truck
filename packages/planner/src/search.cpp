@@ -20,43 +20,38 @@ Grid& Grid::setCollisionChecker(std::shared_ptr<const collision::StaticCollision
 }
 
 Grid& Grid::build() {
-    geom::Vec2 ego_clipped = snapPoint(ego_pose_);
-    geom::Vec2 finish_clipped = snapPoint(finish_area_.center);
-
-    geom::Vec2 origin_clipped = snapPoint(
-        ego_clipped - geom::Vec2(params_.width, params_.height) * (params_.resolution / 2));
-
-    NodeId ego_id = toNodeId(ego_clipped, origin_clipped);
-    NodeId finish_id = toNodeId(finish_clipped, origin_clipped);
+    geom::Vec2 origin = snapPoint(
+        snapPoint(ego_pose_) - geom::Vec2(params_.width, params_.height) * (params_.resolution / 2));
 
     for (int i = 0; i < params_.height; i++) {
         for (int j = 0; j < params_.width; j++) {
             // initialize node
             Node node = Node{
-                .id = NodeId{j, i},
-                .point = origin_clipped + (geom::Vec2(j, i) * params_.resolution),
+                .index = (params_.width * i) + j,
+                .point = origin + (geom::Vec2(j, i) * params_.resolution),
                 .finish = insideFinishArea(node.point),
                 .collision = (checker_->distance(node.point) < (shape_.width / 2)) ? true : false};
 
             nodes_.emplace_back(node);
-
-            size_t cur_node_index = nodes_.size() - 1;
-
-            if (node.id == ego_id) {
-                // save index of a start node
-                start_node_index_ = cur_node_index;
-            }
-
-            if (node.id == finish_id) {
-                // save index of an end node
-                end_node_index_ = cur_node_index;
-            }
+            nodes_points_.insert(std::make_pair(Point(node.point.x, node.point.y), node.index));
 
             if (node.finish) {
-                finish_area_nodes_indices_.insert(cur_node_index);
+                finish_area_nodes_indices_.insert(node.index);
             }
         }
     }
+
+    std::vector<Value> nearest_ego_values;
+    std::vector<Value> nearest_finish_values;
+
+    Point ego_point(ego_pose_.pos.x, ego_pose_.pos.y);
+    Point finish_point(finish_area_.center.x, finish_area_.center.y);
+
+    nodes_points_.query(bgi::nearest(ego_point, 1), std::back_inserter(nearest_ego_values));
+    nodes_points_.query(bgi::nearest(finish_point, 1), std::back_inserter(nearest_finish_values));
+
+    ego_node_index_ = nearest_ego_values.back().second;
+    finish_node_index_ = nearest_finish_values.back().second;
 
     return *this;
 }
@@ -65,13 +60,13 @@ const geom::Pose& Grid::getEgoPose() const { return ego_pose_; }
 
 const std::vector<Node>& Grid::getNodes() const { return nodes_; }
 
-const Node& Grid::getNodeById(const NodeId& id) const {
-    return nodes_.at(id.x + params_.width * id.y);
+const Node& Grid::getNodeByIndex(size_t index) const {
+    return nodes_.at(index);
 }
 
-const std::optional<size_t>& Grid::getStartNodeIndex() const { return start_node_index_; }
+const std::optional<size_t>& Grid::getEgoNodeIndex() const { return ego_node_index_; }
 
-const std::optional<size_t>& Grid::getEndNodeIndex() const { return end_node_index_; }
+const std::optional<size_t>& Grid::getFinishNodeIndex() const { return finish_node_index_; }
 
 const std::unordered_set<size_t>& Grid::getFinishAreaNodesIndices() const {
     return finish_area_nodes_indices_;
@@ -85,12 +80,6 @@ geom::Vec2 Grid::snapPoint(const geom::Vec2& point) const {
     return geom::Vec2(
         round<double>(point.x / params_.resolution) * params_.resolution,
         round<double>(point.y / params_.resolution) * params_.resolution);
-}
-
-NodeId Grid::toNodeId(const geom::Vec2& point, const geom::Vec2& origin) const {
-    return NodeId{
-        .x = int((point.x - origin.x) / params_.resolution),
-        .y = int((point.y - origin.y) / params_.resolution)};
 }
 
 }  // namespace truck::planner::search
