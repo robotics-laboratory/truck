@@ -64,9 +64,9 @@ const Node& Grid::getNodeByIndex(size_t index) const {
     return nodes_.at(index);
 }
 
-const std::optional<size_t>& Grid::getEgoNodeIndex() const { return ego_node_index_; }
+size_t Grid::getEgoNodeIndex() const { return ego_node_index_; }
 
-const std::optional<size_t>& Grid::getFinishNodeIndex() const { return finish_node_index_; }
+size_t Grid::getFinishNodeIndex() const { return finish_node_index_; }
 
 const std::unordered_set<size_t>& Grid::getFinishAreaNodesIndices() const {
     return finish_area_nodes_indices_;

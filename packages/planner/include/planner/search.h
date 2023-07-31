@@ -41,11 +41,12 @@ class Grid {
     Grid& setCollisionChecker(std::shared_ptr<const collision::StaticCollisionChecker> checker);
     Grid& build();
 
+    size_t getEgoNodeIndex() const;
+    size_t getFinishNodeIndex() const;
+
     const geom::Pose& getEgoPose() const;
     const std::vector<Node>& getNodes() const;
     const Node& getNodeByIndex(size_t index) const;
-    const std::optional<size_t>& getEgoNodeIndex() const;
-    const std::optional<size_t>& getFinishNodeIndex() const;
     const std::unordered_set<size_t>& getFinishAreaNodesIndices() const;
 
     bool insideFinishArea(const geom::Vec2& point) const;
@@ -64,8 +65,8 @@ class Grid {
     static const size_t max_points_count = 16;
     bgi::rtree<Value, bgi::rstar<max_points_count>> nodes_points_;
 
-    std::optional<size_t> ego_node_index_ = std::nullopt;
-    std::optional<size_t> finish_node_index_ = std::nullopt;
+    size_t ego_node_index_;
+    size_t finish_node_index_;
     std::unordered_set<size_t> finish_area_nodes_indices_;
 
     std::shared_ptr<const collision::StaticCollisionChecker> checker_ = nullptr;
