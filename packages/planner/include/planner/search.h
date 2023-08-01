@@ -72,4 +72,42 @@ class Grid {
     std::shared_ptr<const collision::StaticCollisionChecker> checker_ = nullptr;
 };
 
+struct Edge {
+    geom::Poses poses;
+    double len;
+    size_t end_pose_yaw_index;
+};
+
+using Edges = std::vector<Edge>;
+
+struct EdgeInfo {
+    size_t index;
+    size_t end_pose_node_index;
+    double len;
+    size_t end_pose_yaw_index;
+};
+
+using EdgesInfo = std::vector<EdgeInfo>;
+
+struct Vertex {
+    size_t yaw_index;
+    size_t node_index;
+
+    struct SearchState {
+        size_t prev_vertex_index;
+        size_t prev_edge_index;
+    } state;
+};
+
+class EdgeCache {
+  public:
+    virtual EdgesInfo getEdgesInfoFromVertex(const Vertex& vertex) = 0;
+    virtual const geom::Poses& getPosesByEdgeIndex(size_t edge_index) = 0;
+
+  private:
+    size_t yaws_count;
+    Edges edges;
+    std::vector<std::vector<size_t>> yaws_to_edges_indexing;
+};
+
 }  // namespace truck::planner::search
