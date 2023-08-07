@@ -18,7 +18,7 @@ std_msgs::msg::ColorRGBA toColorRGBA(const std::vector<double>& vector) {
     return color;
 }
 
-} // namespace
+}  // namespace
 
 PlannerNode::PlannerNode() : Node("planner") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
@@ -51,35 +51,36 @@ PlannerNode::PlannerNode() : Node("planner") {
     signal_.graph = this->create_publisher<visualization_msgs::msg::Marker>("/graph", 10);
 
     search::GridParams grid_params = search::GridParams{
-        .width = this->declare_parameter<int>("grid/nodes/width"),
-        .height = this->declare_parameter<int>("grid/nodes/height"),
-        .resolution = this->declare_parameter<double>("grid/resolution"),
-        .finish_area_radius = this->declare_parameter<double>("grid/finish_area_radius"),
-        .min_obstacle_distance = this->declare_parameter<double>("grid/min_obstacle_distance"),
+        .width = this->declare_parameter<int>("grid.nodes.width"),
+        .height = this->declare_parameter<int>("grid.nodes.height"),
+        .resolution = this->declare_parameter<double>("grid.resolution"),
+        .finish_area_size = this->declare_parameter<double>("grid.finish_area_size"),
+        .min_obstacle_distance = this->declare_parameter<double>("grid.min_obstacle_distance"),
     };
 
     params_ = Parameters{
         .grid = grid_params,
 
         .node = Parameters::NodeParams{
-            .z_lev = this->declare_parameter<double>("node/z-lev"),
-            .scale = this->declare_parameter<double>("node/scale"),
+            .z_lev = this->declare_parameter<double>("node.z_lev"),
+            .scale = this->declare_parameter<double>("node.scale"),
 
             .base_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/base/color_rgba")),
+                this->declare_parameter<std::vector<double>>("node.color_rgba.base")),
 
-            .start_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/start/color_rgba")),
+            .ego_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node.color_rgba.ego")),
 
             .finish_base_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/finish/base/color_rgba")),
+                this->declare_parameter<std::vector<double>>("node.color_rgba.finish_base")),
 
             .finish_accent_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/finish/accent/color_rgba")),
+                this->declare_parameter<std::vector<double>>("node.color_rgba.finish_accent")),
 
             .collision_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/collision/color_rgba")),
-        }};
+                this->declare_parameter<std::vector<double>>("node.color_rgba.collision")),
+        }
+    };
 
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
@@ -129,7 +130,7 @@ void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
 
 void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
     state_.finish_area =
-        geom::Circle{.center = geom::toVec2(*msg), .radius = params_.grid.finish_area_radius};
+        geom::Square{.center = geom::toVec2(*msg), .size = params_.grid.finish_area_size};
 }
 
 void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
@@ -140,14 +141,15 @@ void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_st
 }
 
 std_msgs::msg::ColorRGBA PlannerNode::getNodeColor(size_t node_index) const {
-    const auto& node = state_.grid->getNodes()[node_index];
+    const auto& node = state_.grid->getNodeByIndex(node_index);
 
     std_msgs::msg::ColorRGBA node_color = params_.node.base_color;
 
-    if (node.finish) {
+    if (state_.grid->getFinishAreaNodesIndices().find(node_index) !=
+        state_.grid->getFinishAreaNodesIndices().end()) {
         node_color = params_.node.finish_base_color;
 
-        if (node_index == state_.grid->getEndNodeIndex()) {
+        if (node_index == state_.grid->getFinishNodeIndex()) {
             node_color = params_.node.finish_accent_color;
         }
     }
@@ -156,35 +158,35 @@ std_msgs::msg::ColorRGBA PlannerNode::getNodeColor(size_t node_index) const {
         node_color = params_.node.collision_color;
     }
 
-    if (node_index == state_.grid->getStartNodeIndex()) {
-        node_color = params_.node.start_color;
+    if (node_index == state_.grid->getEgoNodeIndex()) {
+        node_color = params_.node.ego_color;
     }
 
     return node_color;
 }
 
 void PlannerNode::publishGrid() const {
-    visualization_msgs::msg::Marker graph_nodes;
-    graph_nodes.header.stamp = now();
-    graph_nodes.header.frame_id = "odom_ekf";
-    graph_nodes.id = 0;
-    graph_nodes.type = visualization_msgs::msg::Marker::POINTS;
-    graph_nodes.action = visualization_msgs::msg::Marker::ADD;
-    graph_nodes.lifetime = rclcpp::Duration::from_seconds(0);
+    visualization_msgs::msg::Marker marker;
+    marker.header.stamp = now();
+    marker.header.frame_id = "odom_ekf";
+    marker.id = 0;
+    marker.type = visualization_msgs::msg::Marker::POINTS;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+    marker.lifetime = rclcpp::Duration::from_seconds(0);
 
-    graph_nodes.scale.x = params_.node.scale;
-    graph_nodes.scale.y = params_.node.scale;
-    graph_nodes.scale.z = params_.node.scale;
-    graph_nodes.pose.position.z = params_.node.z_lev;
+    marker.scale.x = params_.node.scale;
+    marker.scale.y = params_.node.scale;
+    marker.scale.z = params_.node.scale;
+    marker.pose.position.z = params_.node.z_lev;
 
     const std::vector<search::Node>& nodes = state_.grid->getNodes();
 
     for (size_t i = 0; i < nodes.size(); i++) {
-        graph_nodes.points.push_back(geom::msg::toPoint(nodes[i].point));
-        graph_nodes.colors.push_back(getNodeColor(i));
+        marker.points.push_back(geom::msg::toPoint(nodes[i].point));
+        marker.colors.push_back(getNodeColor(i));
     }
 
-    signal_.graph->publish(graph_nodes);
+    signal_.graph->publish(marker);
 }
 
 std::optional<geom::Transform> PlannerNode::getLatestTranform(
@@ -197,8 +199,7 @@ std::optional<geom::Transform> PlannerNode::getLatestTranform(
 }
 
 void PlannerNode::doPlanningLoop() {
-    if (!checker_->initialized() || !state_.ego_pose.has_value() ||
-        !state_.finish_area.has_value()) {
+    if (!checker_->initialized() || !state_.ego_pose.has_value() || !state_.finish_area.has_value()) {
         return;
     }
 
@@ -207,10 +208,15 @@ void PlannerNode::doPlanningLoop() {
         search::Grid(params_.grid, model_->shape())
             .setEgoPose(state_.ego_pose.value())
             .setFinishArea(state_.finish_area.value())
-            .setCollisionChecker(checker_)
-            .build());
+            .setCollisionChecker(checker_));
 
-    // visualize grid
+
+    if (!state_.grid->build()) {
+        RCLCPP_WARN(this->get_logger(), "Finish point is out of grid bounds!");
+        publishGrid();
+        return;
+    }
+
     publishGrid();
 }
 
