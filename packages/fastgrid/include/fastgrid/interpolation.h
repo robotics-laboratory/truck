@@ -22,16 +22,17 @@ class BilinearInterpolation {
     double operator()(const geom::Vec2& point) const {
         const geom::Vec2 ref_point = domain_.GetReferencePoint(point);
         const auto [row, col] = domain_.GetReferenceCell(ref_point);
-        return (static_cast<double>(grid_[row][col]) *
+        const int index = row * grid_.size.width + col;
+        return (static_cast<double>(grid_.data[index]) *
                     (domain_.resolution * (row + 1) - ref_point.x) *
                     (domain_.resolution * (col + 1) - ref_point.y) +
-                static_cast<double>(grid_[row + 1][col]) *
+                static_cast<double>(grid_.data[index + grid_.size.width]) *
                     (ref_point.x - domain_.resolution * row) *
                     (domain_.resolution * (col + 1) - ref_point.y) +
-                static_cast<double>(grid_[row][col + 1]) *
+                static_cast<double>(grid_.data[index + 1]) *
                     (domain_.resolution * (row + 1) - ref_point.x) *
                     (ref_point.y - domain_.resolution * col) +
-                static_cast<double>(grid_[row + 1][col + 1]) *
+                static_cast<double>(grid_.data[index + grid_.size.width + 1]) *
                     (ref_point.x - domain_.resolution * row) *
                     (ref_point.y - domain_.resolution * col)) /
                std::pow(domain_.resolution, 2);
