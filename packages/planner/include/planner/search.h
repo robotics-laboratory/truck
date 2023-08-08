@@ -4,8 +4,12 @@
 #include "geom/square.h"
 #include "collision/collision_checker.h"
 
+#include <nlohmann/json.hpp>
 #include <boost/geometry.hpp>
 
+#include <rclcpp/rclcpp.hpp>
+
+#include <fstream>
 #include <optional>
 #include <unordered_set>
 
@@ -78,6 +82,61 @@ class Grid {
     } cache_;
 
     std::shared_ptr<const collision::StaticCollisionChecker> checker_ = nullptr;
+};
+
+struct Vertex {
+    size_t yaw_index;
+    size_t node_index;
+
+    struct SearchState {
+        std::optional<size_t> prev_vertex_index;
+        std::optional<size_t> prev_edge_index;
+    } state;
+};
+
+struct EdgeParams {
+    size_t yaws_count;
+    std::string type;
+
+    struct PrimitiveParams {
+        std::string json_path;
+    } primitive;
+};
+
+struct Edge {
+    geom::Poses poses;
+
+    size_t finish_yaw_index;
+    double len;
+};
+
+class EdgeCache {
+  public:
+    size_t getYawIndexFromAngle(double theta);
+
+    const geom::Poses& getPosesByEdgeIndex(size_t index) const;
+
+  protected:
+    EdgeParams edge_params_;
+    std::vector<Edge> edges_;
+
+    // Storing indices of all edges.
+    // The 'i'-th cell of this array stores the array of edges indexes
+    // that start from the angle corresponding to yaw with the 'i'-th index.
+    std::vector<std::vector<size_t>> edges_indices_;
+
+  private:
+    // Storing the full angle value of 360 degrees in radial equivalent.
+    // Used to find the nearest yaw index to an arbitrary angle rad in interval [-PI; PI)
+    const double full_angle = 6.28;
+};
+
+class PrimitiveCache : public EdgeCache {
+  public:
+    PrimitiveCache(const EdgeParams& edge_params);
+
+  private:
+    void parseJSON();
 };
 
 }  // namespace truck::planner::search

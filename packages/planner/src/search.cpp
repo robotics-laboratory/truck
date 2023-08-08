@@ -2,6 +2,8 @@
 
 namespace truck::planner::search {
 
+using nlohmann::json;
+
 Grid::Grid(const GridParams& params, const model::Shape& shape) : params_(params), shape_(shape) {}
 
 Grid& Grid::setEgoPose(const geom::Pose& ego_pose) {
@@ -108,6 +110,68 @@ bool Grid::build() {
 
     calculateNodesIndices();
     return true;
+}
+
+size_t EdgeCache::getYawIndexFromAngle(double theta) {
+    // convert angle rad from interval [-PI; PI) to [0; 2PI)
+    double theta_shifted = theta + M_PI;
+
+    VERIFY(theta_shifted >= 0 && theta_shifted < 2 * M_PI);
+
+    double yaw_step = full_angle / edge_params_.yaws_count;
+
+    // get index of the yaw angle closest to a given 'theta' angle
+    size_t index = round<size_t>(theta_shifted / yaw_step);
+
+    VERIFY(index >= 0 && index < edge_params_.yaws_count);
+
+    return index;
+}
+
+const geom::Poses& EdgeCache::getPosesByEdgeIndex(size_t index) const {
+    return edges_[index].poses;
+}
+
+PrimitiveCache::PrimitiveCache(const EdgeParams& edge_params) {
+    edge_params_ = edge_params;
+    parseJSON();
+}
+
+void PrimitiveCache::parseJSON() {
+    std::ifstream file(edge_params_.primitive.json_path);
+    json data = json::parse(file);
+
+    edges_indices_ = data["primitives_indices"].get<std::vector<std::vector<size_t>>>();
+
+    for (json::iterator it = data["primitives"].begin(); it != data["primitives"].end(); it++) {
+        auto len = (*it)["len"].get<double>();
+        auto x = (*it)["x"].get<std::vector<double>>();
+        auto y = (*it)["y"].get<std::vector<double>>();
+        auto theta = (*it)["theta"].get<std::vector<double>>();
+
+        geom::Poses poses;
+        for (int i = 0; i < x.size(); i++) {
+            poses.push_back(
+                geom::Pose(
+                    geom::Vec2(x[i], y[i]),
+                    geom::Vec2(geom::Angle(theta[i]))
+                )
+            );
+        }
+
+        edges_.push_back(
+            Edge{
+                .poses = poses,
+                .finish_yaw_index = getYawIndexFromAngle(theta.back()),
+                .len = len
+            }
+        );
+    }
+
+    RCLCPP_INFO_STREAM(
+        rclcpp::get_logger(""),
+        "JSON was successfully parsed. Total primitives count: " + std::to_string(edges_.size())
+    );
 }
 
 }  // namespace truck::planner::search

@@ -50,7 +50,7 @@ PlannerNode::PlannerNode() : Node("planner") {
 
     signal_.graph = this->create_publisher<visualization_msgs::msg::Marker>("/graph", 10);
 
-    search::GridParams grid_params = search::GridParams{
+    search::GridParams grid_params {
         .width = this->declare_parameter<int>("grid.nodes.width"),
         .height = this->declare_parameter<int>("grid.nodes.height"),
         .resolution = this->declare_parameter<double>("grid.resolution"),
@@ -58,8 +58,19 @@ PlannerNode::PlannerNode() : Node("planner") {
         .min_obstacle_distance = this->declare_parameter<double>("grid.min_obstacle_distance"),
     };
 
+    search::EdgeParams edge_params {
+        .yaws_count = this->declare_parameter<int>("edge.yaws_count"),
+        .type = this->declare_parameter<std::string>("edge.type"),
+
+        .primitive = search::EdgeParams::PrimitiveParams {
+            .json_path = this->declare_parameter<std::string>("edge.primitive.json_path")
+        }
+    };
+
     params_ = Parameters{
         .grid = grid_params,
+
+        .edge = edge_params,
 
         .node = Parameters::NodeParams{
             .z_lev = this->declare_parameter<double>("node.z_lev"),
@@ -91,6 +102,14 @@ PlannerNode::PlannerNode() : Node("planner") {
     checker_ = std::make_shared<collision::StaticCollisionChecker>(model_->shape());
 
     timer_ = this->create_wall_timer(200ms, bind(&PlannerNode::doPlanningLoop, this));
+
+    if (params_.edge.type == "primitive") {
+        RCLCPP_INFO(this->get_logger(), "Edge type: primitive");
+
+        edge_cache_ = std::make_unique<search::PrimitiveCache>(params_.edge);
+    } else {
+        RCLCPP_WARN(this->get_logger(), "Incorrect edge type!");
+    }
 }
 
 void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {

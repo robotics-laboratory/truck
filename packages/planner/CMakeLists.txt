@@ -13,6 +13,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(Boost REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node
@@ -32,6 +33,7 @@ ament_target_dependencies(
     tf2
     tf2_ros
     Boost
+    nlohmann_json
 )
 
 install(

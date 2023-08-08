@@ -62,6 +62,7 @@ class PlannerNode : public rclcpp::Node {
 
     struct Parameters {
         search::GridParams grid;
+        search::EdgeParams edge;
 
         struct NodeParams {
             double z_lev;
@@ -74,6 +75,7 @@ class PlannerNode : public rclcpp::Node {
         } node;
     } params_;
 
+    std::unique_ptr<search::EdgeCache> edge_cache_ = nullptr;
     std::unique_ptr<model::Model> model_ = nullptr;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
     std::shared_ptr<collision::StaticCollisionChecker> checker_ = nullptr;
