@@ -40,9 +40,9 @@ inline int32_t RowMin(const int row, const int32_t* row_mid_ptr) noexcept {
 template<int BORDER_SIZE, Neighbourhood<BORDER_SIZE> neighbourhood>
 inline int32_t UpperNeighbourhoodMin(const int32_t* buf_ptr, const Size& buf_size) noexcept {
     const int32_t* row_mid_ptr = buf_ptr - buf_size.width;
-    int32_t result = std::min(buf_ptr[-1], *row_mid_ptr) + neighbourhood.distance[0];
-    result =
-        std::min(result, std::min(row_mid_ptr[-1], row_mid_ptr[1]) + neighbourhood.distance[1]);
+    int32_t result = std::min(
+        std::min(buf_ptr[-1], *row_mid_ptr) + neighbourhood.distance[0],
+        std::min(row_mid_ptr[-1], row_mid_ptr[1]) + neighbourhood.distance[1]);
     for (int row = 1; row <= BORDER_SIZE; ++row, row_mid_ptr -= buf_size.width) {
         result = std::min(result, RowMin<BORDER_SIZE, neighbourhood>(row, row_mid_ptr));
     }
@@ -52,9 +52,9 @@ inline int32_t UpperNeighbourhoodMin(const int32_t* buf_ptr, const Size& buf_siz
 template<int BORDER_SIZE, Neighbourhood<BORDER_SIZE> neighbourhood>
 inline int32_t LowerNeighbourhoodMin(const int32_t* buf_ptr, const Size& buf_size) noexcept {
     const int32_t* row_mid_ptr = buf_ptr + buf_size.width;
-    int32_t result = std::min(buf_ptr[1], *row_mid_ptr) + neighbourhood.distance[0];
-    result =
-        std::min(result, std::min(row_mid_ptr[-1], row_mid_ptr[1]) + neighbourhood.distance[1]);
+    int32_t result = std::min(
+        std::min(buf_ptr[1], *row_mid_ptr) + neighbourhood.distance[0],
+        std::min(row_mid_ptr[-1], row_mid_ptr[1]) + neighbourhood.distance[1]);
     for (int row = 1; row <= BORDER_SIZE; ++row, row_mid_ptr += buf_size.width) {
         result = std::min(result, RowMin<BORDER_SIZE, neighbourhood>(row, row_mid_ptr));
     }

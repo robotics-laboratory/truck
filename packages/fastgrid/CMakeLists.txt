@@ -45,6 +45,9 @@ if(BUILD_TESTING)
 
     find_package(ament_cmake_gtest REQUIRED)
     add_subdirectory("test")
+
+    find_package(ament_cmake_google_benchmark REQUIRED)
+    add_subdirectory("benchmark")
 endif()
 
 ament_package()
