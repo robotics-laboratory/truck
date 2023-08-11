@@ -50,12 +50,14 @@ PlannerNode::PlannerNode() : Node("planner") {
 
     signal_.graph = this->create_publisher<visualization_msgs::msg::Marker>("/graph", 10);
 
+    signal_.path = this->create_publisher<visualization_msgs::msg::Marker>("/path", 10);
+
+    signal_.finish = this->create_publisher<visualization_msgs::msg::Marker>("/finish", 10);
+
     search::GridParams grid_params {
-        .width = this->declare_parameter<int>("grid.nodes.width"),
-        .height = this->declare_parameter<int>("grid.nodes.height"),
-        .resolution = this->declare_parameter<double>("grid.resolution"),
-        .finish_area_size = this->declare_parameter<double>("grid.finish_area_size"),
-        .min_obstacle_distance = this->declare_parameter<double>("grid.min_obstacle_distance"),
+        .width = this->declare_parameter<int>("grid.width"),
+        .height = this->declare_parameter<int>("grid.height"),
+        .resolution = this->declare_parameter<double>("grid.resolution")
     };
 
     search::EdgeParams edge_params {
@@ -67,10 +69,19 @@ PlannerNode::PlannerNode() : Node("planner") {
         }
     };
 
+    search::SearcherParams searcher_params {
+        .max_vertices_count = this->declare_parameter<int>("searcher.max_vertices_count"),
+        .finish_area_size = this->declare_parameter<double>("searcher.finish_area_size"),
+        .min_obstacle_distance = this->declare_parameter<double>("searcher.min_obstacle_distance"),
+        .max_node_position_error = this->declare_parameter<double>("searcher.max_node_position_error")
+    };
+
     params_ = Parameters{
         .grid = grid_params,
 
         .edge = edge_params,
+
+        .searcher = searcher_params,
 
         .node = Parameters::NodeParams{
             .z_lev = this->declare_parameter<double>("node.z_lev"),
@@ -106,10 +117,12 @@ PlannerNode::PlannerNode() : Node("planner") {
     if (params_.edge.type == "primitive") {
         RCLCPP_INFO(this->get_logger(), "Edge type: primitive");
 
-        edge_cache_ = std::make_unique<search::PrimitiveCache>(params_.edge);
+        edge_cache_ = std::make_shared<search::PrimitiveCache>(params_.edge);
     } else {
         RCLCPP_WARN(this->get_logger(), "Incorrect edge type!");
     }
+
+    searcher_.setParams(params_.searcher);
 }
 
 void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
@@ -149,7 +162,9 @@ void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
 
 void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
     state_.finish_area =
-        geom::Square{.center = geom::toVec2(*msg), .size = params_.grid.finish_area_size};
+        geom::Square{.center = geom::toVec2(*msg), .size = params_.searcher.finish_area_size};
+
+    searcher_.reset();
 }
 
 void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
@@ -208,6 +223,68 @@ void PlannerNode::publishGrid() const {
     signal_.graph->publish(marker);
 }
 
+void PlannerNode::publishPath() const {
+    visualization_msgs::msg::Marker marker;
+    marker.header.stamp = now();
+    marker.header.frame_id = "odom_ekf";
+    marker.id = 0;
+    marker.type = visualization_msgs::msg::Marker::POINTS;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+    marker.lifetime = rclcpp::Duration::from_seconds(0);
+
+    marker.scale.x = 0.05;
+    marker.scale.y = 0.05;
+    marker.scale.z = 0.05;
+    marker.pose.position.z = params_.node.z_lev;
+    marker.color.a = 0.6;
+    marker.color.g = 1.0;
+
+    const geom::Poses& poses = searcher_.getPath();
+
+    for (size_t i = 0; i < poses.size(); i++) {
+        marker.points.push_back(geom::msg::toPoint(poses[i].pos));
+    }
+
+    signal_.path->publish(marker);
+}
+
+void PlannerNode::publishFinish() const {
+    visualization_msgs::msg::Marker marker;
+    marker.header.stamp = now();
+    marker.header.frame_id = "odom_ekf";
+    marker.id = 0;
+    marker.type = visualization_msgs::msg::Marker::CUBE;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+    marker.lifetime = rclcpp::Duration::from_seconds(0);
+
+    marker.scale.x = params_.searcher.finish_area_size;
+    marker.scale.y = params_.searcher.finish_area_size;
+    marker.scale.z = params_.node.z_lev * 2;
+
+    marker.color = params_.node.finish_base_color;
+
+    geom::Vec2 position = state_.grid->getNodeByIndex(state_.grid->getFinishNodeIndex()).point;
+
+    marker.pose.position.x = position.x;
+    marker.pose.position.y = position.y;
+    marker.pose.position.z = params_.node.z_lev;
+
+    signal_.finish->publish(marker);
+}
+
+void PlannerNode::publish() const {
+    publishGrid();
+    publishPath();
+    publishFinish();
+}
+
+void PlannerNode::reset() const {
+    visualization_msgs::msg::Marker marker;
+    signal_.graph->publish(marker);
+    signal_.path->publish(marker);
+    signal_.finish->publish(marker);
+}
+
 std::optional<geom::Transform> PlannerNode::getLatestTranform(
     const std::string& source, const std::string& target) {
     try {
@@ -222,21 +299,28 @@ void PlannerNode::doPlanningLoop() {
         return;
     }
 
-    // initialize grid
     state_.grid = std::make_shared<search::Grid>(
         search::Grid(params_.grid, model_->shape())
             .setEgoPose(state_.ego_pose.value())
             .setFinishArea(state_.finish_area.value())
-            .setCollisionChecker(checker_));
-
+            .setCollisionChecker(checker_)
+    );
 
     if (!state_.grid->build()) {
         RCLCPP_WARN(this->get_logger(), "Finish point is out of grid bounds!");
-        publishGrid();
+        reset();
         return;
     }
 
-    publishGrid();
+    searcher_.setGrid(state_.grid);
+    searcher_.setEdgeCache(edge_cache_);
+    searcher_.setCollisionChecker(checker_);
+
+    if (!searcher_.findPath()) {
+        RCLCPP_WARN(this->get_logger(), "Path not found!");
+    }
+
+    publish();
 }
 
 }  // namespace truck::planner::visualization

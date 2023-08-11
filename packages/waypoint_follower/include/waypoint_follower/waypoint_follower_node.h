@@ -9,6 +9,7 @@
 #include "truck_msgs/msg/trajectory.hpp"
 #include "truck_msgs/msg/waypoints.hpp"
 
+#include <visualization_msgs/msg/marker.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
@@ -35,6 +36,7 @@ class WaypointFollowerNode : public rclcpp::Node {
     void onOdometry(nav_msgs::msg::Odometry::SharedPtr msg);
     void onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg);
     void onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
+    void onPath(visualization_msgs::msg::Marker::SharedPtr msg);
 
     void onReset(
         const std_srvs::srv::Empty::Request::SharedPtr, std_srvs::srv::Empty::Response::SharedPtr);
@@ -68,6 +70,7 @@ class WaypointFollowerNode : public rclcpp::Node {
         rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr grid = nullptr;
         rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
         rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
+        rclcpp::Subscription<visualization_msgs::msg::Marker>::SharedPtr path = nullptr;
     } slot_;
 
     struct Signals {
@@ -82,6 +85,7 @@ class WaypointFollowerNode : public rclcpp::Node {
         nav_msgs::msg::OccupancyGrid::SharedPtr grid = nullptr;
         std::shared_ptr<collision::Map> distance_transform = nullptr;
         double scheduled_velocity = 0;
+        geom::Poses path_poses;
     } state_;
 
     std::unique_ptr<model::Model> model_ = nullptr;

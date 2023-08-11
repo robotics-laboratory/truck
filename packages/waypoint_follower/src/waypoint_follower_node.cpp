@@ -70,6 +70,9 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
     slot_.grid = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/grid", 1, std::bind(&WaypointFollowerNode::onGrid, this, _1));
 
+    slot_.path =  this->create_subscription<visualization_msgs::msg::Marker>(
+        "/path", 1, std::bind(&WaypointFollowerNode::onPath, this, _1));
+
     using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
 
     TfCallback tf_call = std::bind(&WaypointFollowerNode::onTf, this, _1, false);
@@ -135,11 +138,11 @@ bool isStanding(const nav_msgs::msg::Odometry& odom) {
     return vel.lenSq() < squared(0.01);
 }
 
-motion::Trajectory makeTrajectory(const std::deque<LinkedPose>& path) {
+motion::Trajectory makeTrajectory(const geom::Poses& poses) {
     motion::Trajectory trajectory;
 
-    for (const auto& lp : path) {
-        motion::State state{lp.pose};
+    for (const auto& pose : poses) {
+        motion::State state{pose};
         trajectory.states.push_back(state);
     }
 
@@ -179,7 +182,8 @@ void WaypointFollowerNode::publishTrajectory() {
 
     checker_->reset(*state_.distance_transform);
 
-    motion::Trajectory trajectory = makeTrajectory(follower_->path());
+    motion::Trajectory trajectory = makeTrajectory(state_.path_poses);
+    // motion::Trajectory trajectory = makeTrajectory(follower_->path());
     bool collision = false;
     for (auto& state : trajectory.states) {
         const double margin = checker_->distance(state.pose);
@@ -237,6 +241,9 @@ std::optional<geom::Transform> WaypointFollowerNode::getLatestTranform(
 }
 
 void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPtr msg) {
+    RCLCPP_INFO(this->get_logger(), "Waypoint (%f, %f) added!", msg->point.x, msg->point.y);
+
+    /*
     if (!state_.odometry) {
         RCLCPP_WARN(this->get_logger(), "Has no odometry, ignore waypoint!");
         return;
@@ -269,6 +276,7 @@ void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPt
 
     follower_->update(ego);
     publishFullState();
+    */
 }
 
 void WaypointFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
@@ -304,6 +312,19 @@ void WaypointFollowerNode::onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is
     static const std::string authority = "";
     for (const auto& transform : msg->transforms) {
         tf_buffer_->setTransform(transform, authority, is_static);
+    }
+}
+
+void WaypointFollowerNode::onPath(visualization_msgs::msg::Marker::SharedPtr msg) {
+    state_.path_poses.clear();
+
+    for (const geometry_msgs::msg::Point& point : msg->points) {
+        state_.path_poses.push_back(
+            geom::Pose(
+                geom::Vec2(point.x, point.y),
+                geom::Vec2()
+            )
+        );
     }
 }
 

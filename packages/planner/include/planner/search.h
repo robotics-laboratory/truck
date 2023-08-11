@@ -11,6 +11,7 @@
 
 #include <fstream>
 #include <optional>
+#include <algorithm>
 #include <unordered_set>
 
 namespace truck::planner::search {
@@ -32,8 +33,6 @@ struct GridParams {
     int width;
     int height;
     double resolution;
-    double finish_area_size;
-    double min_obstacle_distance;
 };
 
 class Grid {
@@ -50,7 +49,7 @@ class Grid {
 
     const Node& getNodeByIndex(size_t index) const;
 
-    size_t getNodeIndexByPoint(const geom::Vec2& point);
+    size_t getNodeIndexByPoint(const geom::Vec2& point) const;
 
     size_t getEgoNodeIndex() const;
     size_t getFinishNodeIndex() const;
@@ -89,8 +88,20 @@ struct Vertex {
     size_t node_index;
 
     struct SearchState {
+        // exact cost of the path from the starting vertex to this vertex
+        double start_cost = 0.0;
+
+        // represents the heuristic estimated cost from this vertex to the finish vertex
+        double heuristic_cost = 0.0;
+
+        // index of a previous vertex
         std::optional<size_t> prev_vertex_index;
+
+        // index of a previous edge
         std::optional<size_t> prev_edge_index;
+
+        // lowest found cost: start_cost + heuristic_cost
+        double getTotalCost() const;
     } state;
 };
 
@@ -110,15 +121,30 @@ struct Edge {
     double len;
 };
 
+struct EdgeInfo {
+    size_t index;
+    geom::Vec2 finish_point;
+
+    size_t finish_yaw_index;
+    double len;
+};
+
+using Edges = std::vector<Edge>;
+using EdgesInfo = std::vector<EdgeInfo>;
+
 class EdgeCache {
   public:
-    size_t getYawIndexFromAngle(double theta);
+    size_t getYawsCount() const;
+
+    size_t getYawIndexFromAngle(double theta) const;
 
     const geom::Poses& getPosesByEdgeIndex(size_t index) const;
 
+    virtual EdgesInfo getEdgesInfoByYawIndex(size_t yaw_index) const = 0;
+
   protected:
     EdgeParams edge_params_;
-    std::vector<Edge> edges_;
+    Edges edges_;
 
     // Storing indices of all edges.
     // The 'i'-th cell of this array stores the array of edges indexes
@@ -135,8 +161,84 @@ class PrimitiveCache : public EdgeCache {
   public:
     PrimitiveCache(const EdgeParams& edge_params);
 
+    EdgesInfo getEdgesInfoByYawIndex(size_t yaw_index) const override;
+
   private:
     void parseJSON();
+};
+
+struct SearcherParams {
+    int max_vertices_count;
+    double finish_area_size;
+    double min_obstacle_distance;
+    double max_node_position_error;
+};
+
+class Searcher {
+  public:
+    Searcher();
+
+    void setParams(const SearcherParams& params);
+    void setGrid(std::shared_ptr<const Grid> grid);
+    void setEdgeCache(std::shared_ptr<const EdgeCache> edge_cache);
+    void setCollisionChecker(std::shared_ptr<const collision::StaticCollisionChecker> checker);
+
+    bool findPath();
+    const geom::Poses& getPath() const;
+
+    void reset();
+
+  private:
+    void buildPath();
+
+    void clearVerticesCache();
+
+    void addVertex(const Vertex& vertex);
+
+    // geom::Pose getNearestVertexPose() const;
+    size_t getVertexIndexFromOpenSet() const;
+    std::optional<size_t> getVertexIndex(size_t yaw_index, size_t node_index) const;
+
+    bool collisionFree(const EdgeInfo& edge) const;
+    bool insideBorders(const EdgeInfo& edge) const;
+    double calculateHeuristic(size_t node_index) const;
+
+    SearcherParams params_;
+
+    struct State {
+      struct Path {
+          geom::Poses poses;
+
+          void addEdge(const geom::Poses& edge_poses, const geom::Vec2& origin);
+          void removeLastPose();
+          void reverse();
+      } path;
+
+      struct Vertices {
+          RTree rtree;
+          geom::Poses poses;
+
+          size_t getNearestPoseIndex(const geom::Pose& pose);
+          void addVertex(const geom::Pose& vertex_pose, const geom::Vec2& origin);
+      } vertices;
+
+      void clear();
+      bool empty();
+
+    } current_state_, prev_state_;
+
+    geom::Pose start_pose;
+
+    size_t current_vertex_index_;
+    std::vector<Vertex> vertices_;
+    std::vector<std::vector<size_t>> vertices_indices_;
+    std::unordered_set<size_t> open_set_, closed_set_;
+
+    bool prevPathExist = false;
+
+    std::shared_ptr<const Grid> grid_ = nullptr;
+    std::shared_ptr<const EdgeCache> edge_cache_ = nullptr;
+    std::shared_ptr<const collision::StaticCollisionChecker> checker_ = nullptr;
 };
 
 }  // namespace truck::planner::search
