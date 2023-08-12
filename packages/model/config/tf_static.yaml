@@ -5,7 +5,7 @@
 
 - frame_id: "base"
   child_frame_id: "camera_link"
-  translation: {x: 0.2, y: 0.0, z: 0.04}
+  translation: {x: 0.25, y: 0.05, z: -0.04}
   rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
 
 - frame_id: "camera_link"
