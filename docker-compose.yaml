@@ -1,33 +1,29 @@
-version: "3.5"
+version: "3"
 
 services:
-  truck-jetson:
-    container_name: truck-jetson
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:jetson-0.7.2
-    stdin_open: true
+  truck:
+    container_name: "${CONTAINER_NAME:-truck-${USER}}"
+    image: registry.robotics-lab.ru/truck:latest
     privileged: true
-    tty: true
+    runtime: "${DOCKER_RUNTIME:-runc}"
     build:
-      dockerfile: docker/truck-jetson.dockerfile
+      dockerfile: Dockerfile
       context: .
+      tags:
+        - "registry.robotics-lab.ru/truck:latest"
+        - "registry.robotics-lab.ru/truck:0.7.3"
+      x-bake:
+        platforms: [linux/arm64v8, linux/amd64]
+        cache-to: "type=registry,ref=registry.robotics-lab.ru/truck:cache,mode=max"
+        cache-from: "type=registry,ref=registry.robotics-lab.ru/truck:cache"
     ports:
-    - "2222:2222"
-    - "11345:11345"
-    - "9090:9090"
+      - "${FOXGLOVE_PORT:-8765}:8765"
+      - "${VIDEO_STREAMING_PORT:-8889}:8889"
+      - "${GAZEBO_PORT:-11345}:11345"
     volumes:
       - "${PWD}:/truck"
       - "/dev:/dev"
 
-  truck-amd64:
-    container_name: truck-amd64
-    image: cr.yandex/crp8hpfj5tuhlaodm4dl/truck:amd64-0.7.2
-    stdin_open: true
-    privileged: true
-    tty: true
-    build:
-      dockerfile: docker/truck-amd64.dockerfile
-      context: .
-    network_mode: "host"
-    volumes:
-      - "${PWD}:/truck"
-      - "/dev:/dev"
+networks:
+  default:
+    name: "${CONTAINER_NAME:-truck-${USER}}"
