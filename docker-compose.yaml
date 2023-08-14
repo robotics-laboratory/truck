@@ -5,26 +5,25 @@ services:
     container_name: "${CONTAINER_NAME:-truck-${USER}}"
     image: registry.robotics-lab.ru/truck:latest
     privileged: true
-    stdin_open: true
-    runtime: ${DOCKER_RUNTIME:-runc}
-    entrypoint: "/bin/bash -c 'trap : TERM INT; source ${ROS_ROOT}/setup.bash; sleep infinity & wait'"
-    working_dir: "/truck"
+    runtime: "${DOCKER_RUNTIME:-runc}"
     build:
       dockerfile: Dockerfile
       context: .
       tags:
-          - "registry.robotics-lab.ru/truck:latest"
-          - "registry.robotics-lab.ru/truck:0.7.3"
+        - "registry.robotics-lab.ru/truck:latest"
+        - "registry.robotics-lab.ru/truck:0.7.3"
       x-bake:
         platforms: [linux/arm64v8, linux/amd64]
         cache-to: "type=registry,ref=registry.robotics-lab.ru/truck:cache,mode=max"
         cache-from: "type=registry,ref=registry.robotics-lab.ru/truck:cache"
     ports:
       - "${FOXGLOVE_PORT:-8765}:8765"
+      - "${VIDEO_STREAMING_PORT:-8889}:8889"
       - "${GAZEBO_PORT:-11345}:11345"
     volumes:
       - "${PWD}:/truck"
       - "/dev:/dev"
+
 networks:
   default:
     name: "${CONTAINER_NAME:-truck-${USER}}"

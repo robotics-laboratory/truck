@@ -457,10 +457,12 @@ RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
 
 FROM truck-ros AS truck-dev
 
+ARG TARGETPLATFORM  # Automatically set by docker buildx
+
 ENV MEDIAMTX_VERSION="1.0.0"
 
-RUN NAME=$(echo $TARGETPLATFORM | tr '/' '_') \
-    && wget -qO - https://github.com/aler9/mediamtx/releases/download/v${MEDIAMTX_VERSION}/mediamtx_v${MEDIAMTX_VERSION}_${NAME}.tar.gz | tar -xz -C /usr/bin mediamtx 
+RUN export NAME=$(echo $TARGETPLATFORM | tr '/' '_') \
+    && wget -qO - https://github.com/aler9/mediamtx/releases/download/v${MEDIAMTX_VERSION}/mediamtx_v${MEDIAMTX_VERSION}_${NAME}.tar.gz | tar -xz -C /usr/bin mediamtx
 
 ### INSTALL LIBPOINTMATCHER
 
@@ -496,8 +498,6 @@ RUN wget -qO - https://github.com/ethz-asl/libpointmatcher/archive/refs/tags/${L
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
-### SETUP ENTRYPOINT
-
 ### INSTALL DEV PKGS
 
 COPY requirements.txt /tmp/requirements.txt
@@ -525,4 +525,9 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export TRUCK_SIMULATION=false\n" >> /root/.bashrc \
     && printf "export TRUCK_CONTROL=ipega\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
-    
+
+### SETUP ENTRYPOINT
+
+WORKDIR /truck
+ENTRYPOINT ["/bin/bash", "-lc"]
+CMD ["trap : TERM INT; sleep infinity & wait"]
