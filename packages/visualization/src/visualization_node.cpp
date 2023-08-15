@@ -45,8 +45,8 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         .waypoints_z_lev = this->declare_parameter("waypoints.z_lev", 0.50),
         .waypoints_radius = this->declare_parameter("waypoints.radius", 0.10),
 
-        .trajectory_z_lev = this->declare_parameter("trajectory.z_lev", 0.0),
-        .trajectory_width = this->declare_parameter("trajector.width", 0.12),
+        .trajectory_z_lev = this->declare_parameter("trajectory.z_lev", 0.1),
+        .trajectory_width = this->declare_parameter("trajector.width", 0.1),
     };
 
     slot_.mode = Node::create_subscription<truck_msgs::msg::ControlMode>(

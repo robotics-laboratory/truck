@@ -297,7 +297,13 @@ size_t Searcher::State::Vertices::getNearestPoseIndex(const geom::Pose& pose) {
         std::back_inserter(indexed_points)
     );
 
-    return indexed_points.back().second;
+    size_t index = indexed_points.back().second;
+
+    if ((index + 1) < poses.size()) {
+        return index + 1;
+    }
+
+    return index;
 }
 
 void Searcher::State::Vertices::addVertex(const geom::Pose& vertex_pose, const geom::Vec2& origin) {
@@ -311,6 +317,23 @@ void Searcher::State::Vertices::addVertex(const geom::Pose& vertex_pose, const g
 }
 
 
+size_t Searcher::State::Path::getNearestPoseIndex(const geom::Pose& pose) {
+    std::vector<IndexedPoint> indexed_points;
+
+    rtree.query(bg::index::nearest(
+        Point(pose.pos.x, pose.pos.y), 1),
+        std::back_inserter(indexed_points)
+    );
+
+    size_t index = indexed_points.back().second;
+
+    if ((index + 1) < poses.size()) {
+        return index + 1;
+    }
+
+    return index;
+}
+
 void Searcher::State::Path::addEdge(const geom::Poses& edge_poses, const geom::Vec2& origin) {
     for (const geom::Pose& edge_pose : edge_poses) {
         geom::Pose edge_pose_global = geom::Pose(edge_pose.pos + origin, edge_pose.dir);
@@ -320,11 +343,25 @@ void Searcher::State::Path::addEdge(const geom::Poses& edge_poses, const geom::V
 
 void Searcher::State::Path::removeLastPose() { poses.pop_back(); }
 
-void Searcher::State::Path::reverse() { std::reverse(poses.begin(), poses.end()); }
+void Searcher::State::Path::reverse() {
+    std::reverse(poses.begin(), poses.end());
+
+    for (size_t i = 0; i < poses.size(); i++) {
+        rtree.insert(
+            std::make_pair(Point(poses[i].pos.x, poses[i].pos.y), i)
+        );
+    }
+}
+
+void Searcher::State::Path::cutByEgoPose(const geom::Pose& ego) {
+    size_t index = getNearestPoseIndex(ego);
+    poses.erase(poses.begin(), poses.begin() + index);
+}
 
 
 void Searcher::State::clear() {
     path.poses.clear();
+    path.rtree.clear();
     vertices.poses.clear();
     vertices.rtree.clear();
 }
@@ -360,6 +397,7 @@ void Searcher::buildPath() {
     }
 
     current_state_.path.reverse();
+    current_state_.path.cutByEgoPose(grid_->getEgoPose());
 }
 
 void Searcher::reset() {
@@ -374,7 +412,23 @@ void Searcher::clearVerticesCache() {
     closed_set_.clear();
 }
 
+void Searcher::Stopwatch::start() {
+    t1 = std::chrono::high_resolution_clock::now();
+}
+
+void Searcher::Stopwatch::end() {
+    t2 = std::chrono::high_resolution_clock::now();
+    auto time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+    RCLCPP_INFO_STREAM(
+        rclcpp::get_logger(""),
+        "Path search time: " + std::to_string(time) + "ms";
+    );
+}
+
 bool Searcher::findPath() {
+    stopwatch_.start();
+
     clearVerticesCache();
 
     if (!prevPathExist) {
@@ -394,7 +448,7 @@ bool Searcher::findPath() {
     size_t start_yaw_index = edge_cache_->getYawIndexFromAngle(start_theta);
     size_t start_node_index = grid_->getNodeIndexByPoint(start_pose.pos);
 
-    Vertex ego_vertex {
+    Vertex start_vertex {
         .yaw_index = start_yaw_index,
         .node_index = start_node_index,
 
@@ -406,7 +460,7 @@ bool Searcher::findPath() {
         }
     };
 
-    addVertex(ego_vertex);
+    addVertex(start_vertex);
 
     while(open_set_.size() > 0 && vertices_.size() < params_.max_vertices_count) {
         current_vertex_index_ = getVertexIndexFromOpenSet();
@@ -421,6 +475,8 @@ bool Searcher::findPath() {
             prev_state_ = current_state_;
 
             if (!prevPathExist) { prevPathExist = true; }
+
+            stopwatch_.end();
 
             return true;
         }
@@ -474,6 +530,8 @@ bool Searcher::findPath() {
     }
 
     if (prevPathExist) { current_state_ = prev_state_; }
+
+    stopwatch_.end();
 
     return false;
 }

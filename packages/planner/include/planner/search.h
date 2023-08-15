@@ -9,6 +9,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <chrono>
 #include <fstream>
 #include <optional>
 #include <algorithm>
@@ -205,13 +206,24 @@ class Searcher {
 
     SearcherParams params_;
 
+    struct Stopwatch {
+        void start();
+        void end();
+
+        std::chrono::high_resolution_clock::time_point t1, t2;
+    } stopwatch_;
+
     struct State {
       struct Path {
+          RTree rtree;
           geom::Poses poses;
+
+          size_t getNearestPoseIndex(const geom::Pose& pose);
 
           void addEdge(const geom::Poses& edge_poses, const geom::Vec2& origin);
           void removeLastPose();
           void reverse();
+          void cutByEgoPose(const geom::Pose& ego);
       } path;
 
       struct Vertices {
@@ -219,6 +231,7 @@ class Searcher {
           geom::Poses poses;
 
           size_t getNearestPoseIndex(const geom::Pose& pose);
+
           void addVertex(const geom::Pose& vertex_pose, const geom::Vec2& origin);
       } vertices;
 
