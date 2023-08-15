@@ -2,6 +2,7 @@
 
 #include "geom/pose.h"
 #include "geom/vector.h"
+
 #include "truck_msgs/msg/control.hpp"
 #include "truck_msgs/msg/hardware_telemetry.hpp"
 #include "truck_msgs/msg/simulation_state.hpp"

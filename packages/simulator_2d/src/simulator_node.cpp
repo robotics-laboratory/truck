@@ -3,7 +3,6 @@
 #include "geom/msg.h"
 
 #include <cmath>
-
 namespace truck::simulator {
 
 using namespace std::placeholders;
@@ -43,21 +42,25 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {
-    if (control->has_acceleration) {
-        engine_.setControl(control->velocity, control->acceleration, control->curvature);
-    } else {
-        engine_.setControl(control->velocity, control->curvature);
-    }
+    /*
+    RCLCPP_INFO_STREAM(this->get_logger(), 
+        std::to_string(control->velocity) + " " + std::to_string(control->acceleration) 
+            + " " + std::to_string(control->curvature));
+    //*/
+
+    engine_.setControl(control->velocity, control->acceleration, control->curvature);
 }
 
 void SimulatorNode::publishOdometryMessage(
     const rclcpp::Time &time, const geom::Pose &pose, const geom::Vec2 &linearVelocity,
     const geom::Vec2 &angularVelocity) {
 
-    nav_msgs::msg::Odometry odom_msg;
-    odom_msg.header.frame_id = "odom_ekf";
-    odom_msg.child_frame_id = "odom_ekf";
-    odom_msg.header.stamp = time;
+void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::Vec2 linearVelocity, 
+    const geom::Vec2 angularVelocity) {
+
+    msgs_.odometry.header.frame_id = "odom_ekf";
+    msgs_.odometry.child_frame_id = "base_link";
+    msgs_.odometry.header.stamp = now();
 
     // Set the position.
     odom_msg.pose.pose.position.x = pose.pos.x;
