@@ -129,6 +129,10 @@ void SimulatorNode::publishSignals() {
     publishTransformMessage(time, pose);
     publishTelemetryMessage(time, steering);
     publishSimulationStateMessafe(time, speed, steering);
+    auto pose = engine_.getPose();
+    auto linearVelocity = engine_.getLinearVelocity();
+    auto angularVelocity = engine_.getAngularVelocity();
+    publishOdometryMessage(pose, linearVelocity, angularVelocity);
 }
 
 }  // namespace truck::simulator
