@@ -21,9 +21,10 @@ class SimulatorNode : public rclcpp::Node {
         SimulatorNode();
 
     private:
-        void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) const;
+        void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
         void createOdometryMessage();
-        void publishOdometryMessage(const geom::Pose pose, geom::Angle steering);
+        void publishOdometryMessage(const geom::Pose pose, const geom::Vec2 linearVelocity, 
+            const geom::Vec2 angularVelocity);
         void publishSignals();
 
         SimulatorEngine engine_;

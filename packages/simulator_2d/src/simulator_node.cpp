@@ -45,13 +45,14 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         this->get_logger(),
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
     engine_.start(model, this->declare_parameter("simulation_tick", 0.01));
+    engine_.setControl(0.0, 0.0, 0.0);
 
     timer_ = this->create_wall_timer(
         params_.update_period,
         std::bind(&SimulatorNode::publishSignals, this));
 }
 
-void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) const {
+void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {
     RCLCPP_INFO_STREAM(this->get_logger(), 
         std::to_string(control->velocity) + " " + std::to_string(control->acceleration) 
             + " " + std::to_string(control->curvature));
@@ -65,18 +66,22 @@ void SimulatorNode::createOdometryMessage() {
     msgs_.odometry.child_frame_id = "base_link";
 }
 
-void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::Angle steering) {
+void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::Vec2 linearVelocity, 
+    const geom::Vec2 angularVelocity) {
+
     msgs_.odometry.header.stamp = now();
 
     // Set the position.
-    msgs_.odometry.pose.pose.position.x = pose.pos.x + 0 * steering.radians();
+    msgs_.odometry.pose.pose.position.x = pose.pos.x;
     msgs_.odometry.pose.pose.position.y = pose.pos.y;
-    msgs_.odometry.pose.pose.orientation = odom_quat;
+    msgs_.odometry.pose.pose.orientation.x = pose.dir.x;
+    msgs_.odometry.pose.pose.orientation.y = pose.dir.y;
 
     // Set the velocity.
-    msgs_.odometry.twist.twist.linear.x = 0.1;
-    msgs_.odometry.twist.twist.linear.y = 0.1;
-    msgs_.odometry.twist.twist.angular.z = 0.1;
+    msgs_.odometry.twist.twist.linear.x = linearVelocity.x;
+    msgs_.odometry.twist.twist.linear.y = linearVelocity.y;
+    msgs_.odometry.twist.twist.angular.x = angularVelocity.x;
+    msgs_.odometry.twist.twist.angular.y = angularVelocity.y;
 
     signals_.odom->publish(msgs_.odometry);
 }
@@ -87,7 +92,7 @@ void SimulatorNode::publishSignals() {
     auto linearVelocity = engine_.getLinearVelocity();
     auto angularVelocity = engine_.getAngularVelocity();
     msgs_.truck.publish(pose, steering, now());
-    publishOdometryMessage(pose, steering);
+    publishOdometryMessage(pose, linearVelocity, angularVelocity);
 }
 
 } // namespace truck::simulator

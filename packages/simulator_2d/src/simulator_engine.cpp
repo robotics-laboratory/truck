@@ -5,16 +5,19 @@
 
 namespace truck::simulator {
 
-void SimulatorEngine::start(std::unique_ptr<model::Model> &model, double simulation_tick) {
+SimulatorEngine::~SimulatorEngine() {
+    isRunning_ = false;
+    running_thread_.join();
+}
+
+void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double simulation_tick) {
     params_.simulation_tick = simulation_tick;
     model_ = std::unique_ptr<model::Model>(std::move(model));
     isRunning_ = true;
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
-}
-
-SimulatorEngine::~SimulatorEngine() {
-    isRunning_ = false;
-    running_thread_.join();
+    control_.velocity = 0;
+    control_.acceleration = 0;
+    control_.curvature = 0;
 }
 
 geom::Vec2 SimulatorEngine::getTruckSizes() const {
@@ -39,6 +42,7 @@ geom::Vec2 SimulatorEngine::getAngularVelocity() const {
 
 void SimulatorEngine::setControl(
     const double velocity, const double acceleration, const double curvature) {
+
     control_.velocity = velocity;
     control_.acceleration = acceleration;
     control_.curvature = curvature;

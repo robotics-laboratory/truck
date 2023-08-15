@@ -10,8 +10,8 @@ namespace truck::simulator {
 
 class SimulatorEngine {
     public:
-        void start(std::unique_ptr<model::Model> &model, double simulation_tick);
         ~SimulatorEngine();
+        void start(std::unique_ptr<model::Model> &model, const double simulation_tick);
         geom::Vec2 getTruckSizes() const;
         geom::Pose getPose() const;
         geom::Angle getSteering() const;
