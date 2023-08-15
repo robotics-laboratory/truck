@@ -7,6 +7,7 @@ find_package(model REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(geom REQUIRED)
+find_package(visualization REQUIRED)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 

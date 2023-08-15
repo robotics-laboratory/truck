@@ -1,7 +1,7 @@
 #include "simulator_2d/simulator_engine.h"
 
-#include "geom/angle.h"
 #include "geom/pose.h"
+#include "geom/vector.h"
 
 #include "truck_msgs/msg/control.hpp"
 #include <nav_msgs/msg/odometry.hpp>
@@ -11,8 +11,6 @@
 #include <chrono> 
 
 namespace truck::simulator {
-
-//using namespace std::chrono_literals;
 
 class SimulatorNode : public rclcpp::Node {
     public:

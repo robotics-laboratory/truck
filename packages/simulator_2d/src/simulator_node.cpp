@@ -1,12 +1,5 @@
 #include "simulator_2d/simulator_node.h"
 
-#include "geom/vector.h"
-
-//#include <boost/assert.hpp>
-
-#include <chrono>
-#include <functional>
-
 namespace truck::simulator {
 
 using namespace std::placeholders;
@@ -45,9 +38,11 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {
+    /*
     RCLCPP_INFO_STREAM(this->get_logger(), 
         std::to_string(control->velocity) + " " + std::to_string(control->acceleration) 
             + " " + std::to_string(control->curvature));
+    //*/
 
     engine_.setControl(control->velocity, control->acceleration, control->curvature);
 }
@@ -64,6 +59,8 @@ void SimulatorNode::createOdometryMessage() {
 void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::Vec2 linearVelocity, 
     const geom::Vec2 angularVelocity) {
 
+    msgs_.odometry.header.frame_id = "odom_ekf";
+    msgs_.odometry.child_frame_id = "base_link";
     msgs_.odometry.header.stamp = now();
 
     // Set the position.
