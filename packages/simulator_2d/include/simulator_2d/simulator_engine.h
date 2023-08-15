@@ -10,13 +10,13 @@ namespace truck::simulator {
 
 class SimulatorEngine {
     public:
-        explicit SimulatorEngine(std::unique_ptr<model::Model> &model) 
-            : SimulatorEngine(model, 0.01) {}
-        SimulatorEngine(std::unique_ptr<model::Model> &model, double simulation_tick);
+        void start(std::unique_ptr<model::Model> &model, double simulation_tick);
         ~SimulatorEngine();
         geom::Vec2 getTruckSizes() const;
         geom::Pose getPose() const;
         geom::Angle getSteering() const;
+        geom::Vec2 getLinearVelocity() const;
+        geom::Vec2 getAngularVelocity() const;
         void setControl(const double velocity, const double acceleration, const double curvature);
 
     private:
@@ -38,7 +38,8 @@ class SimulatorEngine {
             geom::Pose pose;
             // The position of the virtual corner in the middle (bicycle model).
             geom::Angle steering;
-            double velocity = 0.0;
+            geom::Vec2 linearVelocity;
+            geom::Vec2 angularVelocity;
         } state_;
 
         struct Control {

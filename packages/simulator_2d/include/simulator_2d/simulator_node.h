@@ -19,7 +19,6 @@ using namespace std::chrono_literals;
 class SimulatorNode : public rclcpp::Node {
     public:
         SimulatorNode();
-        ~SimulatorNode();
 
     private:
         void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) const;
@@ -27,7 +26,7 @@ class SimulatorNode : public rclcpp::Node {
         void publishOdometryMessage(const geom::Pose pose, geom::Angle steering);
         void publishSignals();
 
-        SimulatorEngine *engine_ = nullptr;
+        SimulatorEngine engine_;
         
         rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 

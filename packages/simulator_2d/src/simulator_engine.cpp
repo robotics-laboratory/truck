@@ -5,11 +5,11 @@
 
 namespace truck::simulator {
 
-SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> &model, double simulation_tick) {
+void SimulatorEngine::start(std::unique_ptr<model::Model> &model, double simulation_tick) {
     params_.simulation_tick = simulation_tick;
     model_ = std::unique_ptr<model::Model>(std::move(model));
-    running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
     isRunning_ = true;
+    running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
 }
 
 SimulatorEngine::~SimulatorEngine() {
@@ -27,6 +27,14 @@ geom::Pose SimulatorEngine::getPose() const {
 
 geom::Angle SimulatorEngine::getSteering() const {
     return state_.steering;
+}
+
+geom::Vec2 SimulatorEngine::getLinearVelocity() const {
+    return state_.linearVelocity;
+}
+
+geom::Vec2 SimulatorEngine::getAngularVelocity() const {
+    return state_.angularVelocity;
 }
 
 void SimulatorEngine::setControl(
