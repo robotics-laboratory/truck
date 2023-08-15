@@ -2,7 +2,7 @@
 
 #include "geom/vector.h"
 
-#include <boost/assert.hpp>
+//#include <boost/assert.hpp>
 
 #include <chrono>
 #include <functional>
