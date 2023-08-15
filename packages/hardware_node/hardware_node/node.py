@@ -3,6 +3,7 @@ import pymodel
 import rclpy
 from rclpy.node import Node
 from truck_msgs.msg import Control, ControlMode, HardwareStatus, HardwareTelemetry
+from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3
 from functools import cached_property
@@ -196,15 +197,14 @@ class HardwareNode(Node):
         vel = self._model.motor_rps_to_linear_velocity(telemetry.current_rps)
 
         odom = Odometry(header=header)
-        odom.twist.twist.linear = Vector3(x=vel, y=0, z=0)
-        odom.twist.covariance = self._odom_covariance()
-
+        odom.twist.twist.linear = Vector3(x=float(vel), y=0.0, z=0.0)
+        odom.twist.covariance = self._odom_covariance
         self._odom_pub.publish(odom)
 
     @cached_property
     def _odom_covariance(self):
-        matrix = [[0] * 6 for _ in range(6)]
-        matrix[0][0] = 0.0001
+        matrix = [0.0] * 36
+        matrix[0] = 0.0001
         return matrix
 
     def _get_param(self, name, type, unit=""):
