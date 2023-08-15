@@ -1,5 +1,4 @@
 #include "simulator_2d/simulator_engine.h"
-#include "simulator_2d/truck_marker.h"
 
 #include "geom/angle.h"
 #include "geom/pose.h"
@@ -44,7 +43,6 @@ class SimulatorNode : public rclcpp::Node {
         } slots_;
 
         struct Messages {
-            TruckMarker truck;
             nav_msgs::msg::Odometry odometry;
         } msgs_;
 

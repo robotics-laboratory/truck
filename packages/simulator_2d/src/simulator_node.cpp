@@ -29,23 +29,19 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         std::bind(&SimulatorNode::handleControl, this, _1));
 
     signals_.odom = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/simulator/odometry",
+        "/ekf/odometry/filtered",
         rclcpp::QoS(1).reliability(qos));
 
     signals_.visualization = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/simulator/visualization", 
         rclcpp::QoS(1).reliability(qos));
 
-    auto truck_sizes = engine_.getTruckSizes();
-    msgs_.truck.create(signals_.visualization, truck_sizes.x, truck_sizes.y,
-        params_.ego_height, params_.ego_red, params_.ego_green, params_.ego_blue);
     createOdometryMessage();
 
     auto model = model::makeUniquePtr(
         this->get_logger(),
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
     engine_.start(model, this->declare_parameter("simulation_tick", 0.01));
-    engine_.setControl(0.0, 0.0, 0.0);
 
     timer_ = this->create_wall_timer(
         params_.update_period,
@@ -62,8 +58,11 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
 
 void SimulatorNode::createOdometryMessage() {
     msgs_.odometry.header.frame_id = "odom_ekf";
-    msgs_.odometry.pose.pose.position.z = 0.0;
     msgs_.odometry.child_frame_id = "base_link";
+    msgs_.odometry.pose.pose.position.z = 0.0;
+    msgs_.odometry.pose.pose.orientation.z = 0.0;
+    msgs_.odometry.twist.twist.linear.z = 0.0;
+    msgs_.odometry.twist.twist.angular.z = 0.0;
 }
 
 void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::Vec2 linearVelocity, 
@@ -91,7 +90,6 @@ void SimulatorNode::publishSignals() {
     auto steering = engine_.getSteering();
     auto linearVelocity = engine_.getLinearVelocity();
     auto angularVelocity = engine_.getAngularVelocity();
-    msgs_.truck.publish(pose, steering, now());
     publishOdometryMessage(pose, linearVelocity, angularVelocity);
 }
 
