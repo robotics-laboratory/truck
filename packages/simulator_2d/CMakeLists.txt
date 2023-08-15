@@ -15,8 +15,7 @@ add_executable(
     ${PROJECT_NAME}_node
     src/main.cpp
     src/simulator_node.cpp
-    src/simulator_engine.cpp
-    src/truck_marker.cpp)
+    src/simulator_engine.cpp)
 
 ament_target_dependencies(
     ${PROJECT_NAME}_node
@@ -24,7 +23,6 @@ ament_target_dependencies(
     model
     nav_msgs
     truck_msgs
-    visualization_msgs
     geom
     tf2_geometry_msgs)
 

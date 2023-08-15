@@ -5,7 +5,6 @@
 
 #include "truck_msgs/msg/control.hpp"
 #include <nav_msgs/msg/odometry.hpp>
-#include <visualization_msgs/msg/marker.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -47,7 +46,6 @@ class SimulatorNode : public rclcpp::Node {
         } msgs_;
 
         struct Signals {
-            rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr visualization = nullptr;
             rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
         } signals_;
 };

@@ -32,10 +32,6 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         "/ekf/odometry/filtered",
         rclcpp::QoS(1).reliability(qos));
 
-    signals_.visualization = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/simulator/visualization", 
-        rclcpp::QoS(1).reliability(qos));
-
     createOdometryMessage();
 
     auto model = model::makeUniquePtr(
@@ -87,7 +83,6 @@ void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::Ve
 
 void SimulatorNode::publishSignals() {
     auto pose = engine_.getPose();
-    auto steering = engine_.getSteering();
     auto linearVelocity = engine_.getLinearVelocity();
     auto angularVelocity = engine_.getAngularVelocity();
     publishOdometryMessage(pose, linearVelocity, angularVelocity);
