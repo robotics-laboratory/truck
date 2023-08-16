@@ -98,8 +98,8 @@ void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr o
     ++state_.odom_seq_id;
 
     publishEgo();
-    publishEgoTrack();
-    publishArc();
+    //publishEgoTrack();
+    //publishArc();
 }
 
 namespace {
@@ -186,9 +186,13 @@ void VisualizationNode::publishEgo() const {
     msg.scale.z = params_.ego_height;
     msg.pose = state_.odom->pose.pose;
     msg.pose.position.z = params_.ego_z_lev;
-    msg.color = modeToColor(state_.mode);
+    //msg.color = modeToColor(state_.mode);
+
+    RCLCPP_INFO_STREAM(this->get_logger(), "7777777777777777777777777777777");
 
     signal_.ego->publish(msg);
+
+    RCLCPP_INFO_STREAM(this->get_logger(), "888888888888888888888888888888");
 }
 
 void VisualizationNode::publishEgoTrack() const {
