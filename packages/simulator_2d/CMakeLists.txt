@@ -29,9 +29,7 @@ ament_target_dependencies(
     nav_msgs
     truck_msgs
     geom
-    control_proxy
-    tf2_geometry_msgs
-    tf2_msgs)
+    visualization_msgs)
 
 install(
     TARGETS ${PROJECT_NAME}_node

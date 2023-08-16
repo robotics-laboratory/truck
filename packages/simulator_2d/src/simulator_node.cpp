@@ -59,7 +59,6 @@ void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::Ve
     const geom::Vec2 angularVelocity) {
 
     msgs_.odometry.header.stamp = now();
-    msgs_.odometry.header.frame_id = "odom_ekf";
 
     // Set the position.
     odom_msg.pose.pose.position.x = pose.pos.x;
