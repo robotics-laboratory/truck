@@ -17,39 +17,43 @@
 namespace truck::simulator {
 
 class SimulatorNode : public rclcpp::Node {
-  public:
-    SimulatorNode();
+    public:
+        SimulatorNode();
 
-  private:
-    void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
-    void publishOdometryMessage(
-        const rclcpp::Time &time, const geom::Pose &pose, const geom::Vec2 &linearVelocity,
-        const geom::Vec2 &angularVelocity);
-    void publishTransformMessage(const rclcpp::Time &time, const geom::Pose &pose);
-    void publishTelemetryMessage(const rclcpp::Time &time, const geom::Angle &steering);
-    void publishSimulationStateMessafe(const rclcpp::Time &time, 
-        const double speed, const geom::Angle &steering);
-    void publishSignals();
+    private:
+        void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
+        void createOdometryMessage();
+        void createTransformMessage();
+        void publishOdometryMessage(const geom::Pose &pose, const geom::Vec2 &linearVelocity, 
+            const geom::Vec2 &angularVelocity);
+        void publishTransformMessage(const geom::Pose &pose);
+        void publishSignals();
 
-    SimulatorEngine engine_;
+        SimulatorEngine engine_;
+        
+        rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
-    rclcpp::TimerBase::SharedPtr timer_ = nullptr;
+        struct Parameters {
+            double ego_height;
+            float ego_red;
+            float ego_green;
+            float ego_blue;
+            std::chrono::duration<double> update_period;
+        } params_;
 
-    struct Parameters {
-        double update_period;
-        double precision;
-    } params_;
+        struct Slots {
+            rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
+        } slots_;
 
-    struct Slots {
-        rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
-    } slots_;
+        struct Messages {
+            nav_msgs::msg::Odometry odometry;
+            geometry_msgs::msg::TransformStamped odom_to_base_transform;
+        } msgs_;
 
-    struct Signals {
-        rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
-        rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
-        rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
-        rclcpp::Publisher<truck_msgs::msg::SimulationState>::SharedPtr state = nullptr;
-    } signals_;
+        struct Signals {
+            rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
+            rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
+        } signals_;
 };
 
 }  // namespace truck::simulator

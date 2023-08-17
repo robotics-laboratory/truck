@@ -22,15 +22,12 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
         "/ekf/odometry/transform", rclcpp::QoS(1).reliability(qos));
 
-    signals_.telemetry = Node::create_publisher<truck_msgs::msg::HardwareTelemetry>(
-        "/hardware/telemetry", rclcpp::QoS(1).reliability(qos));
+    signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
+        "/ekf/odometry/transform", 
+        rclcpp::QoS(1).reliability(qos));
 
-    signals_.state = Node::create_publisher<truck_msgs::msg::SimulationState>(
-        "/simulator/state", rclcpp::QoS(1).reliability(qos));
-
-    params_ = Parameters{
-        .update_period = this->declare_parameter("update_period", 0.01),
-        .precision = this->declare_parameter("calculations_precision", 1e-8)};
+    createOdometryMessage();
+    createTransformMessage();
 
     auto model = model::makeUniquePtr(
         this->get_logger(), Node::declare_parameter<std::string>("model_config", "model.yaml"));
@@ -49,14 +46,27 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     //*/
 
     engine_.setControl(control->velocity, control->acceleration, control->curvature);
+    engine_.setControl(0.1, 0, 0);
 }
 
-void SimulatorNode::publishOdometryMessage(
-    const rclcpp::Time &time, const geom::Pose &pose, const geom::Vec2 &linearVelocity,
-    const geom::Vec2 &angularVelocity) {
+void SimulatorNode::createOdometryMessage() {
+    msgs_.odometry.header.frame_id = "odom_ekf";
+    msgs_.odometry.child_frame_id = "odom_ekf";
+    msgs_.odometry.pose.pose.position.z = 0.0;
+    msgs_.odometry.pose.pose.orientation.z = 0.0;
+    msgs_.odometry.twist.twist.linear.z = 0.0;
+    msgs_.odometry.twist.twist.angular.z = 0.0;
+}
 
-void SimulatorNode::publishOdometryMessage(const geom::Pose pose, const geom::Vec2 linearVelocity, 
-    const geom::Vec2 angularVelocity) {
+void SimulatorNode::createTransformMessage() {
+    msgs_.odom_to_base_transform.header.frame_id = "odom_ekf";
+    msgs_.odom_to_base_transform.child_frame_id = "base";
+    msgs_.odom_to_base_transform.transform.translation.z = 0.0;
+    msgs_.odom_to_base_transform.transform.rotation.z = 0.0;
+}
+
+void SimulatorNode::publishOdometryMessage(const geom::Pose &pose, const geom::Vec2 &linearVelocity, 
+    const geom::Vec2 &angularVelocity) {
 
     msgs_.odometry.header.stamp = now();
 
@@ -117,6 +127,20 @@ void SimulatorNode::publishSimulationStateMessafe(const rclcpp::Time &time,
     signals_.state->publish(state_msg);
 }
 
+void SimulatorNode::publishTransformMessage(const geom::Pose &pose) {
+    msgs_.odom_to_base_transform.header.stamp = now();
+
+    // Set the transformation.
+    msgs_.odom_to_base_transform.transform.translation.x = pose.pos.x;
+    msgs_.odom_to_base_transform.transform.translation.y = pose.pos.y;
+    msgs_.odom_to_base_transform.transform.rotation.x = pose.dir.x;
+    msgs_.odom_to_base_transform.transform.rotation.y = pose.dir.y;
+
+    tf2_msgs::msg::TFMessage tf_msg;
+    tf_msg.transforms.push_back(msgs_.odom_to_base_transform);
+    signals_.tf_publisher->publish(tf_msg);
+}
+
 void SimulatorNode::publishSignals() {
     engine_.advance(params_.update_period);
     const auto pose = engine_.getPose();
@@ -133,6 +157,7 @@ void SimulatorNode::publishSignals() {
     auto linearVelocity = engine_.getLinearVelocity();
     auto angularVelocity = engine_.getAngularVelocity();
     publishOdometryMessage(pose, linearVelocity, angularVelocity);
+    publishTransformMessage(pose);
 }
 
 }  // namespace truck::simulator

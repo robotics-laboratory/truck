@@ -9,13 +9,8 @@ void SimulatorEngine::start(
     std::unique_ptr<model::Model> &model, const double integration_step, const double precision) {
     
     model_ = std::unique_ptr<model::Model>(std::move(model));
-    params_.integration_step = integration_step;
-    params_.precision = precision;
-    params_.max_steering_velocity = model_->steeringVelocity();
-    params_.wheelbase = model_->wheelBase().length;
-    params_.base_to_rear = model_->wheelBase().base_to_rear;
-    params_.steering_limit = model_->leftSteeringLimits().max.radians();
-    reset();
+    isRunning_ = true;
+    running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
 }
 
 void SimulatorEngine::reset() {
