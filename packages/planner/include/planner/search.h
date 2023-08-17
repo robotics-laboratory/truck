@@ -185,18 +185,17 @@ class Searcher {
     void setCollisionChecker(std::shared_ptr<const collision::StaticCollisionChecker> checker);
 
     bool findPath();
-    const geom::Poses& getPath() const;
+    geom::Poses getPath() const;
 
     void reset();
 
   private:
-    void buildPath();
+    void buildState();
 
-    void clearVerticesCache();
+    void resetVertices();
 
     void addVertex(const Vertex& vertex);
 
-    // geom::Pose getNearestVertexPose() const;
     size_t getVertexIndexFromOpenSet() const;
     std::optional<size_t> getVertexIndex(size_t yaw_index, size_t node_index) const;
 
@@ -214,30 +213,20 @@ class Searcher {
     } stopwatch_;
 
     struct State {
-      struct Path {
-          RTree rtree;
-          geom::Poses poses;
+        std::vector<geom::Poses> edges;
+        RTree rtree_poses;
 
-          size_t getNearestPoseIndex(const geom::Pose& pose);
+        bool empty() const;
 
-          void addEdge(const geom::Poses& edge_poses, const geom::Vec2& origin);
-          void removeLastPose();
-          void reverse();
-          void cutByEgoPose(const geom::Pose& ego);
-      } path;
+        void clear();
+        void reverse();
 
-      struct Vertices {
-          RTree rtree;
-          geom::Poses poses;
+        void addEdge(const geom::Poses& edge, const geom::Vec2& origin);
+        void addEdgeFromPrevState(const geom::Poses& edge);
 
-          size_t getNearestPoseIndex(const geom::Pose& pose);
-
-          void addVertex(const geom::Pose& vertex_pose, const geom::Vec2& origin);
-      } vertices;
-
-      void clear();
-      bool empty();
-
+        size_t getNearestEdgeIndexByEgo(const geom::Pose& ego) const;
+        geom::Pose getStartPoseByEgo(const geom::Pose& ego) const;
+        geom::Poses constructPath(const geom::Pose& ego) const;
     } current_state_, prev_state_;
 
     geom::Pose start_pose;
@@ -246,8 +235,6 @@ class Searcher {
     std::vector<Vertex> vertices_;
     std::vector<std::vector<size_t>> vertices_indices_;
     std::unordered_set<size_t> open_set_, closed_set_;
-
-    bool prevPathExist = false;
 
     std::shared_ptr<const Grid> grid_ = nullptr;
     std::shared_ptr<const EdgeCache> edge_cache_ = nullptr;
