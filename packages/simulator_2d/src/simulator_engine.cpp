@@ -15,9 +15,6 @@ void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double s
     model_ = std::unique_ptr<model::Model>(std::move(model));
     isRunning_ = true;
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
-    control_.velocity = 0;
-    control_.acceleration = 0;
-    control_.curvature = 0;
 }
 
 geom::Vec2 SimulatorEngine::getTruckSizes() const {

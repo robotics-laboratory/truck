@@ -8,6 +8,8 @@ find_package(nav_msgs REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(geom REQUIRED)
 find_package(visualization REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_msgs REQUIRED)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
@@ -23,7 +25,9 @@ ament_target_dependencies(
     model
     nav_msgs
     truck_msgs
-    geom)
+    geom
+    tf2_geometry_msgs
+    tf2_msgs)
 
 install(
     TARGETS ${PROJECT_NAME}_node

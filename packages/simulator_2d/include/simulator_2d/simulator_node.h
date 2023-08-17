@@ -5,6 +5,7 @@
 
 #include "truck_msgs/msg/control.hpp"
 #include <nav_msgs/msg/odometry.hpp>
+#include <tf2_msgs/msg/tf_message.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -19,8 +20,10 @@ class SimulatorNode : public rclcpp::Node {
     private:
         void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
         void createOdometryMessage();
-        void publishOdometryMessage(const geom::Pose pose, const geom::Vec2 linearVelocity, 
-            const geom::Vec2 angularVelocity);
+        void createTransformMessage();
+        void publishOdometryMessage(const geom::Pose &pose, const geom::Vec2 &linearVelocity, 
+            const geom::Vec2 &angularVelocity);
+        void publishTransformMessage(const geom::Pose &pose);
         void publishSignals();
 
         SimulatorEngine engine_;
@@ -41,10 +44,12 @@ class SimulatorNode : public rclcpp::Node {
 
         struct Messages {
             nav_msgs::msg::Odometry odometry;
+            geometry_msgs::msg::TransformStamped odom_to_base_transform;
         } msgs_;
 
         struct Signals {
             rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
+            rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
         } signals_;
 };
 
