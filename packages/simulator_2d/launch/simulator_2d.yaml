@@ -29,9 +29,15 @@ launch:
     - {name: "qos", value: 0}
     # path to truck mode config
     - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
-    # timers period (seconds)
-    - {name: "update_period", value: 0.01}
-    # integration step per second
-    - {name: "integration_step", value: 0.001}
+    # timers period (milliseconds)
+    - {name: "update_period", value: 10}
+    # simulation step (seconds)
+    - {name: "simulation_tick", value: 0.01}
     # precision of calculations
     - {name: "calculations_precision", value: 0.00000001}
+    # visualization marker height
+    - {name: "ego/height", value: 0.2}
+    # visualization marker color (RGB)
+    - {name: "ego_red", value: 0.0}
+    - {name: "ego_green", value: 0.0}
+    - {name: "ego_blue", value: 1.0}

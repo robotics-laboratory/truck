@@ -5,9 +5,16 @@
 
 namespace truck::simulator {
 
-void SimulatorEngine::start(
-    std::unique_ptr<model::Model> &model, const double integration_step, const double precision) {
+SimulatorEngine::~SimulatorEngine() {
+    isRunning_ = false;
+    running_thread_.join();
+}
+
+void SimulatorEngine::start(std::unique_ptr<model::Model> &model, 
+    const double simulation_tick, const double precision) {
     
+    params_.simulation_tick = simulation_tick;
+    params_.precision = precision;
     model_ = std::unique_ptr<model::Model>(std::move(model));
     isRunning_ = true;
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
@@ -45,20 +52,24 @@ geom::Vec2 SimulatorEngine::getAngularVelocity() const {
 void SimulatorEngine::setControl(
     const double velocity, const double acceleration, const double curvature) {
     
-    control_.velocity = model_->baseVelocityLimits().clamp(velocity);
-    control_.acceleration = model_->baseAccelerationLimits().clamp(acceleration);
-    const auto curvature_limit = model_->baseMaxAbsCurvature();
-    control_.curvature = std::clamp(curvature, -curvature_limit, curvature_limit);
-    const auto product = control_.curvature * params_.base_to_rear;
-    control_.curvature /= sqrt(1 - product * product);
+    control_.velocity = velocity;
+    control_.acceleration = acceleration;
+    control_.curvature = curvature;
+    /*
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
+        std::to_string(velocity) + " " + std::to_string(acceleration) 
+        + " " + std::to_string(curvature));
+    //*/
 }
 
-void SimulatorEngine::setControl(const double velocity, const double curvature) {
-    const auto limits = model_->baseAccelerationLimits();
-    const double acceleration =
-        abs(velocity - state_[StateIndex::linear_velocity]) < params_.precision ? 0
-        : state_[StateIndex::linear_velocity] < velocity                        ? limits.max
-                                                                                : limits.min;
+void SimulatorEngine::setControl(
+    const double velocity, const double curvature) {
+
+    const double acceleration = abs(velocity - control_.velocity) < params_.precision
+        ? 0 
+        : velocity < control_.velocity - params_.precision 
+            ? model_->baseAccelerationLimits().min
+            : model_->baseAccelerationLimits().max;
     setControl(velocity, acceleration, curvature);
 }
 

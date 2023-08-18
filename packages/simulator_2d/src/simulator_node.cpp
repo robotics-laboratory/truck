@@ -30,8 +30,10 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     createTransformMessage();
 
     auto model = model::makeUniquePtr(
-        this->get_logger(), Node::declare_parameter<std::string>("model_config", "model.yaml"));
-    engine_.start(model, this->declare_parameter("integration_step", 0.001), params_.precision);
+        this->get_logger(),
+        Node::declare_parameter<std::string>("model_config", "model.yaml"));
+    engine_.start(model, this->declare_parameter("simulation_tick", 0.01),
+        this->declare_parameter("calculations_precision", 1e-8));
 
     timer_ = this->create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
@@ -39,14 +41,13 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {
-    /*
-    RCLCPP_INFO_STREAM(this->get_logger(), 
-        std::to_string(control->velocity) + " " + std::to_string(control->acceleration) 
-            + " " + std::to_string(control->curvature));
-    //*/
-
-    engine_.setControl(control->velocity, control->acceleration, control->curvature);
-    engine_.setControl(0.1, 0, 0);
+    if (control->has_acceleration) {
+        engine_.setControl(control->velocity, control->acceleration, control->curvature);
+    }
+    else {
+        //engine_.setControl(control->velocity, control->curvature);
+        engine_.setControl(0.1, 0);
+    }
 }
 
 void SimulatorNode::createOdometryMessage() {
