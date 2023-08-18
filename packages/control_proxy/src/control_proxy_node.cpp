@@ -122,6 +122,8 @@ truck_msgs::msg::Control ControlProxyNode::makeControlCommand(
                           : -ratio * model_->baseVelocityLimits().min;
     }();
 
+    result.has_acceleration = state_.mode == Mode::Auto;
+
     return result;
 }
 

@@ -8,6 +8,7 @@ find_package(nav_msgs REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(geom REQUIRED)
 find_package(visualization REQUIRED)
+find_package(control_proxy REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
 
@@ -26,6 +27,7 @@ ament_target_dependencies(
     nav_msgs
     truck_msgs
     geom
+    control_proxy
     tf2_geometry_msgs
     tf2_msgs)
 

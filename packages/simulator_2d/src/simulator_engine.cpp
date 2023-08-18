@@ -10,8 +10,11 @@ SimulatorEngine::~SimulatorEngine() {
     running_thread_.join();
 }
 
-void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double simulation_tick) {
+void SimulatorEngine::start(std::unique_ptr<model::Model> &model, 
+    const double simulation_tick, const double precision) {
+    
     params_.simulation_tick = simulation_tick;
+    params_.precision = precision;
     model_ = std::unique_ptr<model::Model>(std::move(model));
     isRunning_ = true;
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
@@ -39,10 +42,26 @@ geom::Vec2 SimulatorEngine::getAngularVelocity() const {
 
 void SimulatorEngine::setControl(
     const double velocity, const double acceleration, const double curvature) {
-
+    
     control_.velocity = velocity;
     control_.acceleration = acceleration;
     control_.curvature = curvature;
+    /*
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
+        std::to_string(velocity) + " " + std::to_string(acceleration) 
+        + " " + std::to_string(curvature));
+    //*/
+}
+
+void SimulatorEngine::setControl(
+    const double velocity, const double curvature) {
+
+    const double acceleration = abs(velocity - control_.velocity) < params_.precision
+        ? 0 
+        : velocity < control_.velocity - params_.precision 
+            ? model_->baseAccelerationLimits().min
+            : model_->baseAccelerationLimits().max;
+    setControl(velocity, acceleration, curvature);
 }
 
 void SimulatorEngine::updateState() {
