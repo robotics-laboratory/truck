@@ -2,7 +2,6 @@
 
 #include "geom/msg.h"
 
-#include <cmath>
 namespace truck::simulator {
 
 using namespace std::placeholders;
@@ -134,8 +133,11 @@ void SimulatorNode::publishTransformMessage(const geom::Pose &pose) {
     // Set the transformation.
     msgs_.odom_to_base_transform.transform.translation.x = pose.pos.x;
     msgs_.odom_to_base_transform.transform.translation.y = pose.pos.y;
-    msgs_.odom_to_base_transform.transform.rotation.x = pose.dir.x;
-    msgs_.odom_to_base_transform.transform.rotation.y = pose.dir.y;
+    const auto quaternion = truck::geom::msg::toQuaternion(pose.dir);
+    msgs_.odom_to_base_transform.transform.rotation.x = quaternion.x;
+    msgs_.odom_to_base_transform.transform.rotation.y = quaternion.y;
+    msgs_.odom_to_base_transform.transform.rotation.z = quaternion.z;
+    msgs_.odom_to_base_transform.transform.rotation.w = quaternion.w;
 
     tf2_msgs::msg::TFMessage tf_msg;
     tf_msg.transforms.push_back(msgs_.odom_to_base_transform);

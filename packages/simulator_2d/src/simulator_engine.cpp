@@ -1,6 +1,7 @@
 #include "simulator_2d/simulator_engine.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 
 namespace truck::simulator {
@@ -52,9 +53,12 @@ geom::Vec2 SimulatorEngine::getAngularVelocity() const {
 void SimulatorEngine::setControl(
     const double velocity, const double acceleration, const double curvature) {
     
-    control_.velocity = velocity;
-    control_.acceleration = acceleration;
-    control_.curvature = curvature;
+    const auto veloctity_limits = model_->baseVelocityLimits();
+    control_.velocity = std::clamp(velocity, veloctity_limits.min, veloctity_limits.max);
+    const auto acceleration_limits = model_->baseAccelerationLimits();
+    control_.acceleration = std::clamp(acceleration, acceleration_limits.min, acceleration_limits.max);
+    const auto curvature_limit = model_->baseMaxAbsCurvature();
+    control_.curvature = std::clamp(curvature, -curvature_limit, curvature_limit);
     /*
     RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
         std::to_string(velocity) + " " + std::to_string(acceleration) 
@@ -64,12 +68,13 @@ void SimulatorEngine::setControl(
 
 void SimulatorEngine::setControl(
     const double velocity, const double curvature) {
-
+    
+    const auto limits = model_->baseAccelerationLimits();
     const double acceleration = abs(velocity - control_.velocity) < params_.precision
         ? 0 
         : velocity < control_.velocity - params_.precision 
-            ? model_->baseAccelerationLimits().min
-            : model_->baseAccelerationLimits().max;
+            ? limits.min
+            : limits.max;
     setControl(velocity, acceleration, curvature);
 }
 

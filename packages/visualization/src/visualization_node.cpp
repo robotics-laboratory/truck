@@ -198,10 +198,11 @@ void VisualizationNode::addEgoBody(visualization_msgs::msg::MarkerArray &msg_arr
 
 namespace {
 
-void setVerticalRotation(geometry_msgs::msg::Quaternion &original_orientation) {
+void setRotation(geometry_msgs::msg::Quaternion &original_orientation, 
+    const double x_angle, const double y_angle, const double z_angle) {
     tf2::Quaternion q_original, q_rotation, q_new;
     tf2::convert(original_orientation , q_original);
-    q_rotation.setRPY(M_PI / 2, 0.0, 0.0);
+    q_rotation.setRPY(x_angle, y_angle, z_angle);
     q_new = q_rotation * q_original;    
     q_new.normalize();
     tf2::convert(q_new, original_orientation);
@@ -223,7 +224,7 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         msg.scale.z = params_.ego_wheel_width;
         msg.pose = state_.odom->pose.pose;
         msg.pose.position.z = params_.ego_z_lev;
-        setVerticalRotation(msg.pose.orientation);
+        setRotation(msg.pose.orientation, M_PI / 2, 0, 0);
         msg.color = modeToColor(state_.mode);
 
         msg_array.markers.push_back(msg);
