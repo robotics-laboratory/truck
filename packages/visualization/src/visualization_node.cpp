@@ -66,6 +66,11 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleWaypoints, this, _1));
 
+    slot_.telemetry = Node::create_subscription<truck_msgs::msg::HardwareTelemetry>(
+        "/hardware/telemetry",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleTelemetry, this, _1));
+
     slot_.odom = Node::create_subscription<nav_msgs::msg::Odometry>(
         "/ekf/odometry/filtered",
         rclcpp::QoS(1).reliability(qos),
@@ -218,7 +223,7 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         msg.scale.z = params_.ego_wheel_width;
         msg.pose = state_.odom->pose.pose;
         msg.pose.position.z = params_.ego_z_lev;
-        setRotation(msg.pose.orientation, M_PI_2, 0.0, 0.0);
+        setRotation(msg.pose.orientation, M_PI_2, 0.0, i < 2 ? state_.telemetry->steering_angle : 0);
         msg.color = modeToColor(state_.mode);
 
         msg_array.markers.push_back(msg);
@@ -390,6 +395,10 @@ void VisualizationNode::publishWaypoints() const {
 void VisualizationNode::handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg) {
     state_.waypoints = std::move(msg);
     publishWaypoints();
+}
+
+void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg) {
+    state_.telemetry = msg;
 }
 
 }  // namespace truck::visualization

@@ -70,6 +70,8 @@ void SimulatorEngine::setControl(
 }
 
 void SimulatorEngine::updateState() {
+    state_.steering 
+        = geom::Angle::fromRadians(atan2(model_->wheelBase().length, control_.curvature));
     state_.pose.pos.x += params_.simulation_tick * control_.velocity;
     state_.pose.pos.y += params_.simulation_tick * abs(control_.velocity) * control_.curvature / 3;
 }

@@ -4,6 +4,7 @@
 #include "geom/vector.h"
 
 #include "truck_msgs/msg/control.hpp"
+#include "truck_msgs/msg/hardware_telemetry.hpp"
 #include <nav_msgs/msg/odometry.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
@@ -21,9 +22,11 @@ class SimulatorNode : public rclcpp::Node {
         void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
         void createOdometryMessage();
         void createTransformMessage();
-        void publishOdometryMessage(const geom::Pose &pose, const geom::Vec2 &linearVelocity, 
-            const geom::Vec2 &angularVelocity);
-        void publishTransformMessage(const geom::Pose &pose);
+        void createTelemetryMessage();
+        void publishOdometryMessage(const rclcpp::Time &time, const geom::Pose &pose, 
+            const geom::Vec2 &linearVelocity, const geom::Vec2 &angularVelocity);
+        void publishTransformMessage(const rclcpp::Time &time, const geom::Pose &pose);
+        void publishTelemetryMessage(const rclcpp::Time &time, const geom::Angle &steering);
         void publishSignals();
 
         SimulatorEngine engine_;
@@ -45,11 +48,13 @@ class SimulatorNode : public rclcpp::Node {
         struct Messages {
             nav_msgs::msg::Odometry odometry;
             geometry_msgs::msg::TransformStamped odom_to_base_transform;
+            truck_msgs::msg::HardwareTelemetry telemetry;
         } msgs_;
 
         struct Signals {
-            rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
+            rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
             rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
+            rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         } signals_;
 };
 

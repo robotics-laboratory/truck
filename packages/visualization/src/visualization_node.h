@@ -5,6 +5,7 @@
 #include "truck_msgs/msg/control_mode.hpp"
 #include "truck_msgs/msg/trajectory.hpp"
 #include "truck_msgs/msg/waypoints.hpp"
+#include "truck_msgs/msg/hardware_telemetry.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
@@ -24,6 +25,7 @@ class VisualizationNode : public rclcpp::Node {
     void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
     void handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg);
     void handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg);
+    void handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg);
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
 
     void publishTrajectory() const;
@@ -67,6 +69,7 @@ class VisualizationNode : public rclcpp::Node {
         truck_msgs::msg::Control::ConstSharedPtr control = nullptr;
         nav_msgs::msg::Odometry::ConstSharedPtr odom = nullptr;
         truck_msgs::msg::Trajectory::ConstSharedPtr trajectory = nullptr;
+        truck_msgs::msg::HardwareTelemetry::ConstSharedPtr telemetry = nullptr;
         truck_msgs::msg::Waypoints::ConstSharedPtr waypoints = nullptr;
     } state_;
 
@@ -75,6 +78,7 @@ class VisualizationNode : public rclcpp::Node {
         rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
         rclcpp::Subscription<truck_msgs::msg::ControlMode>::SharedPtr mode = nullptr;
         rclcpp::Subscription<truck_msgs::msg::Waypoints>::SharedPtr waypoints = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         // foxglove has twitching if publish ego pose in base frame, use odom for smoother result!
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
     } slot_;
