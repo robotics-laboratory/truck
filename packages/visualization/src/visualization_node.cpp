@@ -9,6 +9,7 @@
 #include "geom/segment.h"
 
 #include <boost/assert.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <functional>
 #include <utility>
@@ -32,6 +33,7 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
 
         .ego_z_lev = this->declare_parameter("ego.z_lev", 0.0),
         .ego_height = this->declare_parameter("ego.height", 0.2),
+        .ego_wheel_width = this->declare_parameter("ego/wheel_width", 0.1),
 
         .ego_track_width = this->declare_parameter("ego.track.width", 0.06),
         .ego_track_height = this->declare_parameter("ego.track.height", 0.01),
@@ -74,7 +76,7 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleTrajectory, this, _1));
 
-    signal_.ego = Node::create_publisher<visualization_msgs::msg::Marker>(
+    signal_.ego = Node::create_publisher<visualization_msgs::msg::MarkerArray>(
         "/visualization/ego", rclcpp::QoS(1).reliability(qos));
 
     signal_.ego_track = Node::create_publisher<visualization_msgs::msg::Marker>(
@@ -169,12 +171,9 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
     publishEgo();
 }
 
-void VisualizationNode::publishEgo() const {
-    if (!state_.odom || !state_.mode) {
-        return;
-    }
-
+void VisualizationNode::addEgoBody(visualization_msgs::msg::MarkerArray &msg_array) const {
     visualization_msgs::msg::Marker msg;
+    msg.id = 0;
     msg.header = state_.odom->header;
     msg.type = visualization_msgs::msg::Marker::CUBE;
     msg.action = visualization_msgs::msg::Marker::ADD;
@@ -188,7 +187,74 @@ void VisualizationNode::publishEgo() const {
     msg.pose.position.z = params_.ego_z_lev;
     msg.color = modeToColor(state_.mode);
 
-    signal_.ego->publish(msg);
+    msg_array.markers.push_back(msg);
+}
+
+namespace {
+
+void setRotation(
+    geometry_msgs::msg::Quaternion &original_orientation, double x, double y, double z) {
+
+    tf2::Quaternion q_original, q_rotation, q_new;
+    tf2::convert(original_orientation , q_original);
+    q_rotation.setRPY(x, y, z);
+    q_new = q_rotation * q_original;    
+    q_new.normalize();
+    tf2::convert(q_new, original_orientation);
+}
+
+} // namespace
+
+void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array) const {
+    const int first_id = msg_array.markers.size();
+    for (auto i = 0; i < 4; ++i) {
+        visualization_msgs::msg::Marker msg;
+        msg.id = i + 1;
+        msg.header = state_.odom->header;
+        msg.type = visualization_msgs::msg::Marker::CYLINDER;
+        msg.action = visualization_msgs::msg::Marker::ADD;
+        msg.frame_locked = true;
+        msg.scale.x = params_.ego_height;
+        msg.scale.y = params_.ego_height;
+        msg.scale.z = params_.ego_wheel_width;
+        msg.pose = state_.odom->pose.pose;
+        msg.pose.position.z = params_.ego_z_lev;
+        setRotation(msg.pose.orientation, M_PI_2, 0.0, 0.0);
+        msg.color = modeToColor(state_.mode);
+
+        msg_array.markers.push_back(msg);
+    }
+
+    const auto shape = model_->shape();
+    const double half_length = shape.length / 2;
+    const double half_width = shape.width / 2;
+
+    // Front right wheel.
+    msg_array.markers[first_id].pose.position.x += half_length;
+    msg_array.markers[first_id].pose.position.y += half_width;
+
+    // Front left wheel
+    msg_array.markers[first_id + 1].pose.position.x += half_length;
+    msg_array.markers[first_id + 1].pose.position.y -= half_width;
+
+    // Rear right wheel.
+    msg_array.markers[first_id + 2].pose.position.x -= half_length;
+    msg_array.markers[first_id + 2].pose.position.y += half_width;
+
+    // Rear left wheel.
+    msg_array.markers[first_id + 3].pose.position.x -= half_length;
+    msg_array.markers[first_id + 3].pose.position.y -= half_width;
+}
+
+void VisualizationNode::publishEgo() const {
+    if (!state_.odom || !state_.mode) {
+        return;
+    }
+
+    visualization_msgs::msg::MarkerArray msg_array;
+    addEgoBody(msg_array);
+    addEgoWheels(msg_array);
+    signal_.ego->publish(msg_array);
 }
 
 void VisualizationNode::publishEgoTrack() const {

@@ -8,6 +8,7 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/time.hpp>
@@ -26,6 +27,8 @@ class VisualizationNode : public rclcpp::Node {
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
 
     void publishTrajectory() const;
+    void addEgoBody(visualization_msgs::msg::MarkerArray &msg_array) const;
+    void addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array) const;
     void publishEgo() const;
     void publishEgoTrack() const;
     void publishArc() const;
@@ -38,6 +41,7 @@ class VisualizationNode : public rclcpp::Node {
 
         double ego_z_lev = 0.0;
         double ego_height = 0.0;
+        double ego_wheel_width = 0.0;
 
         double ego_track_width = 0.06;
         double ego_track_height = 0.01;
@@ -77,7 +81,7 @@ class VisualizationNode : public rclcpp::Node {
 
     struct Signals {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr trajectory = nullptr;
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr ego = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego_track = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr waypoints = nullptr;

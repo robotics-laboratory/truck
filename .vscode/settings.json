@@ -90,7 +90,8 @@
         "shared_mutex": "cpp",
         "scoped_allocator": "cpp",
         "__nullptr": "cpp",
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "__node_handle": "cpp"
     },
     "cmake.sourceDirectory": "${workspaceFolder}/packages/truck_gazebo"
 }
