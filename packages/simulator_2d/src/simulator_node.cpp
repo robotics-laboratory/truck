@@ -16,13 +16,15 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         std::bind(&SimulatorNode::handleControl, this, _1));
 
     signals_.odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/ekf/odometry/filtered", rclcpp::QoS(1).reliability(qos));
-
-    signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
-        "/ekf/odometry/transform", rclcpp::QoS(1).reliability(qos));
+        "/ekf/odometry/filtered",
+        rclcpp::QoS(1).reliability(qos));
 
     signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
         "/ekf/odometry/transform", 
+        rclcpp::QoS(1).reliability(qos));
+
+    signals_.telemetry = Node::create_publisher<truck_msgs::msg::HardwareTelemetry>(
+        "/hardware/telemetry", 
         rclcpp::QoS(1).reliability(qos));
 
     createOdometryMessage();
@@ -45,7 +47,7 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     }
     else {
         //engine_.setControl(control->velocity, control->curvature);
-        engine_.setControl(0.1, 0);
+        engine_.setControl(0, 2);
     }
 }
 
@@ -65,10 +67,14 @@ void SimulatorNode::createTransformMessage() {
     msgs_.odom_to_base_transform.transform.rotation.z = 0.0;
 }
 
-void SimulatorNode::publishOdometryMessage(const geom::Pose &pose, const geom::Vec2 &linearVelocity, 
-    const geom::Vec2 &angularVelocity) {
+void SimulatorNode::createTelemetryMessage() {
+    msgs_.telemetry.header.frame_id = "odom_ekf";
+}
 
-    msgs_.odometry.header.stamp = now();
+void SimulatorNode::publishOdometryMessage(const rclcpp::Time &time, const geom::Pose &pose, 
+    const geom::Vec2 &linearVelocity, const geom::Vec2 &angularVelocity) {
+
+    msgs_.odometry.header.stamp = time;
 
     // Set the position.
     odom_msg.pose.pose.position.x = pose.pos.x;
@@ -119,16 +125,11 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time, const geom
 void SimulatorNode::publishSimulationStateMessafe(const rclcpp::Time &time, 
         const double speed, const geom::Angle &steering) {
 
-    truck_msgs::msg::SimulationState state_msg;
-    state_msg.header.frame_id = "odom_ekf";
-    state_msg.header.stamp = time;
-    state_msg.speed = speed;
-    state_msg.steering = steering.radians();
-    signals_.state->publish(state_msg);
+    signals_.odometry->publish(msgs_.odometry);
 }
 
-void SimulatorNode::publishTransformMessage(const geom::Pose &pose) {
-    msgs_.odom_to_base_transform.header.stamp = now();
+void SimulatorNode::publishTransformMessage(const rclcpp::Time &time, const geom::Pose &pose) {
+    msgs_.odom_to_base_transform.header.stamp = time;
 
     // Set the transformation.
     msgs_.odom_to_base_transform.transform.translation.x = pose.pos.x;
@@ -144,23 +145,21 @@ void SimulatorNode::publishTransformMessage(const geom::Pose &pose) {
     signals_.tf_publisher->publish(tf_msg);
 }
 
+void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time, const geom::Angle &steering) {
+    msgs_.telemetry.header.stamp = time;
+    msgs_.telemetry.steering_angle = steering.radians();
+    signals_.telemetry->publish(msgs_.telemetry);
+}
+
 void SimulatorNode::publishSignals() {
-    engine_.advance(params_.update_period);
+    const auto time = now();
     const auto pose = engine_.getPose();
-    const auto steering = engine_.getSteering();
     const auto linearVelocity = engine_.getLinearVelocity();
     const auto angularVelocity = engine_.getAngularVelocity();
-    const auto speed = engine_.getSpeed();
-    const auto time = now();
     publishOdometryMessage(time, pose, linearVelocity, angularVelocity);
     publishTransformMessage(time, pose);
+    const auto steering = engine_.getSteering();
     publishTelemetryMessage(time, steering);
-    publishSimulationStateMessafe(time, speed, steering);
-    auto pose = engine_.getPose();
-    auto linearVelocity = engine_.getLinearVelocity();
-    auto angularVelocity = engine_.getAngularVelocity();
-    publishOdometryMessage(pose, linearVelocity, angularVelocity);
-    publishTransformMessage(pose);
 }
 
 }  // namespace truck::simulator

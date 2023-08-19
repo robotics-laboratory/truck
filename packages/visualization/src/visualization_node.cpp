@@ -224,7 +224,7 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         msg.scale.z = params_.ego_wheel_width;
         msg.pose = state_.odom->pose.pose;
         msg.pose.position.z = params_.ego_z_lev;
-        setRotation(msg.pose.orientation, M_PI / 2, 0, 0);
+        setRotation(msg.pose.orientation, M_PI / 2, 0.0, i < 2 ? state_.telemetry->steering_angle : 0);
         msg.color = modeToColor(state_.mode);
 
         msg_array.markers.push_back(msg);
