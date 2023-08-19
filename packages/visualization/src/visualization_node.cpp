@@ -32,8 +32,9 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
     params_ = Parameters{
         .ttl = rclcpp::Duration::from_seconds(this->declare_parameter("ttl", 1.0)),
 
-        .ego_z_lev = this->declare_parameter("ego.z_lev", 0.0),
-        .ego_height = this->declare_parameter("ego.height", 0.2),
+        .ego_z_lev = this->declare_parameter("ego/z_lev", 0.0),
+        .ego_height = this->declare_parameter("ego/height", 0.2),
+        .ego_wheel_width = this->declare_parameter("ego/wheel_width", 0.1),
 
         .ego_track_width = this->declare_parameter("ego.track.width", 0.06),
         .ego_track_height = this->declare_parameter("ego.track.height", 0.01),
@@ -176,11 +177,7 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
     publishEgo();
 }
 
-void VisualizationNode::publishEgo() const {
-    if (!state_.odom || !state_.mode) {
-        return;
-    }
-
+void VisualizationNode::addEgoBody(visualization_msgs::msg::MarkerArray &msg_array) const {
     visualization_msgs::msg::Marker msg;
     msg.id = 0;
     msg.header = state_.odom->header;
@@ -196,7 +193,72 @@ void VisualizationNode::publishEgo() const {
     msg.pose.position.z = params_.ego_z_lev;
     msg.color = modeToColor(state_.mode);
 
-    signal_.ego->publish(msg);
+    msg_array.markers.push_back(msg);
+}
+
+namespace {
+
+void setVerticalRotation(geometry_msgs::msg::Quaternion &original_orientation) {
+    tf2::Quaternion q_original, q_rotation, q_new;
+    tf2::convert(original_orientation , q_original);
+    q_rotation.setRPY(M_PI / 2, 0.0, 0.0);
+    q_new = q_rotation * q_original;    
+    q_new.normalize();
+    tf2::convert(q_new, original_orientation);
+}
+
+} // namespace
+
+void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array) const {
+    const int first_id = msg_array.markers.size();
+    for (auto i = 0; i < 4; ++i) {
+        visualization_msgs::msg::Marker msg;
+        msg.id = i + 1;
+        msg.header = state_.odom->header;
+        msg.type = visualization_msgs::msg::Marker::CYLINDER;
+        msg.action = visualization_msgs::msg::Marker::ADD;
+        msg.frame_locked = true;
+        msg.scale.x = params_.ego_height;
+        msg.scale.y = params_.ego_height;
+        msg.scale.z = params_.ego_wheel_width;
+        msg.pose = state_.odom->pose.pose;
+        msg.pose.position.z = params_.ego_z_lev;
+        setVerticalRotation(msg.pose.orientation);
+        msg.color = modeToColor(state_.mode);
+
+        msg_array.markers.push_back(msg);
+    }
+
+    const auto shape = model_->shape();
+    const double half_length = shape.length / 2;
+    const double half_width = shape.width / 2;
+
+    // Front right wheel.
+    msg_array.markers[first_id].pose.position.x += half_length;
+    msg_array.markers[first_id].pose.position.y += half_width;
+
+    // Front left wheel
+    msg_array.markers[first_id + 1].pose.position.x += half_length;
+    msg_array.markers[first_id + 1].pose.position.y -= half_width;
+
+    // Rear right wheel.
+    msg_array.markers[first_id + 2].pose.position.x -= half_length;
+    msg_array.markers[first_id + 2].pose.position.y += half_width;
+
+    // Rear left wheel.
+    msg_array.markers[first_id + 3].pose.position.x -= half_length;
+    msg_array.markers[first_id + 3].pose.position.y -= half_width;
+}
+
+void VisualizationNode::publishEgo() const {
+    if (!state_.odom || !state_.mode) {
+        return;
+    }
+
+    visualization_msgs::msg::MarkerArray msg_array;
+    addEgoBody(msg_array);
+    addEgoWheels(msg_array);
+    signal_.ego->publish(msg_array);
 }
 
 namespace {
