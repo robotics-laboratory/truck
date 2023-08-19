@@ -192,12 +192,11 @@ void VisualizationNode::addEgoBody(visualization_msgs::msg::MarkerArray &msg_arr
 
 namespace {
 
-void setRotation(
-    geometry_msgs::msg::Quaternion &original_orientation, double x, double y, double z) {
-
+void setRotation(geometry_msgs::msg::Quaternion &original_orientation, 
+    const double x_angle, const double y_angle, const double z_angle) {
     tf2::Quaternion q_original, q_rotation, q_new;
     tf2::convert(original_orientation , q_original);
-    q_rotation.setRPY(x, y, z);
+    q_rotation.setRPY(x_angle, y_angle, z_angle);
     q_new = q_rotation * q_original;    
     q_new.normalize();
     tf2::convert(q_new, original_orientation);
@@ -348,7 +347,7 @@ void VisualizationNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr c
     if (control->header.frame_id != "base") {
         RCLCPP_WARN(
             get_logger(),
-            "Expected 'base' frame for cotrol, but got %s. Ignore message!",
+            "Expected 'base' frame for control, but got %s. Ignore message!",
             state_.control->header.frame_id.c_str());
         return;
     }
