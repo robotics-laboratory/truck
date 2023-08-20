@@ -29,8 +29,10 @@ class VisualizationNode : public rclcpp::Node {
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
 
     void publishTrajectory() const;
-    void addEgoBody(visualization_msgs::msg::MarkerArray &msg_array) const;
-    void addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array) const;
+    void addEgoBody(visualization_msgs::msg::MarkerArray &msg_array, 
+        const geometry_msgs::msg::Pose &pose) const;
+    void addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array, 
+        const geometry_msgs::msg::Pose &pose) const;
     void publishEgo() const;
     void publishEgoTrack() const;
     void publishArc() const;

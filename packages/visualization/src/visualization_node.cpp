@@ -13,6 +13,7 @@
 
 #include <functional>
 #include <utility>
+#include <cmath>
 
 namespace truck::visualization {
 
@@ -176,7 +177,9 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
     publishEgo();
 }
 
-void VisualizationNode::addEgoBody(visualization_msgs::msg::MarkerArray &msg_array) const {
+void VisualizationNode::addEgoBody(visualization_msgs::msg::MarkerArray &msg_array, 
+    const geometry_msgs::msg::Pose &pose) const {
+
     visualization_msgs::msg::Marker msg;
     msg.id = 0;
     msg.header = state_.odom->header;
@@ -188,7 +191,7 @@ void VisualizationNode::addEgoBody(visualization_msgs::msg::MarkerArray &msg_arr
     msg.scale.x = model_->shape().length;
     msg.scale.y = model_->shape().width;
     msg.scale.z = params_.ego_height;
-    msg.pose = state_.odom->pose.pose;
+    msg.pose = pose;
     msg.pose.position.z = params_.ego_z_lev;
     msg.color = modeToColor(state_.mode);
 
@@ -202,14 +205,15 @@ void setRotation(geometry_msgs::msg::Quaternion &original_orientation,
     tf2::Quaternion q_original, q_rotation, q_new;
     tf2::convert(original_orientation , q_original);
     q_rotation.setRPY(x_angle, y_angle, z_angle);
-    q_new = q_rotation * q_original;    
+    q_new = q_original * q_rotation;    
     q_new.normalize();
     tf2::convert(q_new, original_orientation);
 }
 
 } // namespace
+void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array, 
+    const geometry_msgs::msg::Pose &pose) const {
 
-void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array) const {
     const int first_id = msg_array.markers.size();
     for (auto i = 0; i < 4; ++i) {
         visualization_msgs::msg::Marker msg;
@@ -221,7 +225,7 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         msg.scale.x = params_.ego_height;
         msg.scale.y = params_.ego_height;
         msg.scale.z = params_.ego_wheel_width;
-        msg.pose = state_.odom->pose.pose;
+        msg.pose = pose;
         msg.pose.position.z = params_.ego_z_lev;
         setRotation(msg.pose.orientation, M_PI_2, 0.0, i < 2 ? state_.telemetry->steering_angle : 0);
         msg.color = modeToColor(state_.mode);
@@ -230,24 +234,33 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
     }
 
     const auto shape = model_->shape();
-    const double half_length = shape.length / 2;
-    const double half_width = shape.width / 2;
+    const double x_delta = shape.length / 2;
+    const double y_delta = shape.width / 2;
+    const double rotation_angle = truck::geom::toAngle(pose.orientation).radians();
 
     // Front right wheel.
-    msg_array.markers[first_id].pose.position.x += half_length;
-    msg_array.markers[first_id].pose.position.y += half_width;
+    msg_array.markers[first_id].pose.position.x 
+        += x_delta * cos(rotation_angle) + y_delta * sin(rotation_angle);
+    msg_array.markers[first_id].pose.position.y
+        += x_delta * sin(rotation_angle) - y_delta * cos(rotation_angle);
 
     // Front left wheel
-    msg_array.markers[first_id + 1].pose.position.x += half_length;
-    msg_array.markers[first_id + 1].pose.position.y -= half_width;
+    msg_array.markers[first_id + 1].pose.position.x
+        += x_delta * cos(rotation_angle) - y_delta * sin(rotation_angle);
+    msg_array.markers[first_id + 1].pose.position.y
+        += x_delta * sin(rotation_angle) + y_delta * cos(rotation_angle);
 
     // Rear right wheel.
-    msg_array.markers[first_id + 2].pose.position.x -= half_length;
-    msg_array.markers[first_id + 2].pose.position.y += half_width;
+    msg_array.markers[first_id + 2].pose.position.x
+        += -x_delta * cos(rotation_angle) + y_delta * sin(rotation_angle);
+    msg_array.markers[first_id + 2].pose.position.y
+        += -x_delta * sin(rotation_angle) - y_delta * cos(rotation_angle);
 
     // Rear left wheel.
-    msg_array.markers[first_id + 3].pose.position.x -= half_length;
-    msg_array.markers[first_id + 3].pose.position.y -= half_width;
+    msg_array.markers[first_id + 3].pose.position.x
+        += -x_delta * cos(rotation_angle) - y_delta * sin(rotation_angle);
+    msg_array.markers[first_id + 3].pose.position.y
+        += -x_delta * sin(rotation_angle) + y_delta * cos(rotation_angle);
 }
 
 void VisualizationNode::publishEgo() const {
@@ -256,8 +269,9 @@ void VisualizationNode::publishEgo() const {
     }
 
     visualization_msgs::msg::MarkerArray msg_array;
-    addEgoBody(msg_array);
-    addEgoWheels(msg_array);
+    const auto pose = state_.odom->pose.pose;
+    addEgoBody(msg_array, pose);
+    addEgoWheels(msg_array, pose);
     signal_.ego->publish(msg_array);
 }
 
