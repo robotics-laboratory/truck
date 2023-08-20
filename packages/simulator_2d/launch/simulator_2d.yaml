@@ -33,6 +33,8 @@ launch:
     - {name: "update_period", value: 10}
     # simulation step (seconds)
     - {name: "simulation_tick", value: 0.01}
+    # number of integration steps
+    - {name: "integration_steps", value: 1000}
     # precision of calculations
     - {name: "calculations_precision", value: 0.00000001}
     # visualization marker height

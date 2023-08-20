@@ -33,7 +33,8 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     auto model = model::makeUniquePtr(
         this->get_logger(),
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
-    engine_.start(model, this->declare_parameter("simulation_tick", 0.01),
+    engine_.start(model, this->declare_parameter("simulation_tick", 0.01), 
+        this->declare_parameter("integration_steps", 1000), 
         this->declare_parameter("calculations_precision", 1e-8));
 
     timer_ = this->create_wall_timer(
@@ -47,7 +48,7 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     }
     else {
         //engine_.setControl(control->velocity, control->curvature);
-        engine_.setControl(0, 2);
+        engine_.setControl(0.5, 0);
     }
 }
 
@@ -77,13 +78,13 @@ void SimulatorNode::publishOdometryMessage(const rclcpp::Time &time, const geom:
     msgs_.odometry.header.stamp = time;
 
     // Set the position.
-    odom_msg.pose.pose.position.x = pose.pos.x;
-    odom_msg.pose.pose.position.y = pose.pos.y;
+    msgs_.odometry.pose.pose.position.x = pose.pos.x;
+    msgs_.odometry.pose.pose.position.y = pose.pos.y;
     const auto quaternion = truck::geom::msg::toQuaternion(pose.dir);
-    odom_msg.pose.pose.orientation.x = quaternion.x;
-    odom_msg.pose.pose.orientation.y = quaternion.y;
-    odom_msg.pose.pose.orientation.z = quaternion.z;
-    odom_msg.pose.pose.orientation.w = quaternion.w;
+    msgs_.odometry.pose.pose.orientation.x = quaternion.x;
+    msgs_.odometry.pose.pose.orientation.y = quaternion.y;
+    msgs_.odometry.pose.pose.orientation.z = quaternion.z;
+    msgs_.odometry.pose.pose.orientation.w = quaternion.w;
 
     // Set the velocity.
     odom_msg.twist.twist.linear.x = linearVelocity.x;

@@ -91,7 +91,8 @@
         "scoped_allocator": "cpp",
         "__nullptr": "cpp",
         "__locale": "cpp",
-        "__node_handle": "cpp"
+        "__node_handle": "cpp",
+        "ios": "cpp"
     },
     "cmake.sourceDirectory": "${workspaceFolder}/packages/truck_gazebo"
 }
