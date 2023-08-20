@@ -1,8 +1,8 @@
 # ACHTUNG!
-# Platform arm64 means nvidia jetson arm64v8.
+# Platform arm64 means nvidia jetson arm64.
 # Image may be not compatible with other arm machines.
 
-FROM --platform=linux/arm64v8 nvcr.io/nvidia/l4t-base:r35.1.0 AS truck-base-arm64v8
+FROM --platform=linux/arm64 nvcr.io/nvidia/l4t-base:r35.1.0 AS truck-base-arm64
 
 ENV CUDA_HOME="/usr/local/cuda"
 ENV PATH="/usr/local/cuda/bin:${PATH}"
@@ -114,7 +114,7 @@ RUN apt-get update -yq && \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV OPENCV_VERSION="4.7.0"
+ENV OPENCV_VERSION=4.7.0
 
 ### PREPARE FOR TORCH
 
@@ -145,9 +145,9 @@ RUN apt-get update -yq \
         udev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV LIBRS_VERSION="2.54.1"
+ENV LIBRS_VERSION=2.54.1
 
-FROM truck-common AS truck-cuda-arm64v8
+FROM --platform=linux/arm64 truck-common AS truck-cuda-arm64
 
 ### INSTALL OPENCV
 
@@ -238,7 +238,7 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
     && make -j$(($(nproc)-1)) install \
     && rm -rf /tmp/*
  
-FROM truck-common AS truck-cuda-amd64
+FROM --platform=linux/amd64 truck-common AS truck-cuda-amd64
 
 # INSTALL OPENCV
 
@@ -265,11 +265,18 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
         -DWITH_OPENCL=ON \
         -DWITH_IPP=OFF \
         -DWITH_TBB=ON \
+        -DWITH_PNG=ON \
+        -DBUILD_PNG=OFF \
         -DWITH_TIFF=OFF \
-        -DWITH_OPENEXR=OFF \
-        -DWITH_JASPER=OFF \
-        -DWITH_WITH_OPENJPEG=OFF \
+        -DBUILD_TIFF=OFF \
         -DWITH_WEBP=OFF \
+        -DBUILD_WEBP=OFF \
+        -DWITH_OPENJPEG=OFF \
+        -DBUILD_OPENJPEG=OFF \
+        -DWITH_JASPER=OFF \
+        -DBUILD_JASPER=OFF \
+        -DWITH_OPENEXR=OFF \
+        -DBUILD_OPENEXR=OFF \
         -DWITH_IMGCODEC_HDR=OFF \
         -DWITH_IMGCODEC_SUNRASTER=OFF \
         -DWITH_IMGCODEC_PXM=OFF \
@@ -322,7 +329,7 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
 FROM truck-cuda-${TARGETARCH} AS truck-ros
 
 ENV ROS_VERSION=2
-ENV ROS_DISTRO=humble
+ENV ROS_DISTRO=iron
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 ENV ROS_PYTHON_VERSION=3
 
@@ -461,8 +468,10 @@ ARG TARGETPLATFORM  # Automatically set by docker buildx
 
 ENV MEDIAMTX_VERSION="1.0.0"
 
-RUN export NAME=$(echo $TARGETPLATFORM | tr '/' '_') \
-    && wget -qO - https://github.com/aler9/mediamtx/releases/download/v${MEDIAMTX_VERSION}/mediamtx_v${MEDIAMTX_VERSION}_${NAME}.tar.gz | tar -xz -C /usr/bin mediamtx
+RUN declare -A map \
+    && map["linux/amd64"]="linux_amd64" \
+    && map["linux/arm64"]="linux_arm64v8" \
+    && wget -qO - https://github.com/aler9/mediamtx/releases/download/v${MEDIAMTX_VERSION}/mediamtx_v${MEDIAMTX_VERSION}_${map[$TARGETPLATFORM]}.tar.gz | tar -xz -C /usr/bin mediamtx
 
 ### INSTALL LIBPOINTMATCHER
 
