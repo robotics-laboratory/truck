@@ -37,6 +37,8 @@ ServoAngles Model::servoHomeAngles() const { return params_.servo_home_angles; }
 
 double Model::baseMaxAbsCurvature() const { return cache_.max_abs_curvature; }
 
+double Model::wheelTurningSpeed() const { return params_.limits.wheel_turning_speed; }
+
 Limits<geom::Angle> Model::leftSteeringLimits() const {
     return {-params_.limits.steering.inner, params_.limits.steering.outer};
 }

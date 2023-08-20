@@ -62,6 +62,7 @@ WheelBase::WheelBase(const YAML::Node& node)
 
 VehicleLimits::VehicleLimits(const YAML::Node& node)
     : max_abs_curvature(node["max_abs_curvature"].as<double>())
+    , wheel_turning_speed(node["wheel_turning_speed"].as<double>())
     , steering{toSteeringLimits(node["steering"])}
     , velocity{toLimits<double>(node["velocity"])}
     , acceleration{toLimits<double>(node["acceleration"])} {
