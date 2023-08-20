@@ -47,8 +47,7 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
         engine_.setControl(control->velocity, control->acceleration, control->curvature);
     }
     else {
-        //engine_.setControl(control->velocity, control->curvature);
-        engine_.setControl(1, 0.1, 2);
+        engine_.setControl(control->velocity, control->curvature);
     }
 }
 

@@ -54,7 +54,7 @@ void SimulatorEngine::setControl(
     const auto curvature_limit = model_->baseMaxAbsCurvature();
     control_.curvature 
         = std::clamp(curvature, -curvature_limit, curvature_limit);
-    /*
+    //*
     RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
         std::to_string(velocity) + " " + std::to_string(acceleration) 
         + " " + std::to_string(curvature));
@@ -85,51 +85,53 @@ SimulationState SimulatorEngine::calculate_state_delta(const SimulationState &st
     return delta;
 }
 
-void SimulatorEngine::correctState() {
-    const auto steering_limit = model_->leftSteeringLimits().max.radians();
-    state_.steering
-        = std::clamp(state_.steering, -steering_limit, steering_limit);
-
-    state_.linear_velocity = model_->baseVelocityLimits().clamp(state_.linear_velocity);
-
-    state_.rotation = fmod(state_.rotation, 2 * M_PI);
-    if (state_.rotation < 0) {
-        state_.rotation += 2 * M_PI;
-    }
-}
-
 void SimulatorEngine::updateState() {
     const double old_rotation = state_.rotation;
-    const double steering_final = std::clamp(atan2(model_->wheelBase().length, control_.curvature), 
-        0.0, model_->leftSteeringLimits().max.radians());
-    double steering_delta = params_.wheel_turning_speed;
+
+    const double steeting_limit = model_->leftSteeringLimits().max.radians();
+    const double steering_final = abs(control_.curvature) < params_.precision 
+        ? 0 
+        : std::clamp(atan2(model_->wheelBase().length, control_.curvature), 
+            -steeting_limit, +steeting_limit);
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), std::to_string(steering_final) + " " + std::to_string(control_.curvature));
+    double steering_delta = abs(steering_final - state_.steering) < params_.precision 
+        ? 0 
+        : state_.steering - params_.precision < steering_final
+            ? params_.wheel_turning_speed
+            : -params_.wheel_turning_speed;
+
+    double acceleration = abs(control_.velocity - state_.linear_velocity) < params_.precision 
+        ? 0 
+        : control_.acceleration;
+    
     SimulationState k1, k2, k3, k4;
     for (auto i = 0; i < params_.integration_steps; ++i) {
-        if (steering_final - params_.precision 
-            < state_.steering + params_.simulation_tick * steering_delta) {
+        if (abs(steering_final - state_.steering) - params_.precision 
+            < abs(params_.simulation_tick * steering_delta)) {
             steering_delta = steering_final - state_.steering;
         }
+        if (abs(control_.velocity - state_.linear_velocity) - params_.precision
+            < abs(params_.simulation_tick * acceleration)) {
+            acceleration = control_.velocity - state_.linear_velocity;
+        }
 
-        k1 = calculate_state_delta(state_, control_.acceleration, steering_delta);
+        state_.rotation = fmod(state_.rotation, 2 * M_PI);
+        if (state_.rotation < 0) {
+            state_.rotation += 2 * M_PI;
+        }
+
+        k1 = calculate_state_delta(state_, acceleration, steering_delta);
         k2 = calculate_state_delta(state_ + k1 * (params_.integration_step / 2),
-            control_.acceleration, steering_delta);
+            acceleration, steering_delta);
         k3 = calculate_state_delta(state_ + k2 * (params_.integration_step / 2),
-            control_.acceleration, steering_delta);
+            acceleration, steering_delta);
         k4 = calculate_state_delta(state_ + k3 * params_.integration_step,
-            control_.acceleration, steering_delta);
+            acceleration, steering_delta);
         state_ += (k1 + k2 * 2 + k3 * 2 + k4) * (params_.integration_step / 6);
     }
 
     state_.angular_velocity = state_.rotation - old_rotation;
-    correctState();
 }
-
-/*
-void SimulatorEngine::updateState() {
-    state_.x += params_.simulation_tick * control_.velocity;
-    state_.y += params_.simulation_tick * abs(control_.velocity) * control_.curvature / 3;
-}
-//*/
 
 void SimulatorEngine::advance(const double time) {
     const int integration_steps = time / params_.integration_step;

@@ -12,7 +12,7 @@ wheel_base:
 limits:
   steering: { inner: 40.0, outer: 40.0 }   # deg
   max_abs_curvature: 2.0                   # 1/m
-  wheel_turning_speed: 0.2                 # rad/s
+  wheel_turning_speed: 0.4                 # rad/s
   velocity: { min: -0.5, max: +0.8 }       # m/s
   acceleration: { min: -2.0, max: +1.0 }   # m/s^2
 

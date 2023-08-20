@@ -24,7 +24,6 @@ class SimulatorEngine {
     private:
         SimulationState calculate_state_delta(const SimulationState &state,
             const double acceleration, const double &steering_delta);
-        void correctState();
         void updateState();
         void processSimulation();
 
