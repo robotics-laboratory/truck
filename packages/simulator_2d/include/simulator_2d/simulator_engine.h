@@ -1,5 +1,6 @@
-#include "model/model.h"
+#include "simulator_2d/simulation_state.h"
 
+#include "model/model.h"
 #include "geom/angle.h"
 #include "geom/pose.h"
 #include "geom/vector.h"
@@ -11,10 +12,9 @@ namespace truck::simulator {
 class SimulatorEngine {
     public:
         ~SimulatorEngine();
-        void start(std::unique_ptr<model::Model> &model, 
-            const double simulation_tick, const double precision = 1e-8);
-        geom::Vec2 getTruckSizes() const;
-        geom::Pose getPose() const;
+        void start(std::unique_ptr<model::Model> &model, const double simulation_tick = 0.01, 
+            const int integration_steps = 1000, const double precision = 1e-8);
+        geom::Pose getPose();
         geom::Angle getSteering() const;
         geom::Vec2 getLinearVelocity() const;
         geom::Vec2 getAngularVelocity() const;
@@ -22,9 +22,11 @@ class SimulatorEngine {
         void setControl(const double velocity, const double curvature);
 
     private:
+        SimulationState calculate_state_delta(const SimulationState &state,
+            const double acceleration, const double &steering_delta);
+        double calculate_steering_delta();
         void updateState();
         void processSimulation();
-        void calculateAcceleration(const double velocity, const double curvature);
 
         bool isRunning_ = false;
 
@@ -34,17 +36,12 @@ class SimulatorEngine {
 
         struct Parameters {
             double simulation_tick;
+            int integration_steps;
+            double integration_step;
             double precision;
         } params_;
 
-        struct State {
-            // The coordinates and the yaw.
-            geom::Pose pose;
-            // The position of the virtual corner in the middle (bicycle model).
-            geom::Angle steering;
-            geom::Vec2 linearVelocity;
-            geom::Vec2 angularVelocity;
-        } state_;
+        SimulationState state_;
 
         struct Control {
             double velocity = 0.0;
