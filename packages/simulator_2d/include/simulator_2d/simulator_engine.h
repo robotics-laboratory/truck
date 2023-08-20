@@ -14,7 +14,7 @@ class SimulatorEngine {
         ~SimulatorEngine();
         void start(std::unique_ptr<model::Model> &model, const double simulation_tick = 0.01, 
             const int integration_steps = 1000, const double precision = 1e-8);
-        geom::Pose getPose();
+        geom::Pose getPose() const;
         geom::Angle getSteering() const;
         geom::Vec2 getLinearVelocity() const;
         geom::Vec2 getAngularVelocity() const;
@@ -24,7 +24,7 @@ class SimulatorEngine {
     private:
         SimulationState calculate_state_delta(const SimulationState &state,
             const double acceleration, const double &steering_delta);
-        double calculate_steering_delta();
+        void correctState();
         void updateState();
         void processSimulation();
 
@@ -39,6 +39,7 @@ class SimulatorEngine {
             int integration_steps;
             double integration_step;
             double precision;
+            double wheel_turning_speed;
         } params_;
 
         SimulationState state_;

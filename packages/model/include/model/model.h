@@ -33,7 +33,7 @@ class Model {
 
     // Limits
     double baseMaxAbsCurvature() const;
-    double steeringVelocity() const;
+    double wheelTurningSpeed() const;
     Limits<geom::Angle> leftSteeringLimits() const;
     Limits<geom::Angle> rightSteeringLimits() const;
     Limits<double> baseVelocityLimits() const;

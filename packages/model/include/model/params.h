@@ -41,7 +41,7 @@ struct VehicleLimits {
     VehicleLimits(const YAML::Node& node);
 
     double max_abs_curvature;
-    double steering_velocity;
+    double wheel_turning_speed;
     SteeringLimit steering;
     Limits<double> velocity;
     Limits<double> acceleration;
