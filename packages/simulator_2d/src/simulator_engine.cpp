@@ -52,7 +52,7 @@ void SimulatorEngine::setControl(
     const auto curvature_limit = model_->baseMaxAbsCurvature();
     control_.curvature 
         = std::clamp(curvature, -curvature_limit, curvature_limit);
-    //*
+    /*
     RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
         std::to_string(velocity) + " " + std::to_string(acceleration) 
         + " " + std::to_string(curvature));
@@ -63,11 +63,11 @@ void SimulatorEngine::setControl(
     const double velocity, const double curvature) {
     
     const auto limits = model_->baseAccelerationLimits();
-    const double acceleration = abs(velocity - control_.velocity) < params_.precision
+    const double acceleration = abs(velocity - state_.linear_velocity) < params_.precision
         ? 0 
-        : velocity < control_.velocity - params_.precision 
-            ? limits.min
-            : limits.max;
+        : state_.linear_velocity < velocity
+            ? limits.max
+            : limits.min;
     setControl(velocity, acceleration, curvature);
 }
 
@@ -89,12 +89,13 @@ void SimulatorEngine::updateState() {
     const double steeting_limit = model_->leftSteeringLimits().max.radians();
     const double steering_final = abs(control_.curvature) < params_.precision 
         ? 0 
-        : std::clamp(atan2(model_->wheelBase().length, control_.curvature), 
-            -steeting_limit, +steeting_limit);
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), std::to_string(steering_final) + " " + std::to_string(control_.curvature));
+        : std::clamp(control_.curvature > 0
+            ? atan2(model_->wheelBase().length, control_.curvature)
+            : -atan2(model_->wheelBase().length, -control_.curvature), 
+        -steeting_limit, +steeting_limit);
     double steering_delta = abs(steering_final - state_.steering) < params_.precision 
         ? 0 
-        : state_.steering - params_.precision < steering_final
+        : state_.steering < steering_final
             ? params_.wheel_turning_speed
             : -params_.wheel_turning_speed;
 
@@ -108,14 +109,10 @@ void SimulatorEngine::updateState() {
             < abs(params_.simulation_tick * steering_delta)) {
             steering_delta = steering_final - state_.steering;
         }
+
         if (abs(control_.velocity - state_.linear_velocity) - params_.precision
             < abs(params_.simulation_tick * acceleration)) {
             acceleration = control_.velocity - state_.linear_velocity;
-        }
-
-        state_.rotation = fmod(state_.rotation, 2 * M_PI);
-        if (state_.rotation < 0) {
-            state_.rotation += 2 * M_PI;
         }
 
         k1 = calculate_state_delta(state_, acceleration, steering_delta);
@@ -126,9 +123,13 @@ void SimulatorEngine::updateState() {
         k4 = calculate_state_delta(state_ + k3 * params_.integration_step,
             acceleration, steering_delta);
         state_ += (k1 + k2 * 2 + k3 * 2 + k4) * (params_.integration_step / 6);
+        state_.rotation = fmod(state_.rotation, 2 * M_PI);
+        if (state_.rotation < 0) {
+            state_.rotation += 2 * M_PI;
+        }
     }
 
-    state_.angular_velocity = state_.rotation - old_rotation;
+    state_.angular_velocity = (state_.rotation - old_rotation) / params_.simulation_tick;
 }
 
 void SimulatorEngine::processSimulation() {
