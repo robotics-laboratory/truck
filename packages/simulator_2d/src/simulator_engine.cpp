@@ -19,15 +19,19 @@ void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double s
     params_.integration_steps = integration_steps;
     params_.integration_step = simulation_tick / integration_steps;
     params_.precision = precision;
-    params_.wheel_turning_speed = model_->wheelTurningSpeed();
+    params_.turning_speed = model_->wheelTurningSpeed();
+    params_.wheelbase = model_->wheelBase().length;
+    params_.steering_limit = model_->leftSteeringLimits().max.radians();
+    state_.x = -params_.wheelbase / 2;
     isRunning_ = true;
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
 }
 
 geom::Pose SimulatorEngine::getPose() const {
     geom::Pose pose;
-    pose.pos.x = state_.x;
-    pose.pos.y = state_.y;
+    const double l_b = params_.wheelbase / 2;
+    pose.pos.x = state_.x + l_b * cos(state_.rotation);
+    pose.pos.y = state_.y + l_b * sin(state_.rotation);
     pose.dir = geom::Vec2(cos(state_.rotation), sin(state_.rotation));
     return pose;
 }
@@ -54,8 +58,9 @@ void SimulatorEngine::setControl(
         = std::clamp(curvature, -curvature_limit, curvature_limit);
     /*
     RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
-        std::to_string(velocity) + " " + std::to_string(acceleration) 
-        + " " + std::to_string(curvature));
+        "v = " + std::to_string(velocity) 
+        + " a = " + std::to_string(acceleration) 
+        + " c = " + std::to_string(curvature));
     //*/
 }
 
@@ -71,65 +76,73 @@ void SimulatorEngine::setControl(
     setControl(velocity, acceleration, curvature);
 }
 
-SimulationState SimulatorEngine::calculate_state_delta(const SimulationState &state,
-    const double acceleration, const double &steering_delta) {
+void SimulatorEngine::calculate_state_delta(const SimulationState &state,
+    const double acceleration, const double &steering_delta, SimulationState &delta) {
     
-    SimulationState delta;
     delta.x = cos(state.rotation) * state.linear_velocity;
     delta.y = sin(state.rotation) * state.linear_velocity;
-    delta.rotation = tan(state.steering) * state.linear_velocity / model_->wheelBase().length;
+    delta.rotation = tan(state.steering) * state.linear_velocity / params_.wheelbase;
     delta.steering = steering_delta;
     delta.linear_velocity = acceleration;
-    return delta;
 }
 
 void SimulatorEngine::updateState() {
     const double old_rotation = state_.rotation;
 
-    const double steeting_limit = model_->leftSteeringLimits().max.radians();
     const double steering_final = abs(control_.curvature) < params_.precision 
         ? 0 
         : std::clamp(control_.curvature > 0
-            ? atan2(model_->wheelBase().length, control_.curvature)
-            : -atan2(model_->wheelBase().length, -control_.curvature), 
-        -steeting_limit, +steeting_limit);
+            ? atan2(params_.wheelbase, control_.curvature)
+            : -atan2(params_.wheelbase, -control_.curvature), 
+        -params_.steering_limit, +params_.steering_limit);
+    //RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "000000000000000000000000");
     double steering_delta = abs(steering_final - state_.steering) < params_.precision 
         ? 0 
         : state_.steering < steering_final
-            ? params_.wheel_turning_speed
-            : -params_.wheel_turning_speed;
-
+            ? params_.turning_speed
+            : -params_.turning_speed;
+    //RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "11111111111111111111111");
     double acceleration = abs(control_.velocity - state_.linear_velocity) < params_.precision 
         ? 0 
         : control_.acceleration;
-    
-    SimulationState k1, k2, k3, k4;
+  //  RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "2222222222222222222222222");
+    SimulationState k[4];
     for (auto i = 0; i < params_.integration_steps; ++i) {
         if (abs(steering_final - state_.steering) - params_.precision 
             < abs(params_.simulation_tick * steering_delta)) {
             steering_delta = steering_final - state_.steering;
         }
-
+//RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "3333333333333333333333333");
         if (abs(control_.velocity - state_.linear_velocity) - params_.precision
             < abs(params_.simulation_tick * acceleration)) {
             acceleration = control_.velocity - state_.linear_velocity;
         }
-
-        k1 = calculate_state_delta(state_, acceleration, steering_delta);
-        k2 = calculate_state_delta(state_ + k1 * (params_.integration_step / 2),
-            acceleration, steering_delta);
-        k3 = calculate_state_delta(state_ + k2 * (params_.integration_step / 2),
-            acceleration, steering_delta);
-        k4 = calculate_state_delta(state_ + k3 * params_.integration_step,
-            acceleration, steering_delta);
-        state_ += (k1 + k2 * 2 + k3 * 2 + k4) * (params_.integration_step / 6);
+//RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "44444444444444444444444444");
+        calculate_state_delta(state_, acceleration, steering_delta, k[0]);
+        calculate_state_delta(state_ + k[0] * (params_.integration_step / 2),
+            acceleration, steering_delta, k[1]);
+        calculate_state_delta(state_ + k[1] * (params_.integration_step / 2),
+            acceleration, steering_delta, k[2]);
+        calculate_state_delta(state_ + k[2] * params_.integration_step,
+            acceleration, steering_delta, k[3]);
+        k[1] *= 2;
+        k[2] *= 2;
+        SimulationState::addSum(state_, k);
+        state_ *= params_.integration_step / 6;
+//RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "5555555555555555555555555555");
         state_.rotation = fmod(state_.rotation, 2 * M_PI);
         if (state_.rotation < 0) {
             state_.rotation += 2 * M_PI;
         }
+//RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "6666666666666666666666666666");
     }
 
+ //   RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "9999999999999999999999999999");
     state_.angular_velocity = (state_.rotation - old_rotation) / params_.simulation_tick;
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
+        std::to_string(state_.x) + " " + std::to_string (state_.y) + " "
+        + std::to_string(state_.rotation) + " " + std::to_string(state_.steering)
+         + " " + std::to_string(state_.linear_velocity));
 }
 
 void SimulatorEngine::processSimulation() {

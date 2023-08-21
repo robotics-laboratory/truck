@@ -22,8 +22,8 @@ class SimulatorEngine {
         void setControl(const double velocity, const double curvature);
 
     private:
-        SimulationState calculate_state_delta(const SimulationState &state,
-            const double acceleration, const double &steering_delta);
+        void calculate_state_delta(const SimulationState &state,
+            const double acceleration, const double &steering_delta, SimulationState &delta);
         void updateState();
         void processSimulation();
 
@@ -38,7 +38,9 @@ class SimulatorEngine {
             int integration_steps;
             double integration_step;
             double precision;
-            double wheel_turning_speed;
+            double turning_speed;
+            double wheelbase;
+            double steering_limit;
         } params_;
 
         SimulationState state_;

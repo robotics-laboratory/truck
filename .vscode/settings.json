@@ -92,7 +92,8 @@
         "__nullptr": "cpp",
         "__locale": "cpp",
         "__node_handle": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "__string": "cpp"
     },
     "cmake.sourceDirectory": "${workspaceFolder}/packages/truck_gazebo"
 }
