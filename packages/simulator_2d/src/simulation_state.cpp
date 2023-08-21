@@ -1,8 +1,5 @@
 #include "simulator_2d/simulation_state.h"
 
-// REMOVE THIS
-#include <rclcpp/rclcpp.hpp>
-
 namespace truck::simulator {
 
 SimulationState::SimulationState() {
