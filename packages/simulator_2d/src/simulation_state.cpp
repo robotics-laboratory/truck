@@ -64,7 +64,8 @@ SimulationState& SimulationState::operator *=(const double number) {
 }
 
 void SimulationState::addSum(SimulationState &state, 
-    const SimulationState *sum, const int summands_number {
+    const SimulationState *sum, const int summands_number) {
+
     for (auto i = 0; i < summands_number; ++i) {
         state.x += sum[i].x;
         state.y += sum[i].y;
