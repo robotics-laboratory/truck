@@ -16,8 +16,8 @@ struct SimulationState {
     SimulationState& operator +=(const SimulationState& other);
     SimulationState& operator *(const double number) const;
     SimulationState& operator *=(const double number);
-    static void addSum(SimulationState &state, 
-        const SimulationState *sum, const int summands_number);
+    static void addSum(SimulationState &state, const SimulationState *sum, 
+        const int summands_number, const double ratio = 1.0);
 };
 
 } // namespace truck::simulator

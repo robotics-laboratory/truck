@@ -1,5 +1,8 @@
 #include "simulator_2d/simulation_state.h"
 
+// REMOVE THIS
+#include <rclcpp/rclcpp.hpp>
+
 namespace truck::simulator {
 
 SimulationState::SimulationState() {
@@ -55,7 +58,7 @@ SimulationState& SimulationState::operator *(const double number) const {
 }
 
 SimulationState& SimulationState::operator *=(const double number) {
-    x *= number; 
+    x *= number;
     y *= number; 
     rotation *= number;
     steering *= number; 
@@ -63,15 +66,15 @@ SimulationState& SimulationState::operator *=(const double number) {
     return *this;
 }
 
-void SimulationState::addSum(SimulationState &state, 
-    const SimulationState *sum, const int summands_number) {
+void SimulationState::addSum(SimulationState &state, const SimulationState *sum, 
+    const int summands_number, const double ratio) {
 
     for (auto i = 0; i < summands_number; ++i) {
-        state.x += sum[i].x;
-        state.y += sum[i].y;
-        state.rotation += sum[i].rotation;
-        state.steering += sum[i].steering;
-        state.linear_velocity += sum[i].linear_velocity;
+        state.x += sum[i].x * ratio;
+        state.y += sum[i].y * ratio;
+        state.rotation += sum[i].rotation * ratio;
+        state.steering += sum[i].steering * ratio;
+        state.linear_velocity += sum[i].linear_velocity * ratio;
     }
 }
 
