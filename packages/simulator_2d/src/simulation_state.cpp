@@ -63,13 +63,14 @@ SimulationState& SimulationState::operator *=(const double number) {
     return *this;
 }
 
-void SimulationState::addSum(SimulationState &state, const SimulationState *sum) {
-    for (const auto &summand : sum) {
-        state.x += summand.x;
-        state.y += summand.y;
-        state.rotation += summand.rotation;
-        state.steering += summand.steering;
-        state.linear_velocity += summand.linear_velocity;
+void SimulationState::addSum(SimulationState &state, 
+    const SimulationState *sum, const int summands_number {
+    for (auto i = 0; i < summands_number; ++i) {
+        state.x += sum[i].x;
+        state.y += sum[i].y;
+        state.rotation += sum[i].rotation;
+        state.steering += sum[i].steering;
+        state.linear_velocity += sum[i].linear_velocity;
     }
 }
 
