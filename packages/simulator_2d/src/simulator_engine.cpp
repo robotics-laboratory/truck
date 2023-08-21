@@ -95,29 +95,28 @@ void SimulatorEngine::updateState() {
             ? atan2(params_.wheelbase, control_.curvature)
             : -atan2(params_.wheelbase, -control_.curvature), 
         -params_.steering_limit, +params_.steering_limit);
-    //RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "000000000000000000000000");
+        
     double steering_delta = abs(steering_final - state_.steering) < params_.precision 
         ? 0 
         : state_.steering < steering_final
             ? params_.turning_speed
             : -params_.turning_speed;
-    //RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "11111111111111111111111");
+
     double acceleration = abs(control_.velocity - state_.linear_velocity) < params_.precision 
         ? 0 
         : control_.acceleration;
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "2222222222222222222222222");
+
     SimulationState k[4];
     for (auto i = 0; i < params_.integration_steps; ++i) {
         if (abs(steering_final - state_.steering) - params_.precision 
             < abs(params_.simulation_tick * steering_delta)) {
             steering_delta = steering_final - state_.steering;
         }
-//RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "3333333333333333333333333");
+
         if (abs(control_.velocity - state_.linear_velocity) - params_.precision
             < abs(params_.simulation_tick * acceleration)) {
             acceleration = control_.velocity - state_.linear_velocity;
         }
-//RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "44444444444444444444444444");
         calculate_state_delta(state_, acceleration, steering_delta, k[0]);
         calculate_state_delta(state_ + k[0] * (params_.integration_step / 2),
             acceleration, steering_delta, k[1]);
@@ -129,15 +128,12 @@ void SimulatorEngine::updateState() {
         k[2] *= 2;
         SimulationState::addSum(state_, k, 4, params_.integration_step / 6);
         
-RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "5555555555555555555555555555");
         state_.rotation = fmod(state_.rotation, 2 * M_PI);
         if (state_.rotation < 0) {
             state_.rotation += 2 * M_PI;
         }
-//RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "6666666666666666666666666666");
     }
 
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), "9999999999999999999999999999");
     state_.angular_velocity = (state_.rotation - old_rotation) / params_.simulation_tick;
 }
 
