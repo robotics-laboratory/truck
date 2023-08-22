@@ -7,10 +7,11 @@ find_package(model REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(geom REQUIRED)
-find_package(visualization REQUIRED)
 find_package(control_proxy REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
+find_package(visualization REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
@@ -30,7 +31,8 @@ ament_target_dependencies(
     geom
     control_proxy
     tf2_geometry_msgs
-    tf2_msgs)
+    tf2_msgs
+    visualization_msgs)
 
 install(
     TARGETS ${PROJECT_NAME}_node

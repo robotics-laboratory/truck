@@ -37,9 +37,5 @@ launch:
     - {name: "integration_steps", value: 1000}
     # precision of calculations
     - {name: "calculations_precision", value: 0.00000001}
-    # visualization marker height
-    - {name: "ego/height", value: 0.2}
-    # visualization marker color (RGB)
-    - {name: "ego_red", value: 0.0}
-    - {name: "ego_green", value: 0.0}
-    - {name: "ego_blue", value: 1.0}
+    # wheel normals (radii) marker
+    - {name: "show_wheel_normals", value: true}
