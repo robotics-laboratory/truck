@@ -35,9 +35,9 @@ SimulationState::SimulationState(const double x, const double y, const double ro
     return *this;
 }
 
-SimulationState& SimulationState::operator +(const SimulationState& other) const {
-    return *(new SimulationState(x + other.x, y + other.y, rotation + other.rotation,
-        steering + other.steering, linear_velocity + other.linear_velocity));
+SimulationState SimulationState::operator +(const SimulationState& other) const {
+    return SimulationState(x + other.x, y + other.y, rotation + other.rotation,
+        steering + other.steering, linear_velocity + other.linear_velocity);
 }
 
 SimulationState& SimulationState::operator +=(const SimulationState& other) {
@@ -49,9 +49,9 @@ SimulationState& SimulationState::operator +=(const SimulationState& other) {
     return *this;
 }
 
-SimulationState& SimulationState::operator *(const double number) const {
-    return *(new SimulationState(number * x, number * y, number * rotation,
-        number * steering, number * linear_velocity));
+SimulationState SimulationState::operator *(const double number) const {
+    return SimulationState(number * x, number * y, number * rotation,
+        number * steering, number * linear_velocity);
 }
 
 SimulationState& SimulationState::operator *=(const double number) {

@@ -62,7 +62,9 @@ void SimulatorEngine::setControl(
     RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
         "v = " + std::to_string(control_.velocity) 
         + " a = " + std::to_string(control_.acceleration) 
-        + " c = " + std::to_string(control_.curvature));
+        + " c = " + std::to_string(control_.curvature)
+        + " x = " + std::to_string(state_.x)
+        + " y = " + std::to_string(state_.y));
     //*/
 }
 
@@ -119,6 +121,7 @@ void SimulatorEngine::updateState() {
             < abs(params_.simulation_tick * acceleration)) {
             acceleration = control_.velocity - state_.linear_velocity;
         }
+        
         calculate_state_delta(state_, acceleration, steering_delta, k[0]);
         calculate_state_delta(state_ + k[0] * (params_.integration_step / 2),
             acceleration, steering_delta, k[1]);
@@ -129,7 +132,7 @@ void SimulatorEngine::updateState() {
         k[1] *= 2;
         k[2] *= 2;
         SimulationState::addSum(state_, k, 4, params_.integration_step / 6);
-        
+
         state_.rotation = fmod(state_.rotation, 2 * M_PI);
         if (state_.rotation < 0) {
             state_.rotation += 2 * M_PI;
