@@ -237,30 +237,24 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
     const double x_delta = shape.length / 2;
     const double y_delta = shape.width / 2;
     const double rotation_angle = truck::geom::toAngle(pose.orientation).radians();
+    const double angle_sin = sin(rotation_angle);
+    const double angle_cos = cos(rotation_angle);
 
     // Front right wheel.
-    msg_array.markers[first_id].pose.position.x 
-        += x_delta * cos(rotation_angle) + y_delta * sin(rotation_angle);
-    msg_array.markers[first_id].pose.position.y
-        += x_delta * sin(rotation_angle) - y_delta * cos(rotation_angle);
+    msg_array.markers[first_id].pose.position.x += x_delta * angle_cos + y_delta * angle_sin;
+    msg_array.markers[first_id].pose.position.y += x_delta * angle_sin - y_delta * angle_cos;
 
     // Front left wheel
-    msg_array.markers[first_id + 1].pose.position.x
-        += x_delta * cos(rotation_angle) - y_delta * sin(rotation_angle);
-    msg_array.markers[first_id + 1].pose.position.y
-        += x_delta * sin(rotation_angle) + y_delta * cos(rotation_angle);
+    msg_array.markers[first_id + 1].pose.position.x += x_delta * angle_cos - y_delta * angle_sin;
+    msg_array.markers[first_id + 1].pose.position.y += x_delta * angle_sin + y_delta * angle_cos;
 
     // Rear right wheel.
-    msg_array.markers[first_id + 2].pose.position.x
-        += -x_delta * cos(rotation_angle) + y_delta * sin(rotation_angle);
-    msg_array.markers[first_id + 2].pose.position.y
-        += -x_delta * sin(rotation_angle) - y_delta * cos(rotation_angle);
+    msg_array.markers[first_id + 2].pose.position.x += -x_delta * angle_cos + y_delta * angle_sin;
+    msg_array.markers[first_id + 2].pose.position.y += -x_delta * angle_sin - y_delta * angle_cos;
 
     // Rear left wheel.
-    msg_array.markers[first_id + 3].pose.position.x
-        += -x_delta * cos(rotation_angle) - y_delta * sin(rotation_angle);
-    msg_array.markers[first_id + 3].pose.position.y
-        += -x_delta * sin(rotation_angle) + y_delta * cos(rotation_angle);
+    msg_array.markers[first_id + 3].pose.position.x += -x_delta * angle_cos - y_delta * angle_sin;
+    msg_array.markers[first_id + 3].pose.position.y += -x_delta * angle_sin + y_delta * angle_cos;
 }
 
 void VisualizationNode::publishEgo() const {
