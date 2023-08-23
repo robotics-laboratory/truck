@@ -45,7 +45,7 @@ TEST(Grid, operability) {
     EXPECT_EQ(grid_1[0][1], 2);
 
     const Vec2 point_1(0, 5);
-    auto ref_point_1 = grid_1.GetReferencePoint(point_1);
+    auto ref_point_1 = grid_1.GetRelativePoint(point_1);
     EXPECT_NEAR(ref_point_1.x, 1.8, eps);
     EXPECT_NEAR(ref_point_1.y, 2.6, eps);
     EXPECT_TRUE(grid_1.VerifyPoint(point_1));
