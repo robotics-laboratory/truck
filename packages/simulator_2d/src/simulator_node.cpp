@@ -17,9 +17,10 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     params_ = Parameters{
         .update_period 
             = std::chrono::milliseconds(this->declare_parameter<long int>("update_period", 250)),
-        .show_wheel_normals = this->declare_parameter<bool>("show_wheel_normals", false),
+        .show_wheel_normals = this->declare_parameter("show_wheel_normals", false),
         .wheel_x_delta = shape.length / 2,
-        .wheel_y_delta = shape.width / 2
+        .wheel_y_delta = shape.width / 2,
+        .precision = this->declare_parameter("calculations_precision", 1e-8)
     };
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
@@ -50,7 +51,7 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 
     engine_.start(model, this->declare_parameter("simulation_tick", 0.01), 
         this->declare_parameter("integration_steps", 1000), 
-        this->declare_parameter("calculations_precision", 1e-8));
+        params_.precision);
 
     timer_ = this->create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
@@ -102,8 +103,6 @@ void SimulatorNode::createWheelNormalsMessage() {
 
     msgs_.normals_.color.a = 1.0;
     msgs_.normals_.color.r = 0.6;
-
-    msgs_.normals_.points.resize(8);
 }
 
 void SimulatorNode::publishOdometryMessage(const rclcpp::Time &time, const geom::Pose &pose, 
@@ -186,28 +185,28 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time, const geom
     signals_.telemetry->publish(msgs_.telemetry);
 }
 
-void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time, const geom::Pose &pose,
-    const geom::Angle &steering) {
+void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time, 
+    const geom::Pose &pose, const geom::Angle &steering) {
+
     msgs_.normals_.header.stamp = time;
 
-    //msgs_.normals_.pose.position.x = pose.pos.x;
-    //msgs_.normals_.pose.position.y = pose.pos.y;
-    const auto quaternion = truck::geom::msg::toQuaternion(pose.dir);
-    /*
-    msgs_.normals_.pose.orientation.x = quaternion.x;
-    msgs_.normals_.pose.orientation.y = quaternion.y;
-    msgs_.normals_.pose.orientation.z = quaternion.z;
-    msgs_.normals_.pose.orientation.w = quaternion.w;
-    //*/
+    const double steering_rad = steering.radians();
+    if (abs(steering_rad) < params_.precision) {
+        msgs_.normals_.points.clear();
+        signals_.normals->publish(msgs_.normals_);
+        return;
+    }
 
-    for (size_t i = 0; i < msgs_.normals_.points.size(); i += 2) {
+    msgs_.normals_.points.resize(8);
+    for (auto i = 0; i < 8; i += 2) {
         msgs_.normals_.points[i].x = pose.pos.x;
         msgs_.normals_.points[i].y = pose.pos.y;
     }
 
-    const double rotation_angle = truck::geom::toAngle(quaternion).radians();
-    double angle_sin = sin(rotation_angle);
-    double angle_cos = cos(rotation_angle);
+    const double rotation_angle 
+        = truck::geom::toAngle(truck::geom::msg::toQuaternion(pose.dir)).radians();
+    const double angle_sin = sin(rotation_angle);
+    const double angle_cos = cos(rotation_angle);
 
     // Front right wheel.
     msgs_.normals_.points[0].x 
@@ -234,60 +233,52 @@ void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time, const g
         += -params_.wheel_x_delta * angle_sin + params_.wheel_y_delta * angle_cos;
 
     // Instant turning point.
-    angle_sin = sin(steering.radians());
-    angle_cos = cos(steering.radians());
     const double w_x = msgs_.normals_.points[2].x 
-        + params_.wheel_x_delta * angle_cos - params_.wheel_y_delta * angle_sin;
-    const double w_y = msgs_.normals_.points[2].y
-        + params_.wheel_x_delta * angle_sin + params_.wheel_y_delta * angle_cos;
-    const double left_normal_a = w_x - msgs_.normals_.points[2].x;
-    const double left_normal_b = -msgs_.normals_.points[2].y + w_y;
-    const double left_normal_c = -left_normal_a * w_x - left_normal_b * w_y;
-    const double right_normal_a = msgs_.normals_.points[4].x - msgs_.normals_.points[0].x;
-    const double right_normal_b = -msgs_.normals_.points[0].y + msgs_.normals_.points[4].y;
-    const double right_normal_c = -right_normal_a * msgs_.normals_.points[4].x 
-        - right_normal_b * msgs_.normals_.points[4].y;
+        + params_.wheel_x_delta * cos(rotation_angle + steering_rad);
+    const double w_y = msgs_.normals_.points[2].y 
+        + params_.wheel_x_delta * sin(rotation_angle + steering_rad);
 
-    const double divider = left_normal_a * right_normal_b - right_normal_a * left_normal_b;
-    if (abs(divider) < 1e-8) {
-        msgs_.normals_.points[1].x = pose.pos.x;
-        msgs_.normals_.points[1].y = pose.pos.y;
-        RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
-            "PARALLEL " + std::to_string(left_normal_a * right_normal_b) + " "
-            + std::to_string(right_normal_a * left_normal_b));
+    const double normal_a_a = w_x - msgs_.normals_.points[2].x;
+    const double normal_a_b = w_y - msgs_.normals_.points[2].y;
+    const double normal_a_c = -normal_a_a * msgs_.normals_.points[2].x 
+        - normal_a_b * msgs_.normals_.points[2].y;
+    const double normal_b_a = msgs_.normals_.points[4].x - msgs_.normals_.points[0].x;
+    const double normal_b_b = -msgs_.normals_.points[0].y + msgs_.normals_.points[4].y;
+    const double normal_b_c = -normal_b_a * msgs_.normals_.points[4].x 
+        - normal_b_b * msgs_.normals_.points[4].y;
+
+    const double divider = normal_a_a * normal_b_b - normal_b_a * normal_a_b;
+    if (abs(divider) < params_.precision) {
+        msgs_.normals_.points.clear();
     }
     else {
         msgs_.normals_.points[1].x 
-            = (left_normal_b * right_normal_c - right_normal_b * left_normal_c) / divider;
+            = (normal_a_b * normal_b_c - normal_b_b * normal_a_c) / divider;
         msgs_.normals_.points[1].y 
-            = (right_normal_a * left_normal_c - left_normal_a * right_normal_c) / divider;
-        RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
-            std::to_string(msgs_.normals_.points[1].x) + " " + std::to_string(msgs_.normals_.points[1].y));
+            = (normal_b_a * normal_a_c - normal_a_a * normal_b_c) / divider;
+        for (auto i = 3; i < 8; i += 2) {
+            msgs_.normals_.points[i] = msgs_.normals_.points[1];
+        }
     }
 
-    for (size_t i = 3; i < msgs_.normals_.points.size(); i += 2) {
-        msgs_.normals_.points[i] = msgs_.normals_.points[1];
-    }
-    
-    //const double xx = msgs_.normals_.points[1].x - msgs_.normals_.points[0].x;
-    //const double yy = msgs_.normals_.points[1].y - msgs_.normals_.points[0].y;
-    //RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), std::to_string(sqrt(xx*xx + yy*yy)));
-    
     signals_.normals->publish(msgs_.normals_);
 }
 
 void SimulatorNode::publishSignals() {
+    engine_.suspend();
     const auto time = now();
     const auto pose = engine_.getPose();
+    const auto steering = engine_.getSteering();
     const auto linearVelocity = engine_.getLinearVelocity();
     const auto angularVelocity = engine_.getAngularVelocity();
-    publishOdometryMessage(time, pose, linearVelocity, angularVelocity);
-    publishTransformMessage(time, pose);
-    const auto steering = engine_.getSteering();
-    publishTelemetryMessage(time, steering);
+    engine_.resume();
     if (params_.show_wheel_normals) {
         publishWheelNormalsMessage(time, pose, steering);
     }
+
+    publishOdometryMessage(time, pose, linearVelocity, angularVelocity);
+    publishTransformMessage(time, pose);
+    publishTelemetryMessage(time, steering);
 }
 
 }  // namespace truck::simulator

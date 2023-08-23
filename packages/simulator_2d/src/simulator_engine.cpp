@@ -23,7 +23,7 @@ void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double s
     params_.wheelbase = model_->wheelBase().length;
     params_.steering_limit = model_->leftSteeringLimits().max.radians();
     state_.x = -params_.wheelbase / 2;
-    isRunning_ = true;
+    isRunning_ = isResumed_ = true;
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
 }
 
@@ -78,6 +78,14 @@ void SimulatorEngine::setControl(
             ? limits.max
             : limits.min;
     setControl(velocity, acceleration, curvature);
+}
+
+void SimulatorEngine::suspend() {
+    isResumed_ = false;
+}
+
+void SimulatorEngine::resume() {
+    isResumed_ = true;
 }
 
 void SimulatorEngine::calculate_state_delta(const SimulationState &state,
@@ -142,51 +150,14 @@ void SimulatorEngine::updateState() {
     state_.angular_velocity = (state_.rotation - old_rotation) / params_.simulation_tick;
 }
 
-void SimulatorEngine::advance(const double time) {
-    const int integration_steps = time / params_.integration_step;
-
-    const double old_rotation = state_[StateIndex::rotation];
-
-    const double steering_final = abs(control_.curvature) < params_.precision
-                                      ? 0
-                                      : std::clamp(
-                                            atan(params_.wheelbase * control_.curvature),
-                                            -params_.steering_limit,
-                                            +params_.steering_limit);
-
-    double steering_rest = abs(steering_final - state_[StateIndex::steering]);
-    double steering_velocity = steering_rest < params_.precision ? 0
-                               : state_[StateIndex::steering] < steering_final
-                                   ? params_.max_steering_velocity
-                                   : -params_.max_steering_velocity;
-
-    double velocity_rest = abs(control_.velocity - state_[StateIndex::linear_velocity]);
-    double acceleration = velocity_rest < params_.precision ? 0 : control_.acceleration;
-
-    for (auto i = 0; i < integration_steps; ++i) {
-        steering_rest = abs(steering_final - state_[StateIndex::steering]) -
-                        abs(steering_velocity) * params_.integration_step / 6;
-        if (steering_rest < params_.precision) {
-            state_[StateIndex::steering] = steering_final;
-            steering_velocity = 0;
+void SimulatorEngine::processSimulation() {
+    auto wait_time = std::chrono::duration<double>(params_.simulation_tick);
+    while (isRunning_) {
+        if (isResumed_) {
+            updateState();
         }
 
-        velocity_rest = abs(control_.velocity - state_[StateIndex::linear_velocity]) -
-                        abs(acceleration) * params_.integration_step / 6;
-        if (velocity_rest < params_.precision) {
-            state_[StateIndex::linear_velocity] = control_.velocity;
-            acceleration = 0;
-        }
-
-        auto k1 = calculateStateDelta(state_, acceleration, steering_velocity);
-        auto k2 = calculateStateDelta(
-            state_ + k1 * (params_.integration_step / 2), acceleration, steering_velocity);
-        auto k3 = calculateStateDelta(
-            state_ + k2 * (params_.integration_step / 2), acceleration, steering_velocity);
-        auto k4 = calculateStateDelta(
-            state_ + k3 * params_.integration_step, acceleration, steering_velocity);
-
-        state_ += (k1 + 2 * k2 + 2 * k3 + k4) * (params_.integration_step / 6);
+        std::this_thread::sleep_for(wait_time);
     }
 
     state_[StateIndex::angular_velocity] 

@@ -20,6 +20,8 @@ class SimulatorEngine {
         geom::Vec2 getAngularVelocity() const;
         void setControl(const double velocity, const double acceleration, const double curvature);
         void setControl(const double velocity, const double curvature);
+        void suspend();
+        void resume();
 
     private:
         void calculate_state_delta(const SimulationState &state,
@@ -28,6 +30,7 @@ class SimulatorEngine {
         void processSimulation();
 
         bool isRunning_ = false;
+        bool isResumed_ = false;
 
         std::thread running_thread_;
 
