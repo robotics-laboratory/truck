@@ -42,6 +42,7 @@ class SimulatorNode : public rclcpp::Node {
             bool show_wheel_normals;
             double wheel_x_delta;
             double wheel_y_delta;
+            double precision;
         } params_;
 
         struct Slots {

@@ -23,7 +23,7 @@ void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double s
     params_.wheelbase = model_->wheelBase().length;
     params_.steering_limit = model_->leftSteeringLimits().max.radians();
     state_.x = -params_.wheelbase / 2;
-    isRunning_ = true;
+    isRunning_ = isResumed_ = true;
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
 }
 
@@ -76,6 +76,14 @@ void SimulatorEngine::setControl(
             ? limits.max
             : limits.min;
     setControl(velocity, acceleration, curvature);
+}
+
+void SimulatorEngine::suspend() {
+    isResumed_ = false;
+}
+
+void SimulatorEngine::resume() {
+    isResumed_ = true;
 }
 
 void SimulatorEngine::calculate_state_delta(const SimulationState &state,
@@ -143,7 +151,10 @@ void SimulatorEngine::updateState() {
 void SimulatorEngine::processSimulation() {
     auto wait_time = std::chrono::duration<double>(params_.simulation_tick);
     while (isRunning_) {
-        updateState();
+        if (isResumed_) {
+            updateState();
+        }
+
         std::this_thread::sleep_for(wait_time);
     }
 }
