@@ -30,9 +30,9 @@ void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double s
 geom::Pose SimulatorEngine::getPose() const {
     geom::Pose pose;
     const double l_b = params_.wheelbase / 2;
-    pose.pos.x = state_.x + l_b * cos(state_.rotation);
-    pose.pos.y = state_.y + l_b * sin(state_.rotation);
     pose.dir = geom::Vec2(cos(state_.rotation), sin(state_.rotation));
+    pose.pos.x = state_.x + l_b * pose.dir.x;
+    pose.pos.y = state_.y + l_b * pose.dir.y;
     return pose;
 }
 
