@@ -20,8 +20,8 @@ class BilinearInterpolation {
                   grid.origin->dir)) {}
 
     double operator()(const geom::Vec2& point) const {
-        const geom::Vec2 ref_point = domain_.GetReferencePoint(point);
-        const auto [row, col] = domain_.GetReferenceCell(ref_point);
+        const geom::Vec2 ref_point = domain_.GetRelativePoint(point);
+        const auto [row, col] = domain_.GetRelativeCell(ref_point);
         const int index = row * grid_.size.width + col;
         return (static_cast<double>(grid_.data[index]) *
                     (domain_.resolution * (row + 1) - ref_point.x) *

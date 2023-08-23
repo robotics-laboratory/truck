@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geom/transform.h"
 #include "geom/pose.h"
 #include "common/exception.h"
 
@@ -21,7 +22,10 @@ struct Grid {
 
     Grid(
         const Size& size, double resolution, const std::optional<geom::Pose>& origin = std::nullopt)
-        : size(size), resolution(resolution), origin(origin) {}
+        : size(size)
+        , resolution(resolution)
+        , origin(origin)
+        , tf(geom::Transform(origin->pos, origin->dir.unit()).inv()) {}
 
     void Reset(T* data) { this->data = data; }
 
@@ -29,44 +33,45 @@ struct Grid {
 
     const T* operator[](int row) const noexcept { return data + row * size.width; }
 
-    geom::Vec2 GetReferencePoint(const geom::Vec2& point) const {
-        VERIFY(origin);
-        return (point - origin->pos).rotate(origin->dir.inv().unit());
+    geom::Vec2 GetRelativePoint(const geom::Vec2& point) const {
+        VERIFY(tf);
+        return (*tf)(point);
     }
 
-    bool VerifyReferencePoint(const geom::Vec2& ref_point) const {
+    bool VerifyRelativePoint(const geom::Vec2& ref_point) const {
         return ref_point.x >= 0 && ref_point.x < size.width * resolution && ref_point.y >= 0 &&
                ref_point.y < size.height * resolution;
     }
 
     bool VerifyPoint(const geom::Vec2& point) const {
-        const geom::Vec2 ref_point = GetReferencePoint(point);
-        return VerifyReferencePoint(ref_point);
+        const geom::Vec2 ref_point = GetRelativePoint(point);
+        return VerifyRelativePoint(ref_point);
     }
 
-    std::pair<int, int> GetReferenceCell(const geom::Vec2& ref_point) const {
-        VERIFY(VerifyReferencePoint(ref_point));
+    std::pair<int, int> GetRelativeCell(const geom::Vec2& ref_point) const {
+        VERIFY(VerifyRelativePoint(ref_point));
         return {
             static_cast<int>(ref_point.x / resolution), static_cast<int>(ref_point.y / resolution)};
     }
 
     std::pair<int, int> GetCell(const geom::Vec2& point) const {
-        return GetReferenceCell(GetReferencePoint(point));
+        return GetRelativeCell(GetRelativePoint(point));
     }
 
-    int GetReferenceIndex(const geom::Vec2& point) const {
-        std::pair<int, int> cell = GetReferenceCell(point);
+    int GetRelativeIndex(const geom::Vec2& point) const {
+        std::pair<int, int> cell = GetRelativeCell(point);
         return cell.second * size.width + cell.first;
     }
 
     int GetIndex(const geom::Vec2& point) const {
-        return GetReferenceIndex(GetReferencePoint(point));
+        return GetRelativeIndex(GetRelativePoint(point));
     }
 
     Size size = {};
     double resolution = 0.0;
     T* data = nullptr;
     std::optional<geom::Pose> origin = std::nullopt;
+    std::optional<geom::Transform> tf = std::nullopt;
 };
 
 using U8Grid = Grid<uint8_t>;
