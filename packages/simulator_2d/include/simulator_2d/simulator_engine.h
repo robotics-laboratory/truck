@@ -5,7 +5,9 @@
 #include "geom/pose.h"
 #include "geom/vector.h"
 
-#include <Eigen/Dense>
+#include <chrono>
+
+#include <thread>
 
 namespace truck::simulator {
 
@@ -36,13 +38,15 @@ class SimulatorEngine {
 
         std::unique_ptr<model::Model> model_ = nullptr;
 
+        std::chrono::_V2::system_clock::time_point last_update_; 
+
         struct Parameters {
             double simulation_tick;
             int integration_steps;
-            double integration_step;
             double precision;
             double turning_speed;
             double wheelbase;
+            double base_to_rear;
             double steering_limit;
         } params_;
 

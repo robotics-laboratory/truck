@@ -256,6 +256,7 @@ void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time,
             = (normal_a_b * normal_b_c - normal_b_b * normal_a_c) / divider;
         msgs_.normals_.points[1].y 
             = (normal_b_a * normal_a_c - normal_a_a * normal_b_c) / divider;
+
         for (auto i = 3; i < 8; i += 2) {
             msgs_.normals_.points[i] = msgs_.normals_.points[1];
         }

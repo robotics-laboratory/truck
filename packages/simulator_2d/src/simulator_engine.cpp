@@ -17,22 +17,22 @@ void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double s
     model_ = std::unique_ptr<model::Model>(std::move(model));
     params_.simulation_tick = simulation_tick;
     params_.integration_steps = integration_steps;
-    params_.integration_step = simulation_tick / integration_steps;
     params_.precision = precision;
     params_.turning_speed = model_->wheelTurningSpeed();
     params_.wheelbase = model_->wheelBase().length;
+    params_.base_to_rear = model_->wheelBase().base_to_rear;
     params_.steering_limit = model_->leftSteeringLimits().max.radians();
-    state_.x = -params_.wheelbase / 2;
+    state_.x = -params_.base_to_rear;
     isRunning_ = isResumed_ = true;
+    last_update_= std::chrono::system_clock::now();
     running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
 }
 
 geom::Pose SimulatorEngine::getPose() const {
     geom::Pose pose;
-    const double l_b = params_.wheelbase / 2;
     pose.dir = geom::Vec2(cos(state_.rotation), sin(state_.rotation));
-    pose.pos.x = state_.x + l_b * pose.dir.x;
-    pose.pos.y = state_.y + l_b * pose.dir.y;
+    pose.pos.x = state_.x + params_.base_to_rear * pose.dir.x;
+    pose.pos.y = state_.y + params_.base_to_rear * pose.dir.y;
     return pose;
 }
 
@@ -58,14 +58,6 @@ void SimulatorEngine::setControl(
     const auto curvature_limit = model_->baseMaxAbsCurvature();
     control_.curvature 
         = std::clamp(curvature, -curvature_limit, curvature_limit);
-    /*
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
-        "v = " + std::to_string(control_.velocity) 
-        + " a = " + std::to_string(control_.acceleration) 
-        + " c = " + std::to_string(control_.curvature)
-        + " x = " + std::to_string(state_.x)
-        + " y = " + std::to_string(state_.y));
-    //*/
 }
 
 void SimulatorEngine::setControl(
@@ -99,6 +91,11 @@ void SimulatorEngine::calculate_state_delta(const SimulationState &state,
 }
 
 void SimulatorEngine::updateState() {
+    const auto now = std::chrono::system_clock::now();
+    const double time = (now - last_update_).count() / 1e9;
+    last_update_ = now;
+    const double integration_step = time / params_.integration_steps;
+
     const double old_rotation = state_.rotation;
 
     const double steering_final = abs(control_.curvature) < params_.precision 
@@ -121,25 +118,25 @@ void SimulatorEngine::updateState() {
     SimulationState k[4];
     for (auto i = 0; i < params_.integration_steps; ++i) {
         if (abs(steering_final - state_.steering) - params_.precision 
-            < abs(params_.simulation_tick * steering_delta)) {
+            < abs(time * steering_delta)) {
             steering_delta = steering_final - state_.steering;
         }
 
         if (abs(control_.velocity - state_.linear_velocity) - params_.precision
-            < abs(params_.simulation_tick * acceleration)) {
+            < abs(time * acceleration)) {
             acceleration = control_.velocity - state_.linear_velocity;
         }
         
         calculate_state_delta(state_, acceleration, steering_delta, k[0]);
-        calculate_state_delta(state_ + k[0] * (params_.integration_step / 2),
+        calculate_state_delta(state_ + k[0] * (integration_step / 2),
             acceleration, steering_delta, k[1]);
-        calculate_state_delta(state_ + k[1] * (params_.integration_step / 2),
+        calculate_state_delta(state_ + k[1] * (integration_step / 2),
             acceleration, steering_delta, k[2]);
-        calculate_state_delta(state_ + k[2] * params_.integration_step,
+        calculate_state_delta(state_ + k[2] * integration_step,
             acceleration, steering_delta, k[3]);
         k[1] *= 2;
         k[2] *= 2;
-        SimulationState::addSum(state_, k, 4, params_.integration_step / 6);
+        SimulationState::addSum(state_, k, 4, integration_step / 6);
 
         state_.rotation = fmod(state_.rotation, 2 * M_PI);
         if (state_.rotation < 0) {
@@ -147,7 +144,7 @@ void SimulatorEngine::updateState() {
         }
     }
 
-    state_.angular_velocity = (state_.rotation - old_rotation) / params_.simulation_tick;
+    state_.angular_velocity = (state_.rotation - old_rotation) / time;
 }
 
 void SimulatorEngine::processSimulation() {
