@@ -11,10 +11,11 @@ namespace impl {
 // otherwise, sorted in distance ascending order
 template<int BORDER_SIZE>
 struct Neighbourhood {
-    constexpr Neighbourhood(std::array<int32_t, 2 * BORDER_SIZE + 1 / BORDER_SIZE - 1>&& arr)
+    static constexpr int total_distances = 2 * BORDER_SIZE + 1 / BORDER_SIZE - 1;
+    constexpr Neighbourhood(std::array<int32_t, total_distances>&& arr)
         : distance(arr), max_value(std::numeric_limits<int32_t>::max() - arr.back()) {}
 
-    const std::array<int32_t, 2 * BORDER_SIZE + 1 / BORDER_SIZE - 1> distance;
+    const std::array<int32_t, total_distances> distance;
     const int32_t max_value;
 };
 
@@ -65,22 +66,30 @@ template<int BORDER_SIZE, Neighbourhood<BORDER_SIZE> neighbourhood>
 inline void DistanceTransformApprox(const U8Grid& input, S32Grid& buf, F32Grid& out) noexcept {
     const float scale = static_cast<float>(input.resolution) / neighbourhood.distance[0];
 
-    int32_t* buf_ptr = buf.data;
-    int32_t* buf_ptr_rev = buf.data + buf.size() - 1;
-    for (int i = 0; i < BORDER_SIZE * buf.size.width; ++i, ++buf_ptr, --buf_ptr_rev) {
+    for (int32_t* buf_ptr = buf.data; buf_ptr != buf.data + BORDER_SIZE * buf.size.width;
+         ++buf_ptr) {
         *buf_ptr = neighbourhood.max_value;
+    }
+
+    for (int32_t* buf_ptr_rev = buf.data + buf.size() - 1;
+         buf_ptr_rev != buf.data + buf.size() - 1 - BORDER_SIZE * buf.size.width;
+         --buf_ptr_rev) {
         *buf_ptr_rev = neighbourhood.max_value;
     }
 
-    uint8_t* input_ptr = input.data;
-    for (int i = 0; i < input.size.height; ++i, buf_ptr += BORDER_SIZE) {
-        int32_t* row_end = buf_ptr + buf.size.width - 1;
-        for (int j = 0; j < BORDER_SIZE; ++j, ++buf_ptr, --row_end) {
-            *buf_ptr = neighbourhood.max_value;
-            *row_end = neighbourhood.max_value;
+    for (int i = 0; i < input.size.height; ++i) {
+        int32_t* buf_ptr = buf.data + (BORDER_SIZE + i) * buf.size.width + BORDER_SIZE;
+
+        for (int j = 1; j <= BORDER_SIZE; ++j) {
+            buf_ptr[-j] = neighbourhood.max_value;
         }
-        ++row_end;
-        for (; buf_ptr != row_end; ++buf_ptr, ++input_ptr) {
+        for (int j = 0; j < BORDER_SIZE; ++j) {
+            buf_ptr[input.size.width + j] = neighbourhood.max_value;
+        }
+
+        uint8_t* input_ptr = input.data + i * input.size.width;
+        uint8_t* input_row_end = input_ptr + input.size.width;
+        for (; input_ptr != input_row_end; ++input_ptr, ++buf_ptr) {
             if (*input_ptr == 0) {
                 *buf_ptr = 0;
                 continue;
@@ -89,25 +98,22 @@ inline void DistanceTransformApprox(const U8Grid& input, S32Grid& buf, F32Grid& 
         }
     }
 
-    float* out_ptr = out.data + out.size() - 1;
-    buf_ptr_rev -= BORDER_SIZE;
-    for (int i = 0; i < input.size.height; ++i, buf_ptr_rev -= 2 * BORDER_SIZE) {
-        for (int j = 0; j < input.size.width; ++j, --buf_ptr_rev, --out_ptr) {
-            *buf_ptr_rev = std::min(
-                *buf_ptr_rev,
-                LowerNeighbourhoodMin<BORDER_SIZE, neighbourhood>(buf_ptr_rev, buf.size));
-            *out_ptr = scale * (*buf_ptr_rev);
+    for (int i = input.size.height - 1; i >= 0; --i) {
+        int32_t* row_begin = buf.data + (i + BORDER_SIZE) * buf.size.width + BORDER_SIZE - 1;
+        float* out_ptr = out.data + out.size.width * (i + 1) - 1;
+
+        for (int32_t* buf_ptr = row_begin + input.size.width; buf_ptr != row_begin;
+             --buf_ptr, --out_ptr) {
+            *buf_ptr = std::min(
+                *buf_ptr, LowerNeighbourhoodMin<BORDER_SIZE, neighbourhood>(buf_ptr, buf.size));
+            *out_ptr = scale * (*buf_ptr);
         }
     }
 }
 
 template<int BORDER_SIZE, Neighbourhood<BORDER_SIZE> neighbourhood>
 inline void DistanceTransformApprox(const U8Grid& input, F32Grid& out) noexcept {
-    S32GridHolder buf = MakeGrid<int32_t>(
-        Size(
-            {.width = input.size.width + 2 * BORDER_SIZE,
-             .height = input.size.height + 2 * BORDER_SIZE}),
-        input.resolution);
+    S32GridHolder buf = MakeGrid<int32_t>(input.size.Extend(2 * BORDER_SIZE), input.resolution);
     DistanceTransformApprox<BORDER_SIZE, neighbourhood>(input, *buf, out);
 }
 

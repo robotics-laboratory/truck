@@ -6,6 +6,7 @@
 
 #include <limits>
 #include <memory>
+#include <vector>
 
 namespace truck::fastgrid {
 
@@ -13,8 +14,7 @@ void ManhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps, int* queue_buf,
     F32Grid& manhattan_distance) {
     const int resolution = distance_transform.resolution;
-    const int width = distance_transform.size.width;
-    const int grid_size = distance_transform.size();
+    const auto [width, height] = distance_transform.size;
     const float unreachable = std::numeric_limits<float>::max();
     const int origin_index = distance_transform.GetIndex(source);
 
@@ -32,10 +32,12 @@ void ManhattanDistance(
 
     while (!queue.Empty()) {
         const int cur_index = queue.Extract();
+        const int i = cur_index / width;
+        const int j = cur_index % width;
 
         for (int dt : {-1, 1}) {
             const int h_next_index = cur_index + dt;
-            if ((0 <= h_next_index) && (h_next_index / width == cur_index / width) &&
+            if ((0 <= j + dt) && (j + dt < width) &&
                 (distance_transform.data[h_next_index] > eps) &&
                 (manhattan_distance.data[h_next_index] == unreachable)) {
                 manhattan_distance.data[h_next_index] =
@@ -44,7 +46,7 @@ void ManhattanDistance(
             }
 
             const int v_next_index = cur_index + dt * width;
-            if ((0 <= v_next_index) && (v_next_index < grid_size) &&
+            if ((0 <= i + dt) && (i + dt < height) &&
                 (distance_transform.data[v_next_index] > eps) &&
                 (manhattan_distance.data[v_next_index] == unreachable)) {
                 manhattan_distance.data[v_next_index] =
@@ -58,8 +60,8 @@ void ManhattanDistance(
 void ManhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps,
     F32Grid& manhattan_distance) {
-    std::unique_ptr<int[]> queue_buf = std::make_unique<int[]>(distance_transform.size());
-    ManhattanDistance(distance_transform, source, eps, queue_buf.get(), manhattan_distance);
+    std::vector<int> queue_buf(distance_transform.size());
+    ManhattanDistance(distance_transform, source, eps, queue_buf.data(), manhattan_distance);
 }
 
 F32GridHolder ManhattanDistance(
