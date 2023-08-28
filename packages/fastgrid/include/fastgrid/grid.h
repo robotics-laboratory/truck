@@ -14,6 +14,8 @@ struct Size {
 
     int width = 0;
     int height = 0;
+
+    Size Extend(const int span) const noexcept { return {width + span, height + span}; }
 };
 
 template<typename T>
@@ -21,7 +23,8 @@ struct Grid {
     Grid() = default;
 
     Grid(
-        const Size& size, double resolution, const std::optional<geom::Pose>& origin = std::nullopt)
+        const Size& size, const double resolution,
+        const std::optional<geom::Pose>& origin = std::nullopt)
         : size(size)
         , resolution(resolution)
         , origin(origin)
@@ -33,38 +36,58 @@ struct Grid {
 
     const T* operator[](int row) const noexcept { return data + row * size.width; }
 
-    geom::Vec2 GetRelativePoint(const geom::Vec2& point) const {
-        VERIFY(tf);
+    // for relative points
+    std::pair<int, int> ToCell(const geom::Vec2& rel_point) const noexcept {
+        return {
+            static_cast<int>(rel_point.x / resolution), static_cast<int>(rel_point.y / resolution)};
+    }
+
+    int ToIndex(const geom::Vec2& rel_point) const noexcept {
+        const auto [x, y] = ToCell(rel_point);
+        return y * size.width + x;
+    }
+
+    // for global points
+    std::optional<geom::Vec2> TryTransform(const geom::Vec2& point) const noexcept {
+        if (!tf) {
+            return std::nullopt;
+        }
         return (*tf)(point);
     }
 
-    bool VerifyRelativePoint(const geom::Vec2& ref_point) const {
-        return ref_point.x >= 0 && ref_point.x < size.width * resolution && ref_point.y >= 0 &&
-               ref_point.y < size.height * resolution;
+    std::optional<std::pair<int, int>> TryGetCell(const geom::Vec2& point) const noexcept {
+        const auto rel_point = TryTransform(point);
+        if (!rel_point || rel_point->x < 0 || rel_point->x >= size.width * resolution ||
+            rel_point->y < 0 || rel_point->y >= size.height * resolution) {
+            return std::nullopt;
+        }
+        return ToCell(*rel_point);
     }
 
-    bool VerifyPoint(const geom::Vec2& point) const {
-        const geom::Vec2 ref_point = GetRelativePoint(point);
-        return VerifyRelativePoint(ref_point);
+    std::optional<int> TryGetIndex(const geom::Vec2& point) const noexcept {
+        const auto cell = TryGetCell(point);
+        if (!cell) {
+            return std::nullopt;
+        }
+        return cell->second * size.width + cell->first;
     }
 
-    std::pair<int, int> GetRelativeCell(const geom::Vec2& ref_point) const {
-        VERIFY(VerifyRelativePoint(ref_point));
-        return {
-            static_cast<int>(ref_point.x / resolution), static_cast<int>(ref_point.y / resolution)};
+    geom::Vec2 Transform(const geom::Vec2& point) const {
+        const auto rel_point = TryTransform(point);
+        VERIFY(rel_point);
+        return *rel_point;
     }
 
     std::pair<int, int> GetCell(const geom::Vec2& point) const {
-        return GetRelativeCell(GetRelativePoint(point));
-    }
-
-    int GetRelativeIndex(const geom::Vec2& point) const {
-        std::pair<int, int> cell = GetRelativeCell(point);
-        return cell.second * size.width + cell.first;
+        const auto cell = TryGetCell(point);
+        VERIFY(cell);
+        return *cell;
     }
 
     int GetIndex(const geom::Vec2& point) const {
-        return GetRelativeIndex(GetRelativePoint(point));
+        const auto index = TryGetIndex(point);
+        VERIFY(index);
+        return *index;
     }
 
     Size size = {};

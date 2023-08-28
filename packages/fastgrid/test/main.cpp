@@ -45,15 +45,15 @@ TEST(Grid, operability) {
     EXPECT_EQ(grid_1[0][1], 2);
 
     const Vec2 point_1(0, 5);
-    auto ref_point_1 = grid_1.GetRelativePoint(point_1);
-    EXPECT_NEAR(ref_point_1.x, 1.8, eps);
-    EXPECT_NEAR(ref_point_1.y, 2.6, eps);
-    EXPECT_TRUE(grid_1.VerifyPoint(point_1));
+    const auto ref_point_1 = grid_1.TryTransform(point_1);
+    EXPECT_NEAR(ref_point_1->x, 1.8, eps);
+    EXPECT_NEAR(ref_point_1->y, 2.6, eps);
+    EXPECT_TRUE(static_cast<bool>(ref_point_1));
     auto cell_1 = grid_1.GetCell(point_1);
     EXPECT_EQ(cell_1.first, 0);
     EXPECT_EQ(cell_1.second, 0);
     EXPECT_EQ(grid_1.GetIndex(point_1), 0);
-    EXPECT_FALSE(grid_1.VerifyPoint({0, 0}));
+    EXPECT_FALSE(static_cast<bool>(grid_1.TryGetCell({0, 0})));
 
     const Size sz_2 = {.width = 2, .height = 3};
     const int res_2 = 10;
