@@ -14,6 +14,11 @@ SimulatorEngine::~SimulatorEngine() {
 void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double simulation_tick, 
     const int integration_steps, const double precision) {
     
+    isRunning_ = isResumed_ = false;
+    if (running_thread_.joinable()) {
+        running_thread_.join();
+    }
+    
     model_ = std::unique_ptr<model::Model>(std::move(model));
     params_.simulation_tick = simulation_tick;
     params_.integration_steps = integration_steps;
