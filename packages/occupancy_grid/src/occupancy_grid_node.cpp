@@ -231,14 +231,14 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
             const auto vec = tf2::Vector3{point.x, point.y, point.z};
             const auto odom_vec = tf(vec);
 
-            if (!params_.camera_view_height.isMet(odom_vec.z())){
+            if (params_.camera_view_height.isMet(odom_vec.z())){
                 continue;
             }
-            if (odom_vec.x() < 2.0) {
+
             *x = odom_vec.x();
             *y = odom_vec.y();
             *z = odom_vec.z();
-            }
+
             ++x;
             ++y;
             ++z;
