@@ -304,11 +304,12 @@ void OccupancyGridNode::publishOccupancyGrid() {
         return;
     }
 
-    const auto cell_radius = ceil<int>(params_.radius / params_.resolution);
+    const double radius = params_.radius;
+    const auto cell_radius = ceil<int>(radius / params_.resolution);
     const auto cell_num = 2 * cell_radius + 1;
 
     const geom::Transform tf(*tf_opt);
-    const geom::Vec2 origin = tf.apply({-params_.radius, -params_.radius});
+    const geom::Vec2 origin = tf.apply({0, 0}) - geom::Vec2{radius, radius};
 
     nav_msgs::msg::OccupancyGrid grid;
 

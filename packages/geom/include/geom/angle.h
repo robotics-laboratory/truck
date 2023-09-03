@@ -18,7 +18,7 @@ class Angle {
     static constexpr Angle fromDegrees(double deg) noexcept { return Angle{(M_PI / 180) * deg}; }
 
     static constexpr Angle fromVector(double x, double y) noexcept {
-        return Angle{std::atan2(x, y)};
+        return Angle{std::atan2(y, x)};
     }
 
     constexpr double radians() const noexcept { return value_; }
