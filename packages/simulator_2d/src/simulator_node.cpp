@@ -64,7 +64,8 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
         engine_.setControl(control->velocity, control->acceleration, control->curvature);
     }
     else {
-        engine_.setControl(control->velocity, control->curvature);
+        //engine_.setControl(control->velocity, control->curvature);
+        engine_.setControl(10, 10);
     }
 }
 
@@ -89,7 +90,7 @@ void SimulatorNode::createTelemetryMessage() {
 }
 
 void SimulatorNode::createWheelNormalsMessage() {
-    msgs_.normals_.header.frame_id = "odom_ekf";
+    msgs_.normals_.header.frame_id = "base";
     msgs_.normals_.id = 0;
 
     msgs_.normals_.type = visualization_msgs::msg::Marker::LINE_LIST;
@@ -152,8 +153,7 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time, const geom
     signals_.telemetry->publish(msgs_.telemetry);
 }
 
-void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time, 
-    const geom::Pose &pose, const geom::Angle &steering) {
+void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time, const geom::Angle &steering) {
 
     msgs_.normals_.header.stamp = time;
 
@@ -165,67 +165,34 @@ void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time,
     }
 
     msgs_.normals_.points.resize(8);
-    for (auto i = 0; i < 8; i += 2) {
-        msgs_.normals_.points[i].x = pose.pos.x;
-        msgs_.normals_.points[i].y = pose.pos.y;
+    for (auto i = 0; i < 8; ++i) {
+        msgs_.normals_.points[i].x = 0;
+        msgs_.normals_.points[i].y = 0;
     }
-
-    const double angle_sin = pose.dir.x;
-    const double angle_cos = pose.dir.y;
 
     // Front right wheel.
-    msgs_.normals_.points[0].x 
-        += params_.wheel_x_offset * angle_cos + params_.wheel_y_offset * angle_sin;
-    msgs_.normals_.points[0].y 
-        += params_.wheel_x_offset * angle_sin - params_.wheel_y_offset * angle_cos;
+    msgs_.normals_.points[0].x = params_.wheel_x_offset;
+    msgs_.normals_.points[0].y = -params_.wheel_y_offset;
 
     // Front left wheel
-    msgs_.normals_.points[2].x 
-        += params_.wheel_x_offset * angle_cos - params_.wheel_y_offset * angle_sin;
-    msgs_.normals_.points[2].y 
-        += params_.wheel_x_offset * angle_sin + params_.wheel_y_offset * angle_cos;
+    msgs_.normals_.points[2].x = params_.wheel_x_offset;
+    msgs_.normals_.points[2].y = params_.wheel_y_offset;
 
     // Rear right wheel.
-    msgs_.normals_.points[4].x 
-        += -params_.wheel_x_offset * angle_cos + params_.wheel_y_offset * angle_sin;
-    msgs_.normals_.points[4].y 
-        += -params_.wheel_x_offset * angle_sin - params_.wheel_y_offset * angle_cos;
+    msgs_.normals_.points[4].x = -params_.wheel_x_offset;
+    msgs_.normals_.points[4].y = -params_.wheel_y_offset;
 
     // Rear left wheel.
-    msgs_.normals_.points[6].x 
-        += -params_.wheel_x_offset * angle_cos - params_.wheel_y_offset * angle_sin;
-    msgs_.normals_.points[6].y 
-        += -params_.wheel_x_offset * angle_sin + params_.wheel_y_offset * angle_cos;
+    msgs_.normals_.points[6].x = -params_.wheel_x_offset;
+    msgs_.normals_.points[6].y = params_.wheel_y_offset;
 
     // Instant turning point.
-    const double rotation_angle = geom::Angle::fromVector(pose.dir.x, pose.dir.y).radians();
-    const double w_x = msgs_.normals_.points[2].x 
-        + params_.wheel_x_offset * cos(rotation_angle + steering_rad);
-    const double w_y = msgs_.normals_.points[2].y 
-        + params_.wheel_x_offset * sin(rotation_angle + steering_rad);
+    const double radius = 2 * params_.wheel_x_offset / tan(steering_rad); // Тут лучше брать честно длину машинки вместо 2*x_offset, упрощаю
+    msgs_.normals_.points[1].x = -params_.wheel_x_offset;
+    msgs_.normals_.points[1].y = radius;
 
-    const double normal_a_a = w_x - msgs_.normals_.points[2].x;
-    const double normal_a_b = w_y - msgs_.normals_.points[2].y;
-    const double normal_a_c = -normal_a_a * msgs_.normals_.points[2].x 
-        - normal_a_b * msgs_.normals_.points[2].y;
-    const double normal_b_a = msgs_.normals_.points[4].x - msgs_.normals_.points[0].x;
-    const double normal_b_b = -msgs_.normals_.points[0].y + msgs_.normals_.points[4].y;
-    const double normal_b_c = -normal_b_a * msgs_.normals_.points[4].x 
-        - normal_b_b * msgs_.normals_.points[4].y;
-
-    const double divider = normal_a_a * normal_b_b - normal_b_a * normal_a_b;
-    if (abs(divider) < params_.precision) {
-        msgs_.normals_.points.clear();
-    }
-    else {
-        msgs_.normals_.points[1].x 
-            = (normal_a_b * normal_b_c - normal_b_b * normal_a_c) / divider;
-        msgs_.normals_.points[1].y 
-            = (normal_b_a * normal_a_c - normal_a_a * normal_b_c) / divider;
-
-        for (auto i = 3; i < 8; i += 2) {
-            msgs_.normals_.points[i] = msgs_.normals_.points[1];
-        }
+    for (auto i = 3; i < 8; i += 2) {
+        msgs_.normals_.points[i] = msgs_.normals_.points[1];
     }
 
     signals_.normals->publish(msgs_.normals_);
@@ -240,7 +207,7 @@ void SimulatorNode::publishSignals() {
     const auto angularVelocity = engine_.getAngularVelocity();
     engine_.resume();
     if (params_.show_wheel_normals) {
-        publishWheelNormalsMessage(time, pose, steering);
+        publishWheelNormalsMessage(time, steering);
     }
 
     publishOdometryMessage(time, pose, linearVelocity, angularVelocity);

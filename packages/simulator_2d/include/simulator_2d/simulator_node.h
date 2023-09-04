@@ -29,8 +29,7 @@ class SimulatorNode : public rclcpp::Node {
             const geom::Vec2 &linearVelocity, const geom::Vec2 &angularVelocity);
         void publishTransformMessage(const rclcpp::Time &time, const geom::Pose &pose);
         void publishTelemetryMessage(const rclcpp::Time &time, const geom::Angle &steering);
-        void publishWheelNormalsMessage(const rclcpp::Time &time, 
-            const geom::Pose &pose, const geom::Angle &steering);
+        void publishWheelNormalsMessage(const rclcpp::Time &time, const geom::Angle &steering);
         void publishSignals();
 
         SimulatorEngine engine_;
