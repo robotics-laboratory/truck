@@ -115,12 +115,12 @@ void SimulatorEngine::updateState() {
         : state_.steering < steering_final
             ? params_.steering_velocity
             : -params_.steering_velocity;
-    steering_delta = steering_delta * time / params_.integration_steps;
+    //steering_delta = steering_delta * time / params_.integration_steps;
 
     double velocity_delta = abs(control_.velocity - state_.linear_velocity) < params_.precision 
         ? 0 
         : control_.acceleration;
-    velocity_delta = velocity_delta * time / params_.integration_steps;
+    //velocity_delta = velocity_delta * time / params_.integration_steps;
 
     SimulationState k[4];
     for (auto i = 0; i < params_.integration_steps; ++i) {
