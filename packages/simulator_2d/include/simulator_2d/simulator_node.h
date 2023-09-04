@@ -40,8 +40,8 @@ class SimulatorNode : public rclcpp::Node {
         struct Parameters {
             std::chrono::duration<double> update_period;
             bool show_wheel_normals;
-            double wheel_x_delta;
-            double wheel_y_delta;
+            double wheel_x_offset;
+            double wheel_y_offset;
             double precision;
         } params_;
 

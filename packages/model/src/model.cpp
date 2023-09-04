@@ -37,7 +37,7 @@ ServoAngles Model::servoHomeAngles() const { return params_.servo_home_angles; }
 
 double Model::baseMaxAbsCurvature() const { return cache_.max_abs_curvature; }
 
-double Model::wheelTurningSpeed() const { return params_.limits.wheel_turning_speed; }
+double Model::steeringVelocity() const { return params_.limits.steering_velocity; }
 
 Limits<geom::Angle> Model::leftSteeringLimits() const {
     return {-params_.limits.steering.inner, params_.limits.steering.outer};
@@ -60,16 +60,16 @@ WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
     const double ratio = twist.curvature * cache_.width_half;
 
     return WheelVelocity {
-        geom::Angle{(1 - ratio) * twist.velocity / params_.wheel_radius},
-        geom::Angle{(1 + ratio) * twist.velocity / params_.wheel_radius}};
+        geom::Angle{(1 - ratio) * twist.velocity / params_.wheel.radius},
+        geom::Angle{(1 + ratio) * twist.velocity / params_.wheel.radius}};
 }
 
 double Model::linearVelocityToMotorRPS(double velocity) const {
-    return velocity / params_.wheel_radius / M_PI / params_.gear_ratio / 2;
+    return velocity / params_.wheel.radius / M_PI / params_.gear_ratio / 2;
 }
 
 double Model::motorRPStoLinearVelocity(double rps) const {
-    return rps * params_.wheel_radius * M_PI * params_.gear_ratio * 2;
+    return rps * params_.wheel.radius * M_PI * params_.gear_ratio * 2;
 }
 
 double Model::gearRatio() const { return params_.gear_ratio; }
@@ -78,6 +78,6 @@ const Shape& Model::shape() const { return params_.shape; }
 
 const WheelBase& Model::wheelBase() const { return params_.wheel_base; }
 
-double Model::wheelRadius() const { return params_.wheel_radius; }
+const Wheel& Model::wheel() const { return params_.wheel; }
 
 }  // namespace truck::model

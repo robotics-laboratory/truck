@@ -34,7 +34,6 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
 
         .ego_z_lev = this->declare_parameter("ego.z_lev", 0.0),
         .ego_height = this->declare_parameter("ego.height", 0.2),
-        .ego_wheel_width = this->declare_parameter("ego/wheel_width", 0.1),
 
         .ego_track_width = this->declare_parameter("ego.track.width", 0.06),
         .ego_track_height = this->declare_parameter("ego.track.height", 0.01),
@@ -211,6 +210,7 @@ void setRotation(geometry_msgs::msg::Quaternion &original_orientation,
 }
 
 } // namespace
+
 void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array, 
     const geometry_msgs::msg::Pose &pose) const {
 
@@ -222,9 +222,8 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         msg.type = visualization_msgs::msg::Marker::CYLINDER;
         msg.action = visualization_msgs::msg::Marker::ADD;
         msg.frame_locked = true;
-        msg.scale.x = params_.ego_height;
-        msg.scale.y = params_.ego_height;
-        msg.scale.z = params_.ego_wheel_width;
+        msg.scale.x = msg.scale.y = 2 * model_->wheel().radius;
+        msg.scale.z = model_->wheel().width;
         msg.pose = pose;
         msg.pose.position.z = params_.ego_z_lev;
         setRotation(msg.pose.orientation, M_PI_2, 0.0, i < 2 ? state_.telemetry->steering_angle : 0);
@@ -233,28 +232,27 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         msg_array.markers.push_back(msg);
     }
 
-    const auto shape = model_->shape();
-    const double x_delta = shape.length / 2;
-    const double y_delta = shape.width / 2;
+    const double x_offset = model_->wheel().x_offset;
+    const double y_offset = model_->wheel().y_offset;
     const double rotation_angle = truck::geom::toAngle(pose.orientation).radians();
     const double angle_sin = sin(rotation_angle);
     const double angle_cos = cos(rotation_angle);
 
     // Front right wheel.
-    msg_array.markers[first_id].pose.position.x += x_delta * angle_cos + y_delta * angle_sin;
-    msg_array.markers[first_id].pose.position.y += x_delta * angle_sin - y_delta * angle_cos;
+    msg_array.markers[first_id].pose.position.x += x_offset * angle_cos + y_offset * angle_sin;
+    msg_array.markers[first_id].pose.position.y += x_offset * angle_sin - y_offset * angle_cos;
 
     // Front left wheel
-    msg_array.markers[first_id + 1].pose.position.x += x_delta * angle_cos - y_delta * angle_sin;
-    msg_array.markers[first_id + 1].pose.position.y += x_delta * angle_sin + y_delta * angle_cos;
+    msg_array.markers[first_id + 1].pose.position.x += x_offset * angle_cos - y_offset * angle_sin;
+    msg_array.markers[first_id + 1].pose.position.y += x_offset * angle_sin + y_offset * angle_cos;
 
     // Rear right wheel.
-    msg_array.markers[first_id + 2].pose.position.x += -x_delta * angle_cos + y_delta * angle_sin;
-    msg_array.markers[first_id + 2].pose.position.y += -x_delta * angle_sin - y_delta * angle_cos;
+    msg_array.markers[first_id + 2].pose.position.x += -x_offset * angle_cos + y_offset * angle_sin;
+    msg_array.markers[first_id + 2].pose.position.y += -x_offset * angle_sin - y_offset * angle_cos;
 
     // Rear left wheel.
-    msg_array.markers[first_id + 3].pose.position.x += -x_delta * angle_cos - y_delta * angle_sin;
-    msg_array.markers[first_id + 3].pose.position.y += -x_delta * angle_sin + y_delta * angle_cos;
+    msg_array.markers[first_id + 3].pose.position.x += -x_offset * angle_cos - y_offset * angle_sin;
+    msg_array.markers[first_id + 3].pose.position.y += -x_offset * angle_sin + y_offset * angle_cos;
 }
 
 void VisualizationNode::publishEgo() const {

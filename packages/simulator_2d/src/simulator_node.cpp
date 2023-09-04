@@ -12,14 +12,14 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     auto model = model::makeUniquePtr(
         this->get_logger(),
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
-    const auto shape = model->shape();
+    const auto wheel_base = model->wheelBase();
 
     params_ = Parameters{
         .update_period 
             = std::chrono::milliseconds(this->declare_parameter<long int>("update_period", 250)),
         .show_wheel_normals = this->declare_parameter("show_wheel_normals", false),
-        .wheel_x_delta = shape.length / 2,
-        .wheel_y_delta = shape.width / 2,
+        .wheel_x_offset = wheel_base.base_to_rear,
+        .wheel_y_offset = wheel_base.width / 2,
         .precision = this->declare_parameter("calculations_precision", 1e-8)
     };
 
@@ -170,40 +170,39 @@ void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time,
         msgs_.normals_.points[i].y = pose.pos.y;
     }
 
-    const double rotation_angle 
-        = truck::geom::toAngle(truck::geom::msg::toQuaternion(pose.dir)).radians();
-    const double angle_sin = sin(rotation_angle);
-    const double angle_cos = cos(rotation_angle);
+    const double angle_sin = pose.dir.x;
+    const double angle_cos = pose.dir.y;
 
     // Front right wheel.
     msgs_.normals_.points[0].x 
-        += params_.wheel_x_delta * angle_cos + params_.wheel_y_delta * angle_sin;
+        += params_.wheel_x_offset * angle_cos + params_.wheel_y_offset * angle_sin;
     msgs_.normals_.points[0].y 
-        += params_.wheel_x_delta * angle_sin - params_.wheel_y_delta * angle_cos;
+        += params_.wheel_x_offset * angle_sin - params_.wheel_y_offset * angle_cos;
 
     // Front left wheel
     msgs_.normals_.points[2].x 
-        += params_.wheel_x_delta * angle_cos - params_.wheel_y_delta * angle_sin;
+        += params_.wheel_x_offset * angle_cos - params_.wheel_y_offset * angle_sin;
     msgs_.normals_.points[2].y 
-        += params_.wheel_x_delta * angle_sin + params_.wheel_y_delta * angle_cos;
+        += params_.wheel_x_offset * angle_sin + params_.wheel_y_offset * angle_cos;
 
     // Rear right wheel.
     msgs_.normals_.points[4].x 
-        += -params_.wheel_x_delta * angle_cos + params_.wheel_y_delta * angle_sin;
+        += -params_.wheel_x_offset * angle_cos + params_.wheel_y_offset * angle_sin;
     msgs_.normals_.points[4].y 
-        += -params_.wheel_x_delta * angle_sin - params_.wheel_y_delta * angle_cos;
+        += -params_.wheel_x_offset * angle_sin - params_.wheel_y_offset * angle_cos;
 
     // Rear left wheel.
     msgs_.normals_.points[6].x 
-        += -params_.wheel_x_delta * angle_cos - params_.wheel_y_delta * angle_sin;
+        += -params_.wheel_x_offset * angle_cos - params_.wheel_y_offset * angle_sin;
     msgs_.normals_.points[6].y 
-        += -params_.wheel_x_delta * angle_sin + params_.wheel_y_delta * angle_cos;
+        += -params_.wheel_x_offset * angle_sin + params_.wheel_y_offset * angle_cos;
 
     // Instant turning point.
+    const double rotation_angle = geom::Angle::fromVector(pose.dir.x, pose.dir.y).radians();
     const double w_x = msgs_.normals_.points[2].x 
-        + params_.wheel_x_delta * cos(rotation_angle + steering_rad);
+        + params_.wheel_x_offset * cos(rotation_angle + steering_rad);
     const double w_y = msgs_.normals_.points[2].y 
-        + params_.wheel_x_delta * sin(rotation_angle + steering_rad);
+        + params_.wheel_x_offset * sin(rotation_angle + steering_rad);
 
     const double normal_a_a = w_x - msgs_.normals_.points[2].x;
     const double normal_a_b = w_y - msgs_.normals_.points[2].y;

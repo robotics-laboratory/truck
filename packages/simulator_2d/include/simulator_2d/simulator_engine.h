@@ -44,7 +44,7 @@ class SimulatorEngine {
             double simulation_tick;
             int integration_steps;
             double precision;
-            double turning_speed;
+            double steering_velocity;
             double wheelbase;
             double base_to_rear;
             double steering_limit;
