@@ -18,12 +18,12 @@ void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double s
     if (running_thread_.joinable()) {
         running_thread_.join();
     }
-    
+
     model_ = std::unique_ptr<model::Model>(std::move(model));
     params_.simulation_tick = simulation_tick;
     params_.integration_steps = integration_steps;
     params_.precision = precision;
-    params_.turning_speed = model_->wheelTurningSpeed();
+    params_.steering_velocity = model_->steeringVelocity();
     params_.wheelbase = model_->wheelBase().length;
     params_.base_to_rear = model_->wheelBase().base_to_rear;
     params_.steering_limit = model_->leftSteeringLimits().max.radians();
@@ -86,13 +86,13 @@ void SimulatorEngine::resume() {
 }
 
 void SimulatorEngine::calculate_state_delta(const SimulationState &state,
-    const double acceleration, const double &steering_delta, SimulationState &delta) {
+    const double velocity_delta, const double &steering_delta, SimulationState &delta) {
     
     delta.x = cos(state.rotation) * state.linear_velocity;
     delta.y = sin(state.rotation) * state.linear_velocity;
     delta.rotation = tan(state.steering) * state.linear_velocity / params_.wheelbase;
     delta.steering = steering_delta;
-    delta.linear_velocity = acceleration;
+    delta.linear_velocity = velocity_delta;
 }
 
 void SimulatorEngine::updateState() {
@@ -113,32 +113,32 @@ void SimulatorEngine::updateState() {
     double steering_delta = abs(steering_final - state_.steering) < params_.precision 
         ? 0 
         : state_.steering < steering_final
-            ? params_.turning_speed
-            : -params_.turning_speed;
+            ? params_.steering_velocity
+            : -params_.steering_velocity;
+    steering_delta = steering_delta * time / params_.integration_steps;
 
-    double acceleration = abs(control_.velocity - state_.linear_velocity) < params_.precision 
+    double velocity_delta = abs(control_.velocity - state_.linear_velocity) < params_.precision 
         ? 0 
         : control_.acceleration;
+    velocity_delta = velocity_delta * time / params_.integration_steps;
 
     SimulationState k[4];
     for (auto i = 0; i < params_.integration_steps; ++i) {
-        if (abs(steering_final - state_.steering) - params_.precision 
-            < abs(time * steering_delta)) {
+        if (abs(steering_final - state_.steering) - params_.precision < abs(steering_delta)) {
             steering_delta = steering_final - state_.steering;
         }
 
-        if (abs(control_.velocity - state_.linear_velocity) - params_.precision
-            < abs(time * acceleration)) {
-            acceleration = control_.velocity - state_.linear_velocity;
+        if (abs(control_.velocity - state_.linear_velocity) - params_.precision < abs(velocity_delta)) {
+            velocity_delta = control_.velocity - state_.linear_velocity;
         }
         
-        calculate_state_delta(state_, acceleration, steering_delta, k[0]);
+        calculate_state_delta(state_, velocity_delta, steering_delta, k[0]);
         calculate_state_delta(state_ + k[0] * (integration_step / 2),
-            acceleration, steering_delta, k[1]);
+            velocity_delta, steering_delta, k[1]);
         calculate_state_delta(state_ + k[1] * (integration_step / 2),
-            acceleration, steering_delta, k[2]);
+            velocity_delta, steering_delta, k[2]);
         calculate_state_delta(state_ + k[2] * integration_step,
-            acceleration, steering_delta, k[3]);
+            velocity_delta, steering_delta, k[3]);
         k[1] *= 2;
         k[2] *= 2;
         SimulationState::addSum(state_, k, 4, integration_step / 6);
