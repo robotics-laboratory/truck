@@ -1,9 +1,9 @@
-#include "simulator_2d/simulation_state.h"
-
 #include "model/model.h"
 #include "geom/angle.h"
 #include "geom/pose.h"
 #include "geom/vector.h"
+
+#include <Eigen/Dense>
 
 namespace truck::simulator {
 
@@ -24,10 +24,22 @@ class SimulatorEngine {
         void advance(const double time = 1.0);
 
     private:
-        void calculate_state_delta(const SimulationState &state,
-            const double acceleration, const double &steering_delta, SimulationState &delta);
+        Eigen::Matrix<double, 6, 1> calculate_state_delta(
+            const Eigen::Matrix<double, 6, 1> &state,
+            const double velocity_delta, const double steering_delta);
+
+        enum StateIndex {
+            x = 0,
+            y = 1,
+            rotation = 2,
+            steering = 3,
+            linear_velocity = 4,
+            angular_velocity = 5
+        };
 
         std::unique_ptr<model::Model> model_ = nullptr;
+
+        Eigen::Matrix<double, 6, 1> state_;
 
         struct Parameters {
             double integration_step;
@@ -37,8 +49,6 @@ class SimulatorEngine {
             double base_to_rear;
             double steering_limit;
         } params_;
-
-        SimulationState state_;
 
         struct Control {
             double velocity = 0.0;
