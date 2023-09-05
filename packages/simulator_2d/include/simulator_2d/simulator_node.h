@@ -21,10 +21,6 @@ class SimulatorNode : public rclcpp::Node {
 
     private:
         void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
-        void createOdometryMessage();
-        void createTransformMessage();
-        void createTelemetryMessage();
-        void createWheelNormalsMessage();
         void publishOdometryMessage(const rclcpp::Time &time, const geom::Pose &pose, 
             const geom::Vec2 &linearVelocity, const geom::Vec2 &angularVelocity);
         void publishTransformMessage(const rclcpp::Time &time, const geom::Pose &pose);
@@ -37,7 +33,7 @@ class SimulatorNode : public rclcpp::Node {
         rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
         struct Parameters {
-            std::chrono::duration<double> update_period;
+            double update_period;
             bool show_wheel_normals;
             double wheel_x_offset;
             double wheel_y_offset;
@@ -47,13 +43,6 @@ class SimulatorNode : public rclcpp::Node {
         struct Slots {
             rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
         } slots_;
-
-        struct Messages {
-            nav_msgs::msg::Odometry odometry;
-            geometry_msgs::msg::TransformStamped odom_to_base_transform;
-            truck_msgs::msg::HardwareTelemetry telemetry;
-            visualization_msgs::msg::Marker normals_;
-        } msgs_;
 
         struct Signals {
             rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
