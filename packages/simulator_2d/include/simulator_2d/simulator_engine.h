@@ -5,44 +5,32 @@
 #include "geom/pose.h"
 #include "geom/vector.h"
 
-#include <chrono>
-
-#include <thread>
-
 namespace truck::simulator {
 
 class SimulatorEngine {
     public:
-        ~SimulatorEngine();
-        void start(std::unique_ptr<model::Model> &model, const double simulation_tick = 0.01, 
-            const int integration_steps = 1000, const double precision = 1e-8);
+        void start(std::unique_ptr<model::Model> &model, 
+            const double integration_step = 0.001, const double precision = 1e-8);
+        void reset();
         geom::Pose getPose() const;
         geom::Angle getSteering() const;
         geom::Vec2 getLinearVelocity() const;
         geom::Vec2 getAngularVelocity() const;
         void setControl(const double velocity, const double acceleration, const double curvature);
         void setControl(const double velocity, const double curvature);
-        void suspend();
-        void resume();
+        /**
+         * @param time in seconds.
+         */
+        void advance(const double time = 1.0);
 
     private:
         void calculate_state_delta(const SimulationState &state,
             const double acceleration, const double &steering_delta, SimulationState &delta);
-        void updateState();
-        void processSimulation();
-
-        bool isRunning_ = false;
-        bool isResumed_ = false;
-
-        std::thread running_thread_;
 
         std::unique_ptr<model::Model> model_ = nullptr;
 
-        std::chrono::_V2::system_clock::time_point last_update_; 
-
         struct Parameters {
-            double simulation_tick;
-            int integration_steps;
+            double integration_step;
             double precision;
             double steering_velocity;
             double wheelbase;

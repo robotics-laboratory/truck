@@ -1,36 +1,28 @@
 #include "simulator_2d/simulator_engine.h"
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 
 namespace truck::simulator {
 
-SimulatorEngine::~SimulatorEngine() {
-    isRunning_ = false;
-    running_thread_.join();
-}
-
-void SimulatorEngine::start(std::unique_ptr<model::Model> &model, const double simulation_tick, 
-    const int integration_steps, const double precision) {
-    
-    isRunning_ = isResumed_ = false;
-    if (running_thread_.joinable()) {
-        running_thread_.join();
-    }
+void SimulatorEngine::start(std::unique_ptr<model::Model> &model, 
+    const double integration_step, const double precision) {
 
     model_ = std::unique_ptr<model::Model>(std::move(model));
-    params_.simulation_tick = simulation_tick;
-    params_.integration_steps = integration_steps;
+    params_.integration_step = integration_step;
     params_.precision = precision;
     params_.steering_velocity = model_->steeringVelocity();
     params_.wheelbase = model_->wheelBase().length;
     params_.base_to_rear = model_->wheelBase().base_to_rear;
     params_.steering_limit = model_->leftSteeringLimits().max.radians();
+    reset();
+}
+
+
+void SimulatorEngine::reset() {
     state_.x = -params_.base_to_rear;
-    isRunning_ = isResumed_ = true;
-    last_update_= std::chrono::system_clock::now();
-    running_thread_ = std::thread(&SimulatorEngine::processSimulation, this);
+    state_.y = state_.rotation = state_.steering 
+        = state_.linear_velocity = state_.angular_velocity = 0;
 }
 
 geom::Pose SimulatorEngine::getPose() const {
@@ -77,14 +69,6 @@ void SimulatorEngine::setControl(
     setControl(velocity, acceleration, curvature);
 }
 
-void SimulatorEngine::suspend() {
-    isResumed_ = false;
-}
-
-void SimulatorEngine::resume() {
-    isResumed_ = true;
-}
-
 void SimulatorEngine::calculate_state_delta(const SimulationState &state,
     const double velocity_delta, const double &steering_delta, SimulationState &delta) {
     
@@ -95,11 +79,8 @@ void SimulatorEngine::calculate_state_delta(const SimulationState &state,
     delta.linear_velocity = velocity_delta;
 }
 
-void SimulatorEngine::updateState() {
-    const auto now = std::chrono::system_clock::now();
-    const double time = (now - last_update_).count() / 1e9;
-    last_update_ = now;
-    const double integration_step = time / params_.integration_steps;
+void SimulatorEngine::advance(const double time) {
+    const int integration_steps = time / params_.integration_step;
 
     const double old_rotation = state_.rotation;
 
@@ -115,33 +96,37 @@ void SimulatorEngine::updateState() {
         : state_.steering < steering_final
             ? params_.steering_velocity
             : -params_.steering_velocity;
-    //steering_delta = steering_delta * time / params_.integration_steps;
+    steering_delta = steering_delta * time / integration_steps;
 
     double velocity_delta = abs(control_.velocity - state_.linear_velocity) < params_.precision 
         ? 0 
         : control_.acceleration;
-    //velocity_delta = velocity_delta * time / params_.integration_steps;
+    velocity_delta = velocity_delta * time / integration_steps;
 
     SimulationState k[4];
-    for (auto i = 0; i < params_.integration_steps; ++i) {
-        if (abs(steering_final - state_.steering) - params_.precision < abs(steering_delta)) {
+    for (auto i = 0; i < integration_steps; ++i) {
+        const double steering_rest 
+            = abs(steering_final - state_.steering) - abs(steering_delta);
+        if (steering_rest < params_.precision) {
             steering_delta = steering_final - state_.steering;
         }
 
-        if (abs(control_.velocity - state_.linear_velocity) - params_.precision < abs(velocity_delta)) {
+        const double velocity_rest 
+            = abs(control_.velocity - state_.linear_velocity) - abs(velocity_delta);
+        if (velocity_rest < params_.precision) {
             velocity_delta = control_.velocity - state_.linear_velocity;
         }
         
         calculate_state_delta(state_, velocity_delta, steering_delta, k[0]);
-        calculate_state_delta(state_ + k[0] * (integration_step / 2),
+        calculate_state_delta(state_ + k[0] * (params_.integration_step / 2),
             velocity_delta, steering_delta, k[1]);
-        calculate_state_delta(state_ + k[1] * (integration_step / 2),
+        calculate_state_delta(state_ + k[1] * (params_.integration_step / 2),
             velocity_delta, steering_delta, k[2]);
-        calculate_state_delta(state_ + k[2] * integration_step,
+        calculate_state_delta(state_ + k[2] * params_.integration_step,
             velocity_delta, steering_delta, k[3]);
         k[1] *= 2;
         k[2] *= 2;
-        SimulationState::addSum(state_, k, 4, integration_step / 6);
+        SimulationState::addSum(state_, k, 4, params_.integration_step / 6);
 
         state_.rotation = fmod(state_.rotation, 2 * M_PI);
         if (state_.rotation < 0) {
@@ -152,18 +137,4 @@ void SimulatorEngine::updateState() {
     state_.angular_velocity = (state_.rotation - old_rotation) / time;
 }
 
-void SimulatorEngine::processSimulation() {
-    auto wait_time = std::chrono::duration<double>(params_.simulation_tick);
-    while (isRunning_) {
-        if (isResumed_) {
-            updateState();
-        }
-
-        std::this_thread::sleep_for(wait_time);
-    }
-
-    state_[StateIndex::angular_velocity] 
-        = (state_[StateIndex::rotation] - old_rotation) / time;
-}
-
-}  // namespace truck::simulator
+} // namespace truck::simulator
