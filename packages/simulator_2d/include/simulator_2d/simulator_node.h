@@ -4,6 +4,7 @@
 #include "geom/vector.h"
 #include "truck_msgs/msg/control.hpp"
 #include "truck_msgs/msg/hardware_telemetry.hpp"
+#include "truck_msgs/msg/simulation_state.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
@@ -50,6 +51,7 @@ class SimulatorNode : public rclcpp::Node {
         rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
         rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr normals = nullptr;
+        rclcpp::Publisher<truck_msgs::msg::SimulationState>::SharedPtr state = nullptr;
     } signals_;
 };
 

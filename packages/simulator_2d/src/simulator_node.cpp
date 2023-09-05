@@ -40,6 +40,9 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     signals_.normals = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/simulator/wheel_normals", rclcpp::QoS(1).reliability(qos));
 
+    signals_.state = Node::create_publisher<truck_msgs::msg::SimulationState>(
+        "/simulator/state", rclcpp::QoS(1).reliability(qos));
+
     engine_.start(model, this->declare_parameter("integration_step", 0.001), params_.precision);
 
     timer_ = this->create_wall_timer(
@@ -181,6 +184,13 @@ void SimulatorNode::publishSignals() {
     publishOdometryMessage(time, pose, linearVelocity, angularVelocity);
     publishTransformMessage(time, pose);
     publishTelemetryMessage(time, steering);
+
+    truck_msgs::msg::SimulationState state_msg;
+    state_msg.header.frame_id = "odom_ekf";
+    state_msg.header.stamp = time;
+    state_msg.speed = engine_.getSpeed();
+    state_msg.steering = steering.radians();
+    signals_.state->publish(state_msg);
 }
 
 }  // namespace truck::simulator

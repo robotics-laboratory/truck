@@ -15,6 +15,7 @@ class SimulatorEngine {
     void reset();
     geom::Pose getPose() const;
     geom::Angle getSteering() const;
+    double getSpeed() const;
     geom::Vec2 getLinearVelocity() const;
     geom::Vec2 getAngularVelocity() const;
     void setControl(const double velocity, const double acceleration, const double curvature);
@@ -26,13 +27,13 @@ class SimulatorEngine {
 
   private:
     Eigen::Matrix<double, 6, 1> calculate_state_delta(
-        const Eigen::Matrix<double, 6, 1> &state, const double velocity_delta,
-        const double steering_delta);
+        const Eigen::Matrix<double, 6, 1> &state, const double acceleration,
+        const double steering_velocity);
 
     struct Parameters {
         double integration_step;
         double precision;
-        double steering_velocity;
+        double max_steering_velocity;
         double wheelbase;
         double base_to_rear;
         double steering_limit;
