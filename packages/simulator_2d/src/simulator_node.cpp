@@ -10,18 +10,16 @@ using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
     auto model = model::makeUniquePtr(
-        this->get_logger(),
-        Node::declare_parameter<std::string>("model_config", "model.yaml"));
+        this->get_logger(), Node::declare_parameter<std::string>("model_config", "model.yaml"));
     const auto wheel_base = model->wheelBase();
 
     params_ = Parameters{
-        .update_period 
-            = this->declare_parameter("params_.update_period", 0.01),
+        .update_period = this->declare_parameter("update_period", 0.01),
         .show_wheel_normals = this->declare_parameter("show_wheel_normals", false),
         .wheel_x_offset = wheel_base.base_to_rear,
         .wheel_y_offset = wheel_base.width / 2,
-        .precision = this->declare_parameter("calculations_precision", 1e-8)
-    };
+        .precision = this->declare_parameter("calculations_precision", 1e-8)};
+
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
@@ -31,16 +29,13 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
         std::bind(&SimulatorNode::handleControl, this, _1));
 
     signals_.odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/ekf/odometry/filtered",
-        rclcpp::QoS(1).reliability(qos));
+        "/ekf/odometry/filtered", rclcpp::QoS(1).reliability(qos));
 
     signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
-        "/ekf/odometry/transform", 
-        rclcpp::QoS(1).reliability(qos));
+        "/ekf/odometry/transform", rclcpp::QoS(1).reliability(qos));
 
     signals_.telemetry = Node::create_publisher<truck_msgs::msg::HardwareTelemetry>(
-        "/hardware/telemetry", 
-        rclcpp::QoS(1).reliability(qos));
+        "/hardware/telemetry", rclcpp::QoS(1).reliability(qos));
 
     signals_.normals = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/simulator/wheel_normals", rclcpp::QoS(1).reliability(qos));
@@ -55,14 +50,14 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {
     if (control->has_acceleration) {
         engine_.setControl(control->velocity, control->acceleration, control->curvature);
-    }
-    else {
+    } else {
         engine_.setControl(control->velocity, control->curvature);
     }
 }
 
-void SimulatorNode::publishOdometryMessage(const rclcpp::Time &time, const geom::Pose &pose, 
-    const geom::Vec2 &linearVelocity, const geom::Vec2 &angularVelocity) {
+void SimulatorNode::publishOdometryMessage(
+    const rclcpp::Time &time, const geom::Pose &pose, const geom::Vec2 &linearVelocity,
+    const geom::Vec2 &angularVelocity) {
 
     nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.frame_id = "odom_ekf";
@@ -115,7 +110,9 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time, const geom
     signals_.telemetry->publish(telemetry_msg);
 }
 
-void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time, const geom::Angle &steering) {
+void SimulatorNode::publishWheelNormalsMessage(
+    const rclcpp::Time &time, const geom::Angle &steering) {
+
     visualization_msgs::msg::Marker normals_msg;
     normals_msg.header.frame_id = "base";
     normals_msg.id = 0;
@@ -157,7 +154,9 @@ void SimulatorNode::publishWheelNormalsMessage(const rclcpp::Time &time, const g
     normals_msg.points[6].y = params_.wheel_y_offset;
 
     // Instant turning point.
-    const double radius = 2 * params_.wheel_x_offset / tan(steering_rad); // Тут лучше брать честно длину машинки вместо 2*x_offset, упрощаю
+    const double radius =
+        2 * params_.wheel_x_offset /
+        tan(steering_rad);  // Тут лучше брать честно длину машинки вместо 2*x_offset, упрощаю
     normals_msg.points[1].x = -params_.wheel_x_offset;
     normals_msg.points[1].y = radius;
 
