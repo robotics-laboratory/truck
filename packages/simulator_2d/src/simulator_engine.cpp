@@ -7,7 +7,7 @@ namespace truck::simulator {
 
 void SimulatorEngine::start(
     std::unique_ptr<model::Model> &model, const double integration_step, const double precision) {
-
+    
     model_ = std::unique_ptr<model::Model>(std::move(model));
     params_.integration_step = integration_step;
     params_.precision = precision;
@@ -35,9 +35,7 @@ geom::Angle SimulatorEngine::getSteering() const {
     return geom::Angle(state_[StateIndex::steering]);
 }
 
-double SimulatorEngine::getSpeed() const {
-    return state_[StateIndex::linear_velocity];
-}
+double SimulatorEngine::getSpeed() const { return state_[StateIndex::linear_velocity]; }
 
 geom::Vec2 SimulatorEngine::getLinearVelocity() const {
     return geom::Vec2(
@@ -51,7 +49,7 @@ geom::Vec2 SimulatorEngine::getAngularVelocity() const {
 
 void SimulatorEngine::setControl(
     const double velocity, const double acceleration, const double curvature) {
-
+    
     control_.velocity = model_->baseVelocityLimits().clamp(velocity);
     control_.acceleration = model_->baseAccelerationLimits().clamp(acceleration);
     const auto curvature_limit = model_->baseMaxAbsCurvature();
@@ -72,7 +70,7 @@ void SimulatorEngine::setControl(const double velocity, const double curvature) 
 Eigen::Matrix<double, 6, 1> SimulatorEngine::calculate_state_delta(
     const Eigen::Matrix<double, 6, 1> &state, const double acceleration,
     const double steering_velocity) {
-
+    
     Eigen::Matrix<double, 6, 1> delta;
     delta[StateIndex::x] = cos(state[StateIndex::rotation]) * state[StateIndex::linear_velocity];
     delta[StateIndex::y] = sin(state[StateIndex::rotation]) * state[StateIndex::linear_velocity];
@@ -88,33 +86,32 @@ void SimulatorEngine::advance(const double time) {
 
     const double old_rotation = state_[StateIndex::rotation];
 
-    const double steering_final =
-        abs(control_.curvature) < params_.precision
-            ? 0
-            : std::clamp(atan(params_.wheelbase * control_.curvature),
-                  -params_.steering_limit,
-                  +params_.steering_limit);
+    const double steering_final = abs(control_.curvature) < params_.precision
+                                      ? 0
+                                      : std::clamp(
+                                            atan(params_.wheelbase * control_.curvature),
+                                            -params_.steering_limit,
+                                            +params_.steering_limit);
 
     double steering_rest = abs(steering_final - state_[StateIndex::steering]);
     double steering_velocity = steering_rest < params_.precision ? 0
-                            : state_[StateIndex::steering] < steering_final
-                                ? params_.max_steering_velocity
-                                : -params_.max_steering_velocity;
+                               : state_[StateIndex::steering] < steering_final
+                                   ? params_.max_steering_velocity
+                                   : -params_.max_steering_velocity;
 
     double velocity_rest = abs(control_.velocity - state_[StateIndex::linear_velocity]);
     double acceleration = velocity_rest < params_.precision ? 0 : control_.acceleration;
 
     for (auto i = 0; i < integration_steps; ++i) {
-        steering_rest = abs(steering_final - state_[StateIndex::steering]) 
-            - abs(steering_velocity) * params_.integration_step / 6;
+        steering_rest = abs(steering_final - state_[StateIndex::steering]) -
+                        abs(steering_velocity) * params_.integration_step / 6;
         if (steering_rest < params_.precision) {
             state_[StateIndex::steering] = steering_final;
             steering_velocity = 0;
         }
 
-        velocity_rest =
-            abs(control_.velocity - state_[StateIndex::linear_velocity]) 
-            - abs(acceleration) * params_.integration_step / 6;
+        velocity_rest = abs(control_.velocity - state_[StateIndex::linear_velocity]) -
+                        abs(acceleration) * params_.integration_step / 6;
         if (velocity_rest < params_.precision) {
             state_[StateIndex::linear_velocity] = control_.velocity;
             acceleration = 0;

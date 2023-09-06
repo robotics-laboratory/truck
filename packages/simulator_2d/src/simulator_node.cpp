@@ -9,17 +9,6 @@ namespace truck::simulator {
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
-    auto model = model::makeUniquePtr(
-        this->get_logger(), Node::declare_parameter<std::string>("model_config", "model.yaml"));
-    const auto wheel_base = model->wheelBase();
-
-    params_ = Parameters{
-        .update_period = this->declare_parameter("update_period", 0.01),
-        .show_wheel_normals = this->declare_parameter("show_wheel_normals", false),
-        .wheel_x_offset = wheel_base.base_to_rear,
-        .wheel_y_offset = wheel_base.width / 2,
-        .precision = this->declare_parameter("calculations_precision", 1e-8)};
-
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
@@ -37,12 +26,15 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     signals_.telemetry = Node::create_publisher<truck_msgs::msg::HardwareTelemetry>(
         "/hardware/telemetry", rclcpp::QoS(1).reliability(qos));
 
-    signals_.normals = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/simulator/wheel_normals", rclcpp::QoS(1).reliability(qos));
-
     signals_.state = Node::create_publisher<truck_msgs::msg::SimulationState>(
         "/simulator/state", rclcpp::QoS(1).reliability(qos));
 
+    params_ = Parameters{
+        .update_period = this->declare_parameter("update_period", 0.01),
+        .precision = this->declare_parameter("calculations_precision", 1e-8)};
+
+    auto model = model::makeUniquePtr(
+        this->get_logger(), Node::declare_parameter<std::string>("model_config", "model.yaml"));
     engine_.start(model, this->declare_parameter("integration_step", 0.001), params_.precision);
 
     timer_ = this->create_wall_timer(
@@ -113,61 +105,15 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time, const geom
     signals_.telemetry->publish(telemetry_msg);
 }
 
-void SimulatorNode::publishWheelNormalsMessage(
-    const rclcpp::Time &time, const geom::Angle &steering) {
+void SimulatorNode::publishSimulationStateMessafe(const rclcpp::Time &time, 
+        const double speed, const geom::Angle &steering) {
 
-    visualization_msgs::msg::Marker normals_msg;
-    normals_msg.header.frame_id = "base";
-    normals_msg.id = 0;
-    normals_msg.type = visualization_msgs::msg::Marker::LINE_LIST;
-    normals_msg.action = visualization_msgs::msg::Marker::ADD;
-    normals_msg.lifetime = rclcpp::Duration::from_seconds(0);
-    normals_msg.scale.x = 0.05;
-    normals_msg.color.a = 1.0;
-    normals_msg.color.r = 0.6;
-    normals_msg.header.stamp = time;
-
-    const double steering_rad = steering.radians();
-    if (abs(steering_rad) < params_.precision) {
-        normals_msg.points.clear();
-        signals_.normals->publish(normals_msg);
-        return;
-    }
-
-    normals_msg.points.resize(8);
-    for (auto i = 0; i < 8; ++i) {
-        normals_msg.points[i].x = 0;
-        normals_msg.points[i].y = 0;
-    }
-
-    // Front right wheel.
-    normals_msg.points[0].x = params_.wheel_x_offset;
-    normals_msg.points[0].y = -params_.wheel_y_offset;
-
-    // Front left wheel
-    normals_msg.points[2].x = params_.wheel_x_offset;
-    normals_msg.points[2].y = params_.wheel_y_offset;
-
-    // Rear right wheel.
-    normals_msg.points[4].x = -params_.wheel_x_offset;
-    normals_msg.points[4].y = -params_.wheel_y_offset;
-
-    // Rear left wheel.
-    normals_msg.points[6].x = -params_.wheel_x_offset;
-    normals_msg.points[6].y = params_.wheel_y_offset;
-
-    // Instant turning point.
-    const double radius =
-        2 * params_.wheel_x_offset /
-        tan(steering_rad);
-    normals_msg.points[1].x = -params_.wheel_x_offset;
-    normals_msg.points[1].y = radius;
-
-    for (auto i = 3; i < 8; i += 2) {
-        normals_msg.points[i] = normals_msg.points[1];
-    }
-
-    signals_.normals->publish(normals_msg);
+    truck_msgs::msg::SimulationState state_msg;
+    state_msg.header.frame_id = "odom_ekf";
+    state_msg.header.stamp = time;
+    state_msg.speed = speed;
+    state_msg.steering = steering.radians();
+    signals_.state->publish(state_msg);
 }
 
 void SimulatorNode::publishSignals() {
@@ -176,21 +122,12 @@ void SimulatorNode::publishSignals() {
     const auto steering = engine_.getSteering();
     const auto linearVelocity = engine_.getLinearVelocity();
     const auto angularVelocity = engine_.getAngularVelocity();
+    const auto speed = engine_.getSpeed();
     const auto time = now();
-    if (params_.show_wheel_normals) {
-        publishWheelNormalsMessage(time, steering);
-    }
-
     publishOdometryMessage(time, pose, linearVelocity, angularVelocity);
     publishTransformMessage(time, pose);
     publishTelemetryMessage(time, steering);
-
-    truck_msgs::msg::SimulationState state_msg;
-    state_msg.header.frame_id = "odom_ekf";
-    state_msg.header.stamp = time;
-    state_msg.speed = engine_.getSpeed();
-    state_msg.steering = steering.radians();
-    signals_.state->publish(state_msg);
+    publishSimulationStateMessafe(time, speed, steering);
 }
 
 }  // namespace truck::simulator
