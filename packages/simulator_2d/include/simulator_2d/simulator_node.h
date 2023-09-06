@@ -8,7 +8,6 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
-#include <visualization_msgs/msg/marker.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -27,7 +26,8 @@ class SimulatorNode : public rclcpp::Node {
         const geom::Vec2 &angularVelocity);
     void publishTransformMessage(const rclcpp::Time &time, const geom::Pose &pose);
     void publishTelemetryMessage(const rclcpp::Time &time, const geom::Angle &steering);
-    void publishWheelNormalsMessage(const rclcpp::Time &time, const geom::Angle &steering);
+    void publishSimulationStateMessafe(const rclcpp::Time &time, 
+        const double speed, const geom::Angle &steering);
     void publishSignals();
 
     SimulatorEngine engine_;
@@ -36,9 +36,6 @@ class SimulatorNode : public rclcpp::Node {
 
     struct Parameters {
         double update_period;
-        bool show_wheel_normals;
-        double wheel_x_offset;
-        double wheel_y_offset;
         double precision;
     } params_;
 
@@ -50,7 +47,6 @@ class SimulatorNode : public rclcpp::Node {
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
         rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
         rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr normals = nullptr;
         rclcpp::Publisher<truck_msgs::msg::SimulationState>::SharedPtr state = nullptr;
     } signals_;
 };

@@ -35,5 +35,3 @@ launch:
     - {name: "integration_step", value: 0.001}
     # precision of calculations
     - {name: "calculations_precision", value: 0.00000001}
-    # wheel normals (radii) marker
-    - {name: "show_wheel_normals", value: true}
