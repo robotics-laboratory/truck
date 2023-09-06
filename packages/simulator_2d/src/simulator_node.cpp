@@ -159,7 +159,7 @@ void SimulatorNode::publishWheelNormalsMessage(
     // Instant turning point.
     const double radius =
         2 * params_.wheel_x_offset /
-        tan(steering_rad);  // Тут лучше брать честно длину машинки вместо 2*x_offset, упрощаю
+        tan(steering_rad);
     normals_msg.points[1].x = -params_.wheel_x_offset;
     normals_msg.points[1].y = radius;
 
