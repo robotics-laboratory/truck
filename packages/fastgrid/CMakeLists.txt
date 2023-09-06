@@ -47,7 +47,10 @@ if(BUILD_TESTING)
     add_subdirectory("test")
 
     find_package(ament_cmake_google_benchmark REQUIRED)
-    add_subdirectory("benchmark")
+    ament_add_google_benchmark(${PROJECT_NAME}_benchmark benchmark/main.cpp)
+    if (TARGET ${PROJECT_NAME}_benchmark)
+        target_link_libraries(${PROJECT_NAME}_benchmark ${PROJECT_NAME})
+    endif()
 endif()
 
 ament_package()
