@@ -41,7 +41,8 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
         Limits<double>{
             this->declare_parameter("camera_view_hmin", -0.05),
             this->declare_parameter("camera_view_hmax", 0.01)
-        }
+        },
+        this->declare_parameter("camera_view_distance", 2.0)
     };
 
     RCLCPP_INFO(this->get_logger(), "frame_id: %s", params_.frame_id.c_str());
@@ -50,9 +51,10 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
     RCLCPP_INFO(this->get_logger(), "enable_camera_cloud: %d", params_.enable_camera_cloud);
     RCLCPP_INFO(this->get_logger(), "enable_lidar_grid: %d", params_.enable_lidar_grid);
     RCLCPP_INFO(this->get_logger(), "enable_camera_grid: %d", params_.enable_camera_grid);
+    RCLCPP_INFO(this->get_logger(), "camera_view_distance: %.2f", params_.camera_view_distance);
     RCLCPP_INFO(
         this->get_logger(),
-        "camera_view_height: [%.2f, %.2f]m",
+        "camera_view_height: [%.3f, %.3f]m",
         params_.camera_view_height.min,
         params_.camera_view_height.max);
 
@@ -206,18 +208,18 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
     odom_cloud->header.frame_id = to_id;
     odom_cloud->header.stamp = image->header.stamp;
 
-    odom_cloud->height = depth_map->image.rows;
-    odom_cloud->width = depth_map->image.cols;
     odom_cloud->is_dense = false;
     odom_cloud->is_bigendian = false;
 
     sensor_msgs::PointCloud2Modifier pcd_modifier(*odom_cloud);
     pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
-
+    pcd_modifier.resize(image->height * image->width);
+    
     sensor_msgs::PointCloud2Iterator<float> x(*odom_cloud, "x");
     sensor_msgs::PointCloud2Iterator<float> y(*odom_cloud, "y");
     sensor_msgs::PointCloud2Iterator<float> z(*odom_cloud, "z");
 
+    size_t point_n = 0;
     for (int v = 0; v < depth_map->image.rows; ++v) {
         for (int u = 0; u < depth_map->image.cols; ++u) {
             const auto depth = depth_map->image.at<uint16_t>(v, u);
@@ -229,9 +231,13 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
             const auto point = DepthTraits::toMeters(depth) * model.projectPixelTo3dRay(image_point);
 
             const auto vec = tf2::Vector3{point.x, point.y, point.z};
+            if (vec.z() > params_.camera_view_distance) {
+                continue;
+            }
+
             const auto odom_vec = tf(vec);
 
-            if (params_.camera_view_height.isMet(odom_vec.z())){
+            if (!params_.camera_view_height.isMet(odom_vec.z())){
                 continue;
             }
 
@@ -239,12 +245,15 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
             *y = odom_vec.y();
             *z = odom_vec.z();
 
+            ++point_n;
             ++x;
             ++y;
             ++z;
         }
     }
-
+    pcd_modifier.resize(point_n);
+    odom_cloud->height = 1;
+    odom_cloud->width = point_n;
     state_.odom_camera_points = std::move(odom_cloud);
     publishOccupancyGrid();
 

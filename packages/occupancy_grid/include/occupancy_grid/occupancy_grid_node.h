@@ -44,11 +44,12 @@ class OccupancyGridNode : public rclcpp::Node {
     struct Params {
         std::string frame_id = "ekd_odom";
         double resolution = 0.1;
-        double radius = 20;
+        double radius = 20; 
         bool enable_lidar_grid = false;
         bool enable_camera_grid = false;
         bool enable_camera_cloud = false;
-        Limits<double> camera_view_height = {-0.05, 0.05};
+        Limits<double> camera_view_height = {-0.165, 0.15};
+        double camera_view_distance = 2;
     } params_{};
 
     struct Slots {
