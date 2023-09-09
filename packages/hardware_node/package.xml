@@ -7,7 +7,7 @@
   <license>MIT</license>
 
   <exec_depend>rclpy</exec_depend>
-  <exec_depend>truck_interfaces</exec_depend>
+  <exec_depend>truck_msgs</exec_depend>
   <exec_depend>model</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
 
