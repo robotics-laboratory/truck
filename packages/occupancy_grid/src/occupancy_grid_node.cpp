@@ -155,7 +155,7 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
         }
 
         const geom::Angle angle(scan->angle_min + k * scan->angle_increment);
-        const geom::Vec2 base_point = range * geom::Vec2(angle);
+        const geom::Vec2 base_point = range * geom::Vec2::fromAngle(angle);
         const geom::Vec2 odom_point = tf.apply(base_point);
         *x = odom_point.x;
         *y = odom_point.y;

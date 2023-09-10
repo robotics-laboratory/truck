@@ -1,56 +1,88 @@
 #include <gtest/gtest.h>
 
 #include "geom/test/equal_assert.h"
-#include "geom/common.h"
-#include "geom/vector.h"
-#include "geom/line.h"
-#include "geom/distance.h"
+#include "geom/angle.h"
+#include "geom/angle_vector.h"
 #include "geom/arc.h"
+#include "geom/distance.h"
+#include "geom/common.h"
+#include "geom/line.h"
+#include "geom/vector.h"
+
+#include <sstream>
 
 using namespace truck::geom;
 
-TEST(Vector, addition) {
-    const Vec2 a = {1, 2};
-    const Vec2 b = {4, 8};
+TEST(Angle, constructor) {
+    const auto a = Angle::fromRadians(0);
+    const auto b = Angle::fromDegrees(90);
+    const auto c = Angle::fromVector(-1, 0);
 
-    const auto c = a + b;
-    ASSERT_GEOM_EQUAL(c.x, a.x + b.x);
-    ASSERT_GEOM_EQUAL(c.y, a.y + b.y);
+    constexpr double eps = 1e-9;
 
-    const auto d = a - b;
-    ASSERT_GEOM_EQUAL(d.x, a.x - b.x);
-    ASSERT_GEOM_EQUAL(d.y, a.y - b.y);
+    ASSERT_GEOM_EQUAL(a, PI0, eps);
+    ASSERT_GEOM_EQUAL(b, PI_2, eps);
+    ASSERT_GEOM_EQUAL(c, PI, eps);
 }
 
-TEST(Vector, multiplication) {
-    const Vec2 a = {42, 84};
-    const double c = 42;
+TEST(Angle, coversion) {
+    const auto a = PI_2;
 
-    const auto b = a * c;
-    ASSERT_GEOM_EQUAL(b.x, a.x * c);
-    ASSERT_GEOM_EQUAL(b.y, a.y * c);
+    constexpr double eps = 1e-9;
 
-    const auto d = c * a;
-    ASSERT_GEOM_EQUAL(d.x, a.x * c);
-    ASSERT_GEOM_EQUAL(d.y, a.y * c);
+    ASSERT_GEOM_EQUAL(a.radians(), M_PI / 2, eps);
+    ASSERT_GEOM_EQUAL(a.degrees(), 90.0, eps);
 }
 
-TEST(Vector, division) {
-    const Vec2 a = {1, 2};
-    const double c = 42;
+TEST(Angle, literals) {
+    using namespace truck::geom::literals;
 
-    const auto b = a / c;
-    ASSERT_GEOM_EQUAL(b.x, a.x / c);
-    ASSERT_GEOM_EQUAL(b.y, a.y / c);
+    const auto a = 0_rad;
+    const auto b = 90_deg;
+
+    constexpr double eps = 1e-9;
+
+    ASSERT_GEOM_EQUAL(a, PI0, eps);
+    ASSERT_GEOM_EQUAL(b, PI_2, eps);
 }
 
-TEST(Vector, compare) {
-    const Vec2 a = {1, 3};
-    const Vec2 b = {1.001, 2.999};
+TEST(Angle, print) {
+    std::stringstream ss;
+    ss << Angle::fromDegrees(90);
+    ASSERT_EQ(ss.str(), "90.00'");
+}
 
-    ASSERT_GEOM_NOT_EQUAL(a, b);
-    ASSERT_GEOM_NOT_EQUAL(a, b, 1e-5);
-    ASSERT_GEOM_EQUAL(a, b, 1e-2);
+TEST(Angle, normalization) {
+    const auto a = Angle::fromDegrees(90);
+    const auto b = Angle::fromDegrees(360 + 45);
+    const auto c = Angle::fromDegrees(-2 * 360 - 45);
+
+    constexpr double eps = 1e-9;
+
+    ASSERT_GEOM_EQUAL(a._0_2PI(), PI_2, eps);
+    ASSERT_GEOM_EQUAL(b._0_2PI(), PI_4, eps);
+    ASSERT_GEOM_EQUAL(c._0_2PI(), 7 * PI_4, eps);
+
+    ASSERT_GEOM_EQUAL(a._mPI_PI(), PI_2, eps);
+    ASSERT_GEOM_EQUAL(b._mPI_PI(), PI_4, eps);
+    ASSERT_GEOM_EQUAL(c._mPI_PI(), -PI_4, eps);
+}
+
+TEST(Vector, constructor) {
+    const auto a = Vec2{1, 3};
+    const auto b = Vec2::fromAngle(PI_2);
+    const auto c = Vec2(AngleVec2(PI));
+
+    constexpr double eps = 1e-9;
+
+    ASSERT_GEOM_EQUAL(a.x, 1., eps);
+    ASSERT_GEOM_EQUAL(a.y, 3., eps);
+
+    ASSERT_GEOM_EQUAL(b.x, 0., eps);
+    ASSERT_GEOM_EQUAL(b.y, 1., eps);
+
+    ASSERT_GEOM_EQUAL(c.x, -1., eps);
+    ASSERT_GEOM_EQUAL(c.y, 0., eps);
 }
 
 TEST(Vector, len) {
@@ -67,21 +99,87 @@ TEST(Vector, len) {
 TEST(Vector, rotate) {
     const Vec2 v = {1, 1};
 
-    ASSERT_GEOM_EQUAL(v.rotate(PI / 2), Vec2{-1, 1}, 1e-9);
-    ASSERT_GEOM_EQUAL(v.rotate(-PI / 2), Vec2{1, -1}, 1e-9);
-    ASSERT_GEOM_EQUAL(v.rotate(PI), -v, 1e-9);
-    ASSERT_GEOM_EQUAL(v.rotate(PI * 4), v, 1e-9);
+    const AngleVec2 a = PI_2;
+    const AngleVec2 b = -PI_2;
+    const AngleVec2 c = PI;
+    const AngleVec2 d = PI * 4;
+
+    constexpr double eps = 1e-9;
+
+    ASSERT_GEOM_EQUAL(a.apply(v), Vec2{-1, 1}, eps);
+    ASSERT_GEOM_EQUAL(b.apply(v), Vec2{1, -1}, eps);
+    ASSERT_GEOM_EQUAL(c.apply(v), -v, eps);
+    ASSERT_GEOM_EQUAL(d.apply(v), v, eps);
 }
 
-TEST(Vector, radians) {
+TEST(Vector, to_angle_vector) {
     const Vec2 a = {1, 1};
-    ASSERT_GEOM_EQUAL(a.angle(), PI / 4, 1e-9);
-
     const Vec2 b = {-10, 0};
-    ASSERT_GEOM_EQUAL(b.angle(), PI, 1e-9);
-
     const Vec2 c = {0, -0.5};
-    ASSERT_GEOM_EQUAL(c.angle(), -PI / 2, 1e-9);
+
+    ASSERT_GEOM_EQUAL(AngleVec2::fromVector(a), AngleVec2(PI_4), 1e-9);
+    ASSERT_GEOM_EQUAL(AngleVec2::fromVector(b), AngleVec2(PI), 1e-9);
+    ASSERT_GEOM_EQUAL(AngleVec2::fromVector(c), AngleVec2(-PI_2), 1e-9);
+}
+
+TEST(AngleVec2, constructor) {
+    const auto a = AngleVec2::fromVector(1, 1);
+    const auto b = AngleVec2(PI_6);
+
+    constexpr double eps = 1e-9;
+
+    ASSERT_GEOM_EQUAL(a.angle(), PI_4, eps);
+    ASSERT_GEOM_EQUAL(a.x(), std::sqrt(2) / 2, eps);
+    ASSERT_GEOM_EQUAL(a.y(), std::sqrt(2) / 2, eps);
+
+    ASSERT_GEOM_EQUAL(b.angle(), PI_6, eps);
+    ASSERT_GEOM_EQUAL(b.x(), std::sqrt(3) / 2, eps);
+    ASSERT_GEOM_EQUAL(b.y(), 0.5, eps);
+}
+
+TEST(AngleVec2, operation) {
+    const auto a = AngleVec2(PI_2);
+    const auto b = AngleVec2(PI_2);
+
+    const auto sum = a + b;
+    const auto diff = a - b;
+    const auto inv = a.inv();
+
+    constexpr double eps = 1e-9;
+
+    ASSERT_GEOM_EQUAL(sum.angle(), PI, eps);
+    ASSERT_GEOM_EQUAL(sum.x(), -1., eps);
+    ASSERT_GEOM_EQUAL(sum.y(), 0., eps);
+
+    ASSERT_GEOM_EQUAL(diff.angle(), PI0, eps);
+    ASSERT_GEOM_EQUAL(diff.x(), 1., eps);
+    ASSERT_GEOM_EQUAL(diff.y(), 0., eps);
+
+    ASSERT_GEOM_EQUAL(inv.angle(), -PI_2, eps);
+    ASSERT_GEOM_EQUAL(inv.x(), 0., eps);
+    ASSERT_GEOM_EQUAL(inv.y(), -1., eps);
+}
+
+TEST(AngleVec2, rotate) {
+    const auto a = AngleVec2(Angle::zero());
+
+    const auto left = a.left();
+    const auto right = a.right();
+    const auto inv = AngleVec2(-PI).apply(a);
+
+    constexpr double eps = 1e-9;
+
+    ASSERT_GEOM_EQUAL(left.angle(), PI_2, eps);
+    ASSERT_GEOM_EQUAL(left.x(), 0., eps);
+    ASSERT_GEOM_EQUAL(left.y(), 1., eps);
+
+    ASSERT_GEOM_EQUAL(right.angle(), -PI_2, eps);
+    ASSERT_GEOM_EQUAL(right.x(), 0., eps);
+    ASSERT_GEOM_EQUAL(right.y(), -1., eps);
+
+    ASSERT_GEOM_EQUAL(inv.angle(), -PI, eps);
+    ASSERT_GEOM_EQUAL(inv.x(), -1., eps);
+    ASSERT_GEOM_EQUAL(inv.y(), 0., eps);
 }
 
 TEST(Line, make) {
@@ -122,7 +220,7 @@ TEST(Arc, try_build_arc) {
     {
         /* begin and end are to close */
 
-        const Pose begin{.pos = {0, 0}, .dir = {1, 0}};
+        const Pose begin{.pos = {0, 0}, .dir = AngleVec2::fromVector(1, 0)};
         const Vec2 end = {0, eps};
 
         const auto result = tryBuildArc(begin, end);
@@ -132,7 +230,7 @@ TEST(Arc, try_build_arc) {
     {
         /* begin.dir and vector (begin, end) are counterdirected  */
 
-        const Pose begin{.pos = {0, 0}, .dir = {-1, 0}};
+        const Pose begin{.pos = {0, 0}, .dir = AngleVec2::fromVector(-1, 0)};
         const Vec2 end = {1, 0};
 
         const auto result = tryBuildArc(begin, end);
@@ -142,7 +240,7 @@ TEST(Arc, try_build_arc) {
     {
         /* begin.dir and vector (begin, end) are codirected  */
 
-        const Pose begin{.pos = {0, 0}, .dir = {1, 0}};
+        const Pose begin{.pos = {0, 0}, .dir = AngleVec2::fromVector(1, 0)};
         const Vec2 end = {1, 0};
 
         const auto result = tryBuildArc(begin, end);
@@ -156,7 +254,7 @@ TEST(Arc, try_build_arc) {
     {
         /* positive arc more less than PI */
 
-        const Pose begin{.pos = {0, -1}, .dir = {1, 0}};
+        const Pose begin{.pos = {0, -1}, .dir = AngleVec2::fromVector(1, 0)};
         const Vec2 end = {1, 0};
 
         const auto result = tryBuildArc(begin, end);
@@ -173,7 +271,7 @@ TEST(Arc, try_build_arc) {
     {
         /* negative arc less than PI */
 
-        const Pose from{.pos = {0, 1}, .dir = {1, 0}};
+        const Pose from{.pos = {0, 1}, .dir = AngleVec2::fromVector(1, 0)};
         const Vec2 to = {1, 0};
 
         const auto result = tryBuildArc(from, to);
@@ -189,7 +287,7 @@ TEST(Arc, try_build_arc) {
     {
         /* positive arc more than PI */
 
-        const Pose from{.pos = {0, -1}, .dir = {1, 0}};
+        const Pose from{.pos = {0, -1}, .dir = AngleVec2::fromVector(1, 0)};
         const Vec2 to = {-1, 0};
 
         const auto result = tryBuildArc(from, to);
@@ -205,7 +303,7 @@ TEST(Arc, try_build_arc) {
     {
         /* negative arc more than PI */
 
-        const Pose from{.pos = {-1, 0}, .dir = {0, 1}};
+        const Pose from{.pos = {-1, 0}, .dir = AngleVec2::fromVector(0, 1)};
         const Vec2 to = {0, -1};
 
         const auto result = tryBuildArc(from, to);

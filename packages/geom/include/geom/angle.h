@@ -7,11 +7,9 @@ namespace truck::geom {
 
 class Angle {
   public:
-    constexpr Angle() : value_(0) {}
+    constexpr Angle() = default;
 
-    explicit constexpr Angle(double rad) : value_(rad) {}
-
-    explicit operator double() noexcept { return value_; }
+    constexpr explicit Angle(double rad) : value_(rad) {}
 
     static constexpr Angle fromRadians(double rad) noexcept { return Angle{rad}; }
 
@@ -35,12 +33,22 @@ class Angle {
 
     constexpr Angle operator-() const noexcept { return Angle{-value_}; }
 
-    constexpr Angle& operator*=(double x) noexcept {
+    Angle& operator+=(Angle other) noexcept {
+        value_ += other.value_;
+        return *this;
+    }
+
+    Angle& operator-=(Angle other) noexcept {
+        value_ -= other.value_;
+        return *this;
+    }
+
+    Angle& operator*=(double x) noexcept {
         value_ *= x;
         return *this;
     }
 
-    constexpr Angle& operator/=(double x) {
+    Angle& operator/=(double x) {
         value_ /= x;
         return *this;
     }
@@ -58,60 +66,50 @@ class Angle {
     }
 
   private:
-    double value_;
+    double value_{0};
 };
 
 namespace literals {
 
-inline constexpr Angle operator"" _rad(unsigned long long radians) {
-    return Angle::fromRadians(radians);
-}
+constexpr Angle operator"" _rad(unsigned long long radians) { return Angle::fromRadians(radians); }
+constexpr Angle operator"" _rad(long double radians) { return Angle::fromRadians(radians); }
 
-inline constexpr Angle operator"" _rad(long double radians) { return Angle::fromRadians(radians); }
-
-inline constexpr Angle operator"" _deg(unsigned long long degrees) {
-    return Angle::fromDegrees(degrees);
-}
-
-inline constexpr Angle operator"" _deg(long double degrees) { return Angle::fromDegrees(degrees); }
+constexpr Angle operator"" _deg(unsigned long long degrees) { return Angle::fromDegrees(degrees); }
+constexpr Angle operator"" _deg(long double degrees) { return Angle::fromDegrees(degrees); }
 
 }  // namespace literals
 
-inline constexpr Angle asin(double x) noexcept { return Angle{std::asin(x)}; }
+constexpr Angle asin(double x) noexcept { return Angle{std::asin(x)}; }
 
-inline constexpr Angle acos(double x) noexcept { return Angle{std::acos(x)}; }
+constexpr Angle acos(double x) noexcept { return Angle{std::acos(x)}; }
 
-inline constexpr Angle atan(double x) noexcept { return Angle{std::atan(x)}; }
+constexpr Angle atan(double x) noexcept { return Angle{std::atan(x)}; }
 
-inline constexpr Angle atan(double x, double y) noexcept { return Angle{std::atan2(x, y)}; }
+constexpr Angle atan(double x, double y) noexcept { return Angle{std::atan2(x, y)}; }
 
-inline constexpr Angle operator+(Angle a, Angle b) noexcept {
-    return Angle{a.radians() + b.radians()};
-}
+constexpr Angle operator+(Angle a, Angle b) noexcept { return Angle{a.radians() + b.radians()}; }
 
-inline constexpr Angle operator-(Angle a, Angle b) noexcept {
-    return Angle{a.radians() - b.radians()};
-}
+constexpr Angle operator-(Angle a, Angle b) noexcept { return Angle{a.radians() - b.radians()}; }
 
-inline constexpr Angle operator*(double v, Angle a) noexcept { return Angle{v * a.radians()}; }
+constexpr Angle operator*(double v, Angle a) noexcept { return Angle{v * a.radians()}; }
 
-inline constexpr Angle operator*(Angle a, double v) noexcept { return v * a; }
+constexpr Angle operator*(Angle a, double v) noexcept { return v * a; }
 
-inline constexpr Angle operator/(Angle a, double v) noexcept { return Angle{a.radians() / v}; }
+constexpr Angle operator/(Angle a, double v) noexcept { return Angle{a.radians() / v}; }
 
-inline constexpr bool operator<(Angle left, Angle right) noexcept {
+constexpr bool operator<(Angle left, Angle right) noexcept {
     return left.radians() < right.radians();
 }
 
-inline constexpr bool operator<=(Angle left, Angle right) noexcept {
+constexpr bool operator<=(Angle left, Angle right) noexcept {
     return left.radians() <= right.radians();
 }
 
-inline constexpr bool operator>(Angle left, Angle right) noexcept {
+constexpr bool operator>(Angle left, Angle right) noexcept {
     return left.radians() > right.radians();
 }
 
-inline constexpr bool operator>=(Angle left, Angle right) noexcept {
+constexpr bool operator>=(Angle left, Angle right) noexcept {
     return left.radians() >= right.radians();
 }
 
@@ -120,6 +118,7 @@ bool equal(Angle a, Angle b, double eps) noexcept;
 std::ostream& operator<<(std::ostream& out, const Angle& angle) noexcept;
 
 constexpr Angle PI = Angle(M_PI);
+constexpr Angle PI0 = Angle::zero();
 constexpr Angle PI2 = 2 * PI;
 constexpr Angle PI_2 = PI / 2;
 constexpr Angle PI_3 = PI / 3;

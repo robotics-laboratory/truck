@@ -1,11 +1,11 @@
 #include "geom/segment.h"
-#include "geom/bezue.h"
+#include "geom/bezier.h"
 
 #include "common/math.h"
 
 namespace truck::geom {
 
-Poses Segment::trace(double step) const noexcept { return bezue1(begin, end, step); }
+Poses Segment::trace(double step) const noexcept { return bezier1(begin, end, step); }
 
 Vec2 Segment::pos(double t) const noexcept {
     t = clamp(t, 0.0, 1.0);

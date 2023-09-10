@@ -12,8 +12,9 @@ find_package(tf2)
 add_library(
     ${PROJECT_NAME} SHARED
     src/angle.cpp
+    src/angle_vector.cpp
     src/arc.cpp
-    src/bezue.cpp
+    src/bezier.cpp
     src/circle.cpp
     src/distance.cpp
     src/line.cpp
