@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geom/angle_vector.h"
 #include "geom/vector.h"
 
 #include <ostream>
@@ -7,15 +8,21 @@
 
 namespace truck::geom {
 
+/*
+ * Position of rigid body in 2D space.
+ *
+ * The pose is a combination of position (translation) and orientation (rotation).
+ */
+
 struct Pose {
-    Pose() : pos(Vec2()), dir(Vec2()) {}
+    constexpr Pose() = default;
 
-    Pose(const Vec2& pos, const Vec2& dir) : pos(pos), dir(dir) {}
+    constexpr Pose(Vec2 pos, AngleVec2 dir) : pos(pos), dir(dir) {}
 
-    operator Vec2() const { return pos; }
+    constexpr operator Vec2() const { return pos; }
 
-    Vec2 pos;
-    Vec2 dir;
+    Vec2 pos{};
+    AngleVec2 dir{};
 };
 
 std::ostream& operator<<(std::ostream& out, const Pose& pose) noexcept;

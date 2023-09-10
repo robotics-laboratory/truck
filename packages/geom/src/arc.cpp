@@ -47,18 +47,19 @@ Poses Arc::trace(double step) const {
     VERIFY(step > 0);
 
     const size_t n = 1 + ceil<size_t>(len() / step);
-    const Angle angle_step = delta / n;
+    const AngleVec2 angle_step(delta / n);
 
     Vec2 radius_vec = radius * begin;
-    Vec2 dir = ccw() > 0 ? begin.left() : begin.right();
+
+    auto dir = AngleVec2::fromVector(ccw() > 0 ? begin.left() : begin.right());
 
     Poses poses;
     poses.reserve(n);
 
     for (size_t i = 0; i < n; ++i) {
         poses.emplace_back(center + radius_vec, dir);
-        radius_vec = radius_vec.rotate(angle_step);
-        dir = dir.rotate(angle_step);
+        radius_vec = angle_step.apply(radius_vec);
+        dir = angle_step.apply(dir);
     }
 
     return poses;

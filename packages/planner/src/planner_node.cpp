@@ -51,8 +51,8 @@ PlannerNode::PlannerNode() : Node("planner") {
     signal_.graph = this->create_publisher<visualization_msgs::msg::Marker>("/graph", 10);
 
     search::GridParams grid_params = search::GridParams{
-        .width = this->declare_parameter<int>("grid/nodes/width"),
-        .height = this->declare_parameter<int>("grid/nodes/height"),
+        .width = this->declare_parameter<int>("grid/nodes/width", 40),
+        .height = this->declare_parameter<int>("grid/nodes/height", 40),
         .resolution = this->declare_parameter<double>("grid/resolution"),
         .finish_area_radius = this->declare_parameter<double>("grid/finish_area_radius"),
         .min_obstacle_distance = this->declare_parameter<double>("grid/min_obstacle_distance"),

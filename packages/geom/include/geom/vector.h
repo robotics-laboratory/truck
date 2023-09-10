@@ -3,16 +3,25 @@
 #include "geom/angle.h"
 
 #include <cmath>
+#include <math.h>
 #include <ostream>
 
 namespace truck::geom {
+
+/* 2D vector
+ *
+ * Represents a point or vector using double-precision x and y coordinates.
+ * For storing angles, it is recommended to use the Angle class.
+ * However, if you need to represent directions efficiently,
+ * consider using the AngleVec2 class, which is optimized for that purpose.
+ */
 
 struct Vec2 {
     constexpr Vec2() : x(0), y(0) {}
 
     constexpr Vec2(double x, double y) : x(x), y(y) {}
 
-    constexpr explicit Vec2(Angle angle) : x(cos(angle)), y(sin(angle)) {}
+    static constexpr Vec2 fromAngle(Angle a) noexcept { return {cos(a), sin(a)}; }
 
     Vec2& operator+=(const Vec2& other) noexcept {
         x += other.x;
@@ -38,16 +47,18 @@ struct Vec2 {
 
     constexpr double len() const noexcept { return std::sqrt(lenSq()); }
 
+    constexpr Angle angle() const noexcept { return Angle::fromVector(x, y); }
+
     constexpr Vec2 unit() const noexcept {
-        const double length = len();
-        return Vec2{x / length, y / length};
+        const double l = len();
+        return Vec2{x / l, y / l};
     }
 
     static constexpr Vec2 axisX() noexcept { return Vec2{1, 0}; }
 
     static constexpr Vec2 axisY() noexcept { return Vec2{0, 1}; }
 
-    constexpr Vec2 operator-() const noexcept { return Vec2{-x, -y}; }
+    constexpr Vec2 operator-() const noexcept { return inv(); }
 
     Vec2& operator*=(double c) noexcept {
         x *= c;
@@ -61,38 +72,32 @@ struct Vec2 {
         return *this;
     }
 
-    Vec2 inv() const noexcept { return {x, -y}; }
-
-    Vec2 rotate(const Vec2& a) const noexcept { return {x * a.x - y * a.y, x * a.y + y * a.x}; }
-
-    Vec2 rotate(Angle angle) const noexcept { return rotate(Vec2(angle)); }
+    constexpr Vec2 inv() const noexcept { return {-x, -y}; }
 
     constexpr Vec2 left() const noexcept { return {-y, x}; }
 
     constexpr Vec2 right() const noexcept { return {y, -x}; }
 
-    constexpr Angle angle() const noexcept { return atan(y, x); }
-
     double x, y;
 };
 
-constexpr Vec2 operator*(const Vec2& v, double c) noexcept { return {v.x * c, v.y * c}; }
+constexpr Vec2 operator*(Vec2 v, double c) noexcept { return {v.x * c, v.y * c}; }
 
-constexpr Vec2 operator*(double c, const Vec2& v) noexcept { return v * c; }
+constexpr Vec2 operator*(double c, Vec2 v) noexcept { return v * c; }
 
-constexpr Vec2 operator/(const Vec2& v, double c) noexcept { return Vec2{v.x / c, v.y / c}; }
+constexpr Vec2 operator/(const Vec2& v, double c) noexcept { return {v.x / c, v.y / c}; }
+
+constexpr double dot(const Vec2& a, const Vec2& b) noexcept { return a.x * b.x + a.y * b.y; }
+
+constexpr double cross(const Vec2& a, const Vec2& b) noexcept { return a.x * b.y - a.y * b.x; }
+
+constexpr double lenSq(const Vec2& v) noexcept { return v.lenSq(); }
+
+constexpr double len(const Vec2& v) noexcept { return v.len(); }
 
 bool equal(const Vec2& a, const Vec2& b, double eps = 0) noexcept;
 
-double dot(const Vec2& a, const Vec2& b) noexcept;
-
-double cross(const Vec2& a, const Vec2& b) noexcept;
-
 Angle angleBetween(const Vec2& from, const Vec2& to) noexcept;
-
-inline double lenSq(const Vec2& v) noexcept { return v.lenSq(); }
-
-inline double len(const Vec2& v) noexcept { return v.len(); }
 
 Vec2 interpolate(const Vec2& a, const Vec2& b, double t) noexcept;
 
