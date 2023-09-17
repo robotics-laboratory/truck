@@ -32,4 +32,8 @@ Transform Transform::inv() const {
     return Transform(r_inv.apply(-translation_), r_inv);
 }
 
+std::ostream& operator<<(std::ostream& out, const Transform& transform) noexcept {
+    return out << "TF[t=" << transform.t() << ", R=" << transform.r().angle() << "]";
+}
+
 }  // namespace truck::geom
