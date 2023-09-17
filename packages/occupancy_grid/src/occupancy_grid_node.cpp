@@ -5,7 +5,7 @@
 #include "geom/transform.h"
 #include "geom/vector.h"
 
-#include <cv_bridge/cv_bridge.h>
+#include <cv_bridge/cv_bridge.hpp>
 
 #include <chrono>
 #include <cmath>

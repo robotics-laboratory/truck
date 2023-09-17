@@ -6,6 +6,8 @@
 
 #include <tf2/LinearMath/Transform.h>
 
+#include <ostream>
+
 namespace truck::geom {
 
 /*
@@ -39,5 +41,7 @@ class Transform {
     Vec2 translation_ = {};
     AngleVec2 rotation_ = {};
 };
+
+std::ostream& operator<<(std::ostream& out, const Transform& transform) noexcept;
 
 }  // namespace truck::geom

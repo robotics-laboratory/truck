@@ -12,27 +12,25 @@ class ArrayAsQueue {
 
     ArrayAsQueue(T* arr) : head_(arr), tail_(arr) {}
 
-    void Push(const T& value) noexcept {
+    void push(const T& value) noexcept {
         *tail_ = value;
         ++tail_;
     }
 
-    void Push(T&& value) noexcept {
+    void push(T&& value) noexcept {
         *tail_ = std::move(value);
         ++tail_;
     }
 
-    const T& Front() const noexcept { return *head_; }
+    const T& front() const noexcept { return *head_; }
 
-    T& Front() noexcept { return *head_; }
+    T& front() noexcept { return *head_; }
 
-    T Extract() noexcept { return *(head_++); }
+    T pop() noexcept { return *(head_++); }
 
-    void Pop() noexcept { ++head_; }
+    size_t size() const noexcept { return tail_ - head_; }
 
-    size_t Size() const noexcept { return tail_ - head_; }
-
-    bool Empty() const noexcept { return head_ == tail_; }
+    bool empty() const noexcept { return head_ == tail_; }
 
   private:
     T* head_;

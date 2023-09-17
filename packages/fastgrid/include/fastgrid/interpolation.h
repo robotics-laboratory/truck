@@ -9,68 +9,63 @@
 
 namespace truck::fastgrid {
 
-template<typename T>
-class BilinearInterpolation {
-  public:
-    struct Domain {
-        Domain(const double width, const double height, double resolution, const geom::Pose& origin)
-            : width(width)
-            , height(height)
-            , resolution(resolution)
-            , origin(origin)
-            , tf(geom::Transform(origin.pos, origin.dir.unit()).inv()) {}
+struct Domain {
+    template<class T>
+    Domain(const Grid<T>& grid) : size(grid.size), resolution(grid.resolution) {
+        auto pose = VERIFY(grid.origin)->pose;
+        const auto dx = grid.resolution / 2 * pose.dir;
+        const auto dy = dx.left();
+        pose.pos += dx + dy;
 
-        geom::Vec2 Transform(const geom::Vec2& point) const { return tf(point); }
-
-        std::pair<int, int> GetCell(const geom::Vec2& point) const {
-            const geom::Vec2 rel_point = Transform(point);
-            VERIFY(
-                rel_point.x >= 0 && rel_point.x < width * resolution && rel_point.y >= 0 &&
-                rel_point.y < height * resolution);
-            return {
-                static_cast<int>(rel_point.x / resolution),
-                static_cast<int>(rel_point.y / resolution)};
-        }
-
-        double width = 0;
-        double height = 0;
-        double resolution = 0;
-
-        geom::Pose origin;
-
-        geom::Transform tf;
-    };
-
-    BilinearInterpolation(const Grid<T>& grid)
-        : grid_(grid)
-        , domain_(
-              grid.size.width - 1, grid.size.height - 1, grid.resolution,
-              geom::Pose(
-                  grid.origin->pos + grid.origin->dir.unit() * grid.resolution / 2 +
-                      grid.origin->dir.unit().left() * grid.resolution / 2,
-                  grid.origin->dir)) {}
-
-    double operator()(const geom::Vec2& point) const {
-        const geom::Vec2 ref_point = domain_.Transform(point);
-        const auto [row, col] = domain_.GetCell(point);
-        const int index = row * grid_.size.width + col;
-        return static_cast<double>(grid_.data[index]) *
-                   ((row + 1) - ref_point.x / domain_.resolution) *
-                   ((col + 1) - ref_point.y / domain_.resolution) +
-               static_cast<double>(grid_.data[index + grid_.size.width]) *
-                   (ref_point.x / domain_.resolution - row) *
-                   ((col + 1) - ref_point.y / domain_.resolution) +
-               static_cast<double>(grid_.data[index + 1]) *
-                   ((row + 1) - ref_point.x / domain_.resolution) *
-                   (ref_point.y / domain_.resolution - col) +
-               static_cast<double>(grid_.data[index + grid_.size.width + 1]) *
-                   (ref_point.x / domain_.resolution - row) *
-                   (ref_point.y / domain_.resolution - col);
+        origin = Origin(pose);
     }
 
-  private:
-    Grid<T> grid_;
-    Domain domain_;
+    geom::Vec2 Transform(const geom::Vec2& point) const { return origin.tf(point); }
+
+    Size size;
+    double resolution;
+    Origin origin;
+};
+
+template<typename T>
+struct Bilinear {
+    Bilinear(const Grid<T>& grid) : grid(grid), domain(grid) {}
+
+    double GetRelative(const geom::Vec2& point) const noexcept {
+        const double resolution = domain.resolution;
+        const int x = static_cast<int>(point.x / domain.resolution);
+        const int y = static_cast<int>(point.y / domain.resolution);
+
+        std::cerr << "x: " << x << " y: " << y << std::endl;
+
+        const int index = y * domain.size.width + x;
+
+        const double topLetf = grid.data[index];
+        const double topRight = grid.data[index + 1];
+        const double bottomLeft = grid.data[index + domain.size.width];
+        const double bottomRight = grid.data[index + domain.size.width + 1];
+
+        const double xRatio = (point.x / resolution - x);
+        const double xRatioInv = 1 - xRatio;
+
+        const double yRatio = (point.y / resolution - y);
+        const double yRatioInv = 1 - yRatio;
+
+        const double top = topLetf * xRatioInv + topRight * xRatio;
+        const double bottom = bottomLeft * xRatioInv + bottomRight * xRatio;
+
+        return top * yRatioInv + bottom * yRatio;
+    }
+
+    double Get(const geom::Vec2& point) const noexcept {
+        const auto rel_point = domain.origin.tf(point);
+        return GetRelative(rel_point);
+    }
+
+    double operator()(const geom::Vec2& point) const noexcept { return Get(point); }
+
+    Grid<T> grid;
+    Domain domain;
 };
 
 }  // namespace truck::fastgrid

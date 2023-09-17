@@ -6,15 +6,15 @@
 
 namespace truck::fastgrid {
 
-void ManhattanDistance(
+void manhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps, int* queue_buf,
     F32Grid& manhattan_distance);
 
-void ManhattanDistance(
+void manhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps,
     F32Grid& manhattan_distance);
 
-F32GridHolder ManhattanDistance(
+F32GridHolder manhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps);
 
 }  // namespace truck::fastgrid

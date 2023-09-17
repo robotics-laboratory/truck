@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(fastgrid)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)   
 
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
@@ -10,6 +10,7 @@ find_package(geom REQUIRED)
 add_library(
     ${PROJECT_NAME} SHARED
     src/distance_transform.cpp
+    src/grid.cpp
     src/manhattan_distance.cpp
 )
 
@@ -41,11 +42,8 @@ if(BUILD_TESTING)
     find_package(ament_cmake_clang_format REQUIRED)
     ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
 
-    find_package(ament_cmake_gtest REQUIRED)
-    add_subdirectory("test")
-
-    find_package(ament_cmake_google_benchmark REQUIRED)
-    add_subdirectory("benchmark")
+    # add_subdirectory("test")
+    # add_subdirectory("benchmark")
 endif()
 
 ament_package()

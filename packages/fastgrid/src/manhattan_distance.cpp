@@ -1,7 +1,9 @@
+#include "fastgrid/manhattan_distance.h"
+#include "fastgrid/misc.h"
+
 #include "common/array_as_queue.h"
 #include "common/exception.h"
 #include "common/math.h"
-#include "fastgrid/manhattan_distance.h"
 #include "geom/vector.h"
 
 #include <limits>
@@ -10,13 +12,13 @@
 
 namespace truck::fastgrid {
 
-void ManhattanDistance(
+void manhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps, int* queue_buf,
     F32Grid& manhattan_distance) {
     const int resolution = distance_transform.resolution;
     const auto [width, height] = distance_transform.size;
     const float unreachable = std::numeric_limits<float>::max();
-    const int origin_index = distance_transform.GetIndex(source);
+    const auto origin_index = *VERIFY(distance_transform.tryGetPlainIndex(source));
 
     std::fill(
         manhattan_distance.data, manhattan_distance.data + manhattan_distance.size(), unreachable);
@@ -28,46 +30,61 @@ void ManhattanDistance(
     manhattan_distance.data[origin_index] = 0;
 
     ArrayAsQueue<int> queue(queue_buf);
-    queue.Push(origin_index);
+    queue.push(origin_index);
 
-    while (!queue.Empty()) {
-        const int cur_index = queue.Extract();
-        const int i = cur_index / width;
-        const int j = cur_index % width;
+    while (!queue.empty()) {
+        const int cur_index = queue.pop();
+        const float next_weight = manhattan_distance.data[cur_index] + resolution;
+        const auto [x, y] = distance_transform.toIndex(cur_index);
 
-        for (int dt : {-1, 1}) {
-            const int h_next_index = cur_index + dt;
-            if ((0 <= j + dt) && (j + dt < width) &&
-                (distance_transform.data[h_next_index] > eps) &&
-                (manhattan_distance.data[h_next_index] == unreachable)) {
-                manhattan_distance.data[h_next_index] =
-                    manhattan_distance.data[cur_index] + resolution;
-                queue.Push(h_next_index);
+        if (0 < x) {
+            const int left = cur_index - 1;
+            if (distance_transform.data[left] > eps &&
+                manhattan_distance.data[left] == unreachable) {
+                manhattan_distance.data[left] = next_weight;
+                queue.push(left);
             }
+        }
 
-            const int v_next_index = cur_index + dt * width;
-            if ((0 <= i + dt) && (i + dt < height) &&
-                (distance_transform.data[v_next_index] > eps) &&
-                (manhattan_distance.data[v_next_index] == unreachable)) {
-                manhattan_distance.data[v_next_index] =
-                    manhattan_distance.data[cur_index] + resolution;
-                queue.Push(v_next_index);
+        if (x < width - 1) {
+            const int right = cur_index + 1;
+            if (distance_transform.data[right] > eps &&
+                manhattan_distance.data[right] == unreachable) {
+                manhattan_distance.data[right] = next_weight;
+                queue.push(right);
+            }
+        }
+
+        if (0 < y) {
+            const int up = cur_index - width;
+            if (distance_transform.data[up] > eps && manhattan_distance.data[up] == unreachable) {
+                manhattan_distance.data[up] = next_weight;
+                queue.push(up);
+            }
+        }
+
+        if (y < height - 1) {
+            const int down = cur_index + width;
+            if (down < manhattan_distance.size() && distance_transform.data[down] > eps &&
+                manhattan_distance.data[down] == unreachable) {
+                manhattan_distance.data[down] = next_weight;
+                queue.push(down);
             }
         }
     }
 }
 
-void ManhattanDistance(
+void manhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps,
     F32Grid& manhattan_distance) {
     std::vector<int> queue_buf(distance_transform.size());
-    ManhattanDistance(distance_transform, source, eps, queue_buf.data(), manhattan_distance);
+    manhattanDistance(distance_transform, source, eps, queue_buf.data(), manhattan_distance);
 }
 
-F32GridHolder ManhattanDistance(
+F32GridHolder manhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps) {
-    F32GridHolder result = MakeGridLike<float>(distance_transform);
-    ManhattanDistance(distance_transform, source, eps, *result);
+    F32GridHolder result = makeGridLike<float>(distance_transform);
+    manhattanDistance(distance_transform, source, eps, *result);
     return result;
 }
 
