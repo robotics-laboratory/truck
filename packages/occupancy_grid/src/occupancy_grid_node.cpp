@@ -5,7 +5,7 @@
 #include "geom/transform.h"
 #include "geom/vector.h"
 
-#include <cv_bridge/cv_bridge.hpp>
+#include <cv_bridge/cv_bridge.h>
 
 #include <chrono>
 #include <cmath>
@@ -40,10 +40,8 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
         this->declare_parameter("enable_camera_cloud", false),
         Limits<double>{
             this->declare_parameter("camera_view_hmin", -0.05),
-            this->declare_parameter("camera_view_hmax", 0.01)
-        },
-        this->declare_parameter("camera_view_distance", 2.0)
-    };
+            this->declare_parameter("camera_view_hmax", 0.01)},
+        this->declare_parameter("camera_view_distance", 2.0)};
 
     RCLCPP_INFO(this->get_logger(), "frame_id: %s", params_.frame_id.c_str());
     RCLCPP_INFO(this->get_logger(), "resolution: %.2fm", params_.resolution);
@@ -123,7 +121,7 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
     }
 
     geom::Transform tf(*tf_opt);
-    
+
     auto odom_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
 
     odom_cloud->header.frame_id = to_id;
@@ -135,8 +133,12 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
     sensor_msgs::PointCloud2Modifier modifier(*odom_cloud);
     modifier.setPointCloud2Fields(
         2,
-        "x", 1, sensor_msgs::msg::PointField::FLOAT32,
-        "y", 1, sensor_msgs::msg::PointField::FLOAT32);
+        "x",
+        1,
+        sensor_msgs::msg::PointField::FLOAT32,
+        "y",
+        1,
+        sensor_msgs::msg::PointField::FLOAT32);
     modifier.resize(scan->ranges.size());
 
     sensor_msgs::PointCloud2Iterator<float> x(*odom_cloud, "x");
@@ -173,7 +175,6 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
     publishOccupancyGrid();
 }
 
-
 void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPtr image) {
     if (!params_.enable_camera_grid) {
         return;
@@ -188,7 +189,9 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
             get_logger(),
             *get_clock(),
             5000,
-            "No transform from `%s` to `%s`!", from_id.c_str(), to_id.c_str());
+            "No transform from `%s` to `%s`!",
+            from_id.c_str(),
+            to_id.c_str());
         return;
     }
 
@@ -214,7 +217,7 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
     sensor_msgs::PointCloud2Modifier pcd_modifier(*odom_cloud);
     pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
     pcd_modifier.resize(image->height * image->width);
-    
+
     sensor_msgs::PointCloud2Iterator<float> x(*odom_cloud, "x");
     sensor_msgs::PointCloud2Iterator<float> y(*odom_cloud, "y");
     sensor_msgs::PointCloud2Iterator<float> z(*odom_cloud, "z");
@@ -228,7 +231,8 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
             }
 
             const cv::Point2d image_point{static_cast<double>(u), static_cast<double>(v)};
-            const auto point = DepthTraits::toMeters(depth) * model.projectPixelTo3dRay(image_point);
+            const auto point =
+                DepthTraits::toMeters(depth) * model.projectPixelTo3dRay(image_point);
 
             const auto vec = tf2::Vector3{point.x, point.y, point.z};
             if (vec.z() > params_.camera_view_distance) {
@@ -237,7 +241,7 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
 
             const auto odom_vec = tf(vec);
 
-            if (!params_.camera_view_height.isMet(odom_vec.z())){
+            if (!params_.camera_view_height.isMet(odom_vec.z())) {
                 continue;
             }
 
@@ -296,7 +300,7 @@ std_msgs::msg::Header mergeHeader(
     return header;
 }
 
-} // namespace
+}  // namespace
 
 void OccupancyGridNode::publishOccupancyGrid() {
     const std::string from_id = "base";
@@ -308,7 +312,9 @@ void OccupancyGridNode::publishOccupancyGrid() {
             get_logger(),
             *get_clock(),
             5000,
-            "No transform from `%s` to `%s`!", from_id.c_str(), to_id.c_str());
+            "No transform from `%s` to `%s`!",
+            from_id.c_str(),
+            to_id.c_str());
 
         return;
     }
@@ -328,7 +334,7 @@ void OccupancyGridNode::publishOccupancyGrid() {
     grid.info.resolution = params_.resolution;
     grid.info.width = cell_num;
     grid.info.height = cell_num;
-    
+
     grid.info.origin.position.x = origin.x;
     grid.info.origin.position.y = origin.y;
     grid.info.origin.position.z = 0;
@@ -337,7 +343,7 @@ void OccupancyGridNode::publishOccupancyGrid() {
     grid.info.origin.orientation.y = 0;
     grid.info.origin.orientation.z = 0;
     grid.info.origin.orientation.w = 1;
-    
+
     grid.data.resize(cell_num * cell_num);
     std::fill(grid.data.begin(), grid.data.end(), 0);
 

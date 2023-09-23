@@ -1,0 +1,31 @@
+launch:
+  - arg:
+      name: "model_config"
+      default: "$(find-pkg-share model)/config/model.yaml"
+  - node:
+      pkg: "tree_planner"
+      exec: "tree_planner_node"
+      name: "tree_planner_node"
+      output: "log"
+      param:
+        - { name: "model_config", value: "$(var model_config)" }
+
+        - name: "node"
+          param:
+            - { name: "z_lev", value: 0.1 }
+            - { name: "scale", value: 0.1 }
+
+            - name: "color_rgba"
+              param:
+                - { name: "base", value: [0.5, 0.2, 0.2, 0.2] }
+                - { name: "start", value: [1.0, 0.8, 0.8, 0.8] }
+                - { name: "goal", value: [0.3, 0.0, 1.0, 0.0] }
+                - { name: "optimal_goal", value: [1.0, 0.0, 1.0, 0.0] }
+
+        - name: "planner"
+          param:
+            - { name: "max_sampling_num", value: 100000 }
+            - { name: "steering_dist", value: 0.2 }
+            - { name: "sampling_range", value: 4.0 }
+            - { name: "finish_area_radius", value: 0.2 }
+            

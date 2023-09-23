@@ -3,7 +3,7 @@
 #include "common/math.h"
 #include "geom/vector.h"
 
-#include <image_geometry/pinhole_camera_model.hpp>
+#include <image_geometry/pinhole_camera_model.h>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 
 #include <nav_msgs/msg/occupancy_grid.hpp>
