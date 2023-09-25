@@ -25,7 +25,7 @@ void SimulatorEngine::reset() {
 
 geom::Pose SimulatorEngine::getPose() const {
     geom::Pose pose;
-    pose.dir = geom::Vec2(state_[StateIndex::rotation_cos], state_[StateIndex::rotation_sin]);
+    pose.dir = geom::Vec2(cos(state_[StateIndex::rotation]), sin(state_[StateIndex::rotation]));
     pose.pos.x = state_[StateIndex::x] + params_.base_to_rear * pose.dir.x;
     pose.pos.y = state_[StateIndex::y] + params_.base_to_rear * pose.dir.y;
     return pose;
@@ -84,7 +84,7 @@ SimulatorEngine::State SimulatorEngine::calculateStateDelta(
 void SimulatorEngine::advance(const double time) {
     const int integration_steps = time / params_.integration_step;
 
-    const double old_rotation = acos(state_[StateIndex::rotation_cos]);
+    const double old_rotation = state_[StateIndex::rotation];
 
     const double steering_final = abs(control_.curvature) < params_.precision
                                       ? 0
@@ -129,7 +129,7 @@ void SimulatorEngine::advance(const double time) {
     }
 
     state_[StateIndex::angular_velocity] 
-        = (acos(state_[StateIndex::rotation_cos]) - old_rotation) / time;
+        = (state_[StateIndex::rotation] - old_rotation) / time;
 }
 
 }  // namespace truck::simulator
