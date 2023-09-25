@@ -26,8 +26,10 @@ class SimulatorEngine {
     void advance(const double time = 1.0);
 
   private:
-    Eigen::Matrix<double, 6, 1> calculate_state_delta(
-        const Eigen::Matrix<double, 6, 1> &state, const double acceleration,
+    typedef Eigen::Matrix<double, 6, 1> State;
+
+    State calculate_state_delta(
+        const State &state, const double acceleration,
         const double steering_velocity);
 
     struct Parameters {
@@ -54,7 +56,7 @@ class SimulatorEngine {
         angular_velocity = 5
     };
 
-    Eigen::Matrix<double, 6, 1> state_;
+    State state_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
 };
