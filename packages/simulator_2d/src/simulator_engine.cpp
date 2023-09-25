@@ -19,7 +19,7 @@ void SimulatorEngine::start(
 }
 
 void SimulatorEngine::reset() {
-    state_ = Eigen::Matrix<double, 6, 1>::Zero();
+    state_ = SimulatorEngine::State::Zero();
     state_[StateIndex::x] = -params_.base_to_rear;
 }
 
@@ -67,11 +67,11 @@ void SimulatorEngine::setControl(const double velocity, const double curvature) 
     setControl(velocity, acceleration, curvature);
 }
 
-Eigen::Matrix<double, 6, 1> SimulatorEngine::calculate_state_delta(
-    const Eigen::Matrix<double, 6, 1> &state, const double acceleration,
+SimulatorEngine::State SimulatorEngine::calculate_state_delta(
+    const SimulatorEngine::State &state, const double acceleration,
     const double steering_velocity) {
     
-    Eigen::Matrix<double, 6, 1> delta;
+    SimulatorEngine::State delta;
     delta[StateIndex::x] = cos(state[StateIndex::rotation]) * state[StateIndex::linear_velocity];
     delta[StateIndex::y] = sin(state[StateIndex::rotation]) * state[StateIndex::linear_velocity];
     delta[StateIndex::rotation] =
