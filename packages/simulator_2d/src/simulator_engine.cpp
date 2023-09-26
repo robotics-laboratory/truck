@@ -25,7 +25,7 @@ void SimulatorEngine::reset() {
 
 geom::Pose SimulatorEngine::getPose() const {
     geom::Pose pose;
-    pose.dir = geom::AngleVec2(geom::Angle::fromRadians(state_[StateIndex::rotation]));
+    pose.dir = geom::AngleVec2(geom::Angle::fromRadians(state_[StateIndex::yaw]));
     pose.pos.x = state_[StateIndex::x] + params_.base_to_rear * pose.dir.x();
     pose.pos.y = state_[StateIndex::y] + params_.base_to_rear * pose.dir.y();
     return pose;
@@ -72,9 +72,9 @@ SimulatorEngine::State SimulatorEngine::calculateStateDelta(
     const double steering_velocity) {
     
     SimulatorEngine::State delta;
-    delta[StateIndex::x] = cos(state[StateIndex::rotation]) * state[StateIndex::linear_velocity];
-    delta[StateIndex::y] = sin(state[StateIndex::rotation]) * state[StateIndex::linear_velocity];
-    delta[StateIndex::rotation] =
+    delta[StateIndex::x] = cos(state[StateIndex::yaw]) * state[StateIndex::linear_velocity];
+    delta[StateIndex::y] = sin(state[StateIndex::yaw]) * state[StateIndex::linear_velocity];
+    delta[StateIndex::yaw] =
         tan(state[StateIndex::steering]) * state[StateIndex::linear_velocity] / params_.wheelbase;
     delta[StateIndex::steering] = steering_velocity;
     delta[StateIndex::linear_velocity] = acceleration;
@@ -84,7 +84,7 @@ SimulatorEngine::State SimulatorEngine::calculateStateDelta(
 void SimulatorEngine::advance(const double time) {
     const int integration_steps = time / params_.integration_step;
 
-    const double old_rotation = state_[StateIndex::rotation];
+    const double old_yaw = state_[StateIndex::yaw];
 
     const double steering_final = abs(control_.curvature) < params_.precision
                                       ? 0
@@ -126,11 +126,10 @@ void SimulatorEngine::advance(const double time) {
             state_ + k3 * params_.integration_step, acceleration, steering_velocity);
 
         state_ += (k1 + 2 * k2 + 2 * k3 + k4) * (params_.integration_step / 6);
-        state_[StateIndex::rotation] = geom::Angle::_0_2PI(state_[StateIndex::rotation]);
+        state_[StateIndex::yaw] = geom::Angle::_0_2PI(state_[StateIndex::yaw]);
     }
 
-    state_[StateIndex::angular_velocity] 
-        = (state_[StateIndex::rotation] - old_rotation) / time;
+    state_[StateIndex::angular_velocity] = (state_[StateIndex::yaw] - old_yaw) / time;
 }
 
 }  // namespace truck::simulator

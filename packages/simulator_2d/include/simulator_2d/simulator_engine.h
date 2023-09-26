@@ -50,7 +50,7 @@ class SimulatorEngine {
     enum StateIndex {
         x = 0,
         y = 1,
-        rotation = 2,
+        yaw = 2,
         steering = 3,
         linear_velocity = 4,
         angular_velocity = 5
