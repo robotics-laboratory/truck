@@ -105,7 +105,7 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time, const geom
     signals_.telemetry->publish(telemetry_msg);
 }
 
-void SimulatorNode::publishSimulationStateMessafe(const rclcpp::Time &time, 
+void SimulatorNode::publishSimulationStateMessage(const rclcpp::Time &time, 
         const double speed, const geom::Angle &steering) {
 
     truck_msgs::msg::SimulationState state_msg;
@@ -127,7 +127,7 @@ void SimulatorNode::publishSignals() {
     publishOdometryMessage(time, pose, linearVelocity, angularVelocity);
     publishTransformMessage(time, pose);
     publishTelemetryMessage(time, steering);
-    publishSimulationStateMessafe(time, speed, steering);
+    publishSimulationStateMessage(time, speed, steering);
 }
 
 }  // namespace truck::simulator
