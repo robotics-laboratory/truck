@@ -25,9 +25,9 @@ void SimulatorEngine::reset() {
 
 geom::Pose SimulatorEngine::getPose() const {
     geom::Pose pose;
-    pose.dir = geom::Vec2(cos(state_[StateIndex::rotation]), sin(state_[StateIndex::rotation]));
-    pose.pos.x = state_[StateIndex::x] + params_.base_to_rear * pose.dir.x;
-    pose.pos.y = state_[StateIndex::y] + params_.base_to_rear * pose.dir.y;
+    pose.dir = geom::AngleVec2(geom::Angle::fromRadians(state_[StateIndex::rotation]));
+    pose.pos.x = state_[StateIndex::x] + params_.base_to_rear * pose.dir.x();
+    pose.pos.y = state_[StateIndex::y] + params_.base_to_rear * pose.dir.y();
     return pose;
 }
 
@@ -126,6 +126,7 @@ void SimulatorEngine::advance(const double time) {
             state_ + k3 * params_.integration_step, acceleration, steering_velocity);
 
         state_ += (k1 + 2 * k2 + 2 * k3 + k4) * (params_.integration_step / 6);
+        state_[StateIndex::rotation] = geom::Angle::_0_2PI(state_[StateIndex::rotation]);
     }
 
     state_[StateIndex::angular_velocity] 
