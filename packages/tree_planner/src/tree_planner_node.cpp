@@ -253,9 +253,20 @@ std::optional<geom::Transform> TreePlannerNode::GetLatestTranform(
 }
 
 void TreePlannerNode::DoPlanningLoop() {
-    if (!checker_->initialized() || !state_.ego_pose || !state_.finish_area ||
-        !state_.planning_space) {
+    if (!checker_->initialized()) {
+        RCLCPP_WARN(this->get_logger(), "No checker!");
         return;
+    }
+    if (!state_.ego_pose) {
+        RCLCPP_WARN(this->get_logger(), "No ego_pose!");
+        return;
+    }
+    if (!state_.finish_area) {
+        RCLCPP_WARN(this->get_logger(), "No finish_area!");
+        return;
+    }
+    if (!state_.planning_space) {
+        RCLCPP_WARN(this->get_logger(), "No planning_space!");
     }
 
     planner_
