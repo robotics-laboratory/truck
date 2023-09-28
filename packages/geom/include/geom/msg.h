@@ -32,7 +32,7 @@ Angle toAngle(const geometry_msgs::msg::Quaternion& q);
 
 Angle toYawAngle(const geometry_msgs::msg::Quaternion& q);
 
-Vec2 toYawDir(const geometry_msgs::msg::Quaternion& q);
+AngleVec2 toYawDir(const geometry_msgs::msg::Quaternion& q);
 
 Pose toPose(const geometry_msgs::msg::Pose& p);
 
@@ -50,7 +50,7 @@ namespace msg {
 
 geometry_msgs::msg::Quaternion toQuaternion(const Angle& a);
 
-geometry_msgs::msg::Quaternion toQuaternion(const geom::Vec2& dir);
+geometry_msgs::msg::Quaternion toQuaternion(const AngleVec2& a);
 
 geometry_msgs::msg::Point toPoint(const Vec2& v);
 

@@ -58,23 +58,27 @@ using U32GridHolder = GridHolder<uint32_t>;
 using F32GridHolder = GridHolder<float>;
 
 template<typename T, typename... Args>
-GridHolder<T> MakeGrid(Args&&... args) {
+GridHolder<T> makeGrid(Args&&... args) {
     auto grid = Grid<T>(std::forward<Args>(args)...);
     auto ptr = Allocate<T>(grid.size);
-    grid.Reset(ptr.get());
+    grid.reset(ptr.get());
     return {std::move(grid), std::move(ptr)};
 }
 
 template<typename T, typename U>
-GridHolder<T> MakeGridLike(const Grid<U>& other) noexcept {
-    GridHolder<T> holder(MakeGrid<T>(other.size, other.resolution, other.origin));
-    std::copy(other.data, other.data + other.size(), holder.ptr.get());
+GridHolder<T> makeGridLike(const Grid<U>& other) noexcept {
+    std::optional<geom::Pose> origin = std::nullopt;
+    if (other.origin) {
+        origin = geom::Pose(other.origin->pose);
+    }
+
+    GridHolder<T> holder(makeGrid<T>(other.size, other.resolution, origin));
     return holder;
 }
 
 template<typename T, typename U>
-GridHolder<T> MakeGridLike(const GridHolder<U>& other) noexcept {
-    return MakeGridLike<T>(other.grid);
+GridHolder<T> makeGridLike(const GridHolder<U>& other) noexcept {
+    return makeGridLike<T>(other.grid);
 }
 
 }  // namespace truck::fastgrid

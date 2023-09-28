@@ -15,7 +15,7 @@ launch:
     - {name: "rgb_camera.profile", value: "848x480x30"}
 
     - {name: "enable_depth", value: False}
-    - {name: "depth_moduel.profile", value: "848x480x30"}
+    - {name: "depth_module.profile", value: "424x240x15"}
 
     - {name: "enable_accel", value: True}
     - {name: "accel_fps", value: 200}

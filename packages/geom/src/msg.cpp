@@ -18,7 +18,7 @@ Angle toAngle(const geometry_msgs::msg::Quaternion& q) {
 
 Angle toYawAngle(const geometry_msgs::msg::Quaternion& q) { return toAngle(q); }
 
-Vec2 toYawDir(const geometry_msgs::msg::Quaternion& q) { return Vec2(toYawAngle(q)); }
+AngleVec2 toYawDir(const geometry_msgs::msg::Quaternion& q) { return toYawAngle(q); }
 
 Pose toPose(const geometry_msgs::msg::Pose& p) { return Pose{toVec2(p), toYawDir(p.orientation)}; }
 
@@ -61,7 +61,9 @@ geometry_msgs::msg::Quaternion toQuaternion(const geom::Angle& a) {
     return msg;
 }
 
-geometry_msgs::msg::Quaternion toQuaternion(const geom::Vec2& v) { return toQuaternion(v.angle()); }
+geometry_msgs::msg::Quaternion toQuaternion(const geom::AngleVec2& v) {
+    return toQuaternion(Angle(v));
+}
 
 geometry_msgs::msg::Pose toPose(const geom::Pose& p) {
     geometry_msgs::msg::Pose msg;
