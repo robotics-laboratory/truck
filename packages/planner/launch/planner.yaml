@@ -1,25 +1,46 @@
 launch:
-- arg:
-    name: "model_config"
-    default: "$(find-pkg-share model)/config/model.yaml"
-- node:
-    pkg: "planner"
-    exec: "planner_node"
-    name: "planner_node"
-    output: "log"
-    param:
-    - {name: "model_config", value: "$(var model_config)"}
+  - arg:
+      name: "model_config"
+      default: "$(find-pkg-share model)/config/model.yaml"
+  - node:
+      pkg: "planner"
+      exec: "planner_node"
+      name: "planner_node"
+      output: "log"
+      param:
+        - { name: "model_config", value: "$(var model_config)" }
 
-    - {name: "grid/nodes/width", value: 40}
-    - {name: "grid/nodes/height", value: 40}
-    - {name: "grid/resolution", value: 0.2}
-    - {name: "grid/finish_area_radius", value: 0.5}
-    - {name: "grid/min_obstacle_distance", value: 0.5}
+        - name: "grid"
+          param:
+            - { name: "width", value: 80 }
+            - { name: "height", value: 80 }
+            - { name: "resolution", value: 0.2 }
 
-    - {name: "node/z-lev", value: 0.05 }
-    - {name: "node/scale", value: 0.1 }
-    - {name: "node/base/color_rgba", value: [1.0, 0.2, 0.2, 0.2] }
-    - {name: "node/start/color_rgba", value: [1.0, 0.8, 0.8, 0.8] }
-    - {name: "node/finish/base/color_rgba", value: [0.3, 1.0, 1.0, 0.0] }
-    - {name: "node/finish/accent/color_rgba", value: [1.0, 1.0, 1.0, 0.0] }
-    - {name: "node/collision/color_rgba", value: [0.8, 1.0, 0.0, 0.0] }
+        - name: "node"
+          param:
+            - { name: "z_lev", value: 0.1 }
+            - { name: "scale", value: 0.1 }
+
+            - name: "color_rgba"
+              param:
+                - { name: "base", value: [0.5, 0.2, 0.2, 0.2] }
+                - { name: "ego", value: [1.0, 0.8, 0.8, 0.8] }
+                - { name: "finish_base", value: [0.3, 0.0, 1.0, 0.0] }
+                - { name: "finish_accent", value: [1.0, 0.0, 1.0, 0.0] }
+                - { name: "collision", value: [1.0, 1.0, 0.0, 0.0] }
+
+        - name: "searcher"
+          param:
+            - { name: "max_vertices_count", value: 10000 }
+            - { name: "finish_area_size", value: 0.3 }
+            - { name: "min_obstacle_distance", value: 0.4 }
+            - { name: "max_node_position_error", value: 0.05 }
+
+        - name: "edge"
+          param:
+            - { name: "yaws_count", value: 12 }
+            - { name: "type", value: "primitive" }
+
+            - name: "primitive"
+              param:
+                - { name: "json_path", value: "/truck/packages/planner/data/primitives_advanced.json" }

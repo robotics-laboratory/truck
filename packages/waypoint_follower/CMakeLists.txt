@@ -19,6 +19,7 @@ find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(truck_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node
