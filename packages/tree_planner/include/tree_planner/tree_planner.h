@@ -48,7 +48,7 @@ struct Edge {
 
     Node* destination;
 
-    geom::Poses poses;
+    geom::Poses path;
 
     double length;
 };
@@ -58,12 +58,12 @@ struct Node {
     Node(
         const geom::Vec2& pose, double cost_to_come, double locally_minimum_cost_to_come,
         double heuristics);
-    Node(const geom::Vec2& pose, Edge* parent_edge, double heuristics);
+    Node(const geom::Vec2& pose, std::shared_ptr<Edge> parent, double heuristics);
 
     geom::Vec2 pose;
 
-    Edge* parent_edge = nullptr;
-    std::vector<Edge*> successor_edges;
+    std::shared_ptr<Edge> parent_edge = nullptr;
+    std::vector<std::shared_ptr<Edge>> successor_edges;
 
     double cost_to_come = unreachable;
     double locally_minimum_cost_to_come = unreachable;
@@ -92,11 +92,15 @@ class TreePlanner {
   public:
     TreePlanner();
 
-    void SetParams(const TreePlannerParams& params);
+    TreePlanner& SetParams(const TreePlannerParams& params);
 
-    void Build() noexcept;
+    TreePlanner& SetShape(const model::Shape& shape);
+
+    TreePlanner& Build() noexcept;
 
     geom::Poses GetPath() const noexcept;
+
+    const Node* GetStartNode() const noexcept;
 
     const Node* GetGoalNode() const noexcept;
 
@@ -104,7 +108,7 @@ class TreePlanner {
 
     TreePlanner& Reset(
         const geom::BBox& planning_space, const geom::Vec2& start_pose,
-        const geom::Circle& goal_region, const model::Shape& shape,
+        const geom::Circle& goal_region,
         std::shared_ptr<const collision::StaticCollisionChecker> checker) noexcept;
 
     const std::vector<Node>& GetNodes() const noexcept;
@@ -121,20 +125,19 @@ class TreePlanner {
 
     static constexpr int dim_ = 2;
     static constexpr double multiplier_ = 1.1;
-    const double gamma_ = std::pow(2, dim_) * (1 + 1 / dim_);
+    const double gamma_ = std::pow(2, dim_) * (1.0 + 1.0 / static_cast<double>(dim_));
 
     template<typename... Args>
     Node& AddNode(Args&&... args) noexcept {
-        nodes_.push_back(std::move(Node(std::forward<Args>(args)...)));
+        nodes_.emplace_back(std::forward<Args>(args)...);
         nodes_.back().heap_handle = heap_.push(&nodes_.back());
         r_star_tree_.insert(std::make_pair(nodes_.back().pose, &nodes_.back()));
         return nodes_.back();
     }
 
     template<typename... Args>
-    Edge& AddEdge(Args&&... args) noexcept {
-        edges_.push_back(std::move(Edge(std::forward<Args>(args)...)));
-        return edges_.back();
+    std::shared_ptr<Edge> AddEdge(Args&&... args) noexcept {
+        return std::make_shared<Edge>(std::forward<Args>(args)...);
     }
 
     geom::Vec2 Steer(const geom::Vec2& nearest_point, const geom::Vec2& point) const noexcept;
@@ -145,6 +148,8 @@ class TreePlanner {
         const geom::Vec2& from, const geom::Vec2& to) const noexcept;
 
     void UpdateQueue(Node* node) noexcept;
+
+    void UpdateOptimalGoalNode(Node* node) noexcept;
 
     void Extend(const geom::BBox& bbox) noexcept;
 
@@ -164,11 +169,12 @@ class TreePlanner {
     Node* optimal_goal_node_ = nullptr;
 
     std::vector<Node> nodes_;
-    std::vector<Edge> edges_;
 
     FibonacciHeap heap_;
     // SplayTree splay_;
     RStarTree r_star_tree_;
+
+    int sampled_points_ = 0;
 };
 
 }  // namespace truck::planner::tree_planner

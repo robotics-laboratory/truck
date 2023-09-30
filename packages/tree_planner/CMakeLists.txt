@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(tree_planner)
 
+set(CMAKE_CXX_STANDARD 20)
+
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 find_package(ament_cmake REQUIRED)
