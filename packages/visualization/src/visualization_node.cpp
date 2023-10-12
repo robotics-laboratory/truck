@@ -235,27 +235,36 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         msg_array.markers.push_back(msg);
     }
 
-    const double x_offset = model_->wheel().x_offset;
-    const double y_offset = model_->wheel().y_offset;
+    const double front_x_offset = model_->wheelBase().length - model_->wheelBase().base_to_rear;
+    const double rear_x_offset = -model_->wheelBase().base_to_rear;
+    const double y_offset = model_->wheelBase().width / 2;
     const double rotation_angle = truck::geom::toAngle(pose.orientation).radians();
     const double angle_sin = sin(rotation_angle);
     const double angle_cos = cos(rotation_angle);
 
     // Front right wheel.
-    msg_array.markers[first_id].pose.position.x += x_offset * angle_cos + y_offset * angle_sin;
-    msg_array.markers[first_id].pose.position.y += x_offset * angle_sin - y_offset * angle_cos;
+    msg_array.markers[first_id].pose.position.x 
+        += front_x_offset * angle_cos + y_offset * angle_sin;
+    msg_array.markers[first_id].pose.position.y 
+        += front_x_offset * angle_sin - y_offset * angle_cos;
 
     // Front left wheel
-    msg_array.markers[first_id + 1].pose.position.x += x_offset * angle_cos - y_offset * angle_sin;
-    msg_array.markers[first_id + 1].pose.position.y += x_offset * angle_sin + y_offset * angle_cos;
+    msg_array.markers[first_id + 1].pose.position.x 
+        += front_x_offset * angle_cos - y_offset * angle_sin;
+    msg_array.markers[first_id + 1].pose.position.y 
+        += front_x_offset * angle_sin + y_offset * angle_cos;
 
     // Rear right wheel.
-    msg_array.markers[first_id + 2].pose.position.x += -x_offset * angle_cos + y_offset * angle_sin;
-    msg_array.markers[first_id + 2].pose.position.y += -x_offset * angle_sin - y_offset * angle_cos;
+    msg_array.markers[first_id + 2].pose.position.x 
+        += rear_x_offset * angle_cos + y_offset * angle_sin;
+    msg_array.markers[first_id + 2].pose.position.y 
+        += rear_x_offset * angle_sin - y_offset * angle_cos;
 
     // Rear left wheel.
-    msg_array.markers[first_id + 3].pose.position.x += -x_offset * angle_cos - y_offset * angle_sin;
-    msg_array.markers[first_id + 3].pose.position.y += -x_offset * angle_sin + y_offset * angle_cos;
+    msg_array.markers[first_id + 3].pose.position.x 
+        += rear_x_offset * angle_cos - y_offset * angle_sin;
+    msg_array.markers[first_id + 3].pose.position.y 
+        += rear_x_offset * angle_sin + y_offset * angle_cos;
 }
 
 void VisualizationNode::publishEgo() const {

@@ -19,8 +19,6 @@ limits:
 wheel:
   radius: 0.0525    # m
   width: 0.058      # m
-  x_offset: 0.2025  # m (absolute value)
-  y_offset: 0.11168 # m (absolute value)
 # Motor to differential ratio. See docs/gearbox.md for more info.
 gear_ratio: 0.08421
 servo_home_angles: {left: 89, right: 96}  # deg

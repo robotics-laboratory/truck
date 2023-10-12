@@ -85,13 +85,9 @@ ServoAngles::ServoAngles(const YAML::Node& node)
 
 Wheel::Wheel(const YAML::Node& node)
     : radius(node["radius"].as<double>())
-    , width(node["width"].as<double>())
-    , x_offset(node["x_offset"].as<double>())
-    , y_offset(node["y_offset"].as<double>()) {
+    , width(node["width"].as<double>()) {
     BOOST_VERIFY(radius > 0);
     BOOST_VERIFY(width > 0);
-    BOOST_VERIFY(x_offset > 0);
-    BOOST_VERIFY(y_offset > 0);
 }
 
 Params::Params(const YAML::Node& node)

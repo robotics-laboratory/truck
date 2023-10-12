@@ -59,8 +59,6 @@ struct Wheel {
 
     double radius;
     double width;
-    double x_offset;
-    double y_offset;
 };
 
 struct Params {
