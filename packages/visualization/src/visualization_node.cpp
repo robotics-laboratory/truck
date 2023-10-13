@@ -215,7 +215,7 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
     const geometry_msgs::msg::Pose &pose) const {
 
     const int first_id = msg_array.markers.size();
-    for (auto i = 0; i < 4; ++i) {
+    for (auto i = first_id; i < first_id + 4; ++i) {
         visualization_msgs::msg::Marker msg;
         msg.id = i + 1;
         msg.header = state_.odom->header;
@@ -228,9 +228,9 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         msg.pose = pose;
         msg.pose.position.z = params_.ego_z_lev + model_->wheel().radius - params_.ego_height / 2;
         double z_angle = 0;
-        if (i == 0) {
+        if (i == first_id) {
             z_angle = state_.telemetry->current_right_steering;
-        } else if (i == 1) {
+        } else if (i == first_id + 1) {
             z_angle = state_.telemetry->current_left_steering;
         }
 
