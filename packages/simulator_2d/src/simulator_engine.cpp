@@ -31,8 +31,34 @@ geom::Pose SimulatorEngine::getPose() const {
     return pose;
 }
 
-geom::Angle SimulatorEngine::getSteering() const {
+geom::Angle SimulatorEngine::getMiddleSteering() const {
     return geom::Angle(state_[StateIndex::steering]);
+}
+
+namespace {
+
+geom::Angle getSteering(double yaw, double wheelbase_length, double wheelbase_width, bool isLeftWheel) {
+    const double y = abs(yaw) * wheelbase_length;
+    const double x = 1 + -isLeftWheel * yaw * wheelbase_width / 2;
+    return geom::Angle(atan2(y, x));
+}
+
+} // namespace
+
+geom::Angle SimulatorEngine::getLeftSteering() const {
+    return getSteering(state_[StateIndex::yaw], params_.wheelbase, model_->wheelBase().width, true);
+}
+
+geom::Angle SimulatorEngine::getRightSteering() const {
+    return getSteering(state_[StateIndex::yaw], params_.wheelbase, model_->wheelBase().width, false);
+}
+
+geom::Angle SimulatorEngine::getTargetLeftSteering() const {
+    return getSteering(control_.curvature, params_.wheelbase, model_->wheelBase().width, true);
+}
+
+geom::Angle SimulatorEngine::getTargetRightSteering() const {
+    return getSteering(control_.curvature, params_.wheelbase, model_->wheelBase().width, false);
 }
 
 double SimulatorEngine::getSpeed() const { return state_[StateIndex::linear_velocity]; }
@@ -86,16 +112,12 @@ void SimulatorEngine::advance(const double time) {
 
     const double old_yaw = state_[StateIndex::yaw];
 
-    const double steering_final = abs(control_.curvature) < params_.precision
-                                      ? 0
-                                      : std::clamp(
-                                            atan(params_.wheelbase * control_.curvature),
-                                            -params_.steering_limit,
-                                            +params_.steering_limit);
-
-    double steering_rest = abs(steering_final - state_[StateIndex::steering]);
+    const double target_steering = std::clamp(atan2(control_.curvature, 1 / params_.wheelbase), 
+                                   -params_.steering_limit, 
+                                   params_.steering_limit);
+    double steering_rest = abs(target_steering - state_[StateIndex::steering]);
     double steering_velocity = steering_rest < params_.precision ? 0
-                               : state_[StateIndex::steering] < steering_final
+                               : state_[StateIndex::steering] < target_steering
                                    ? params_.max_steering_velocity
                                    : -params_.max_steering_velocity;
 
@@ -103,10 +125,10 @@ void SimulatorEngine::advance(const double time) {
     double acceleration = velocity_rest < params_.precision ? 0 : control_.acceleration;
 
     for (auto i = 0; i < integration_steps; ++i) {
-        steering_rest = abs(steering_final - state_[StateIndex::steering]) -
+        steering_rest = abs(target_steering - state_[StateIndex::steering]) -
                         abs(steering_velocity) * params_.integration_step / 6;
         if (steering_rest < params_.precision) {
-            state_[StateIndex::steering] = steering_final;
+            state_[StateIndex::steering] = target_steering;
             steering_velocity = 0;
         }
 

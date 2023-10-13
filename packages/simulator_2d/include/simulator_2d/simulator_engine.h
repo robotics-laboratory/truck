@@ -14,7 +14,11 @@ class SimulatorEngine {
         const double precision = 1e-8);
     void reset();
     geom::Pose getPose() const;
-    geom::Angle getSteering() const;
+    geom::Angle getMiddleSteering() const;
+    geom::Angle getLeftSteering() const;
+    geom::Angle getRightSteering() const;
+    geom::Angle getTargetLeftSteering() const;
+    geom::Angle getTargetRightSteering() const;
     double getSpeed() const;
     geom::Vec2 getLinearVelocity() const;
     geom::Vec2 getAngularVelocity() const;

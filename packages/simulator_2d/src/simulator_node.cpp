@@ -97,11 +97,15 @@ void SimulatorNode::publishTransformMessage(const rclcpp::Time &time, const geom
     signals_.tf_publisher->publish(tf_msg);
 }
 
-void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time, const geom::Angle &steering) {
+void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time) {
     truck_msgs::msg::HardwareTelemetry telemetry_msg;
     telemetry_msg.header.frame_id = "odom_ekf";
     telemetry_msg.header.stamp = time;
-    telemetry_msg.steering_angle = steering.radians();
+    // To do: разный steering
+    telemetry_msg.current_left_steering = getLeftSteering();
+    telemetry_msg.current_right_steering = getRightSteering();
+    telemetry_msg.target_left_steering = getTargetLeftSteering();
+    telemetry_msg.target_right_steering = getTargetRightSteering();
     signals_.telemetry->publish(telemetry_msg);
 }
 
@@ -126,7 +130,7 @@ void SimulatorNode::publishSignals() {
     const auto time = now();
     publishOdometryMessage(time, pose, linearVelocity, angularVelocity);
     publishTransformMessage(time, pose);
-    publishTelemetryMessage(time, steering);
+    publishTelemetryMessage(time);
     publishSimulationStateMessage(time, speed, steering);
 }
 
