@@ -102,28 +102,26 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time) {
     telemetry_msg.header.frame_id = "odom_ekf";
     telemetry_msg.header.stamp = time;
     // To do: разный steering
-    telemetry_msg.current_left_steering = getLeftSteering();
-    telemetry_msg.current_right_steering = getRightSteering();
-    telemetry_msg.target_left_steering = getTargetLeftSteering();
-    telemetry_msg.target_right_steering = getTargetRightSteering();
+    telemetry_msg.current_left_steering = engine_.getLeftSteering().radians();
+    telemetry_msg.current_right_steering = engine_.getRightSteering().radians();
+    telemetry_msg.target_left_steering = engine_.getTargetLeftSteering().radians();
+    telemetry_msg.target_right_steering = engine_.getTargetRightSteering().radians();
     signals_.telemetry->publish(telemetry_msg);
 }
 
-void SimulatorNode::publishSimulationStateMessage(const rclcpp::Time &time, 
-        const double speed, const geom::Angle &steering) {
+void SimulatorNode::publishSimulationStateMessage(const rclcpp::Time &time, const double speed) {
 
     truck_msgs::msg::SimulationState state_msg;
     state_msg.header.frame_id = "odom_ekf";
     state_msg.header.stamp = time;
     state_msg.speed = speed;
-    state_msg.steering = steering.radians();
+    state_msg.steering = engine_.getMiddleSteering().radians();
     signals_.state->publish(state_msg);
 }
 
 void SimulatorNode::publishSignals() {
     engine_.advance(params_.update_period);
     const auto pose = engine_.getPose();
-    const auto steering = engine_.getSteering();
     const auto linearVelocity = engine_.getLinearVelocity();
     const auto angularVelocity = engine_.getAngularVelocity();
     const auto speed = engine_.getSpeed();
@@ -131,7 +129,7 @@ void SimulatorNode::publishSignals() {
     publishOdometryMessage(time, pose, linearVelocity, angularVelocity);
     publishTransformMessage(time, pose);
     publishTelemetryMessage(time);
-    publishSimulationStateMessage(time, speed, steering);
+    publishSimulationStateMessage(time, speed);
 }
 
 }  // namespace truck::simulator

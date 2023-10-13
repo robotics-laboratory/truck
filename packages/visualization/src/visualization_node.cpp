@@ -222,14 +222,19 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         msg.type = visualization_msgs::msg::Marker::CYLINDER;
         msg.action = visualization_msgs::msg::Marker::ADD;
         msg.frame_locked = true;
-        msg.scale.x = msg.scale.y = 2 * model_->wheel().radius;
+        msg.scale.x = 2 * model_->wheel().radius;
+        msg.scale.y = 2 * model_->wheel().radius;
         msg.scale.z = model_->wheel().width;
         msg.pose = pose;
         msg.pose.position.z = params_.ego_z_lev + model_->wheel().radius - params_.ego_height / 2;
-        setRotation(msg.pose.orientation, M_PI_2, 0.0, 
-            i < 2 
-            ? state_.telemetry->steering_angle 
-            : 0);
+        double z_angle = 0;
+        if (i == 0) {
+            z_angle = state_.telemetry->current_right_steering;
+        } else if (i == 1) {
+            z_angle = state_.telemetry->current_left_steering;
+        }
+        
+        setRotation(msg.pose.orientation, M_PI_2, 0.0, z_angle);
         msg.color = modeToColor(state_.mode);
 
         msg_array.markers.push_back(msg);
