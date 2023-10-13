@@ -39,10 +39,6 @@ class SimulatorEngine {
     struct Parameters {
         double integration_step;
         double precision;
-        double max_steering_velocity;
-        double wheelbase;
-        double base_to_rear;
-        double steering_limit;
     } params_;
 
     struct Control {
