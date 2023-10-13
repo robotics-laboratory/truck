@@ -8,6 +8,7 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
+#include <rosgraph_msgs/msg/clock.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -21,12 +22,11 @@ class SimulatorNode : public rclcpp::Node {
 
   private:
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
-    void publishOdometryMessage(
-        const rclcpp::Time &time, const geom::Pose &pose, const geom::Vec2 &linearVelocity,
-        const geom::Vec2 &angularVelocity);
+    void publishTime(const rclcpp::Time &time);
+    void publishOdometryMessage(const rclcpp::Time &time, const geom::Pose &pose);
     void publishTransformMessage(const rclcpp::Time &time, const geom::Pose &pose);
     void publishTelemetryMessage(const rclcpp::Time &time);
-    void publishSimulationStateMessage(const rclcpp::Time &time, const double speed);
+    void publishSimulationStateMessage(const rclcpp::Time &time);
     void publishSignals();
 
     SimulatorEngine engine_;
@@ -35,7 +35,6 @@ class SimulatorNode : public rclcpp::Node {
 
     struct Parameters {
         double update_period;
-        double precision;
     } params_;
 
     struct Slots {
@@ -43,6 +42,7 @@ class SimulatorNode : public rclcpp::Node {
     } slots_;
 
     struct Signals {
+        rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr time = nullptr;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
         rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
         rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;

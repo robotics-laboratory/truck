@@ -9,10 +9,10 @@ namespace truck::simulator {
 
 class SimulatorEngine {
   public:
-    void start(
-        std::unique_ptr<model::Model> &model, const double integration_step = 0.001,
-        const double precision = 1e-8);
+    SimulatorEngine(const std::string& model_config_path, 
+        double integration_step = 0.001, double precision = 1e-8);
     void reset();
+    rclcpp::Time getTime() const;
     geom::Pose getPose() const;
     geom::Angle getMiddleSteering() const;
     geom::Angle getLeftSteering() const;
@@ -22,14 +22,16 @@ class SimulatorEngine {
     double getSpeed() const;
     geom::Vec2 getLinearVelocity() const;
     geom::Vec2 getAngularVelocity() const;
-    void setControl(const double velocity, const double acceleration, const double curvature);
-    void setControl(const double velocity, const double curvature);
+    void setControl(double velocity, double acceleration, double curvature);
+    void setControl(double velocity, double curvature);
     /**
      * @param time in seconds.
      */
     void advance(const double time = 1.0);
 
   private:
+    rclcpp::Time time_;
+
     typedef Eigen::Matrix<double, 6, 1> State;
 
     State calculateStateDelta(
@@ -38,7 +40,12 @@ class SimulatorEngine {
 
     struct Parameters {
         double integration_step;
+        double integration_step_2;
+        double integration_step_6;
+        double inverse_integration_step;
         double precision;
+        double inverse_wheelbase_length;
+        double wheelbase_width_2;
     } params_;
 
     struct Control {
@@ -56,9 +63,10 @@ class SimulatorEngine {
         angular_velocity = 5
     };
 
+    // For the rear axle.
     State state_;
 
-    std::unique_ptr<model::Model> model_ = nullptr;
+    model::Model model_;
 };
 
 }  // namespace truck::simulator

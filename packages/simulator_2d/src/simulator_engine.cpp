@@ -5,25 +5,33 @@
 
 namespace truck::simulator {
 
-void SimulatorEngine::start(
-    std::unique_ptr<model::Model> &model, const double integration_step, const double precision) {
+SimulatorEngine::SimulatorEngine(const std::string& model_config_path, 
+    double integration_step, double precision): model_(model_config_path) {
     
-    model_ = std::unique_ptr<model::Model>(std::move(model));
     params_.integration_step = integration_step;
+    params_.integration_step_2 = integration_step / 2;
+    params_.integration_step_6 = integration_step / 6;
+    params_.inverse_integration_step = 1 / integration_step;
     params_.precision = precision;
+    params_.inverse_wheelbase_length = 1 / model_.wheelBase().length;
+    params_.wheelbase_width_2 = model_.wheelBase().width / 2;
     reset();
 }
 
 void SimulatorEngine::reset() {
     state_ = SimulatorEngine::State::Zero();
-    state_[StateIndex::x] = -model_->wheelBase().base_to_rear;
+    state_[StateIndex::x] = -model_.wheelBase().base_to_rear;
+}
+
+rclcpp::Time SimulatorEngine::getTime() const {
+    return time_;
 }
 
 geom::Pose SimulatorEngine::getPose() const {
     geom::Pose pose;
     pose.dir = geom::AngleVec2(geom::Angle::fromRadians(state_[StateIndex::yaw]));
-    pose.pos.x = state_[StateIndex::x] + model_->wheelBase().base_to_rear * pose.dir.x();
-    pose.pos.y = state_[StateIndex::y] + model_->wheelBase().base_to_rear * pose.dir.y();
+    pose.pos.x = state_[StateIndex::x] + model_.wheelBase().base_to_rear * pose.dir.x();
+    pose.pos.y = state_[StateIndex::y] + model_.wheelBase().base_to_rear * pose.dir.y();
     return pose;
 }
 
@@ -33,117 +41,142 @@ geom::Angle SimulatorEngine::getMiddleSteering() const {
 
 namespace {
 
-geom::Angle getSteering(double yaw, double wheelbase_length, double wheelbase_width, bool isLeftWheel) {
+geom::Angle getSteering(double yaw, double wheelbase_length, 
+    double wheelbase_width_2, bool isLeftWheel) {
+        
     const double y = abs(yaw) * wheelbase_length;
-    const double x = 1 + -isLeftWheel * yaw * wheelbase_width / 2;
+    const double x = 1 + -isLeftWheel * yaw * wheelbase_width_2;
     return geom::Angle(atan2(y, x));
 }
 
 } // namespace
 
 geom::Angle SimulatorEngine::getLeftSteering() const {
-    return getSteering(state_[StateIndex::yaw], model_->wheelBase().length, model_->wheelBase().width, true);
+    return getSteering(state_[StateIndex::yaw], model_.wheelBase().length, 
+        params_.wheelbase_width_2, true);
 }
 
 geom::Angle SimulatorEngine::getRightSteering() const {
-    return getSteering(state_[StateIndex::yaw], model_->wheelBase().length, model_->wheelBase().width, false);
+    return getSteering(state_[StateIndex::yaw], model_.wheelBase().length, 
+        params_.wheelbase_width_2, false);
 }
 
 geom::Angle SimulatorEngine::getTargetLeftSteering() const {
-    return getSteering(control_.curvature, model_->wheelBase().length, model_->wheelBase().width, true);
+    return getSteering(control_.curvature, model_.wheelBase().length, 
+        params_.wheelbase_width_2, true);
 }
 
 geom::Angle SimulatorEngine::getTargetRightSteering() const {
-    return getSteering(control_.curvature, model_->wheelBase().length, model_->wheelBase().width, false);
+    return getSteering(control_.curvature, model_.wheelBase().length, 
+        params_.wheelbase_width_2, false);
 }
 
 double SimulatorEngine::getSpeed() const { return state_[StateIndex::linear_velocity]; }
 
 geom::Vec2 SimulatorEngine::getLinearVelocity() const {
-    return geom::Vec2(
-        cos(state_[StateIndex::linear_velocity]), sin(state_[StateIndex::linear_velocity]));
+    return geom::Vec2::fromAngle(geom::Angle(state_[StateIndex::linear_velocity]));
 }
 
 geom::Vec2 SimulatorEngine::getAngularVelocity() const {
-    return geom::Vec2(
-        cos(state_[StateIndex::angular_velocity]), sin(state_[StateIndex::angular_velocity]));
+    return geom::Vec2::fromAngle(geom::Angle(state_[StateIndex::angular_velocity]));
 }
 
 void SimulatorEngine::setControl(
-    const double velocity, const double acceleration, const double curvature) {
+    double velocity, double acceleration, double curvature) {
     
-    control_.velocity = model_->baseVelocityLimits().clamp(velocity);
-    control_.acceleration = model_->baseAccelerationLimits().clamp(acceleration);
-    const auto curvature_limit = model_->baseMaxAbsCurvature();
+    control_.velocity = model_.baseVelocityLimits().clamp(velocity);
+    control_.acceleration = model_.baseAccelerationLimits().clamp(acceleration);
+    const auto curvature_limit = model_.baseMaxAbsCurvature();
     control_.curvature = std::clamp(curvature, -curvature_limit, curvature_limit);
-    const auto product = control_.curvature * model_->wheelBase().base_to_rear;
+    const auto product = control_.curvature * model_.wheelBase().base_to_rear;
     control_.curvature /= sqrt(1 - product * product);
 }
 
-void SimulatorEngine::setControl(const double velocity, const double curvature) {
-    const auto limits = model_->baseAccelerationLimits();
-    const double acceleration =
-        abs(velocity - state_[StateIndex::linear_velocity]) < params_.precision ? 0
-        : state_[StateIndex::linear_velocity] < velocity                        ? limits.max
-                                                                                : limits.min;
+void SimulatorEngine::setControl(double velocity, double curvature) {
+    const auto limits = model_.baseAccelerationLimits();
+    const double velocity_rest = abs(velocity - state_[StateIndex::linear_velocity]);
+    double acceleration;
+    if (velocity_rest < params_.precision) {
+        acceleration = 0;
+    } else if (state_[StateIndex::linear_velocity] < velocity) {
+        acceleration = limits.max;
+    } else {
+        acceleration = limits.min;
+    }
+
     setControl(velocity, acceleration, curvature);
 }
 
 SimulatorEngine::State SimulatorEngine::calculateStateDelta(
-    const SimulatorEngine::State &state, const double acceleration,
-    const double steering_velocity) {
+    const SimulatorEngine::State &state, double acceleration,
+    double steering_velocity) {
     
     SimulatorEngine::State delta;
     delta[StateIndex::x] = cos(state[StateIndex::yaw]) * state[StateIndex::linear_velocity];
     delta[StateIndex::y] = sin(state[StateIndex::yaw]) * state[StateIndex::linear_velocity];
     delta[StateIndex::yaw] =
-        tan(state[StateIndex::steering]) * state[StateIndex::linear_velocity] / model_->wheelBase().length;
+        tan(state[StateIndex::steering]) * state[StateIndex::linear_velocity] 
+            * params_.inverse_wheelbase_length;
     delta[StateIndex::steering] = steering_velocity;
     delta[StateIndex::linear_velocity] = acceleration;
     return delta;
 }
 
-void SimulatorEngine::advance(const double time) {
-    const int integration_steps = time / params_.integration_step;
+namespace {
+
+rclcpp::Duration convertFromSecondsToDuration(double seconds) {
+    auto int_seconds = int(seconds);
+    auto nanoseconds = (seconds - int_seconds) * 1e9;
+    return rclcpp::Duration(int_seconds, int(nanoseconds));
+}
+
+} // namespace
+
+void SimulatorEngine::advance(double time) {
+    time_ += convertFromSecondsToDuration(time);
+
+    const int integration_steps = time * params_.inverse_integration_step;
 
     const double old_yaw = state_[StateIndex::yaw];
 
-    const double target_steering = std::clamp(atan2(control_.curvature, 1 / model_->wheelBase().length), 
-                                   -model_->leftSteeringLimits().max.radians(), 
-                                   model_->leftSteeringLimits().max.radians());
-    double steering_rest = abs(target_steering - state_[StateIndex::steering]);
-    double steering_velocity = steering_rest < params_.precision ? 0
-                               : state_[StateIndex::steering] < target_steering
-                                   ? model_->steeringVelocity()
-                                   : -model_->steeringVelocity();
+    const double target_steering 
+        = std::clamp(atan2(control_.curvature, params_.inverse_wheelbase_length), 
+                                -model_.leftSteeringLimits().max.radians(), 
+                                model_.leftSteeringLimits().max.radians());
+    double steering_velocity;
+    if (state_[StateIndex::steering] - params_.precision < target_steering) {
+        steering_velocity = model_.steeringVelocity();
+    } else {
+        steering_velocity = -model_.steeringVelocity();
+    }
 
     double velocity_rest = abs(control_.velocity - state_[StateIndex::linear_velocity]);
     double acceleration = velocity_rest < params_.precision ? 0 : control_.acceleration;
 
     for (auto i = 0; i < integration_steps; ++i) {
-        steering_rest = abs(target_steering - state_[StateIndex::steering]) -
-                        abs(steering_velocity) * params_.integration_step / 6;
-        if (steering_rest < params_.precision) {
+        const double steering_rest = abs(target_steering - state_[StateIndex::steering]);
+        const double steering_delta = abs(steering_velocity) * params_.integration_step_6;
+        if (steering_rest - steering_delta < params_.precision) {
             state_[StateIndex::steering] = target_steering;
             steering_velocity = 0;
         }
 
-        velocity_rest = abs(control_.velocity - state_[StateIndex::linear_velocity]) -
-                        abs(acceleration) * params_.integration_step / 6;
-        if (velocity_rest < params_.precision) {
+        velocity_rest = abs(control_.velocity - state_[StateIndex::linear_velocity]);
+        const double velocity_delta = abs(acceleration) * params_.integration_step_6;
+        if (velocity_rest - velocity_delta < params_.precision) {
             state_[StateIndex::linear_velocity] = control_.velocity;
             acceleration = 0;
         }
 
         auto k1 = calculateStateDelta(state_, acceleration, steering_velocity);
         auto k2 = calculateStateDelta(
-            state_ + k1 * (params_.integration_step / 2), acceleration, steering_velocity);
+            state_ + k1 * params_.integration_step_2, acceleration, steering_velocity);
         auto k3 = calculateStateDelta(
-            state_ + k2 * (params_.integration_step / 2), acceleration, steering_velocity);
+            state_ + k2 * params_.integration_step_2, acceleration, steering_velocity);
         auto k4 = calculateStateDelta(
             state_ + k3 * params_.integration_step, acceleration, steering_velocity);
 
-        state_ += (k1 + 2 * k2 + 2 * k3 + k4) * (params_.integration_step / 6);
+        state_ += (k1 + 2 * k2 + 2 * k3 + k4) * params_.integration_step_6;
         state_[StateIndex::yaw] = geom::Angle::_0_2PI(state_[StateIndex::yaw]);
     }
 
