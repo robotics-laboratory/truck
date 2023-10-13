@@ -202,7 +202,7 @@ namespace {
 void setRotation(geometry_msgs::msg::Quaternion &original_orientation, 
     const double x_angle, const double y_angle, const double z_angle) {
     tf2::Quaternion q_original, q_rotation, q_new;
-    tf2::convert(original_orientation , q_original);
+    tf2::convert(original_orientation, q_original);
     q_rotation.setRPY(x_angle, y_angle, z_angle);
     q_new = q_original * q_rotation;    
     q_new.normalize();
@@ -233,7 +233,7 @@ void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_a
         } else if (i == 1) {
             z_angle = state_.telemetry->current_left_steering;
         }
-        
+
         setRotation(msg.pose.orientation, M_PI_2, 0.0, z_angle);
         msg.color = modeToColor(state_.mode);
 
