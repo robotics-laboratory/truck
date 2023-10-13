@@ -14,11 +14,11 @@ class SimulatorEngine {
     void reset();
     rclcpp::Time getTime() const;
     geom::Pose getPose() const;
-    geom::Angle getMiddleSteering() const;
-    geom::Angle getLeftSteering() const;
-    geom::Angle getRightSteering() const;
-    geom::Angle getTargetLeftSteering() const;
-    geom::Angle getTargetRightSteering() const;
+    double getMiddleSteering() const;
+    double getLeftSteering() const;
+    double getRightSteering() const;
+    double getTargetLeftSteering() const;
+    double getTargetRightSteering() const;
     double getSpeed() const;
     geom::Vec2 getLinearVelocity() const;
     geom::Vec2 getAngularVelocity() const;

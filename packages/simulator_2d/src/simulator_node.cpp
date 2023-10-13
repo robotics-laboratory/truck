@@ -50,7 +50,8 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     if (control->has_acceleration) {
         engine_.setControl(control->velocity, control->acceleration, control->curvature);
     } else {
-        engine_.setControl(control->velocity, control->curvature);
+        //engine_.setControl(control->velocity, control->curvature);
+        engine_.setControl(10, 10);
     }
 }
 
@@ -110,10 +111,10 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time) {
     telemetry_msg.header.frame_id = "base";
     telemetry_msg.header.stamp = time;
     // To do: разный steering
-    telemetry_msg.current_left_steering = engine_.getLeftSteering().radians();
-    telemetry_msg.current_right_steering = engine_.getRightSteering().radians();
-    telemetry_msg.target_left_steering = engine_.getTargetLeftSteering().radians();
-    telemetry_msg.target_right_steering = engine_.getTargetRightSteering().radians();
+    telemetry_msg.current_left_steering = engine_.getLeftSteering();
+    telemetry_msg.current_right_steering = engine_.getRightSteering();
+    telemetry_msg.target_left_steering = engine_.getTargetLeftSteering();
+    telemetry_msg.target_right_steering = engine_.getTargetRightSteering();
     signals_.telemetry->publish(telemetry_msg);
 }
 
@@ -123,7 +124,7 @@ void SimulatorNode::publishSimulationStateMessage(const rclcpp::Time &time) {
     state_msg.header.frame_id = "odom_ekf";
     state_msg.header.stamp = time;
     state_msg.speed = engine_.getSpeed();
-    state_msg.steering = engine_.getMiddleSteering().radians();
+    state_msg.steering = engine_.getMiddleSteering();
     signals_.state->publish(state_msg);
 }
 

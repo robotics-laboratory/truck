@@ -35,38 +35,38 @@ geom::Pose SimulatorEngine::getPose() const {
     return pose;
 }
 
-geom::Angle SimulatorEngine::getMiddleSteering() const {
-    return geom::Angle(state_[StateIndex::steering]);
+double SimulatorEngine::getMiddleSteering() const {
+    return state_[StateIndex::steering];
 }
 
 namespace {
 
-geom::Angle getSteering(double yaw, double wheelbase_length, 
+double getSteering(double yaw, double wheelbase_length, 
     double wheelbase_width_2, bool isLeftWheel) {
         
     const double y = abs(yaw) * wheelbase_length;
     const double x = 1 + -isLeftWheel * yaw * wheelbase_width_2;
-    return geom::Angle(atan2(y, x));
+    return atan2(y, x);
 }
 
 } // namespace
 
-geom::Angle SimulatorEngine::getLeftSteering() const {
+double SimulatorEngine::getLeftSteering() const {
     return getSteering(state_[StateIndex::yaw], model_.wheelBase().length, 
         params_.wheelbase_width_2, true);
 }
 
-geom::Angle SimulatorEngine::getRightSteering() const {
+double SimulatorEngine::getRightSteering() const {
     return getSteering(state_[StateIndex::yaw], model_.wheelBase().length, 
         params_.wheelbase_width_2, false);
 }
 
-geom::Angle SimulatorEngine::getTargetLeftSteering() const {
+double SimulatorEngine::getTargetLeftSteering() const {
     return getSteering(control_.curvature, model_.wheelBase().length, 
         params_.wheelbase_width_2, true);
 }
 
-geom::Angle SimulatorEngine::getTargetRightSteering() const {
+double SimulatorEngine::getTargetRightSteering() const {
     return getSteering(control_.curvature, model_.wheelBase().length, 
         params_.wheelbase_width_2, false);
 }
