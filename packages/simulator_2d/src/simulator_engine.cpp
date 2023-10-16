@@ -60,10 +60,6 @@ model::Twist SimulatorEngine::getTwist() const {
     return model_.baseToRearTwist(twist);
 }
 
-double SimulatorEngine::getSpeed() const { 
-    return getTwist().velocity; 
-}
-
 geom::Vec2 SimulatorEngine::getLinearVelocity() const {
     return geom::Vec2::fromAngle(geom::Angle(getTwist().velocity));
 }
