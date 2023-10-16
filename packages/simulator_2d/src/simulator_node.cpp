@@ -110,11 +110,12 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time) {
     truck_msgs::msg::HardwareTelemetry telemetry_msg;
     telemetry_msg.header.frame_id = "base";
     telemetry_msg.header.stamp = time;
-    // To do: разный steering
-    telemetry_msg.current_left_steering = engine_.getLeftSteering();
-    telemetry_msg.current_right_steering = engine_.getRightSteering();
-    telemetry_msg.target_left_steering = engine_.getTargetLeftSteering();
-    telemetry_msg.target_right_steering = engine_.getTargetRightSteering();
+    const auto current_steering = engine_.getCurrentSteering();
+    telemetry_msg.current_left_steering = current_steering.left.radians();
+    telemetry_msg.current_right_steering = current_steering.right.radians();
+    const auto target_steering = engine_.getTargetSteering();
+    telemetry_msg.target_left_steering = target_steering.left.radians();
+    telemetry_msg.target_right_steering = target_steering.right.radians();
     signals_.telemetry->publish(telemetry_msg);
 }
 

@@ -56,6 +56,15 @@ Steering Model::rearTwistToSteering(Twist twist) const {
         geom::Angle::fromRadians(std::atan2(first, 1 + second))};
 }
 
+Steering Model::rearCurvatureToSteering(double curvature) const {
+    const double first = curvature * params_.wheel_base.length;
+    const double second = curvature * cache_.width_half;
+
+    return Steering {
+        geom::Angle::fromRadians(std::atan2(first, 1 - second)),
+        geom::Angle::fromRadians(std::atan2(first, 1 + second))};
+}
+
 WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
     const double ratio = twist.curvature * cache_.width_half;
 
