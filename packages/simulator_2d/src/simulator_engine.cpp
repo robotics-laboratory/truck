@@ -18,8 +18,12 @@ SimulatorEngine::SimulatorEngine(const std::string& model_config_path,
     reset();
 }
 
+void SimulatorEngine::reset(const simulator::State &state) {
+    state_ = state;
+}
+
 void SimulatorEngine::reset() {
-    state_ = SimulatorEngine::State::Zero();
+    state_ = simulator::State::Zero();
     state_[StateIndex::x] = -model_.wheelBase().base_to_rear;
 }
 
@@ -39,39 +43,18 @@ double SimulatorEngine::getMiddleSteering() const {
     return state_[StateIndex::steering];
 }
 
-namespace {
-
-double getSteering(double yaw, double wheelbase_length, 
-    double wheelbase_width_2, bool isLeftWheel) {
-        
-    const double y = abs(yaw) * wheelbase_length;
-    const double x = 1 + -isLeftWheel * yaw * wheelbase_width_2;
-    return atan2(y, x);
+model::Steering SimulatorEngine::getCurrentSteering() const {
+    const double current_curvature = model_.wheelBase().length * tan(state_[StateIndex::steering]);
+    return model_.rearCurvatureToSteering(current_curvature);
 }
 
-} // namespace
-
-double SimulatorEngine::getLeftSteering() const {
-    return getSteering(state_[StateIndex::yaw], model_.wheelBase().length, 
-        params_.wheelbase_width_2, true);
+model::Steering SimulatorEngine::getTargetSteering() const {
+    return model_.rearCurvatureToSteering(control_.curvature);
 }
 
-double SimulatorEngine::getRightSteering() const {
-    return getSteering(state_[StateIndex::yaw], model_.wheelBase().length, 
-        params_.wheelbase_width_2, false);
+double SimulatorEngine::getSpeed() const { 
+    return state_[StateIndex::linear_velocity]; 
 }
-
-double SimulatorEngine::getTargetLeftSteering() const {
-    return getSteering(control_.curvature, model_.wheelBase().length, 
-        params_.wheelbase_width_2, true);
-}
-
-double SimulatorEngine::getTargetRightSteering() const {
-    return getSteering(control_.curvature, model_.wheelBase().length, 
-        params_.wheelbase_width_2, false);
-}
-
-double SimulatorEngine::getSpeed() const { return state_[StateIndex::linear_velocity]; }
 
 geom::Vec2 SimulatorEngine::getLinearVelocity() const {
     return geom::Vec2::fromAngle(geom::Angle(state_[StateIndex::linear_velocity]));
@@ -107,11 +90,11 @@ void SimulatorEngine::setControl(double velocity, double curvature) {
     setControl(velocity, acceleration, curvature);
 }
 
-SimulatorEngine::State SimulatorEngine::calculateStateDelta(
-    const SimulatorEngine::State &state, double acceleration,
+simulator::State SimulatorEngine::calculateStateDelta(
+    const simulator::State &state, double acceleration,
     double steering_velocity) {
     
-    SimulatorEngine::State delta;
+    simulator::State delta;
     delta[StateIndex::x] = cos(state[StateIndex::yaw]) * state[StateIndex::linear_velocity];
     delta[StateIndex::y] = sin(state[StateIndex::yaw]) * state[StateIndex::linear_velocity];
     delta[StateIndex::yaw] =
