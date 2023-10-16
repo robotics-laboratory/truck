@@ -124,7 +124,7 @@ void SimulatorNode::publishSimulationStateMessage(const rclcpp::Time &time) {
     truck_msgs::msg::SimulationState state_msg;
     state_msg.header.frame_id = "odom_ekf";
     state_msg.header.stamp = time;
-    state_msg.speed = engine_.getSpeed();
+    state_msg.speed = engine_.getTwist().velocity;
     state_msg.steering = engine_.getMiddleSteering();
     signals_.state->publish(state_msg);
 }

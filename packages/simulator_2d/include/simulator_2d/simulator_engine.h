@@ -26,10 +26,11 @@ class SimulatorEngine {
     void reset();
     rclcpp::Time getTime() const;
     geom::Pose getPose() const;
+    double getCurrentCurvature() const;
     double getMiddleSteering() const;
     model::Steering getCurrentSteering() const;
     model::Steering getTargetSteering() const;
-    double getSpeed() const;
+    model::Twist getTwist() const;
     geom::Vec2 getLinearVelocity() const;
     geom::Vec2 getAngularVelocity() const;
     void setControl(double velocity, double acceleration, double curvature);

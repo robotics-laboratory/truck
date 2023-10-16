@@ -39,25 +39,33 @@ geom::Pose SimulatorEngine::getPose() const {
     return pose;
 }
 
+double SimulatorEngine::getCurrentCurvature() const {
+    return model_.wheelBase().length * tan(state_[StateIndex::steering]);
+}
+
 double SimulatorEngine::getMiddleSteering() const {
     return state_[StateIndex::steering];
 }
 
 model::Steering SimulatorEngine::getCurrentSteering() const {
-    const double current_curvature = model_.wheelBase().length * tan(state_[StateIndex::steering]);
-    return model_.rearCurvatureToSteering(current_curvature);
+    return model_.rearCurvatureToSteering(getCurrentCurvature());
 }
 
 model::Steering SimulatorEngine::getTargetSteering() const {
     return model_.rearCurvatureToSteering(control_.curvature);
 }
 
+model::Twist SimulatorEngine::getTwist() const { 
+    const auto twist = model::Twist {getCurrentCurvature(), state_[StateIndex::linear_velocity]};
+    return model_.baseToRearTwist(twist);
+}
+
 double SimulatorEngine::getSpeed() const { 
-    return state_[StateIndex::linear_velocity]; 
+    return getTwist().velocity; 
 }
 
 geom::Vec2 SimulatorEngine::getLinearVelocity() const {
-    return geom::Vec2::fromAngle(geom::Angle(state_[StateIndex::linear_velocity]));
+    return geom::Vec2::fromAngle(geom::Angle(getTwist().velocity));
 }
 
 geom::Vec2 SimulatorEngine::getAngularVelocity() const {
