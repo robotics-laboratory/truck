@@ -57,7 +57,7 @@ model::Steering SimulatorEngine::getTargetSteering() const {
 
 model::Twist SimulatorEngine::getTwist() const { 
     const auto twist = model::Twist {getCurrentCurvature(), state_[StateIndex::linear_velocity]};
-    return model_.baseToRearTwist(twist);
+    return model_.rearToBaseTwist(twist);
 }
 
 geom::Vec2 SimulatorEngine::getLinearVelocity() const {
@@ -71,12 +71,13 @@ geom::Vec2 SimulatorEngine::getAngularVelocity() const {
 void SimulatorEngine::setControl(
     double velocity, double acceleration, double curvature) {
     
-    control_.velocity = model_.baseVelocityLimits().clamp(velocity);
-    control_.acceleration = model_.baseAccelerationLimits().clamp(acceleration);
-    const auto curvature_limit = model_.baseMaxAbsCurvature();
-    control_.curvature = std::clamp(curvature, -curvature_limit, curvature_limit);
-    const auto product = control_.curvature * model_.wheelBase().base_to_rear;
-    control_.curvature /= sqrt(1 - product * product);
+    curvature = model_.baseToLimitedRearCurvature(curvature);
+    velocity = model_.baseToLimitedRearVelocity(velocity, curvature);
+    acceleration = model_.baseToLimitedRearAcceleration(acceleration, curvature);
+
+    control_.velocity = velocity;
+    control_.acceleration = acceleration;
+    control_.curvature = curvature;
 }
 
 void SimulatorEngine::setControl(double velocity, double curvature) {
