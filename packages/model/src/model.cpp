@@ -24,6 +24,10 @@ Model::Model(const std::string& config_path) : params_(config_path) {
         cache_.max_abs_curvature =
             std::min(rearToBaseCurvature(max_abs_rear_curvature), 
             params_.limits.max_abs_curvature);
+
+        const double steering_limit 
+            = std::atan2(cache_.max_abs_rear_curvature, params_.wheel_base.length);
+        cache_.middle_steering_limits = {-steering_limit, steering_limit};
     }
 }
 
@@ -101,9 +105,7 @@ Limits<geom::Angle> Model::rightSteeringLimits() const {
 }
 
 Limits<double> Model::middleSteeringLimits() const {
-    const double limit 
-        = std::atan2(cache_.max_abs_rear_curvature, params_.wheel_base.length);
-    return {-limit, limit};
+    return cache_.middle_steering_limits;
 }
 
 Steering Model::rearCurvatureToSteering(double curvature) const {

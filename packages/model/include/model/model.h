@@ -65,6 +65,7 @@ class Model {
         double width_half;
         double max_abs_rear_curvature;
         double max_abs_curvature;
+        Limits<double> middle_steering_limits;
     } cache_;
 
     Params params_;
