@@ -10,6 +10,8 @@
 
 #include <boost/assert.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2/LinearMath/Transform.h>
+#include <tf2/convert.h>
 
 #include <functional>
 #include <utility>
@@ -50,6 +52,21 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         .trajectory_z_lev = this->declare_parameter("trajectory.z_lev", 0.0),
         .trajectory_width = this->declare_parameter("trajector.width", 0.12),
     };
+
+    cache_.ego_body_scale = geometry_msgs::msg::Vector3();
+    cache_.ego_body_scale.x = model_->shape().length;
+    cache_.ego_body_scale.y = model_->shape().width;
+    cache_.ego_body_scale.z = params_.ego_height;
+    cache_.ego_wheel_scale = geometry_msgs::msg::Vector3();
+    cache_.ego_wheel_scale.x = 2 * model_->wheel().radius;
+    cache_.ego_wheel_scale.y = 2 * model_->wheel().radius;
+    cache_.ego_wheel_scale.z = model_->wheel().width;
+    cache_.ego_wheel_position_z = params_.ego_z_lev 
+        + model_->wheel().radius - params_.ego_height / 2;
+    cache_.ego_front_x_offset 
+        = model_->wheelBase().length - model_->wheelBase().base_to_rear;
+    cache_.ego_rear_x_offset = -model_->wheelBase().base_to_rear;
+    cache_.ego_y_offset = model_->wheelBase().width / 2;
 
     slot_.mode = Node::create_subscription<truck_msgs::msg::ControlMode>(
         "/control/mode",
@@ -176,101 +193,69 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
     publishEgo();
 }
 
-void VisualizationNode::addEgoBody(visualization_msgs::msg::MarkerArray &msg_array, 
-    const geometry_msgs::msg::Pose &pose) const {
+namespace {
+
+void addEgoPart(
+    visualization_msgs::msg::MarkerArray &msg_array,
+    int32_t marker_type,
+    const geometry_msgs::msg::Vector3 &scale,
+    const std_msgs::msg::ColorRGBA &color) {
 
     visualization_msgs::msg::Marker msg;
-    msg.id = 0;
-    msg.header = state_.odom->header;
-    msg.type = visualization_msgs::msg::Marker::CUBE;
-    msg.action = visualization_msgs::msg::Marker::ADD;
-    msg.frame_locked = true;
+    msg.type = marker_type;
     // always keep last ego marker
 
-    msg.scale.x = model_->shape().length;
-    msg.scale.y = model_->shape().width;
-    msg.scale.z = params_.ego_height;
-    msg.pose = pose;
-    msg.pose.position.z = params_.ego_z_lev;
-    msg.color = modeToColor(state_.mode);
+    msg.scale = scale;
+    msg.color = color;
 
     msg_array.markers.push_back(msg);
 }
 
-namespace {
+void transformMarker(visualization_msgs::msg::Marker &marker, 
+    double x, double y, double x_angle, double z_angle) {
 
-void setRotation(geometry_msgs::msg::Quaternion &original_orientation, 
-    const double x_angle, const double y_angle, const double z_angle) {
-    tf2::Quaternion q_original, q_rotation, q_new;
-    tf2::convert(original_orientation, q_original);
-    q_rotation.setRPY(x_angle, y_angle, z_angle);
-    q_new = q_original * q_rotation;    
-    q_new.normalize();
-    tf2::convert(q_new, original_orientation);
+    tf2::Quaternion rotation = tf2::Quaternion::getIdentity();
+    rotation.setRPY(x_angle, 0, z_angle);
+    const tf2::Transform egoTobase {
+        rotation,
+        tf2::Vector3{x, y, 0}
+    };
+    
+    tf2::toMsg(egoTobase, marker.pose);
+}
+
+void addEgoWheels(
+    visualization_msgs::msg::MarkerArray &msg_array,
+    const geometry_msgs::msg::Vector3 &scale,
+    const std_msgs::msg::ColorRGBA &color,
+    double front_x_offset, double rear_x_offset, double y_offset,
+    double right_steering, double left_steering) {
+
+    const int first_id = msg_array.markers.size();
+    for (int i = 0; i < 4; ++i) {
+        addEgoPart(msg_array,
+            visualization_msgs::msg::Marker::CYLINDER, 
+            scale, color);
+    }
+
+    // Front right wheel.
+    transformMarker(msg_array.markers[first_id], 
+        front_x_offset, y_offset, M_PI_2, right_steering);
+
+    // Front left wheel.
+    transformMarker(msg_array.markers[first_id], 
+        front_x_offset, -y_offset, M_PI_2, left_steering);
+
+    // Rear right wheel.
+    transformMarker(msg_array.markers[first_id], 
+        rear_x_offset, y_offset, M_PI_2, 0);
+
+    // Rear left wheel.
+    transformMarker(msg_array.markers[first_id], 
+        rear_x_offset, -y_offset, M_PI_2, 0);
 }
 
 } // namespace
-
-void VisualizationNode::addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array, 
-    const geometry_msgs::msg::Pose &pose) const {
-
-    const int first_id = msg_array.markers.size();
-    for (auto i = first_id; i < first_id + 4; ++i) {
-        visualization_msgs::msg::Marker msg;
-        msg.id = i + 1;
-        msg.header = state_.odom->header;
-        msg.type = visualization_msgs::msg::Marker::CYLINDER;
-        msg.action = visualization_msgs::msg::Marker::ADD;
-        msg.frame_locked = true;
-        msg.scale.x = 2 * model_->wheel().radius;
-        msg.scale.y = 2 * model_->wheel().radius;
-        msg.scale.z = model_->wheel().width;
-        msg.pose = pose;
-        msg.pose.position.z = params_.ego_z_lev + model_->wheel().radius - params_.ego_height / 2;
-        double z_angle = 0;
-        if (i == first_id) {
-            z_angle = state_.telemetry->current_right_steering;
-        } else if (i == first_id + 1) {
-            z_angle = state_.telemetry->current_left_steering;
-        }
-
-        setRotation(msg.pose.orientation, M_PI_2, 0.0, z_angle);
-        msg.color = modeToColor(state_.mode);
-
-        msg_array.markers.push_back(msg);
-    }
-
-    const double front_x_offset = model_->wheelBase().length - model_->wheelBase().base_to_rear;
-    const double rear_x_offset = -model_->wheelBase().base_to_rear;
-    const double y_offset = model_->wheelBase().width / 2;
-    const double rotation_angle = truck::geom::toAngle(pose.orientation).radians();
-    const double angle_sin = sin(rotation_angle);
-    const double angle_cos = cos(rotation_angle);
-
-    // Front right wheel.
-    msg_array.markers[first_id].pose.position.x 
-        += front_x_offset * angle_cos + y_offset * angle_sin;
-    msg_array.markers[first_id].pose.position.y 
-        += front_x_offset * angle_sin - y_offset * angle_cos;
-
-    // Front left wheel
-    msg_array.markers[first_id + 1].pose.position.x 
-        += front_x_offset * angle_cos - y_offset * angle_sin;
-    msg_array.markers[first_id + 1].pose.position.y 
-        += front_x_offset * angle_sin + y_offset * angle_cos;
-
-    // Rear right wheel.
-    msg_array.markers[first_id + 2].pose.position.x 
-        += rear_x_offset * angle_cos + y_offset * angle_sin;
-    msg_array.markers[first_id + 2].pose.position.y 
-        += rear_x_offset * angle_sin - y_offset * angle_cos;
-
-    // Rear left wheel.
-    msg_array.markers[first_id + 3].pose.position.x 
-        += rear_x_offset * angle_cos - y_offset * angle_sin;
-    msg_array.markers[first_id + 3].pose.position.y 
-        += rear_x_offset * angle_sin + y_offset * angle_cos;
-}
 
 void VisualizationNode::publishEgo() const {
     if (!state_.odom || !state_.mode) {
@@ -278,9 +263,45 @@ void VisualizationNode::publishEgo() const {
     }
 
     visualization_msgs::msg::MarkerArray msg_array;
-    const auto pose = state_.odom->pose.pose;
-    addEgoBody(msg_array, pose);
-    addEgoWheels(msg_array, pose);
+    addEgoPart(msg_array, visualization_msgs::msg::Marker::CUBE, 
+        cache_.ego_body_scale, modeToColor(state_.mode));
+    addEgoWheels(msg_array, cache_.ego_wheel_scale, 
+        modeToColor(state_.mode), cache_.ego_front_x_offset,
+        cache_.ego_rear_x_offset, cache_.ego_y_offset,
+        state_.telemetry->current_right_steering,
+        state_.telemetry->current_left_steering);
+
+    msg_array.markers.pop_back();
+    msg_array.markers.pop_back();
+    msg_array.markers.pop_back();
+    msg_array.markers.pop_back();
+
+    const model::Twist base_twist {
+        .curvature = state_.control->curvature,
+        .velocity = state_.control->velocity
+    };
+    const model::Steering steering = model_->rearTwistToSteering(
+        model_->baseToRearTwist(base_twist));
+    tf2::Quaternion rotation = tf2::Quaternion::getIdentity();
+    rotation.setRPY(0, 0, steering.middle.radians());
+    const tf2::Transform egoTobase {
+        tf2::Quaternion::getIdentity(),
+        tf2::Vector3{0, 0, 0}
+    };
+    tf2::Transform baseToOdom;
+    tf2::fromMsg(state_.odom->pose.pose, baseToOdom);
+
+    const int array_size = msg_array.markers.size();
+    for (int i = 0; i < array_size; ++i) {
+        msg_array.markers[i].id = i;
+        msg_array.markers[i].header = state_.odom->header;
+        msg_array.markers[i].action 
+            = visualization_msgs::msg::Marker::ADD;
+        msg_array.markers[i].frame_locked = true;
+        tf2::toMsg(baseToOdom * egoTobase * tf2::Transform(rotation), 
+            msg_array.markers[i].pose);
+    }
+
     signal_.ego->publish(msg_array);
 }
 

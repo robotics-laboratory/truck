@@ -29,10 +29,6 @@ class VisualizationNode : public rclcpp::Node {
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
 
     void publishTrajectory() const;
-    void addEgoBody(visualization_msgs::msg::MarkerArray &msg_array, 
-        const geometry_msgs::msg::Pose &pose) const;
-    void addEgoWheels(visualization_msgs::msg::MarkerArray &msg_array, 
-        const geometry_msgs::msg::Pose &pose) const;
     void publishEgo() const;
     void publishEgoTrack() const;
     void publishArc() const;
@@ -62,6 +58,15 @@ class VisualizationNode : public rclcpp::Node {
         double trajectory_z_lev = 0.0;
         double trajectory_width = 0.0;
     } params_{};
+
+    struct Cache {
+        geometry_msgs::msg::Vector3 ego_body_scale;
+        geometry_msgs::msg::Vector3 ego_wheel_scale;
+        double ego_wheel_position_z = 0.0;
+        double ego_front_x_offset = 0.0;
+        double ego_rear_x_offset = 0.0;
+        double ego_y_offset = 0.0;
+    } cache_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
 
