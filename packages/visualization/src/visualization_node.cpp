@@ -271,11 +271,6 @@ void VisualizationNode::publishEgo() const {
         state_.telemetry->current_right_steering,
         state_.telemetry->current_left_steering);
 
-    msg_array.markers.pop_back();
-    msg_array.markers.pop_back();
-    msg_array.markers.pop_back();
-    msg_array.markers.pop_back();
-
     const model::Twist base_twist {
         .curvature = state_.control->curvature,
         .velocity = state_.control->velocity
