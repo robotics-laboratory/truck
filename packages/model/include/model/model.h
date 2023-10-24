@@ -13,6 +13,7 @@
 namespace truck::model {
 
 struct Steering {
+    geom::Angle middle;
     geom::Angle left;
     geom::Angle right;
 };
@@ -36,6 +37,7 @@ class Model {
     double steeringVelocity() const;
     Limits<geom::Angle> leftSteeringLimits() const;
     Limits<geom::Angle> rightSteeringLimits() const;
+    Limits<double> middleSteeringLimits() const;
     Limits<double> baseVelocityLimits() const;
     Limits<double> baseAccelerationLimits() const;
     ServoAngles servoHomeAngles() const;
@@ -50,8 +52,9 @@ class Model {
     Twist rearToBaseTwist(Twist twist) const;
     Steering rearTwistToSteering(Twist twist) const;
     Steering rearCurvatureToSteering(double curvature) const;
-    double baseToLimitedRearVelocity(double velocity, double correct_curvature) const;
-    double baseToLimitedRearAcceleration(double acceleration, double correct_curvature) const;
+    double rearCurvatureToLimitedSteering(double curvature) const;
+    double baseToLimitedRearVelocity(double velocity, double base_curvature) const;
+    double baseToLimitedRearAcceleration(double acceleration, double base_curvature) const;
     double baseToLimitedRearCurvature(double curvature) const;
     WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
     double linearVelocityToMotorRPS(double velocity) const;
@@ -60,6 +63,7 @@ class Model {
   private:
     struct Cache {
         double width_half;
+        double max_abs_rear_curvature;
         double max_abs_curvature;
     } cache_;
 

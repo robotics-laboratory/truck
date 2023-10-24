@@ -15,12 +15,15 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_inner / (params_.wheel_base.length - cache_.width_half * tan_inner),
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
+        cache_.max_abs_rear_curvature = max_abs_rear_curvature;
+
         auto rearToBaseCurvature = [&](double C) {
             return C / std::sqrt(1 + squared(C * params_.wheel_base.base_to_rear));
         };
 
         cache_.max_abs_curvature =
-            std::min(rearToBaseCurvature(max_abs_rear_curvature), params_.limits.max_abs_curvature);
+            std::min(rearToBaseCurvature(max_abs_rear_curvature), 
+            params_.limits.max_abs_curvature);
     }
 }
 
@@ -67,9 +70,9 @@ double Model::baseToLimitedRearVelocity(double velocity, double base_curvature) 
 
 double Model::baseToLimitedRearAcceleration(double acceleration, double base_curvature) const {
     acceleration = getCorrectLimitedValue(baseAccelerationLimits(), acceleration);
-    // TO DO
-    
-    return acceleration;
+    base_curvature = getCorrectLimitedValue(baseMaxAbsCurvature(), base_curvature);
+    const double ratio = getBaseToRearRatio(base_curvature, params_.wheel_base.base_to_rear);
+    return acceleration * ratio;
 }
 
 double Model::baseToLimitedRearCurvature(double curvature) const {
@@ -93,7 +96,14 @@ Limits<geom::Angle> Model::leftSteeringLimits() const {
 }
 
 Limits<geom::Angle> Model::rightSteeringLimits() const {
+
     return {-params_.limits.steering.outer, params_.limits.steering.inner};
+}
+
+Limits<double> Model::middleSteeringLimits() const {
+    const double limit 
+        = std::atan2(cache_.max_abs_rear_curvature, params_.wheel_base.length);
+    return {-limit, limit};
 }
 
 Steering Model::rearCurvatureToSteering(double curvature) const {
@@ -101,8 +111,16 @@ Steering Model::rearCurvatureToSteering(double curvature) const {
     const double second = curvature * cache_.width_half;
 
     return Steering {
+        geom::Angle::fromRadians(std::atan2(first, 1)),
         geom::Angle::fromRadians(std::atan2(first, 1 - second)),
-        geom::Angle::fromRadians(std::atan2(first, 1 + second))};
+        geom::Angle::fromRadians(std::atan2(first, 1 + second))
+    };
+}
+
+double Model::rearCurvatureToLimitedSteering(double curvature) const {
+    const double y = curvature * params_.wheel_base.length;
+    const double steering = std::atan2(y, 1);
+    return middleSteeringLimits().clamp(steering);
 }
 
 Steering Model::rearTwistToSteering(Twist twist) const {
@@ -114,7 +132,8 @@ WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
 
     return WheelVelocity {
         geom::Angle{(1 - ratio) * twist.velocity / params_.wheel.radius},
-        geom::Angle{(1 + ratio) * twist.velocity / params_.wheel.radius}};
+        geom::Angle{(1 + ratio) * twist.velocity / params_.wheel.radius}
+    };
 }
 
 double Model::linearVelocityToMotorRPS(double velocity) const {
