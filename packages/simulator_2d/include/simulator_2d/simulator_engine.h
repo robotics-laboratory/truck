@@ -7,22 +7,12 @@
 
 namespace truck::simulator {
 
-typedef Eigen::Matrix<double, 6, 1> State;
-
-enum StateIndex { 
-    x = 0, 
-    y = 1, 
-    yaw = 2, 
-    steering = 3, 
-    linear_velocity = 4, 
-    angular_velocity = 5 
-};
-
 class SimulatorEngine {
   public:
     SimulatorEngine(const std::string& model_config_path, 
         double integration_step = 0.001, double precision = 1e-8);
-    void reset(const State &state);
+    void reset(double x, double y, double yaw, double steering, 
+        double linear_velocity, double angular_velocity);
     void reset();
     rclcpp::Time getTime() const;
     geom::Pose getPose() const;
@@ -43,19 +33,24 @@ class SimulatorEngine {
   private:
     rclcpp::Time time_;
 
+    typedef Eigen::Matrix<double, 6, 1> State;
+
     State calculateStateDelta(
         const State &state, const double acceleration,
         const double steering_velocity);
 
     struct Parameters {
         double integration_step;
+        double precision;    
+    } params_;
+
+    struct Cache {
         double integration_step_2;
         double integration_step_6;
         double inverse_integration_step;
-        double precision;
         double inverse_wheelbase_length;
         double wheelbase_width_2;
-    } params_;
+    } cache_;
 
     struct Control {
         double velocity = 0.0;
@@ -65,6 +60,15 @@ class SimulatorEngine {
 
     // For the rear axle.
     State state_;
+
+    enum StateIndex { 
+        x = 0, 
+        y = 1, 
+        yaw = 2, 
+        steering = 3, 
+        linear_velocity = 4, 
+        angular_velocity = 5 
+    };
 
     model::Model model_;
 };

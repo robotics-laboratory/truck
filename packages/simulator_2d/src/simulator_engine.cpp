@@ -9,22 +9,26 @@ SimulatorEngine::SimulatorEngine(const std::string& model_config_path,
     double integration_step, double precision): model_(model_config_path) {
     
     params_.integration_step = integration_step;
-    params_.integration_step_2 = integration_step / 2;
-    params_.integration_step_6 = integration_step / 6;
-    params_.inverse_integration_step = 1 / integration_step;
     params_.precision = precision;
-    params_.inverse_wheelbase_length = 1 / model_.wheelBase().length;
-    params_.wheelbase_width_2 = model_.wheelBase().width / 2;
+
+    cache_.integration_step_2 = integration_step / 2;
+    cache_.integration_step_6 = integration_step / 6;
+    cache_.inverse_integration_step = 1 / integration_step;
+    cache_.inverse_wheelbase_length = 1 / model_.wheelBase().length;
+    cache_.wheelbase_width_2 = model_.wheelBase().width / 2;
+
     reset();
 }
 
-void SimulatorEngine::reset(const simulator::State &state) {
-    state_ = state;
+void SimulatorEngine::reset(double x, double y, double yaw, double steering, 
+        double linear_velocity, double angular_velocity) {
+    state_ = (SimulatorEngine::State() 
+        << x, y, yaw, steering, linear_velocity, angular_velocity)
+        .finished();
 }
 
 void SimulatorEngine::reset() {
-    state_ = simulator::State::Zero();
-    state_[StateIndex::x] = -model_.wheelBase().base_to_rear;
+    reset(-model_.wheelBase().base_to_rear, 0, 0, 0, 0, 0);
 }
 
 rclcpp::Time SimulatorEngine::getTime() const {
@@ -70,14 +74,13 @@ geom::Vec2 SimulatorEngine::getAngularVelocity() const {
 
 void SimulatorEngine::setControl(
     double velocity, double acceleration, double curvature) {
-    
-    curvature = model_.baseToLimitedRearCurvature(curvature);
-    velocity = model_.baseToLimitedRearVelocity(velocity, curvature);
-    acceleration = model_.baseToLimitedRearAcceleration(acceleration, curvature);
 
-    control_.velocity = velocity;
-    control_.acceleration = acceleration;
-    control_.curvature = curvature;
+    control_.velocity 
+        = model_.baseToLimitedRearVelocity(velocity, curvature);
+    control_.acceleration 
+        = model_.baseToLimitedRearAcceleration(acceleration, curvature);
+    control_.curvature 
+        = model_.baseToLimitedRearCurvature(curvature);
 }
 
 void SimulatorEngine::setControl(double velocity, double curvature) {
@@ -95,16 +98,16 @@ void SimulatorEngine::setControl(double velocity, double curvature) {
     setControl(velocity, acceleration, curvature);
 }
 
-simulator::State SimulatorEngine::calculateStateDelta(
-    const simulator::State &state, double acceleration,
+SimulatorEngine::State SimulatorEngine::calculateStateDelta(
+    const SimulatorEngine::State &state, double acceleration,
     double steering_velocity) {
     
-    simulator::State delta;
+    SimulatorEngine::State delta;
     delta[StateIndex::x] = cos(state[StateIndex::yaw]) * state[StateIndex::linear_velocity];
     delta[StateIndex::y] = sin(state[StateIndex::yaw]) * state[StateIndex::linear_velocity];
     delta[StateIndex::yaw] =
         tan(state[StateIndex::steering]) * state[StateIndex::linear_velocity] 
-            * params_.inverse_wheelbase_length;
+            * cache_.inverse_wheelbase_length;
     delta[StateIndex::steering] = steering_velocity;
     delta[StateIndex::linear_velocity] = acceleration;
     return delta;
@@ -123,14 +126,12 @@ rclcpp::Duration convertFromSecondsToDuration(double seconds) {
 void SimulatorEngine::advance(double time) {
     time_ += convertFromSecondsToDuration(time);
 
-    const int integration_steps = time * params_.inverse_integration_step;
+    const int integration_steps = time * cache_.inverse_integration_step;
 
     const double old_yaw = state_[StateIndex::yaw];
 
-    const double target_steering 
-        = std::clamp(atan2(control_.curvature, params_.inverse_wheelbase_length), 
-                                -model_.leftSteeringLimits().max.radians(), 
-                                model_.leftSteeringLimits().max.radians());
+    const double target_steering = model_.rearCurvatureToLimitedSteering(control_.curvature);
+
     double steering_velocity;
     if (state_[StateIndex::steering] - params_.precision < target_steering) {
         steering_velocity = model_.steeringVelocity();
@@ -143,14 +144,14 @@ void SimulatorEngine::advance(double time) {
 
     for (auto i = 0; i < integration_steps; ++i) {
         const double steering_rest = abs(target_steering - state_[StateIndex::steering]);
-        const double steering_delta = abs(steering_velocity) * params_.integration_step_6;
+        const double steering_delta = abs(steering_velocity) * cache_.integration_step_6;
         if (steering_rest - steering_delta < params_.precision) {
             state_[StateIndex::steering] = target_steering;
             steering_velocity = 0;
         }
 
         velocity_rest = abs(control_.velocity - state_[StateIndex::linear_velocity]);
-        const double velocity_delta = abs(acceleration) * params_.integration_step_6;
+        const double velocity_delta = abs(acceleration) * cache_.integration_step_6;
         if (velocity_rest - velocity_delta < params_.precision) {
             state_[StateIndex::linear_velocity] = control_.velocity;
             acceleration = 0;
@@ -158,13 +159,13 @@ void SimulatorEngine::advance(double time) {
 
         auto k1 = calculateStateDelta(state_, acceleration, steering_velocity);
         auto k2 = calculateStateDelta(
-            state_ + k1 * params_.integration_step_2, acceleration, steering_velocity);
+            state_ + k1 * cache_.integration_step_2, acceleration, steering_velocity);
         auto k3 = calculateStateDelta(
-            state_ + k2 * params_.integration_step_2, acceleration, steering_velocity);
+            state_ + k2 * cache_.integration_step_2, acceleration, steering_velocity);
         auto k4 = calculateStateDelta(
             state_ + k3 * params_.integration_step, acceleration, steering_velocity);
 
-        state_ += (k1 + 2 * k2 + 2 * k3 + k4) * params_.integration_step_6;
+        state_ += (k1 + 2 * k2 + 2 * k3 + k4) * cache_.integration_step_6;
         state_[StateIndex::yaw] = geom::Angle::_0_2PI(state_[StateIndex::yaw]);
     }
 
