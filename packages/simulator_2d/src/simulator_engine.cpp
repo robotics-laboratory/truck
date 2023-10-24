@@ -38,8 +38,10 @@ rclcpp::Time SimulatorEngine::getTime() const {
 geom::Pose SimulatorEngine::getPose() const {
     geom::Pose pose;
     pose.dir = geom::AngleVec2(geom::Angle::fromRadians(state_[StateIndex::yaw]));
-    pose.pos.x = state_[StateIndex::x] + model_.wheelBase().base_to_rear * pose.dir.x();
-    pose.pos.y = state_[StateIndex::y] + model_.wheelBase().base_to_rear * pose.dir.y();
+    pose.pos.x = state_[StateIndex::x] 
+        + model_.wheelBase().base_to_rear * pose.dir.x();
+    pose.pos.y = state_[StateIndex::y] 
+        + model_.wheelBase().base_to_rear * pose.dir.y();
     return pose;
 }
 
