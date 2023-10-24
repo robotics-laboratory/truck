@@ -89,7 +89,34 @@ void SimulatorNode::publishOdometryMessage(
     signals_.odometry->publish(odom_msg);
 }
 
-void SimulatorNode::publishTransformMessage(const rclcpp::Time &time, const geom::Pose &pose) {
+void SimulatorNode::publishTransformMessage(
+    const rclcpp::Time &time, const geom::Pose &pose) {
+
+    geometry_msgs::msg::TransformStamped odom_to_base_msg;
+    odom_to_base_msg.header.frame_id = "base";
+    odom_to_base_msg.child_frame_id = "odom_ekf";
+    odom_to_base_msg.header.stamp = time;
+
+    // Set the base to odom transformation.
+    tf2::Quaternion rotation = tf2::Quaternion::getIdentity();
+    rotation.setRPY(0, 0, pose.dir.angle().radians());
+    const tf2::Transform base_to_odom {
+        rotation,
+        tf2::Vector3{pose.pos.x, pose.pos.y, 0}
+    };
+
+    // Set the odom to base transformation.
+    tf2::toMsg(base_to_odom.inverse(), odom_to_base_msg.transform);
+
+    tf2_msgs::msg::TFMessage tf_msg;
+    tf_msg.transforms.push_back(odom_to_base_msg);
+    signals_.tf_publisher->publish(tf_msg);
+}
+
+/*
+void SimulatorNode::publishTransformMessage(
+    const rclcpp::Time &time, const geom::Pose &pose) {
+
     geometry_msgs::msg::TransformStamped odom_to_base_transform_msg;
     odom_to_base_transform_msg.header.frame_id = "odom_ekf";
     odom_to_base_transform_msg.child_frame_id = "base";
@@ -104,6 +131,7 @@ void SimulatorNode::publishTransformMessage(const rclcpp::Time &time, const geom
     tf_msg.transforms.push_back(odom_to_base_transform_msg);
     signals_.tf_publisher->publish(tf_msg);
 }
+*/
 
 void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time) {
     truck_msgs::msg::HardwareTelemetry telemetry_msg;
@@ -119,7 +147,6 @@ void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time) {
 }
 
 void SimulatorNode::publishSimulationStateMessage(const rclcpp::Time &time) {
-
     truck_msgs::msg::SimulationState state_msg;
     state_msg.header.frame_id = "odom_ekf";
     state_msg.header.stamp = time;
