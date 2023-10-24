@@ -144,14 +144,14 @@ void SimulatorEngine::advance(double time) {
     for (auto i = 0; i < integration_steps; ++i) {
         const double steering_rest = target_steering - state_[StateIndex::steering];
         const double steering_delta = steering_velocity * params_.integration_step;
-        if (abs(steering_rest - steering_delta) < params_.precision) {
+        if (steering_rest - steering_delta < params_.precision) {
             state_[StateIndex::steering] = target_steering;
             steering_velocity = 0;
         }
 
         const double velocity_rest = control_.velocity - state_[StateIndex::linear_velocity];
         const double velocity_delta = acceleration * params_.integration_step;
-        if (abs(velocity_rest - velocity_delta) < params_.precision) {
+        if (velocity_rest - velocity_delta < params_.precision) {
             state_[StateIndex::linear_velocity] = control_.velocity;
             acceleration = 0;
         }
