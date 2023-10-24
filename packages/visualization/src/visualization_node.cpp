@@ -211,6 +211,21 @@ void addEgoPart(
     msg_array.markers.push_back(msg);
 }
 
+/*
+void transformMarker(visualization_msgs::msg::Marker &marker, 
+    double x, double y, double x_angle, double z_angle) {
+
+    const tf2::Transform egoTobase {
+        tf2::Quaternion::getIdentity(),
+        tf2::Vector3{x, y, 0}
+    };
+    tf2::Quaternion rotation = tf2::Quaternion::getIdentity();
+    rotation.setRPY(x_angle, 0, z_angle);
+    tf2::toMsg(egoTobase * tf2::Transform(rotation), marker.pose);
+}
+//*/
+
+//*
 void transformMarker(visualization_msgs::msg::Marker &marker, 
     double x, double y, double x_angle, double z_angle) {
 
@@ -223,6 +238,7 @@ void transformMarker(visualization_msgs::msg::Marker &marker,
     
     tf2::toMsg(egoTobase, marker.pose);
 }
+//*/
 
 void addEgoWheels(
     visualization_msgs::msg::MarkerArray &msg_array,
@@ -271,14 +287,9 @@ void VisualizationNode::publishEgo() const {
         state_.telemetry->current_right_steering,
         state_.telemetry->current_left_steering);
 
-    const model::Twist base_twist {
-        .curvature = state_.control->curvature,
-        .velocity = state_.control->velocity
-    };
-    const model::Steering steering = model_->rearTwistToSteering(
-        model_->baseToRearTwist(base_twist));
     tf2::Quaternion rotation = tf2::Quaternion::getIdentity();
-    rotation.setRPY(0, 0, steering.middle.radians());
+    rotation.setRPY(0, 0, 
+        truck::geom::toAngle(state_.odom->pose.pose.orientation).radians());
     const tf2::Transform egoTobase {
         tf2::Quaternion::getIdentity(),
         tf2::Vector3{0, 0, 0}
