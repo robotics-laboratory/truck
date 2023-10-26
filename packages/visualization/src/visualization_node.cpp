@@ -211,34 +211,18 @@ void addEgoPart(
     msg_array.markers.push_back(msg);
 }
 
-/*
-void transformMarker(visualization_msgs::msg::Marker &marker, 
-    double x, double y, double x_angle, double z_angle) {
-
-    const tf2::Transform egoTobase {
-        tf2::Quaternion::getIdentity(),
-        tf2::Vector3{x, y, 0}
-    };
-    tf2::Quaternion rotation = tf2::Quaternion::getIdentity();
-    rotation.setRPY(x_angle, 0, z_angle);
-    tf2::toMsg(egoTobase * tf2::Transform(rotation), marker.pose);
-}
-//*/
-
-//*
 void transformMarker(visualization_msgs::msg::Marker &marker, 
     double x, double y, double x_angle, double z_angle) {
 
     tf2::Quaternion rotation = tf2::Quaternion::getIdentity();
     rotation.setRPY(x_angle, 0, z_angle);
-    const tf2::Transform egoTobase {
+    const tf2::Transform ego_to_base {
         rotation,
         tf2::Vector3{x, y, 0}
     };
     
-    tf2::toMsg(egoTobase, marker.pose);
+    tf2::toMsg(ego_to_base, marker.pose);
 }
-//*/
 
 void addEgoWheels(
     visualization_msgs::msg::MarkerArray &msg_array,
@@ -290,12 +274,8 @@ void VisualizationNode::publishEgo() const {
     tf2::Quaternion rotation = tf2::Quaternion::getIdentity();
     rotation.setRPY(0, 0, 
         truck::geom::toAngle(state_.odom->pose.pose.orientation).radians());
-    const tf2::Transform egoTobase {
-        tf2::Quaternion::getIdentity(),
-        tf2::Vector3{0, 0, 0}
-    };
-    tf2::Transform baseToOdom;
-    tf2::fromMsg(state_.odom->pose.pose, baseToOdom);
+    tf2::Transform base_to_odom;
+    tf2::fromMsg(state_.odom->pose.pose, base_to_odom);
 
     const int array_size = msg_array.markers.size();
     for (int i = 0; i < array_size; ++i) {
@@ -304,7 +284,9 @@ void VisualizationNode::publishEgo() const {
         msg_array.markers[i].action 
             = visualization_msgs::msg::Marker::ADD;
         msg_array.markers[i].frame_locked = true;
-        tf2::toMsg(baseToOdom * egoTobase * tf2::Transform(rotation), 
+        tf2::Transform ego_to_base;
+        tf2::fromMsg(msg_array.markers[i].pose, ego_to_base);
+        tf2::toMsg(base_to_odom * ego_to_base * tf2::Transform(rotation), 
             msg_array.markers[i].pose);
     }
 

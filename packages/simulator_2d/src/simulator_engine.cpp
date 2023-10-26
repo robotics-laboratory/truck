@@ -123,6 +123,11 @@ rclcpp::Duration convertFromSecondsToDuration(double seconds) {
     return rclcpp::Duration(int_seconds, int(nanoseconds));
 }
 
+bool isOutOfRange(double value, double limit, double precision) {
+    return (limit > 0 && value + precision > limit)
+        || (limit < 0 && value - precision < limit);
+}
+
 } // namespace
 
 void SimulatorEngine::advance(double time) {
@@ -144,16 +149,16 @@ void SimulatorEngine::advance(double time) {
     double acceleration = control_.acceleration;
 
     for (auto i = 0; i < integration_steps; ++i) {
-        const double steering_rest = target_steering - state_[StateIndex::steering];
         const double steering_delta = steering_velocity * params_.integration_step;
-        if (steering_rest - steering_delta < params_.precision) {
+        const double new_steering = state_[StateIndex::steering] + steering_delta;
+        if (isOutOfRange(new_steering, target_steering, params_.precision)) {
             state_[StateIndex::steering] = target_steering;
             steering_velocity = 0;
         }
 
-        const double velocity_rest = control_.velocity - state_[StateIndex::linear_velocity];
         const double velocity_delta = acceleration * params_.integration_step;
-        if (velocity_rest - velocity_delta < params_.precision) {
+        const double new_velocity = state_[StateIndex::linear_velocity] + velocity_delta;
+        if (isOutOfRange(new_velocity, control_.velocity, params_.precision)) {
             state_[StateIndex::linear_velocity] = control_.velocity;
             acceleration = 0;
         }
