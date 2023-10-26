@@ -1,0 +1,37 @@
+launch:
+- include:
+    file: $(find-pkg-share truck)/launch/bridge.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+
+- include:
+    file: $(find-pkg-share truck)/launch/control.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+    - {name: "control_name", value: "ps4"}
+
+- include:
+    file: $(find-pkg-share model)/launch/model_tf.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+
+- include:
+    file: $(find-pkg-share visualization)/launch/visualization.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+
+- node:
+    pkg: "simulator_2d"
+    exec: "simulator_2d_node"
+    name: "simulator_2d_node"
+    output: "log"
+    param:
+    - {name: "qos", value: 0}
+    # path to truck mode config
+    - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
+    # timers period (seconds)
+    - {name: "update_period", value: 0.01}
+    # integration step per second
+    - {name: "integration_step", value: 0.001}
+    # precision of calculations
+    - {name: "calculations_precision", value: 0.00000001}
