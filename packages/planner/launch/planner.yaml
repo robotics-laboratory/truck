@@ -13,13 +13,13 @@ launch:
     - {name: "grid/nodes/width", value: 40}
     - {name: "grid/nodes/height", value: 40}
     - {name: "grid/resolution", value: 0.2}
-    - {name: "grid/finish_area_size", value: 0.5}
+    - {name: "grid/finish_area_radius", value: 0.5}
     - {name: "grid/min_obstacle_distance", value: 0.5}
 
     - {name: "node/z-lev", value: 0.05 }
     - {name: "node/scale", value: 0.1 }
     - {name: "node/base/color_rgba", value: [1.0, 0.2, 0.2, 0.2] }
     - {name: "node/ego/color_rgba", value: [1.0, 0.8, 0.8, 0.8] }
-    - {name: "node/finish/base/color_rgba", value: [0.3, 1.0, 1.0, 0.0] }
-    - {name: "node/finish/accent/color_rgba", value: [1.0, 1.0, 1.0, 0.0] }
+    - {name: "node/finish/color_rgba", value: [1.0, 1.0, 1.0, 0.0] }
+    - {name: "node/finish_area/color_rgba", value: [0.3, 1.0, 1.0, 0.0] }
     - {name: "node/collision/color_rgba", value: [0.8, 1.0, 0.0, 0.0] }

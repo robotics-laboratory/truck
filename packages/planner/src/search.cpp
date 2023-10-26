@@ -9,7 +9,7 @@ Grid& Grid::setEgoPose(const geom::Pose& ego_pose) {
     return *this;
 }
 
-Grid& Grid::setFinishArea(const geom::Square& finish_area) {
+Grid& Grid::setFinishArea(const geom::Circle& finish_area) {
     finish_area_ = finish_area;
     return *this;
 }
@@ -38,7 +38,7 @@ Grid& Grid::build() {
         }
     }
 
-    calculateNodesIndices();
+    calculateNodes();
     return *this;
 }
 
@@ -46,7 +46,7 @@ const geom::Pose& Grid::getEgoPose() const { return ego_pose_; }
 
 const std::vector<Node>& Grid::getNodes() const { return node_cache_.nodes; }
 
-const Node& Grid::getNodeByIndex(size_t index) const { return node_cache_.nodes.at(index); }
+const Node& Grid::getNodeByIndex(size_t index) const { return node_cache_.nodes[index]; }
 
 const std::optional<size_t>& Grid::getEgoNodeIndex() const { return node_cache_.index.ego; }
 
@@ -62,43 +62,64 @@ geom::Vec2 Grid::snapPoint(const geom::Vec2& point) const {
         round<double>(point.y / params_.resolution) * params_.resolution);
 }
 
-size_t Grid::getNodeIndexByPoint(const geom::Vec2& point) const {
+void Grid::calculateNodes() {
+    calculateEgoNode();
+    calculateFinishNode();
+    calculateFinishAreaNodes();
+}
+
+void Grid::calculateEgoNode() {
     std::vector<RTreeIndexedPoint> rtree_indexed_points;
 
     node_cache_.indexed_point_rtree.query(
-        bg::index::nearest(RTreePoint(point.x, point.y), 1), std::back_inserter(rtree_indexed_points));
+        bg::index::nearest(RTreePoint(ego_pose_.pos.x, ego_pose_.pos.y), 1), std::back_inserter(rtree_indexed_points));
 
-    return rtree_indexed_points.back().second;
+    int node_index = rtree_indexed_points.back().second;
+    node_cache_.nodes[node_index].ego = true;
+    node_cache_.index.ego = node_index;
 }
 
-std::unordered_set<size_t> Grid::getNodesIndicesInsideFinishArea() const {
-    std::unordered_set<size_t> finish_area_indices;
+void Grid::calculateFinishNode() {
+    std::vector<RTreeIndexedPoint> rtree_indexed_points;
+
+    node_cache_.indexed_point_rtree.query(
+        bg::index::nearest(RTreePoint(finish_area_.center.x, finish_area_.center.y), 1), std::back_inserter(rtree_indexed_points));
+
+    int node_index = rtree_indexed_points.back().second;
+    node_cache_.nodes[node_index].finish = true;
+    node_cache_.index.finish = rtree_indexed_points.back().second;
+}
+
+void Grid::calculateFinishAreaNodes() {
     std::vector<RTreeIndexedPoint> rtree_indexed_points;
 
     geom::Vec2 finish_node_point = getNodeByIndex(node_cache_.index.finish.value()).point;
 
     RTreeBox rtree_finish_box(
         RTreePoint(
-            finish_node_point.x - (finish_area_.size / 2),
-            finish_node_point.y - (finish_area_.size / 2)),
+            finish_node_point.x - finish_area_.radius,
+            finish_node_point.y - finish_area_.radius),
         RTreePoint(
-            finish_node_point.x + (finish_area_.size / 2),
-            finish_node_point.y + (finish_area_.size / 2)));
+            finish_node_point.x + finish_area_.radius,
+            finish_node_point.y + finish_area_.radius));
 
     node_cache_.indexed_point_rtree.query(
-        bg::index::intersects(rtree_finish_box), std::back_inserter(rtree_indexed_points));
+        bg::index::intersects(rtree_finish_box) &&
+        bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
+            geom::Vec2 node_point(
+                rtree_indexed_point.first.get<0>(),
+                rtree_indexed_point.first.get<1>()
+            );
+
+            return (finish_node_point - node_point).lenSq() < squared(finish_area_.radius);
+        }),
+        std::back_inserter(rtree_indexed_points));
 
     for (const auto& rtree_indexed_point : rtree_indexed_points) {
-        finish_area_indices.insert(rtree_indexed_point.second);
+        int node_index = rtree_indexed_point.second;
+        node_cache_.nodes[node_index].finish_area = true;
+        node_cache_.index.finish_area.insert(node_index);
     }
-
-    return finish_area_indices;
-}
-
-void Grid::calculateNodesIndices() {
-    node_cache_.index.ego = getNodeIndexByPoint(ego_pose_.pos);
-    node_cache_.index.finish = getNodeIndexByPoint(finish_area_.center);
-    node_cache_.index.finish_area = getNodesIndicesInsideFinishArea();
 }
 
 }  // namespace truck::planner::search

@@ -57,7 +57,7 @@ class PlannerNode : public rclcpp::Node {
         nav_msgs::msg::OccupancyGrid::SharedPtr occupancy_grid = nullptr;
 
         std::optional<geom::Pose> ego_pose = std::nullopt;
-        std::optional<geom::Square> finish_area = std::nullopt;
+        std::optional<geom::Circle> finish_area = std::nullopt;
     } state_;
 
     struct Parameters {
@@ -68,8 +68,8 @@ class PlannerNode : public rclcpp::Node {
             double scale;
             std_msgs::msg::ColorRGBA base_color;
             std_msgs::msg::ColorRGBA ego_color;
-            std_msgs::msg::ColorRGBA finish_base_color;
-            std_msgs::msg::ColorRGBA finish_accent_color;
+            std_msgs::msg::ColorRGBA finish_color;
+            std_msgs::msg::ColorRGBA finish_area_color;
             std_msgs::msg::ColorRGBA collision_color;
         } node;
     } params_;

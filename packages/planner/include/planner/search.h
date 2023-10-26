@@ -1,7 +1,7 @@
 #pragma once
 
 #include "geom/pose.h"
-#include "geom/square.h"
+#include "geom/circle.h"
 #include "collision/collision_checker.h"
 
 #include <boost/geometry.hpp>
@@ -21,6 +21,10 @@ namespace truck::planner::search {
 struct Node {
     size_t index;
     geom::Vec2 point;
+
+    bool ego;
+    bool finish;
+    bool finish_area;
     bool collision;
 };
 
@@ -28,7 +32,7 @@ struct GridParams {
     int width;
     int height;
     double resolution;
-    double finish_area_size;
+    double finish_area_radius;
     double min_obstacle_distance;
 };
 
@@ -37,7 +41,7 @@ class Grid {
     Grid(const GridParams& params, const model::Shape& shape);
 
     Grid& setEgoPose(const geom::Pose& ego_pose);
-    Grid& setFinishArea(const geom::Square& finish_area);
+    Grid& setFinishArea(const geom::Circle& finish_area);
     Grid& setCollisionChecker(std::shared_ptr<const collision::StaticCollisionChecker> checker);
     Grid& build();
 
@@ -51,10 +55,10 @@ class Grid {
   private:
     geom::Vec2 snapPoint(const geom::Vec2& point) const;
 
-    size_t getNodeIndexByPoint(const geom::Vec2& point) const;
-    std::unordered_set<size_t> getNodesIndicesInsideFinishArea() const;
-
-    void calculateNodesIndices();
+    void calculateNodes();
+    void calculateEgoNode();
+    void calculateFinishNode();
+    void calculateFinishAreaNodes();
 
     struct NodeCache {
         RTree indexed_point_rtree;
@@ -72,7 +76,7 @@ class Grid {
     model::Shape shape_;
 
     geom::Pose ego_pose_;
-    geom::Square finish_area_;
+    geom::Circle finish_area_;
 
     std::shared_ptr<const collision::StaticCollisionChecker> checker_ = nullptr;
 };

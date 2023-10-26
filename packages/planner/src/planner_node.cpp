@@ -54,7 +54,7 @@ PlannerNode::PlannerNode() : Node("planner") {
         .width = this->declare_parameter<int>("grid/nodes/width", 40),
         .height = this->declare_parameter<int>("grid/nodes/height", 40),
         .resolution = this->declare_parameter<double>("grid/resolution"),
-        .finish_area_size = this->declare_parameter<double>("grid/finish_area_size"),
+        .finish_area_radius = this->declare_parameter<double>("grid/finish_area_radius"),
         .min_obstacle_distance = this->declare_parameter<double>("grid/min_obstacle_distance"),
     };
 
@@ -71,11 +71,11 @@ PlannerNode::PlannerNode() : Node("planner") {
             .ego_color = toColorRGBA(
                 this->declare_parameter<std::vector<double>>("node/ego/color_rgba")),
 
-            .finish_base_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/finish/base/color_rgba")),
+            .finish_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node/finish/color_rgba")),
 
-            .finish_accent_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/finish/accent/color_rgba")),
+            .finish_area_color = toColorRGBA(
+                this->declare_parameter<std::vector<double>>("node/finish_area/color_rgba")),
 
             .collision_color = toColorRGBA(
                 this->declare_parameter<std::vector<double>>("node/collision/color_rgba")),
@@ -129,7 +129,7 @@ void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
 
 void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
     state_.finish_area =
-        geom::Square{.center = geom::toVec2(*msg), .size = params_.grid.finish_area_size};
+        geom::Circle{.center = geom::toVec2(*msg), .radius = params_.grid.finish_area_radius};
 }
 
 void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
@@ -144,12 +144,11 @@ std_msgs::msg::ColorRGBA PlannerNode::getNodeColor(size_t node_index) const {
 
     std_msgs::msg::ColorRGBA node_color = params_.node.base_color;
 
-    if (state_.grid->getFinishAreaNodesIndices().find(node_index) !=
-        state_.grid->getFinishAreaNodesIndices().end()) {
-        node_color = params_.node.finish_base_color;
+    if (node.finish_area) {
+        node_color = params_.node.finish_area_color;
 
-        if (node_index == state_.grid->getFinishNodeIndex()) {
-            node_color = params_.node.finish_accent_color;
+        if (node.finish) {
+            node_color = params_.node.finish_color;
         }
     }
 
@@ -157,7 +156,7 @@ std_msgs::msg::ColorRGBA PlannerNode::getNodeColor(size_t node_index) const {
         node_color = params_.node.collision_color;
     }
 
-    if (node_index == state_.grid->getEgoNodeIndex()) {
+    if (node.ego) {
         node_color = params_.node.ego_color;
     }
 
