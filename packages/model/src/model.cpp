@@ -15,18 +15,74 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_inner / (params_.wheel_base.length - cache_.width_half * tan_inner),
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
+        cache_.max_abs_rear_curvature = max_abs_rear_curvature;
+
         auto rearToBaseCurvature = [&](double C) {
             return C / std::sqrt(1 + squared(C * params_.wheel_base.base_to_rear));
         };
 
         cache_.max_abs_curvature =
-            std::min(rearToBaseCurvature(max_abs_rear_curvature), params_.limits.max_abs_curvature);
+            std::min(rearToBaseCurvature(max_abs_rear_curvature), 
+            params_.limits.max_abs_curvature);
+
+        const double steering_limit 
+            = std::atan2(cache_.max_abs_rear_curvature, params_.wheel_base.length);
+        cache_.middle_steering_limits = {-steering_limit, steering_limit};
     }
 }
 
+namespace {
+
+double getBaseToRearRatio(double base_curvature, double base_to_rear) {
+    return std::sqrt(1 - squared(base_curvature * base_to_rear));
+}
+
+double getRearToBaseRatio(double rear_curvature, double base_to_rear) {
+    return std::sqrt(1 + squared(rear_curvature * base_to_rear));
+}
+
+} // namespace
+
 Twist Model::baseToRearTwist(Twist twist) const {
-    const double ratio = std::sqrt(1 - squared(twist.curvature * params_.wheel_base.base_to_rear));
+    const double ratio = getBaseToRearRatio(twist.curvature, params_.wheel_base.base_to_rear);
     return {twist.curvature / ratio, twist.velocity * ratio};
+}
+
+Twist Model::rearToBaseTwist(Twist twist) const {
+    const double ratio = getRearToBaseRatio(twist.curvature, params_.wheel_base.base_to_rear);
+    return {twist.curvature / ratio, twist.velocity * ratio};
+}
+
+namespace {
+
+double getCorrectLimitedValue(Limits<double> limit, double value) {
+    return limit.clamp(value);
+}
+
+double getCorrectLimitedValue(double limit, double value) {
+    return std::clamp(value, -limit, limit);
+}
+
+} // namespace
+
+double Model::baseToLimitedRearVelocity(double velocity, double base_curvature) const {
+    velocity = getCorrectLimitedValue(baseVelocityLimits(), velocity);
+    base_curvature = getCorrectLimitedValue(baseMaxAbsCurvature(), base_curvature);
+    const double ratio = getBaseToRearRatio(base_curvature, params_.wheel_base.base_to_rear);
+    return velocity * ratio;
+}
+
+double Model::baseToLimitedRearAcceleration(double acceleration, double base_curvature) const {
+    acceleration = getCorrectLimitedValue(baseAccelerationLimits(), acceleration);
+    base_curvature = getCorrectLimitedValue(baseMaxAbsCurvature(), base_curvature);
+    const double ratio = getBaseToRearRatio(base_curvature, params_.wheel_base.base_to_rear);
+    return acceleration * ratio;
+}
+
+double Model::baseToLimitedRearCurvature(double curvature) const {
+    curvature = getCorrectLimitedValue(baseMaxAbsCurvature(), curvature);
+    const double ratio = getBaseToRearRatio(curvature, params_.wheel_base.base_to_rear);
+    return curvature / ratio;
 }
 
 Limits<double> Model::baseVelocityLimits() const { return params_.limits.velocity; }
@@ -37,37 +93,57 @@ ServoAngles Model::servoHomeAngles() const { return params_.servo_home_angles; }
 
 double Model::baseMaxAbsCurvature() const { return cache_.max_abs_curvature; }
 
+double Model::steeringVelocity() const { return params_.limits.steering_velocity; }
+
 Limits<geom::Angle> Model::leftSteeringLimits() const {
     return {-params_.limits.steering.inner, params_.limits.steering.outer};
 }
 
 Limits<geom::Angle> Model::rightSteeringLimits() const {
+
     return {-params_.limits.steering.outer, params_.limits.steering.inner};
 }
 
-Steering Model::rearTwistToSteering(Twist twist) const {
-    const double first = twist.curvature * params_.wheel_base.length;
-    const double second = twist.curvature * cache_.width_half;
+Limits<double> Model::middleSteeringLimits() const {
+    return cache_.middle_steering_limits;
+}
+
+Steering Model::rearCurvatureToSteering(double curvature) const {
+    const double first = curvature * params_.wheel_base.length;
+    const double second = curvature * cache_.width_half;
 
     return Steering {
+        geom::Angle::fromRadians(std::atan2(first, 1)),
         geom::Angle::fromRadians(std::atan2(first, 1 - second)),
-        geom::Angle::fromRadians(std::atan2(first, 1 + second))};
+        geom::Angle::fromRadians(std::atan2(first, 1 + second))
+    };
+}
+
+double Model::rearCurvatureToLimitedSteering(double curvature) const {
+    const double y = curvature * params_.wheel_base.length;
+    const double steering = std::atan2(y, 1);
+    return middleSteeringLimits().clamp(steering);
+}
+
+Steering Model::rearTwistToSteering(Twist twist) const {
+    return rearCurvatureToSteering(twist.curvature);
 }
 
 WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
     const double ratio = twist.curvature * cache_.width_half;
 
     return WheelVelocity {
-        geom::Angle{(1 - ratio) * twist.velocity / params_.wheel_radius},
-        geom::Angle{(1 + ratio) * twist.velocity / params_.wheel_radius}};
+        geom::Angle{(1 - ratio) * twist.velocity / params_.wheel.radius},
+        geom::Angle{(1 + ratio) * twist.velocity / params_.wheel.radius}
+    };
 }
 
 double Model::linearVelocityToMotorRPS(double velocity) const {
-    return velocity / params_.wheel_radius / M_PI / params_.gear_ratio / 2;
+    return velocity / params_.wheel.radius / M_PI / params_.gear_ratio / 2;
 }
 
 double Model::motorRPStoLinearVelocity(double rps) const {
-    return rps * params_.wheel_radius * M_PI * params_.gear_ratio * 2;
+    return rps * params_.wheel.radius * M_PI * params_.gear_ratio * 2;
 }
 
 double Model::gearRatio() const { return params_.gear_ratio; }
@@ -76,6 +152,6 @@ const Shape& Model::shape() const { return params_.shape; }
 
 const WheelBase& Model::wheelBase() const { return params_.wheel_base; }
 
-double Model::wheelRadius() const { return params_.wheel_radius; }
+const Wheel& Model::wheel() const { return params_.wheel; }
 
 }  // namespace truck::model
