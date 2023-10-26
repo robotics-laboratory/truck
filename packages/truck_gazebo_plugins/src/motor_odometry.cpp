@@ -45,7 +45,7 @@ nav_msgs::msg::Odometry MotorOdometryPlugin::GetOdometry(const common::Time& now
     const double angular_velocity = (left_angular_velocity + right_angular_velocity) / 2.0;
     constexpr double error = 0.001;
 
-    odometry.twist.twist.linear.x = angular_velocity * model_->wheelRadius();
+    odometry.twist.twist.linear.x = angular_velocity * model_->wheel().radius;
     odometry.twist.covariance[0] = truck::squared(error);
 
     return odometry;
