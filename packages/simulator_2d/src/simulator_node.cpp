@@ -50,7 +50,8 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     if (control->has_acceleration) {
         engine_.setControl(control->velocity, control->acceleration, control->curvature);
     } else {
-        engine_.setControl(control->velocity, control->curvature);
+        //engine_.setControl(control->velocity, control->curvature);
+        engine_.setControl(0.1, 0);
     }
 }
 
@@ -89,6 +90,7 @@ void SimulatorNode::publishOdometryMessage(
     signals_.odometry->publish(odom_msg);
 }
 
+ /*
 void SimulatorNode::publishTransformMessage(
     const rclcpp::Time &time, const geom::Pose &pose) {
 
@@ -106,6 +108,26 @@ void SimulatorNode::publishTransformMessage(
 
     tf2_msgs::msg::TFMessage tf_msg;
     tf_msg.transforms.push_back(odom_to_base_msg);
+    signals_.tf_publisher->publish(tf_msg);
+}
+//*/
+
+// It's crazy, but that's the only way the transformation works correctly.
+void SimulatorNode::publishTransformMessage(
+    const rclcpp::Time &time, const geom::Pose &pose) {
+
+    geometry_msgs::msg::TransformStamped odom_to_base_transform_msg;
+    odom_to_base_transform_msg.header.frame_id = "odom_ekf";
+    odom_to_base_transform_msg.child_frame_id = "base";
+    odom_to_base_transform_msg.header.stamp = time;
+
+    // Set the transformation.
+    odom_to_base_transform_msg.transform.translation.x = pose.pos.x;
+    odom_to_base_transform_msg.transform.translation.y = pose.pos.y;
+    odom_to_base_transform_msg.transform.rotation = truck::geom::msg::toQuaternion(pose.dir);
+
+    tf2_msgs::msg::TFMessage tf_msg;
+    tf_msg.transforms.push_back(odom_to_base_transform_msg);
     signals_.tf_publisher->publish(tf_msg);
 }
 
