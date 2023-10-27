@@ -4,22 +4,22 @@
 #include "geom/circle.h"
 #include "collision/collision_checker.h"
 
-#include <rclcpp/rclcpp.hpp>
+#include <boost/geometry.hpp>
 
 #include <optional>
+#include <unordered_set>
 
 namespace truck::planner::search {
 
-struct NodeId {
-    int x, y;
-
-    bool operator==(const NodeId& other) const { return (x == other.x) && (y == other.y); }
-};
+namespace bg = boost::geometry;
 
 struct Node {
-    NodeId id;
+    size_t index;
     geom::Vec2 point;
+
+    bool ego;
     bool finish;
+    bool finish_area;
     bool collision;
 };
 
@@ -42,28 +42,41 @@ class Grid {
 
     const geom::Pose& getEgoPose() const;
     const std::vector<Node>& getNodes() const;
-    const Node& getNodeById(const NodeId& id) const;
-    const std::optional<size_t>& getStartNodeIndex() const;
-    const std::optional<size_t>& getEndNodeIndex() const;
+    const Node& getNodeByIndex(size_t index) const;
+    const std::optional<size_t>& getEgoNodeIndex() const;
+    const std::optional<size_t>& getFinishNodeIndex() const;
     const std::unordered_set<size_t>& getFinishAreaNodesIndices() const;
 
-    bool insideFinishArea(const geom::Vec2& point) const;
-    geom::Vec2 snapPoint(const geom::Vec2& point) const;
-    NodeId toNodeId(const geom::Vec2& point, const geom::Vec2& origin) const;
-
   private:
+    using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
+    using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
+    using RTreeBox = bg::model::box<RTreePoint>;
+    using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
+
+    geom::Vec2 snapPoint(const geom::Vec2& point) const;
+
+    void calculateNodeTypes();
+    void calculateEgoNode();
+    void calculateFinishNode();
+    void calculateFinishAreaNodes();
+
+    struct NodeCache {
+        RTree indexed_point_rtree;
+        std::vector<Node> nodes;
+
+        struct Index {
+            std::optional<size_t> ego = std::nullopt;
+            std::optional<size_t> finish = std::nullopt;
+            std::unordered_set<size_t> finish_area;
+        } index;
+    } node_cache_;
+
     GridParams params_;
 
     model::Shape shape_;
 
     geom::Pose ego_pose_;
     geom::Circle finish_area_;
-
-    std::vector<Node> nodes_;
-    std::unordered_set<size_t> finish_area_nodes_indices_;
-
-    std::optional<size_t> start_node_index_ = std::nullopt;
-    std::optional<size_t> end_node_index_ = std::nullopt;
 
     std::shared_ptr<const collision::StaticCollisionChecker> checker_ = nullptr;
 };

@@ -20,65 +20,39 @@ Grid& Grid::setCollisionChecker(std::shared_ptr<const collision::StaticCollision
 }
 
 Grid& Grid::build() {
-    geom::Vec2 ego_clipped = snapPoint(ego_pose_);
-    geom::Vec2 finish_clipped = snapPoint(finish_area_.center);
-
-    geom::Vec2 origin_clipped = snapPoint(
-        ego_clipped - geom::Vec2(params_.width, params_.height) * (params_.resolution / 2));
-
-    NodeId ego_id = toNodeId(ego_clipped, origin_clipped);
-    NodeId finish_id = toNodeId(finish_clipped, origin_clipped);
+    geom::Vec2 grid_origin_point =  \
+        snapPoint(ego_pose_) - geom::Vec2(params_.width, params_.height) * (params_.resolution / 2);
 
     for (int i = 0; i < params_.height; i++) {
         for (int j = 0; j < params_.width; j++) {
             // initialize node
             Node node = Node{
-                .id = NodeId{j, i},
-                .point = origin_clipped + (geom::Vec2(j, i) * params_.resolution),
-                .finish = insideFinishArea(node.point),
+                .index = (i * params_.width) + j,
+                .point = grid_origin_point + (geom::Vec2(j, i) * params_.resolution),
                 .collision = (checker_->distance(node.point) < (shape_.width / 2)) ? true : false};
 
-            nodes_.emplace_back(node);
-
-            size_t cur_node_index = nodes_.size() - 1;
-
-            if (node.id == ego_id) {
-                // save index of a start node
-                start_node_index_ = cur_node_index;
-            }
-
-            if (node.id == finish_id) {
-                // save index of an end node
-                end_node_index_ = cur_node_index;
-            }
-
-            if (node.finish) {
-                finish_area_nodes_indices_.insert(cur_node_index);
-            }
+            node_cache_.nodes.emplace_back(node);
+            node_cache_.indexed_point_rtree.insert(
+                std::make_pair(RTreePoint(node.point.x, node.point.y), node.index));
         }
     }
 
+    calculateNodeTypes();
     return *this;
 }
 
 const geom::Pose& Grid::getEgoPose() const { return ego_pose_; }
 
-const std::vector<Node>& Grid::getNodes() const { return nodes_; }
+const std::vector<Node>& Grid::getNodes() const { return node_cache_.nodes; }
 
-const Node& Grid::getNodeById(const NodeId& id) const {
-    return nodes_.at(id.x + params_.width * id.y);
-}
+const Node& Grid::getNodeByIndex(size_t index) const { return node_cache_.nodes[index]; }
 
-const std::optional<size_t>& Grid::getStartNodeIndex() const { return start_node_index_; }
+const std::optional<size_t>& Grid::getEgoNodeIndex() const { return node_cache_.index.ego; }
 
-const std::optional<size_t>& Grid::getEndNodeIndex() const { return end_node_index_; }
+const std::optional<size_t>& Grid::getFinishNodeIndex() const { return node_cache_.index.finish; }
 
 const std::unordered_set<size_t>& Grid::getFinishAreaNodesIndices() const {
-    return finish_area_nodes_indices_;
-}
-
-bool Grid::insideFinishArea(const geom::Vec2& point) const {
-    return (finish_area_.center - point).lenSq() < squared(finish_area_.radius);
+    return node_cache_.index.finish_area;
 }
 
 geom::Vec2 Grid::snapPoint(const geom::Vec2& point) const {
@@ -87,10 +61,64 @@ geom::Vec2 Grid::snapPoint(const geom::Vec2& point) const {
         round<double>(point.y / params_.resolution) * params_.resolution);
 }
 
-NodeId Grid::toNodeId(const geom::Vec2& point, const geom::Vec2& origin) const {
-    return NodeId{
-        .x = int((point.x - origin.x) / params_.resolution),
-        .y = int((point.y - origin.y) / params_.resolution)};
+void Grid::calculateNodeTypes() {
+    calculateEgoNode();
+    calculateFinishNode();
+    calculateFinishAreaNodes();
+}
+
+void Grid::calculateEgoNode() {
+    std::vector<RTreeIndexedPoint> rtree_indexed_points;
+
+    node_cache_.indexed_point_rtree.query(
+        bg::index::nearest(RTreePoint(ego_pose_.pos.x, ego_pose_.pos.y), 1), std::back_inserter(rtree_indexed_points));
+
+    int node_index = rtree_indexed_points.back().second;
+    node_cache_.nodes[node_index].ego = true;
+    node_cache_.index.ego = node_index;
+}
+
+void Grid::calculateFinishNode() {
+    std::vector<RTreeIndexedPoint> rtree_indexed_points;
+
+    node_cache_.indexed_point_rtree.query(
+        bg::index::nearest(RTreePoint(finish_area_.center.x, finish_area_.center.y), 1), std::back_inserter(rtree_indexed_points));
+
+    int node_index = rtree_indexed_points.back().second;
+    node_cache_.nodes[node_index].finish = true;
+    node_cache_.index.finish = rtree_indexed_points.back().second;
+}
+
+void Grid::calculateFinishAreaNodes() {
+    std::vector<RTreeIndexedPoint> rtree_indexed_points;
+
+    geom::Vec2 finish_node_point = getNodeByIndex(node_cache_.index.finish.value()).point;
+
+    RTreeBox rtree_finish_box(
+        RTreePoint(
+            finish_node_point.x - finish_area_.radius,
+            finish_node_point.y - finish_area_.radius),
+        RTreePoint(
+            finish_node_point.x + finish_area_.radius,
+            finish_node_point.y + finish_area_.radius));
+
+    node_cache_.indexed_point_rtree.query(
+        bg::index::intersects(rtree_finish_box) &&
+        bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
+            geom::Vec2 node_point(
+                rtree_indexed_point.first.get<0>(),
+                rtree_indexed_point.first.get<1>()
+            );
+
+            return (finish_node_point - node_point).lenSq() < squared(finish_area_.radius);
+        }),
+        std::back_inserter(rtree_indexed_points));
+
+    for (const auto& rtree_indexed_point : rtree_indexed_points) {
+        int node_index = rtree_indexed_point.second;
+        node_cache_.nodes[node_index].finish_area = true;
+        node_cache_.index.finish_area.insert(node_index);
+    }
 }
 
 }  // namespace truck::planner::search

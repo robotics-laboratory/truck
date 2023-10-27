@@ -67,9 +67,9 @@ class PlannerNode : public rclcpp::Node {
             double z_lev;
             double scale;
             std_msgs::msg::ColorRGBA base_color;
-            std_msgs::msg::ColorRGBA start_color;
-            std_msgs::msg::ColorRGBA finish_base_color;
-            std_msgs::msg::ColorRGBA finish_accent_color;
+            std_msgs::msg::ColorRGBA ego_color;
+            std_msgs::msg::ColorRGBA finish_color;
+            std_msgs::msg::ColorRGBA finish_area_color;
             std_msgs::msg::ColorRGBA collision_color;
         } node;
     } params_;
