@@ -9,14 +9,9 @@
 #include <optional>
 #include <unordered_set>
 
-namespace bg = boost::geometry;
-
-using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
-using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
-using RTreeBox = bg::model::box<RTreePoint>;
-using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
-
 namespace truck::planner::search {
+
+namespace bg = boost::geometry;
 
 struct Node {
     size_t index;
@@ -53,9 +48,14 @@ class Grid {
     const std::unordered_set<size_t>& getFinishAreaNodesIndices() const;
 
   private:
+    using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
+    using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
+    using RTreeBox = bg::model::box<RTreePoint>;
+    using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
+
     geom::Vec2 snapPoint(const geom::Vec2& point) const;
 
-    void calculateNodes();
+    void calculateNodeTypes();
     void calculateEgoNode();
     void calculateFinishNode();
     void calculateFinishAreaNodes();

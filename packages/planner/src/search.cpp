@@ -20,9 +20,8 @@ Grid& Grid::setCollisionChecker(std::shared_ptr<const collision::StaticCollision
 }
 
 Grid& Grid::build() {
-    geom::Vec2 grid_origin_point = snapPoint(
-        snapPoint(ego_pose_) -
-        geom::Vec2(params_.width, params_.height) * (params_.resolution / 2));
+    geom::Vec2 grid_origin_point =  \
+        snapPoint(ego_pose_) - geom::Vec2(params_.width, params_.height) * (params_.resolution / 2);
 
     for (int i = 0; i < params_.height; i++) {
         for (int j = 0; j < params_.width; j++) {
@@ -38,7 +37,7 @@ Grid& Grid::build() {
         }
     }
 
-    calculateNodes();
+    calculateNodeTypes();
     return *this;
 }
 
@@ -62,7 +61,7 @@ geom::Vec2 Grid::snapPoint(const geom::Vec2& point) const {
         round<double>(point.y / params_.resolution) * params_.resolution);
 }
 
-void Grid::calculateNodes() {
+void Grid::calculateNodeTypes() {
     calculateEgoNode();
     calculateFinishNode();
     calculateFinishAreaNodes();
