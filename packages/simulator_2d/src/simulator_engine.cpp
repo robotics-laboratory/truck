@@ -5,8 +5,8 @@
 
 namespace truck::simulator {
 
-SimulatorEngine::SimulatorEngine(const std::string& model_config_path, 
-    double integration_step, double precision): model_(model_config_path) {
+SimulatorEngine::SimulatorEngine(const model::Model& model, 
+    double integration_step, double precision): model_(model) {
     
     params_.integration_step = integration_step;
     params_.precision = precision;
@@ -17,85 +17,120 @@ SimulatorEngine::SimulatorEngine(const std::string& model_config_path,
     cache_.inverse_wheelbase_length = 1 / model_.wheelBase().length;
     cache_.wheelbase_width_2 = model_.wheelBase().width / 2;
 
-    reset();
+    reset_rear();
 }
 
-void SimulatorEngine::reset(double x, double y, double yaw, double steering, 
-        double linear_velocity, double angular_velocity) {
-    state_ = (SimulatorEngine::State() 
-        << x, y, yaw, steering, linear_velocity, angular_velocity)
+void SimulatorEngine::reset_rear(double x, double y, double yaw,
+    double steering, double linear_velocity) {
+
+    rear_ax_state_ = (SimulatorEngine::State() 
+        << x, y, yaw, steering, linear_velocity)
         .finished();
 }
 
-void SimulatorEngine::reset() {
-    reset(-model_.wheelBase().base_to_rear, 0, 0, 0, 0, 0);
+void SimulatorEngine::reset_rear() {
+    reset_rear(-model_.wheelBase().base_to_rear, 0, 0, 0, 0);
 }
 
-rclcpp::Time SimulatorEngine::getTime() const {
+void SimulatorEngine::reset_base(double x, double y, double yaw,
+    double steering, double linear_velocity) {
+    
+    const auto dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
+    const double rear_x = x 
+        - model_.wheelBase().base_to_rear * dir.x();
+    const double rear_y = y
+        - model_.wheelBase().base_to_rear * dir.y();
+
+    const double base_curvature = std::tan(steering) * cache_.inverse_wheelbase_length;
+    const auto base_twist = model::Twist {base_curvature, linear_velocity};
+    const auto rear_twist = model_.baseToRearTwist(base_twist);
+    const double rear_steering = model_.rearTwistToSteering(rear_twist).middle.radians();
+
+    reset_rear(rear_x, rear_y, yaw, rear_steering, rear_twist.velocity);
+}
+
+const rclcpp::Time& SimulatorEngine::getTime() const {
     return time_;
 }
 
-geom::Pose SimulatorEngine::getPose() const {
+geom::Pose SimulatorEngine::getBasePose() const {
     geom::Pose pose;
-    pose.pos.x = state_[StateIndex::x] + model_.wheelBase().base_to_rear;
+    pose.pos.x = rear_ax_state_[StateIndex::x] + model_.wheelBase().base_to_rear;
     return pose;
 }
 
-double SimulatorEngine::getCurrentCurvature() const {
-    return model_.wheelBase().length * tan(state_[StateIndex::steering]);
-}
-
-double SimulatorEngine::getMiddleSteering() const {
-    return state_[StateIndex::steering];
+double SimulatorEngine::getCurrentRearCurvature() const {
+    return tan(rear_ax_state_[StateIndex::steering]) * cache_.inverse_wheelbase_length;
 }
 
 model::Steering SimulatorEngine::getCurrentSteering() const {
-    return model_.rearCurvatureToSteering(getCurrentCurvature());
+    return model_.rearCurvatureToSteering(getCurrentRearCurvature());
 }
 
 model::Steering SimulatorEngine::getTargetSteering() const {
     return model_.rearCurvatureToSteering(control_.curvature);
 }
 
-model::Twist SimulatorEngine::getTwist() const { 
-    const auto twist = model::Twist {getCurrentCurvature(), state_[StateIndex::linear_velocity]};
+model::Twist SimulatorEngine::getBaseTwist() const { 
+    const auto twist = model::Twist {getCurrentRearCurvature(), 
+        rear_ax_state_[StateIndex::linear_velocity]};
     return model_.rearToBaseTwist(twist);
 }
 
-geom::Vec2 SimulatorEngine::getLinearVelocity() const {
-    return geom::Vec2::fromAngle(geom::Angle(getTwist().velocity));
+geom::Vec2 SimulatorEngine::getBaseLinearVelocity() const {
+    return geom::Vec2::fromAngle(geom::Angle(getBaseTwist().velocity));
 }
 
-geom::Vec2 SimulatorEngine::getAngularVelocity() const {
-    return geom::Vec2::fromAngle(geom::Angle(state_[StateIndex::angular_velocity]));
+geom::Vec2 SimulatorEngine::getBaseAngularVelocity() const {
+    const double angular_velocity = getBaseTwist().velocity * getCurrentRearCurvature();
+    return geom::Vec2::fromAngle(geom::Angle(angular_velocity));
 }
 
-void SimulatorEngine::setControl(
+void SimulatorEngine::setBaseControl(
     double velocity, double acceleration, double curvature) {
 
-    control_.velocity 
-        = model_.baseToLimitedRearVelocity(velocity, curvature);
+    velocity = model_.baseVelocityLimits().clamp(velocity);
+    acceleration = model_.baseAccelerationLimits().clamp(acceleration);
+    curvature = model_.baseCurvatureLimits().clamp(curvature);
+
+    const auto base_twist = model::Twist {curvature, velocity};
+    const auto rear_twist = model_.baseToRearTwist(base_twist);
+
+    control_.velocity = rear_twist.velocity;
     control_.acceleration 
-        = model_.baseToLimitedRearAcceleration(acceleration, curvature);
-    control_.curvature 
-        = model_.baseToLimitedRearCurvature(curvature);
+        = model_.baseToRearAcceleration(acceleration, curvature);
+    control_.curvature = rear_twist.curvature;
 }
 
-void SimulatorEngine::setControl(double velocity, double curvature) {
-    control_.velocity 
-        = model_.baseToLimitedRearVelocity(velocity, curvature);
-    control_.curvature 
-        = model_.baseToLimitedRearCurvature(curvature);
-
+void SimulatorEngine::setBaseControl(double velocity, double curvature) {
+    double acceleration;
+    
     const auto limits = model_.baseAccelerationLimits();
-    if (state_[StateIndex::linear_velocity] - params_.precision < control_.velocity) {
-        control_.acceleration = limits.max;
-    } else {
-        control_.acceleration = limits.min;
+    if (rear_ax_state_[StateIndex::linear_velocity] * velocity > 0) {
+        const double current_speed 
+            = abs(rear_ax_state_[StateIndex::linear_velocity] - params_.precision);
+        if (current_speed < abs(velocity)) {
+            acceleration = limits.max;
+        } else {
+            acceleration = limits.min;
+        }
+
+        if (velocity < 0) {
+            acceleration *= -1;
+        }
     }
+    else {
+        acceleration = limits.min;
+
+        if (velocity > 0) {
+            acceleration *= -1;
+        }
+    }
+
+    setBaseControl(velocity, acceleration, curvature);
 }
 
-SimulatorEngine::State SimulatorEngine::calculateStateDelta(
+SimulatorEngine::State SimulatorEngine::calculateStateDerivative(
     const SimulatorEngine::State &state, double acceleration) {
     
     SimulatorEngine::State delta;
@@ -129,21 +164,21 @@ void SimulatorEngine::advance(double time) {
     const double velocity_delta = acceleration * params_.integration_step;
 
     for (auto i = 0; i < integration_steps; ++i) {
-        const double new_velocity = state_[StateIndex::linear_velocity] + velocity_delta;
+        const double new_velocity = rear_ax_state_[StateIndex::linear_velocity] + velocity_delta;
         if (isOutOfRange(new_velocity, control_.velocity, params_.precision)) {
-            state_[StateIndex::linear_velocity] = control_.velocity;
+            rear_ax_state_[StateIndex::linear_velocity] = control_.velocity;
             acceleration = 0;
         }
 
-        auto k1 = calculateStateDelta(state_, acceleration);
-        auto k2 = calculateStateDelta(
-            state_ + k1 * cache_.integration_step_2, acceleration);
-        auto k3 = calculateStateDelta(
-            state_ + k2 * cache_.integration_step_2, acceleration);
-        auto k4 = calculateStateDelta(
-            state_ + k3 * params_.integration_step, acceleration);
+        auto k1 = calculateStateDerivative(rear_ax_state_, acceleration);
+        auto k2 = calculateStateDerivative(
+            rear_ax_state_ + k1 * cache_.integration_step_2, acceleration);
+        auto k3 = calculateStateDerivative(
+            rear_ax_state_ + k2 * cache_.integration_step_2, acceleration);
+        auto k4 = calculateStateDerivative(
+            rear_ax_state_ + k3 * params_.integration_step, acceleration);
 
-        state_ += (k1 + 2 * k2 + 2 * k3 + k4) * cache_.integration_step_6;
+        rear_ax_state_ += (k1 + 2 * k2 + 2 * k3 + k4) * cache_.integration_step_6;
     }
 }
 

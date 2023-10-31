@@ -9,34 +9,34 @@ namespace truck::simulator {
 
 class SimulatorEngine {
   public:
-    SimulatorEngine(const std::string& model_config_path, 
+    SimulatorEngine(const model::Model& model, 
         double integration_step = 0.001, double precision = 1e-8);
-    void reset(double x, double y, double yaw, double steering, 
-        double linear_velocity, double angular_velocity);
-    void reset();
-    rclcpp::Time getTime() const;
-    geom::Pose getPose() const;
-    double getCurrentCurvature() const;
-    double getMiddleSteering() const;
+    void reset_rear(double x, double y, double yaw,
+        double steering, double linear_velocity);
+    void reset_rear();
+    void reset_base(double x, double y, double yaw,
+        double steering, double linear_velocity);
+    const rclcpp::Time& getTime() const;
+    geom::Pose getBasePose() const;
     model::Steering getCurrentSteering() const;
     model::Steering getTargetSteering() const;
-    model::Twist getTwist() const;
-    geom::Vec2 getLinearVelocity() const;
-    geom::Vec2 getAngularVelocity() const;
-    void setControl(double velocity, double acceleration, double curvature);
-    void setControl(double velocity, double curvature);
+    model::Twist getBaseTwist() const;
+    geom::Vec2 getBaseLinearVelocity() const;
+    geom::Vec2 getBaseAngularVelocity() const;
+    void setBaseControl(double velocity, double acceleration, double curvature);
+    void setBaseControl(double velocity, double curvature);
     /**
      * @param time in seconds.
      */
-    void advance(const double time = 1.0);
+    void advance(double time = 1.0);
 
   private:
     rclcpp::Time time_;
 
-    typedef Eigen::Matrix<double, 6, 1> State;
+    typedef Eigen::Matrix<double, 5, 1> State;
 
-    State calculateStateDelta(
-        const State &state, const double acceleration);
+    double getCurrentRearCurvature() const;
+    State calculateStateDerivative(const State &state, double acceleration);
 
     struct Parameters {
         double integration_step;
@@ -58,18 +58,17 @@ class SimulatorEngine {
     } control_;
 
     // For the rear axle.
-    State state_;
+    State rear_ax_state_;
 
     enum StateIndex { 
         x = 0, 
         y = 1, 
         yaw = 2, 
         steering = 3, 
-        linear_velocity = 4, 
-        angular_velocity = 5 
+        linear_velocity = 4
     };
 
-    model::Model model_;
+    const model::Model model_;
 };
 
 }  // namespace truck::simulator

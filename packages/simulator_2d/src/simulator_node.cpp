@@ -10,11 +10,7 @@ namespace truck::simulator {
 
 using namespace std::placeholders;
 
-SimulatorNode::SimulatorNode() : Node("simulator"), 
-    engine_(Node::declare_parameter<std::string>("model_config", "model.yaml"), 
-        declare_parameter("integration_step", 0.001), 
-        declare_parameter("calculations_precision", 1e-8)) {
-
+SimulatorNode::SimulatorNode() : Node("simulator") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
@@ -41,87 +37,67 @@ SimulatorNode::SimulatorNode() : Node("simulator"),
     params_ = Parameters{
         .update_period = declare_parameter("update_period", 0.01)};
 
+    const auto model = truck::model::Model(
+        declare_parameter<std::string>("model_config", "model.yaml"));
+    engine_ = std::make_unique<SimulatorEngine>(
+        SimulatorEngine(model, declare_parameter("integration_step", 0.001), 
+        declare_parameter("calculations_precision", 1e-8)));
+
+    // The zero state of the simulation.
+    publishSimulationState();
+
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
-        std::bind(&SimulatorNode::publishSignals, this));    
+        std::bind(&SimulatorNode::makeSimulationTick, this));    
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {
     if (control->has_acceleration) {
-        engine_.setControl(control->velocity, control->acceleration, control->curvature);
+        engine_->setBaseControl(control->velocity, control->acceleration, control->curvature);
     } else {
-        //engine_.setControl(control->velocity, control->curvature);
-        engine_.setControl(0.1, 0);
+        engine_->setBaseControl(control->velocity, control->curvature);
     }
 }
 
-void SimulatorNode::publishTime(const rclcpp::Time &time) {
+void SimulatorNode::publishTime() {
     rosgraph_msgs::msg::Clock clock_msg;
-    clock_msg.clock = time;
+    clock_msg.clock = engine_->getTime();
     signals_.time->publish(clock_msg);
 }
 
-void SimulatorNode::publishOdometryMessage(
-    const rclcpp::Time &time, const geom::Pose &pose) {
+void SimulatorNode::publishOdometryMessage() {
 
     nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.frame_id = "odom_ekf";
     odom_msg.child_frame_id = "odom_ekf";
-    odom_msg.header.stamp = time;
+    odom_msg.header.stamp = engine_->getTime();
 
-    // Set the position.
+    // Set the pose.
+    const auto pose = engine_->getBasePose();
     odom_msg.pose.pose.position.x = pose.pos.x;
     odom_msg.pose.pose.position.y = pose.pos.y;
     odom_msg.pose.pose.orientation = truck::geom::msg::toQuaternion(pose.dir);
 
-    // Set the velocity.
-    const auto linearVelocity = engine_.getLinearVelocity();
-    odom_msg.twist.twist.linear.x = linearVelocity.x;
-    odom_msg.twist.twist.linear.y = linearVelocity.y;
-    tf2::Quaternion orientation;
-    tf2::convert(odom_msg.pose.pose.orientation, orientation);
-    tf2::Matrix3x3 twist_angles(orientation);
-    double roll, pitch, yaw;
-    twist_angles.getRPY(roll, pitch, yaw);
-    odom_msg.twist.twist.angular.x = roll; 
-    odom_msg.twist.twist.angular.y = pitch; 
-    odom_msg.twist.twist.angular.z = yaw;
+    // Set the twist.
+    const auto linear_velocity = engine_->getBaseLinearVelocity();
+    odom_msg.twist.twist.linear.x = linear_velocity.x;
+    odom_msg.twist.twist.linear.y = linear_velocity.y;
+    const auto angular_velocity = engine_->getBaseAngularVelocity();
+    odom_msg.twist.twist.angular.x = angular_velocity.x; 
+    odom_msg.twist.twist.angular.y = angular_velocity.y;
 
     signals_.odometry->publish(odom_msg);
 }
 
- /*
-void SimulatorNode::publishTransformMessage(
-    const rclcpp::Time &time, const geom::Pose &pose) {
-
-    geometry_msgs::msg::TransformStamped odom_to_base_msg;
-    odom_to_base_msg.header.frame_id = "odom_ekf";
-    odom_to_base_msg.child_frame_id = "base";
-    odom_to_base_msg.header.stamp = time;
-
-    // Set the base to odom transformation.
-    tf2::Transform base_to_odom;
-    tf2::fromMsg(truck::geom::msg::toPose(pose), base_to_odom);
-
-    // Set the odom to base transformation.
-    tf2::toMsg(base_to_odom.inverse(), odom_to_base_msg.transform);
-
-    tf2_msgs::msg::TFMessage tf_msg;
-    tf_msg.transforms.push_back(odom_to_base_msg);
-    signals_.tf_publisher->publish(tf_msg);
-}
-//*/
-
-// It's crazy, but that's the only way the transformation works correctly.
-void SimulatorNode::publishTransformMessage(
-    const rclcpp::Time &time, const geom::Pose &pose) {
+void SimulatorNode::publishTransformMessage() {
 
     geometry_msgs::msg::TransformStamped odom_to_base_transform_msg;
     odom_to_base_transform_msg.header.frame_id = "odom_ekf";
     odom_to_base_transform_msg.child_frame_id = "base";
-    odom_to_base_transform_msg.header.stamp = time;
+    odom_to_base_transform_msg.header.stamp = engine_->getTime();
 
     // Set the transformation.
+    const auto pose = engine_->getBasePose();
     odom_to_base_transform_msg.transform.translation.x = pose.pos.x;
     odom_to_base_transform_msg.transform.translation.y = pose.pos.y;
     odom_to_base_transform_msg.transform.rotation = truck::geom::msg::toQuaternion(pose.dir);
@@ -131,37 +107,39 @@ void SimulatorNode::publishTransformMessage(
     signals_.tf_publisher->publish(tf_msg);
 }
 
-void SimulatorNode::publishTelemetryMessage(const rclcpp::Time &time) {
+void SimulatorNode::publishTelemetryMessage() {
     truck_msgs::msg::HardwareTelemetry telemetry_msg;
     telemetry_msg.header.frame_id = "base";
-    telemetry_msg.header.stamp = time;
-    const auto current_steering = engine_.getCurrentSteering();
+    telemetry_msg.header.stamp = engine_->getTime();
+    const auto current_steering = engine_->getCurrentSteering();
     telemetry_msg.current_left_steering = current_steering.left.radians();
     telemetry_msg.current_right_steering = current_steering.right.radians();
-    const auto target_steering = engine_.getTargetSteering();
+    const auto target_steering = engine_->getTargetSteering();
     telemetry_msg.target_left_steering = target_steering.left.radians();
     telemetry_msg.target_right_steering = target_steering.right.radians();
     signals_.telemetry->publish(telemetry_msg);
 }
 
-void SimulatorNode::publishSimulationStateMessage(const rclcpp::Time &time) {
+void SimulatorNode::publishSimulationStateMessage() {
     truck_msgs::msg::SimulationState state_msg;
     state_msg.header.frame_id = "odom_ekf";
-    state_msg.header.stamp = time;
-    state_msg.speed = engine_.getTwist().velocity;
-    state_msg.steering = engine_.getMiddleSteering();
+    state_msg.header.stamp = engine_->getTime();
+    state_msg.speed = engine_->getBaseTwist().velocity;
+    state_msg.steering = engine_->getCurrentSteering().middle.radians();
     signals_.state->publish(state_msg);
 }
 
-void SimulatorNode::publishSignals() {
-    engine_.advance(params_.update_period);
-    const auto time = engine_.getTime();
-    const auto pose = engine_.getPose();
-    publishTime(time);
-    publishOdometryMessage(time, pose);
-    publishTransformMessage(time, pose);
-    publishTelemetryMessage(time);
-    publishSimulationStateMessage(time);
+void SimulatorNode::publishSimulationState() {
+    publishTime();
+    publishOdometryMessage();
+    publishTransformMessage();
+    publishTelemetryMessage();
+    publishSimulationStateMessage();
+}
+
+void SimulatorNode::makeSimulationTick() {
+    engine_->advance(params_.update_period);
+    publishSimulationState();
 }
 
 }  // namespace truck::simulator

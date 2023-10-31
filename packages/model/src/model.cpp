@@ -28,6 +28,8 @@ Model::Model(const std::string& config_path) : params_(config_path) {
         const double steering_limit 
             = std::atan2(cache_.max_abs_rear_curvature, params_.wheel_base.length);
         cache_.middle_steering_limits = {-steering_limit, steering_limit};
+
+        cache_.base_curvature_limits = {-cache_.max_abs_curvature, cache_.max_abs_curvature};
     }
 }
 
@@ -53,41 +55,18 @@ Twist Model::rearToBaseTwist(Twist twist) const {
     return {twist.curvature / ratio, twist.velocity * ratio};
 }
 
-namespace {
-
-double getCorrectLimitedValue(Limits<double> limit, double value) {
-    return limit.clamp(value);
-}
-
-double getCorrectLimitedValue(double limit, double value) {
-    return std::clamp(value, -limit, limit);
-}
-
-} // namespace
-
-double Model::baseToLimitedRearVelocity(double velocity, double base_curvature) const {
-    velocity = getCorrectLimitedValue(baseVelocityLimits(), velocity);
-    base_curvature = getCorrectLimitedValue(baseMaxAbsCurvature(), base_curvature);
-    const double ratio = getBaseToRearRatio(base_curvature, params_.wheel_base.base_to_rear);
-    return velocity * ratio;
-}
-
-double Model::baseToLimitedRearAcceleration(double acceleration, double base_curvature) const {
-    acceleration = getCorrectLimitedValue(baseAccelerationLimits(), acceleration);
-    base_curvature = getCorrectLimitedValue(baseMaxAbsCurvature(), base_curvature);
+double Model::baseToRearAcceleration(double acceleration, double base_curvature) const {
+    acceleration = baseVelocityLimits().clamp(acceleration);
+    base_curvature = baseCurvatureLimits().clamp(base_curvature);
     const double ratio = getBaseToRearRatio(base_curvature, params_.wheel_base.base_to_rear);
     return acceleration * ratio;
-}
-
-double Model::baseToLimitedRearCurvature(double curvature) const {
-    curvature = getCorrectLimitedValue(baseMaxAbsCurvature(), curvature);
-    const double ratio = getBaseToRearRatio(curvature, params_.wheel_base.base_to_rear);
-    return curvature / ratio;
 }
 
 Limits<double> Model::baseVelocityLimits() const { return params_.limits.velocity; }
 
 Limits<double> Model::baseAccelerationLimits() const { return params_.limits.acceleration; }
+
+Limits<double> Model::baseCurvatureLimits() const { return cache_.base_curvature_limits; }
 
 ServoAngles Model::servoHomeAngles() const { return params_.servo_home_angles; }
 
@@ -117,12 +96,6 @@ Steering Model::rearCurvatureToSteering(double curvature) const {
         geom::Angle::fromRadians(std::atan2(first, 1 - second)),
         geom::Angle::fromRadians(std::atan2(first, 1 + second))
     };
-}
-
-double Model::rearCurvatureToLimitedSteering(double curvature) const {
-    const double y = curvature * params_.wheel_base.length;
-    const double steering = std::atan2(y, 1);
-    return middleSteeringLimits().clamp(steering);
 }
 
 Steering Model::rearTwistToSteering(Twist twist) const {

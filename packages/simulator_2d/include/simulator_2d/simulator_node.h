@@ -22,14 +22,15 @@ class SimulatorNode : public rclcpp::Node {
 
   private:
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
-    void publishTime(const rclcpp::Time &time);
-    void publishOdometryMessage(const rclcpp::Time &time, const geom::Pose &pose);
-    void publishTransformMessage(const rclcpp::Time &time, const geom::Pose &pose);
-    void publishTelemetryMessage(const rclcpp::Time &time);
-    void publishSimulationStateMessage(const rclcpp::Time &time);
-    void publishSignals();
+    void publishTime();
+    void publishOdometryMessage();
+    void publishTransformMessage();
+    void publishTelemetryMessage();
+    void publishSimulationStateMessage();
+    void publishSimulationState();
+    void makeSimulationTick();
 
-    SimulatorEngine engine_;
+    std::unique_ptr<SimulatorEngine> engine_ = nullptr;
 
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 
