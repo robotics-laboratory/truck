@@ -11,11 +11,13 @@ class SimulatorEngine {
   public:
     SimulatorEngine(const model::Model& model, 
         double integration_step = 0.001, double precision = 1e-8);
+
     void reset_rear(double x, double y, double yaw,
         double steering, double linear_velocity);
     void reset_rear();
     void reset_base(double x, double y, double yaw,
         double steering, double linear_velocity);
+
     const rclcpp::Time& getTime() const;
     geom::Pose getBasePose() const;
     model::Steering getCurrentSteering() const;
@@ -23,12 +25,10 @@ class SimulatorEngine {
     model::Twist getBaseTwist() const;
     geom::Vec2 getBaseLinearVelocity() const;
     geom::Vec2 getBaseAngularVelocity() const;
+
     void setBaseControl(double velocity, double acceleration, double curvature);
     void setBaseControl(double velocity, double curvature);
-    /**
-     * @param time in seconds.
-     */
-    void advance(double time = 1.0);
+    void advance(double time_in_seconds = 1.0);
 
   private:
     rclcpp::Time time_;
