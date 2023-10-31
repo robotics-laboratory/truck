@@ -30,6 +30,16 @@ Model::Model(const std::string& config_path) : params_(config_path) {
         cache_.middle_steering_limits = {-steering_limit, steering_limit};
 
         cache_.base_curvature_limits = {-cache_.max_abs_curvature, cache_.max_abs_curvature};
+
+        cache_.base_speed_up_limits = {
+            -params_.limits.acceleration.max, 
+            params_.limits.acceleration.max
+        };
+
+        cache_.base_braking_limits = {
+            params_.limits.acceleration.min, 
+            -params_.limits.acceleration.min
+        };
     }
 }
 
@@ -65,6 +75,10 @@ double Model::baseToRearAcceleration(double acceleration, double base_curvature)
 Limits<double> Model::baseVelocityLimits() const { return params_.limits.velocity; }
 
 Limits<double> Model::baseAccelerationLimits() const { return params_.limits.acceleration; }
+
+Limits<double> Model::baseSpeedUpLimits() const { return cache_.base_speed_up_limits; }
+
+Limits<double> Model::baseBrakingLimits() const { return cache_.base_braking_limits; }
 
 Limits<double> Model::baseCurvatureLimits() const { return cache_.base_curvature_limits; }
 

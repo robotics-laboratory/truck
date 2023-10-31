@@ -86,45 +86,60 @@ geom::Vec2 SimulatorEngine::getBaseAngularVelocity() const {
     return geom::Vec2::fromAngle(geom::Angle(angular_velocity));
 }
 
+namespace {
+
+bool isOutOfRange(double value, double limit, double precision) {
+    return (limit >= 0 && value + precision >= limit)
+        || (limit < 0 && value - precision < limit);
+}
+
+} // namespace
+
 void SimulatorEngine::setBaseControl(
     double velocity, double acceleration, double curvature) {
 
-    velocity = model_.baseVelocityLimits().clamp(velocity);
-    acceleration = model_.baseAccelerationLimits().clamp(acceleration);
     curvature = model_.baseCurvatureLimits().clamp(curvature);
+    velocity = model_.baseVelocityLimits().clamp(velocity);
 
     const auto base_twist = model::Twist {curvature, velocity};
     const auto rear_twist = model_.baseToRearTwist(base_twist);
 
+    const bool is_acceleration_incorrect 
+        = (rear_twist.velocity < control_.velocity && acceleration > 0)
+        || (rear_twist.velocity > control_.velocity && acceleration < 0);
+    if (is_acceleration_incorrect) {
+        acceleration *= -1;
+    }
+
+    const bool is_speed_up = isOutOfRange(rear_twist.velocity, 
+        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
+    if (is_speed_up) {
+        acceleration = model_.baseSpeedUpLimits().clamp(acceleration);
+    }
+    else {
+        acceleration = model_.baseBrakingLimits().clamp(acceleration);
+    }
+
+    control_.curvature = rear_twist.curvature;
     control_.velocity = rear_twist.velocity;
     control_.acceleration 
         = model_.baseToRearAcceleration(acceleration, curvature);
-    control_.curvature = rear_twist.curvature;
 }
 
 void SimulatorEngine::setBaseControl(double velocity, double curvature) {
     double acceleration;
-    
-    const auto limits = model_.baseAccelerationLimits();
-    if (rear_ax_state_[StateIndex::linear_velocity] * velocity > 0) {
-        const double current_speed 
-            = abs(rear_ax_state_[StateIndex::linear_velocity] - params_.precision);
-        if (current_speed < abs(velocity)) {
-            acceleration = limits.max;
-        } else {
-            acceleration = limits.min;
-        }
 
-        if (velocity < 0) {
-            acceleration *= -1;
-        }
+    const bool is_speed_up = isOutOfRange(velocity,
+        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
+    if (is_speed_up) {
+        acceleration = model_.baseAccelerationLimits().max;
     }
     else {
-        acceleration = limits.min;
+        acceleration = model_.baseAccelerationLimits().min;
+    }
 
-        if (velocity > 0) {
-            acceleration *= -1;
-        }
+    if (velocity < 0) {
+        acceleration *= -1;
     }
 
     setBaseControl(velocity, acceleration, curvature);
@@ -147,11 +162,6 @@ rclcpp::Duration convertFromSecondsToDuration(double seconds) {
     return rclcpp::Duration(int_seconds, int(nanoseconds));
 }
 
-bool isOutOfRange(double value, double limit, double precision) {
-    return (limit > 0 && value - precision > limit)
-        || (limit < 0 && value + precision < limit);
-}
-
 } // namespace
 
 void SimulatorEngine::advance(double time) {
@@ -159,15 +169,34 @@ void SimulatorEngine::advance(double time) {
 
     const int integration_steps = time * cache_.inverse_integration_step;
 
+    const bool is_speed_up = isOutOfRange(control_.velocity, 
+        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
+    double target_velocity
+        = rear_ax_state_[StateIndex::linear_velocity] * control_.velocity < 0
+            ? 0
+            : control_.velocity;
     double acceleration = control_.acceleration;
     // Acceleration is actually constant, so delta is a constant.
     const double velocity_delta = acceleration * params_.integration_step;
 
     for (auto i = 0; i < integration_steps; ++i) {
-        const double new_velocity = rear_ax_state_[StateIndex::linear_velocity] + velocity_delta;
-        if (isOutOfRange(new_velocity, control_.velocity, params_.precision)) {
-            rear_ax_state_[StateIndex::linear_velocity] = control_.velocity;
-            acceleration = 0;
+        
+        const double new_velocity 
+            = rear_ax_state_[StateIndex::linear_velocity] + velocity_delta;
+        const bool target_speed_achieved = is_speed_up
+            ^ isOutOfRange(new_velocity, target_velocity, params_.precision);
+        if (target_speed_achieved) {
+            rear_ax_state_[StateIndex::linear_velocity] = target_velocity;
+            if ((target_velocity - control_.velocity) > params_.precision) {
+                target_velocity = control_.velocity;
+                acceleration = model_.baseAccelerationLimits().max;
+                if (control_.velocity < 0) {
+                    acceleration *= -1;
+                }
+            }
+            else {
+                acceleration = 0;
+            }
         }
 
         auto k1 = calculateStateDerivative(rear_ax_state_, acceleration);

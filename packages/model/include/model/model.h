@@ -40,6 +40,8 @@ class Model {
     Limits<double> middleSteeringLimits() const;
     Limits<double> baseVelocityLimits() const;
     Limits<double> baseAccelerationLimits() const;
+    Limits<double> baseSpeedUpLimits() const;
+    Limits<double> baseBrakingLimits() const;
     Limits<double> baseCurvatureLimits() const;
     ServoAngles servoHomeAngles() const;
 
@@ -65,6 +67,8 @@ class Model {
         double max_abs_curvature;
         Limits<double> middle_steering_limits;
         Limits<double> base_curvature_limits;
+        Limits<double> base_speed_up_limits;
+        Limits<double> base_braking_limits;
     } cache_;
 
     Params params_;
