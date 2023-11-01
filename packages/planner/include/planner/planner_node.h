@@ -61,17 +61,47 @@ class PlannerNode : public rclcpp::Node {
     } state_;
 
     struct Parameters {
-        search::GridParams grid;
+        struct Graph {
+            std::string type;
 
-        struct NodeParams {
+            struct Grid {
+                int width;
+                int height;
+                double resolution;
+            } grid;
+        } graph;
+
+        struct Node {
             double z_lev;
             double scale;
-            std_msgs::msg::ColorRGBA base_color;
-            std_msgs::msg::ColorRGBA ego_color;
-            std_msgs::msg::ColorRGBA finish_color;
-            std_msgs::msg::ColorRGBA finish_area_color;
-            std_msgs::msg::ColorRGBA collision_color;
+
+            struct ColorRGBA {
+                std_msgs::msg::ColorRGBA base;
+                std_msgs::msg::ColorRGBA ego;
+                std_msgs::msg::ColorRGBA finish;
+                std_msgs::msg::ColorRGBA finish_area;
+                std_msgs::msg::ColorRGBA collision;
+            } color_rgba;
         } node;
+
+        struct Edge {
+            std::string type;
+
+            struct Primitive {
+                std::string json_path;
+            } primitive;
+
+            struct Spline {
+                int yaws_count;
+                double sector_angle;
+                double sector_radius;
+            } spline;
+        } edge;
+
+        struct Searcher {
+            double finish_area_radius;
+            double min_obstacle_distance;
+        } searcher;
     } params_;
 
     std::unique_ptr<model::Model> model_ = nullptr;

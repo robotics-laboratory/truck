@@ -27,8 +27,6 @@ struct GridParams {
     int width;
     int height;
     double resolution;
-    double finish_area_radius;
-    double min_obstacle_distance;
 };
 
 class Grid {

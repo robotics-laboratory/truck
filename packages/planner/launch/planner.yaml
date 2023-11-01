@@ -10,16 +10,44 @@ launch:
     param:
     - {name: "model_config", value: "$(var model_config)"}
 
-    - {name: "grid/nodes/width", value: 40}
-    - {name: "grid/nodes/height", value: 40}
-    - {name: "grid/resolution", value: 0.2}
-    - {name: "grid/finish_area_radius", value: 0.5}
-    - {name: "grid/min_obstacle_distance", value: 0.5}
+    - name: "graph"
+      param:
+        - { name: "type", value: "grid" }
 
-    - {name: "node/z-lev", value: 0.05 }
-    - {name: "node/scale", value: 0.1 }
-    - {name: "node/base/color_rgba", value: [1.0, 0.2, 0.2, 0.2] }
-    - {name: "node/ego/color_rgba", value: [1.0, 0.8, 0.8, 0.8] }
-    - {name: "node/finish/color_rgba", value: [1.0, 1.0, 1.0, 0.0] }
-    - {name: "node/finish_area/color_rgba", value: [0.3, 1.0, 1.0, 0.0] }
-    - {name: "node/collision/color_rgba", value: [0.8, 1.0, 0.0, 0.0] }
+        - name: "grid"
+          param:
+            - { name: "width", value: 40 }
+            - { name: "height", value: 40 }
+            - { name: "resolution", value: 0.2 }
+
+    - name: "node"
+      param:
+        - { name: "z_lev", value: 0.05 }
+        - { name: "scale", value: 0.1 }
+
+        - name: "color_rgba"
+          param:
+            - { name: "base", value: [0.2, 0.2, 0.2, 1.0] }
+            - { name: "ego", value: [0.8, 0.8, 0.8, 1.0] }
+            - { name: "finish", value: [1.0, 1.0, 0.0, 1.0] }
+            - { name: "finish_area", value: [1.0, 1.0, 0.0, 0.3] }
+            - { name: "collision", value: [1.0, 0.0, 0.0, 0.8] }
+
+    - name: "edge"
+      param:
+        - { name: "type", value: "primitive" }
+
+        - name: "primitive"
+          param:
+            - { name: "json_path", value: "/truck/packages/planner/data/primitives.json" }
+
+        - name: "spline"
+          param:
+            - { name: "yaws_count", value: 12 }
+            - { name: "sector_angle", value: 0.8 }
+            - { name: "sector_radius", value: 1.4 }
+
+    - name: "searcher"
+      param:
+        - { name: "finish_area_radius", value: 0.5 }
+        - { name: "min_obstacle_distance", value: 0.5 }
