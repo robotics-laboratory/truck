@@ -161,10 +161,9 @@ void SimulatorEngine::validateAcceleration(double& acceleration, double& target_
     const double velocity_delta = acceleration * params_.integration_step;
     const double new_velocity 
         = rear_ax_state_[StateIndex::linear_velocity] + velocity_delta;
-    const bool is_speed_up = isOutOfRange(control_.velocity, 
-        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
-    const bool target_speed_achieved = is_speed_up
-        == isOutOfRange(new_velocity, target_velocity, params_.precision);
+    const bool target_speed_achieved = acceleration > 0
+        ? new_velocity + params_.precision > target_velocity
+        : new_velocity - params_.precision < target_velocity;
 
     if (target_speed_achieved) {
         rear_ax_state_[StateIndex::linear_velocity] = target_velocity;
