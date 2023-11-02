@@ -72,8 +72,10 @@ model::Steering SimulatorEngine::getTargetSteering() const {
 }
 
 model::Twist SimulatorEngine::getBaseTwist() const { 
-    const auto twist = model::Twist {getCurrentRearCurvature(), 
-        rear_ax_state_[StateIndex::linear_velocity]};
+    const auto twist = model::Twist {
+        getCurrentRearCurvature(), 
+        rear_ax_state_[StateIndex::linear_velocity]
+    };
     return model_.rearToBaseTwist(twist);
 }
 
@@ -149,6 +151,7 @@ SimulatorEngine::State SimulatorEngine::calculateStateDerivative(
     const SimulatorEngine::State &state, double acceleration) {
     
     SimulatorEngine::State deriv;
+    deriv.setZero();
     deriv[StateIndex::x] = state[StateIndex::linear_velocity];
     deriv[StateIndex::linear_velocity] = acceleration;
     return deriv;
@@ -161,7 +164,8 @@ void SimulatorEngine::validateAcceleration(double& acceleration, double& target_
     const bool is_speed_up = isOutOfRange(control_.velocity, 
         rear_ax_state_[StateIndex::linear_velocity], params_.precision);
     const bool target_speed_achieved = is_speed_up
-        ^ isOutOfRange(new_velocity, target_velocity, params_.precision);
+        == isOutOfRange(new_velocity, target_velocity, params_.precision);
+
     if (target_speed_achieved) {
         rear_ax_state_[StateIndex::linear_velocity] = target_velocity;
         if ((target_velocity - control_.velocity) > params_.precision) {
