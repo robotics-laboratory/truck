@@ -31,7 +31,13 @@ class SimulatorEngine {
     void advance(double seconds = 1.0);
 
   private:
-    rclcpp::Time time_;
+    enum StateIndex { 
+        x = 0, 
+        y = 1, 
+        yaw = 2, 
+        steering = 3, 
+        linear_velocity = 4
+    };
 
     typedef Eigen::Matrix<double, 5, 1> State;
 
@@ -59,16 +65,9 @@ class SimulatorEngine {
         double curvature = 0.0;
     } control_;
 
-    // For the rear axle.
-    State rear_ax_state_;
+    rclcpp::Time time_;
 
-    enum StateIndex { 
-        x = 0, 
-        y = 1, 
-        yaw = 2, 
-        steering = 3, 
-        linear_velocity = 4
-    };
+    State rear_ax_state_;
 
     const model::Model model_;
 };
