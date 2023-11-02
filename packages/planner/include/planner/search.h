@@ -79,4 +79,74 @@ class Grid {
     std::shared_ptr<const collision::StaticCollisionChecker> checker_ = nullptr;
 };
 
+struct Vertex {
+    size_t node_index;
+    size_t yaw_index;
+
+    struct State {
+        // path cost from start vertex to this vertex
+        double start_cost = 0.0;
+
+        std::optional<size_t> prev_vertex_index;
+        std::optional<size_t> prev_edge_index;
+    } state;
+};
+
+struct Edge {
+    size_t index;
+    double len;
+
+    struct NeighborVertex {
+        size_t node_index;
+        size_t yaw_index;
+    } neighbor_vertex;
+};
+
+class EdgeCache {
+  public:
+    virtual void reset() = 0;
+    virtual std::vector<Edge> getEdgesfromVertex(const Vertex& vertex) = 0;
+
+    void setGrid(std::shared_ptr<const Grid> grid);
+    void setCollisionChecker(std::shared_ptr<const collision::StaticCollisionChecker> checker);
+
+  protected:
+    std::vector<geom::Poses> cache_;
+
+    std::shared_ptr<const Grid> grid_ = nullptr;
+    std::shared_ptr<const collision::StaticCollisionChecker> checker_ = nullptr;
+};
+
+struct PrimitiveCacheParams {
+    std::string json_path;
+};
+
+class PrimitiveCache : public EdgeCache {
+  public:
+    PrimitiveCache(const PrimitiveCacheParams& params);
+
+    void reset() override;
+    std::vector<Edge> getEdgesfromVertex(const Vertex& vertex) override;
+
+  private:
+    PrimitiveCacheParams params_;
+};
+
+struct SplineCacheParams {
+    int yaws_count;
+    double sector_angle;
+    double sector_radius;
+};
+
+class SplineCache : public EdgeCache {
+  public:
+    SplineCache(const SplineCacheParams& params);
+
+    void reset() override;
+    std::vector<Edge> getEdgesfromVertex(const Vertex& vertex) override;
+
+  private:
+    SplineCacheParams params_;
+};
+
 }  // namespace truck::planner::search

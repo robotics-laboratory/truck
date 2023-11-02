@@ -110,13 +110,29 @@ PlannerNode::PlannerNode() : Node("planner") {
         return;
     }
 
-    if (!(params_.edge.type == "primitive" || params_.edge.type == "spline")) {
+    if (params_.edge.type == "primitive") {
+        search::PrimitiveCacheParams primitive_cache_params {
+            .json_path = params_.edge.primitive.json_path
+        };
+
+        edge_cache_ = std::make_shared<search::PrimitiveCache>(primitive_cache_params);
+    } else if (params_.edge.type == "spline") {
+        search::SplineCacheParams spline_cache_params {
+            .yaws_count = params_.edge.spline.yaws_count,
+            .sector_angle = params_.edge.spline.sector_angle,
+            .sector_radius = params_.edge.spline.sector_radius
+        };
+
+        edge_cache_ = std::make_shared<search::SplineCache>(spline_cache_params);
+    } else {
         RCLCPP_WARN(
             this->get_logger(),
             "Invalid edge type: '%s'. Assign 'primitive' or 'spline' only!",
             params_.edge.type.c_str());
         return;
     }
+
+    edge_cache_->setCollisionChecker(checker_);
 
     if (params_.graph.type == "adaptive" && params_.edge.type == "primitive") {
         RCLCPP_WARN(
@@ -257,6 +273,9 @@ void PlannerNode::doPlanningLoop() {
 
     // visualize grid
     publishGrid();
+
+    // update grid in edge cache
+    edge_cache_->setGrid(state_.grid);
 }
 
 }  // namespace truck::planner::visualization

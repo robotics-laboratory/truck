@@ -107,6 +107,7 @@ class PlannerNode : public rclcpp::Node {
     std::unique_ptr<model::Model> model_ = nullptr;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
     std::shared_ptr<collision::StaticCollisionChecker> checker_ = nullptr;
+    std::shared_ptr<search::EdgeCache> edge_cache_ = nullptr;
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 };
 
