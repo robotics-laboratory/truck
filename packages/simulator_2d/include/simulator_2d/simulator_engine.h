@@ -28,7 +28,7 @@ class SimulatorEngine {
 
     void setBaseControl(double velocity, double acceleration, double curvature);
     void setBaseControl(double velocity, double curvature);
-    void advance(double time_in_seconds = 1.0);
+    void advance(double seconds = 1.0);
 
   private:
     rclcpp::Time time_;
@@ -37,6 +37,8 @@ class SimulatorEngine {
 
     double getCurrentRearCurvature() const;
     State calculateStateDerivative(const State &state, double acceleration);
+    void validateAcceleration(double& acceleration, double& target_velocity);
+    State calculateRK4(double acceleration);
 
     struct Parameters {
         double integration_step;

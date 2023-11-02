@@ -90,7 +90,7 @@ namespace {
 
 bool isOutOfRange(double value, double limit, double precision) {
     return (limit >= 0 && value + precision >= limit)
-        || (limit < 0 && value - precision < limit);
+        || (limit < 0 && value - precision <= limit);
 }
 
 } // namespace
@@ -148,10 +148,45 @@ void SimulatorEngine::setBaseControl(double velocity, double curvature) {
 SimulatorEngine::State SimulatorEngine::calculateStateDerivative(
     const SimulatorEngine::State &state, double acceleration) {
     
-    SimulatorEngine::State delta;
-    delta[StateIndex::x] = state[StateIndex::linear_velocity];
-    delta[StateIndex::linear_velocity] = acceleration;
-    return delta;
+    SimulatorEngine::State deriv;
+    deriv[StateIndex::x] = state[StateIndex::linear_velocity];
+    deriv[StateIndex::linear_velocity] = acceleration;
+    return deriv;
+}
+
+void SimulatorEngine::validateAcceleration(double& acceleration, double& target_velocity) {
+    const double velocity_delta = acceleration * params_.integration_step;
+    const double new_velocity 
+        = rear_ax_state_[StateIndex::linear_velocity] + velocity_delta;
+    const bool is_speed_up = isOutOfRange(control_.velocity, 
+        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
+    const bool target_speed_achieved = is_speed_up
+        ^ isOutOfRange(new_velocity, target_velocity, params_.precision);
+    if (target_speed_achieved) {
+        rear_ax_state_[StateIndex::linear_velocity] = target_velocity;
+        if ((target_velocity - control_.velocity) > params_.precision) {
+            target_velocity = control_.velocity;
+            acceleration = model_.baseAccelerationLimits().max;
+            if (control_.velocity < 0) {
+                acceleration *= -1;
+            }
+        }
+        else {
+            acceleration = 0;
+        }
+    }
+}
+
+SimulatorEngine::State SimulatorEngine::calculateRK4(double acceleration) {
+    const auto k1 = calculateStateDerivative(rear_ax_state_, acceleration);
+    const auto k2 = calculateStateDerivative(
+        rear_ax_state_ + k1 * cache_.integration_step_2, acceleration);
+    const auto k3 = calculateStateDerivative(
+        rear_ax_state_ + k2 * cache_.integration_step_2, acceleration);
+    const auto k4 = calculateStateDerivative(
+        rear_ax_state_ + k3 * params_.integration_step, acceleration);
+
+    return (k1 + 2 * k2 + 2 * k3 + k4) * cache_.integration_step_6;
 }
 
 namespace {
@@ -164,50 +199,20 @@ rclcpp::Duration convertFromSecondsToDuration(double seconds) {
 
 } // namespace
 
-void SimulatorEngine::advance(double time) {
-    time_ += convertFromSecondsToDuration(time);
+void SimulatorEngine::advance(double seconds) {
+    time_ += convertFromSecondsToDuration(seconds);
 
-    const int integration_steps = time * cache_.inverse_integration_step;
-
-    const bool is_speed_up = isOutOfRange(control_.velocity, 
-        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
+    const int integration_steps = seconds * cache_.inverse_integration_step;
+    
+    double acceleration = control_.acceleration;
     double target_velocity
         = rear_ax_state_[StateIndex::linear_velocity] * control_.velocity < 0
             ? 0
             : control_.velocity;
-    double acceleration = control_.acceleration;
-    // Acceleration is actually constant, so delta is a constant.
-    const double velocity_delta = acceleration * params_.integration_step;
 
-    for (auto i = 0; i < integration_steps; ++i) {
-        
-        const double new_velocity 
-            = rear_ax_state_[StateIndex::linear_velocity] + velocity_delta;
-        const bool target_speed_achieved = is_speed_up
-            ^ isOutOfRange(new_velocity, target_velocity, params_.precision);
-        if (target_speed_achieved) {
-            rear_ax_state_[StateIndex::linear_velocity] = target_velocity;
-            if ((target_velocity - control_.velocity) > params_.precision) {
-                target_velocity = control_.velocity;
-                acceleration = model_.baseAccelerationLimits().max;
-                if (control_.velocity < 0) {
-                    acceleration *= -1;
-                }
-            }
-            else {
-                acceleration = 0;
-            }
-        }
-
-        auto k1 = calculateStateDerivative(rear_ax_state_, acceleration);
-        auto k2 = calculateStateDerivative(
-            rear_ax_state_ + k1 * cache_.integration_step_2, acceleration);
-        auto k3 = calculateStateDerivative(
-            rear_ax_state_ + k2 * cache_.integration_step_2, acceleration);
-        auto k4 = calculateStateDerivative(
-            rear_ax_state_ + k3 * params_.integration_step, acceleration);
-
-        rear_ax_state_ += (k1 + 2 * k2 + 2 * k3 + k4) * cache_.integration_step_6;
+    for (int i = 0; i < integration_steps; ++i) {
+        validateAcceleration(acceleration, target_velocity);
+        rear_ax_state_ += calculateRK4(acceleration);
     }
 }
 
