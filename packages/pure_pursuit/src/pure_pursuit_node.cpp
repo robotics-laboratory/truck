@@ -108,7 +108,7 @@ void PurePursuitNode::publishCommand() {
             msg.target.point = geom::msg::toPoint(*cmd.target);
         }
 
-        result.has_acceleration = true;
+        msg.has_acceleration = true;
 
         return msg;
     };
