@@ -42,9 +42,9 @@ class SimulatorEngine {
     typedef Eigen::Matrix<double, 5, 1> State;
 
     double getCurrentRearCurvature() const;
-    State calculateStateDerivative(const State &state, double acceleration);
-    void validateAcceleration(double& acceleration, double& target_velocity);
-    State calculateRK4(double acceleration);
+    State calculateStateDerivative(const State &state);
+    void validateAcceleration(double& target_velocity);
+    State calculateRK4();
 
     struct Parameters {
         double integration_step;

@@ -119,7 +119,7 @@ void SimulatorEngine::setBaseControl(
         acceleration = model_.baseSpeedUpLimits().clamp(acceleration);
     }
     else {
-        acceleration = model_.baseBrakingLimits().clamp(acceleration);
+        acceleration = model_.baseDecelerationLimits().clamp(acceleration);
     }
 
     control_.curvature = rear_twist.curvature;
@@ -129,65 +129,67 @@ void SimulatorEngine::setBaseControl(
 }
 
 void SimulatorEngine::setBaseControl(double velocity, double curvature) {
-    double acceleration;
-
-    const bool is_speed_up = isOutOfRange(velocity,
+    const auto base_twist = model::Twist {curvature, velocity};
+    const auto rear_twist = model_.baseToRearTwist(base_twist);
+    const bool is_speed_up = isOutOfRange(rear_twist.velocity,
         rear_ax_state_[StateIndex::linear_velocity], params_.precision);
-    if (is_speed_up) {
-        acceleration = model_.baseAccelerationLimits().max;
-    }
-    else {
-        acceleration = model_.baseAccelerationLimits().min;
-    }
 
-    if (velocity < 0) {
-        acceleration *= -1;
-    }
+    double acceleration = is_speed_up
+        ? model_.baseAccelerationLimits().max
+        : model_.baseAccelerationLimits().min;
 
     setBaseControl(velocity, acceleration, curvature);
 }
 
 SimulatorEngine::State SimulatorEngine::calculateStateDerivative(
-    const SimulatorEngine::State &state, double acceleration) {
+    const SimulatorEngine::State &state) {
     
     SimulatorEngine::State deriv;
     deriv.setZero();
     deriv[StateIndex::x] = state[StateIndex::linear_velocity];
-    deriv[StateIndex::linear_velocity] = acceleration;
+    deriv[StateIndex::linear_velocity] = control_.acceleration;
     return deriv;
 }
 
-void SimulatorEngine::validateAcceleration(double& acceleration, double& target_velocity) {
-    const double velocity_delta = acceleration * params_.integration_step;
+void SimulatorEngine::validateAcceleration(double& target_velocity) {
+    if (abs(control_.acceleration) < params_.precision) {
+        return;
+    }
+
+    const double velocity_delta = control_.acceleration * params_.integration_step;
     const double new_velocity 
         = rear_ax_state_[StateIndex::linear_velocity] + velocity_delta;
-    const bool target_speed_achieved = acceleration > 0
+    const bool target_speed_achieved = control_.acceleration > 0
         ? new_velocity + params_.precision > target_velocity
         : new_velocity - params_.precision < target_velocity;
 
     if (target_speed_achieved) {
         rear_ax_state_[StateIndex::linear_velocity] = target_velocity;
-        if ((target_velocity - control_.velocity) > params_.precision) {
+        if (abs(target_velocity - control_.velocity) > params_.precision) {
             target_velocity = control_.velocity;
-            acceleration = model_.baseAccelerationLimits().max;
+            control_.acceleration = model_.baseAccelerationLimits().max;
+            double curvature = getCurrentRearCurvature();
+            curvature = model_.rearToBaseCurvature(curvature);
+            control_.acceleration 
+                = model_.baseToRearAcceleration(control_.acceleration, curvature);
             if (control_.velocity < 0) {
-                acceleration *= -1;
+                control_.acceleration *= -1;
             }
         }
         else {
-            acceleration = 0;
+            control_.acceleration = 0;
         }
     }
 }
 
-SimulatorEngine::State SimulatorEngine::calculateRK4(double acceleration) {
-    const auto k1 = calculateStateDerivative(rear_ax_state_, acceleration);
+SimulatorEngine::State SimulatorEngine::calculateRK4() {
+    const auto k1 = calculateStateDerivative(rear_ax_state_);
     const auto k2 = calculateStateDerivative(
-        rear_ax_state_ + k1 * cache_.integration_step_2, acceleration);
+        rear_ax_state_ + k1 * cache_.integration_step_2);
     const auto k3 = calculateStateDerivative(
-        rear_ax_state_ + k2 * cache_.integration_step_2, acceleration);
+        rear_ax_state_ + k2 * cache_.integration_step_2);
     const auto k4 = calculateStateDerivative(
-        rear_ax_state_ + k3 * params_.integration_step, acceleration);
+        rear_ax_state_ + k3 * params_.integration_step);
 
     return (k1 + 2 * k2 + 2 * k3 + k4) * cache_.integration_step_6;
 }
@@ -207,15 +209,14 @@ void SimulatorEngine::advance(double seconds) {
 
     const int integration_steps = seconds * cache_.inverse_integration_step;
     
-    double acceleration = control_.acceleration;
     double target_velocity
         = rear_ax_state_[StateIndex::linear_velocity] * control_.velocity < 0
             ? 0
             : control_.velocity;
 
     for (int i = 0; i < integration_steps; ++i) {
-        validateAcceleration(acceleration, target_velocity);
-        rear_ax_state_ += calculateRK4(acceleration);
+        validateAcceleration(target_velocity);
+        rear_ax_state_ += calculateRK4();
     }
 }
 
