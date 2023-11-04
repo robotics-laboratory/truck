@@ -36,7 +36,7 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             params_.limits.acceleration.max
         };
 
-        cache_.base_braking_limits = {
+        cache_.base_deceleration_limits = {
             params_.limits.acceleration.min, 
             -params_.limits.acceleration.min
         };
@@ -66,8 +66,6 @@ Twist Model::rearToBaseTwist(Twist twist) const {
 }
 
 double Model::baseToRearAcceleration(double acceleration, double base_curvature) const {
-    acceleration = baseVelocityLimits().clamp(acceleration);
-    base_curvature = baseCurvatureLimits().clamp(base_curvature);
     const double ratio = getBaseToRearRatio(base_curvature, params_.wheel_base.base_to_rear);
     return acceleration * ratio;
 }
@@ -78,7 +76,7 @@ Limits<double> Model::baseAccelerationLimits() const { return params_.limits.acc
 
 Limits<double> Model::baseSpeedUpLimits() const { return cache_.base_speed_up_limits; }
 
-Limits<double> Model::baseBrakingLimits() const { return cache_.base_braking_limits; }
+Limits<double> Model::baseDecelerationLimits() const { return cache_.base_deceleration_limits; }
 
 Limits<double> Model::baseCurvatureLimits() const { return cache_.base_curvature_limits; }
 
