@@ -17,10 +17,6 @@ Model::Model(const std::string& config_path) : params_(config_path) {
 
         cache_.max_abs_rear_curvature = max_abs_rear_curvature;
 
-        auto rearToBaseCurvature = [&](double C) {
-            return C / std::sqrt(1 + squared(C * params_.wheel_base.base_to_rear));
-        };
-
         cache_.max_abs_curvature =
             std::min(rearToBaseCurvature(max_abs_rear_curvature), 
             params_.limits.max_abs_curvature);
@@ -68,6 +64,11 @@ Twist Model::rearToBaseTwist(Twist twist) const {
 double Model::baseToRearAcceleration(double acceleration, double base_curvature) const {
     const double ratio = getBaseToRearRatio(base_curvature, params_.wheel_base.base_to_rear);
     return acceleration * ratio;
+}
+
+double Model::rearToBaseCurvature(double rear_curvature)  const {
+    const double ratio = getRearToBaseRatio(rear_curvature, params_.wheel_base.base_to_rear);
+    return rear_curvature / ratio;
 }
 
 Limits<double> Model::baseVelocityLimits() const { return params_.limits.velocity; }
