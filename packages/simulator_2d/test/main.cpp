@@ -24,6 +24,10 @@ TEST(SimulatorEngine, advance) {
                 std::to_string(engine_.getTime().seconds()) + " "
                 + std::to_string(engine_.getBasePose().pos.x) + " "
                 + std::to_string(engine_.getBaseTwist().velocity));
+            ASSERT_TRUE(false)
+                << engine_.getTime().seconds() << ' '
+                << engine_.getBasePose().pos.x << ' '
+                << engine_.getBaseTwist().velocity << '\n';
         }
     }
 }
