@@ -30,6 +30,12 @@ ament_target_dependencies(
     tf2_msgs
     rosgraph_msgs)
 
+if(BUILD_TESTING)
+    find_package(ament_cmake_gtest REQUIRED)
+    ament_add_gtest(${PROJECT_NAME}_test test/main.cpp WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
+endif()
+
 install(
     TARGETS ${PROJECT_NAME}_node
     DESTINATION lib/${PROJECT_NAME})
