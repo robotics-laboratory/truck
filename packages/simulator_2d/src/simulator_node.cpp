@@ -1,4 +1,4 @@
-#include "simulator_2d/simulator_node.h"
+#include "simulator_node.h"
 
 #include "geom/msg.h"
 
