@@ -14,6 +14,37 @@ constexpr size_t matrix_data_size = matrix_size * matrix_size;
 constexpr size_t cache_line_size = 64;
 constexpr size_t block_size = cache_line_size / sizeof(int);
 
+namespace {
+
+void Transpose(int* matrix_data, size_t n) {
+    if (n <= 2) {
+        for (size_t i = 0; i < n; ++i) {
+            for (size_t j = 0; j < i; ++j) {
+                std::swap(matrix_data[i * matrix_size + j], matrix_data[j * matrix_size + i]);
+            }
+        }
+        return;
+    }
+    if (n & 1) {
+        for (size_t i = 0; i < n - 1; ++i) {
+            std::swap(matrix_data[i * matrix_size + n - 1], matrix_data[(n - 1) * matrix_size + i]);
+        }
+    }
+    n >>= 1;
+    Transpose(matrix_data, n);
+    Transpose(matrix_data + n, n);
+    Transpose(matrix_data + n * matrix_size, n);
+    Transpose(matrix_data + n * matrix_size + n, n);
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = 0; j < n; ++j) {
+            std::swap(
+                matrix_data[i * matrix_size + (j + n)], matrix_data[(i + n) * matrix_size + j]);
+        }
+    }
+}
+
+}  // namespace
+
 struct BasicMatrixTransposeFixture : public ::benchmark::Fixture {
     void SetUp(const ::benchmark::State&) override {
         std::iota(matrix_data, matrix_data + matrix_data_size, 0);
@@ -79,12 +110,24 @@ BENCHMARK_DEFINE_F(CacheAwareMatrixTransposeFixture, CacheAwareMatrixTranspose)
     }
 }
 
+BENCHMARK_DEFINE_F(BasicMatrixTransposeFixture, CacheObliviousMatrixTranspose)
+(benchmark::State& state) {
+    for (auto _ : state) {
+        Transpose(matrix_data, matrix_size);
+    }
+}
+
 BENCHMARK_REGISTER_F(BasicMatrixTransposeFixture, BasicMatrixTranspose)
     ->Unit(benchmark::kMillisecond)
     ->Iterations(iters_count)
     ->UseRealTime();
 
 BENCHMARK_REGISTER_F(CacheAwareMatrixTransposeFixture, CacheAwareMatrixTranspose)
+    ->Unit(benchmark::kMillisecond)
+    ->Iterations(iters_count)
+    ->UseRealTime();
+
+BENCHMARK_REGISTER_F(BasicMatrixTransposeFixture, CacheObliviousMatrixTranspose)
     ->Unit(benchmark::kMillisecond)
     ->Iterations(iters_count)
     ->UseRealTime();
