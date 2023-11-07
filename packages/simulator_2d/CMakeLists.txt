@@ -21,7 +21,6 @@ add_library(simulator_engine SHARED src/simulator_engine.cpp)
 
 ament_target_dependencies(
     simulator_engine
-    rclcpp
     model
     geom)
 
@@ -34,7 +33,6 @@ target_include_directories(
 ament_export_targets(simulator_engine_targets HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(
-    rclcpp
     model
     geom)
 
