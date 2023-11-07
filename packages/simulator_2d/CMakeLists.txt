@@ -68,6 +68,8 @@ ament_target_dependencies(
     tf2_msgs
     rosgraph_msgs)
 
+target_link_libraries(${PROJECT_NAME}_node simulator_engine)
+
 install(
     TARGETS ${PROJECT_NAME}_node
     DESTINATION lib/${PROJECT_NAME})

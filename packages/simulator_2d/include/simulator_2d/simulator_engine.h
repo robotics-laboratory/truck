@@ -3,7 +3,7 @@
 #include "geom/pose.h"
 #include "geom/vector.h"
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 namespace truck::simulator {
 
