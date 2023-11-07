@@ -6,6 +6,8 @@
 #include <numeric>
 #include <string_view>
 
+constexpr size_t iters_count = 20;
+
 constexpr size_t matrix_size = 1 << 13;
 constexpr size_t matrix_data_size = matrix_size * matrix_size;
 
@@ -17,12 +19,34 @@ struct BasicMatrixTransposeFixture : public ::benchmark::Fixture {
         std::iota(matrix_data, matrix_data + matrix_data_size, 0);
     }
 
+    void TearDown(const ::benchmark::State&) override {
+        for (size_t i = 0; i < matrix_size; ++i) {
+            for (size_t j = 0; j < matrix_size; ++j) {
+                assert(
+                    matrix_data[i * matrix_size + j] ==
+                    static_cast<int>(
+                        (iters_count & 1 ? j : i) * matrix_size + (iters_count & 1 ? i : j)));
+            }
+        }
+    }
+
     int matrix_data[matrix_data_size];
 };
 
 struct CacheAwareMatrixTransposeFixture : public ::benchmark::Fixture {
     void SetUp(const ::benchmark::State&) override {
         std::iota(matrix_data, matrix_data + matrix_data_size, 0);
+    }
+
+    void TearDown(const ::benchmark::State&) override {
+        for (size_t i = 0; i < matrix_size; ++i) {
+            for (size_t j = 0; j < matrix_size; ++j) {
+                assert(
+                    matrix_data[i * matrix_size + j] ==
+                    static_cast<int>(
+                        (iters_count & 1 ? j : i) * matrix_size + (iters_count & 1 ? i : j)));
+            }
+        }
     }
 
     alignas(cache_line_size) int matrix_data[matrix_data_size];
@@ -32,7 +56,7 @@ BENCHMARK_DEFINE_F(BasicMatrixTransposeFixture, BasicMatrixTranspose)
 (benchmark::State& state) {
     for (auto _ : state) {
         for (size_t i = 0; i < matrix_size; ++i) {
-            for (size_t j = 0; j < matrix_size; ++j) {
+            for (size_t j = 0; j < i; ++j) {
                 std::swap(matrix_data[i * matrix_size + j], matrix_data[j * matrix_size + i]);
             }
         }
@@ -57,12 +81,12 @@ BENCHMARK_DEFINE_F(CacheAwareMatrixTransposeFixture, CacheAwareMatrixTranspose)
 
 BENCHMARK_REGISTER_F(BasicMatrixTransposeFixture, BasicMatrixTranspose)
     ->Unit(benchmark::kMillisecond)
-    ->Iterations(20)
+    ->Iterations(iters_count)
     ->UseRealTime();
 
 BENCHMARK_REGISTER_F(CacheAwareMatrixTransposeFixture, CacheAwareMatrixTranspose)
     ->Unit(benchmark::kMillisecond)
-    ->Iterations(20)
+    ->Iterations(iters_count)
     ->UseRealTime();
 
 BENCHMARK_MAIN();
