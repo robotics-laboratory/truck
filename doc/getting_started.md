@@ -75,11 +75,6 @@ Such a command will run only the tests of the specified package:
 colcon test --ctest-args tests --merge-install --packages-select [package_name]
 ```
 
-Example of running tests of the simulator_2d package:
-```bash
-colcon test --ctest-args tests --merge-install --packages-select simulator_2d
-```
-
 ## Pipeline
 - `ros2 launch truck truck.yaml` - run full pipeline
 - `ros2 launch truck simulator.yaml` - run simulation (gazebo + part of pipeline), default port 11345.
