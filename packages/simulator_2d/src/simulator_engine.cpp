@@ -5,7 +5,7 @@
 
 namespace truck::simulator {
 
-SimulatorEngine::SimulatorEngine(const model::Model& model, 
+SimulatorEngine::SimulatorEngine(const model::Model& model,
     double integration_step, double precision): model_(model) {
     
     params_.integration_step = integration_step;
@@ -15,7 +15,6 @@ SimulatorEngine::SimulatorEngine(const model::Model& model,
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_.wheelBase().length;
-    cache_.wheelbase_width_2 = model_.wheelBase().width / 2;
 
     reset_rear();
 }
@@ -49,43 +48,11 @@ void SimulatorEngine::reset_base(double x, double y, double yaw,
     reset_rear(rear_x, rear_y, yaw, rear_steering, rear_twist.velocity);
 }
 
-const rclcpp::Time& SimulatorEngine::getTime() const {
-    return time_;
-}
-
-geom::Pose SimulatorEngine::getBasePose() const {
-    geom::Pose pose;
-    pose.pos.x = rear_ax_state_[StateIndex::x] + model_.wheelBase().base_to_rear;
-    return pose;
-}
-
-double SimulatorEngine::getCurrentRearCurvature() const {
-    return tan(rear_ax_state_[StateIndex::steering]) * cache_.inverse_wheelbase_length;
-}
-
-model::Steering SimulatorEngine::getCurrentSteering() const {
-    return model_.rearCurvatureToSteering(getCurrentRearCurvature());
-}
-
-model::Steering SimulatorEngine::getTargetSteering() const {
-    return model_.rearCurvatureToSteering(control_.curvature);
-}
-
-model::Twist SimulatorEngine::getBaseTwist() const { 
-    const auto twist = model::Twist {
-        getCurrentRearCurvature(), 
-        rear_ax_state_[StateIndex::linear_velocity]
-    };
-    return model_.rearToBaseTwist(twist);
-}
-
-geom::Vec2 SimulatorEngine::getBaseLinearVelocity() const {
-    return geom::Vec2::fromAngle(geom::Angle(getBaseTwist().velocity));
-}
-
-geom::Vec2 SimulatorEngine::getBaseAngularVelocity() const {
-    const double angular_velocity = getBaseTwist().velocity * getCurrentRearCurvature();
-    return geom::Vec2::fromAngle(geom::Angle(angular_velocity));
+std::unique_ptr<TruckState> SimulatorEngine::getBaseTruckState() const {
+    return TruckState::fromRearToBaseState(model_, rear_ax_state_[StateIndex::x],
+        rear_ax_state_[StateIndex::y], rear_ax_state_[StateIndex::yaw], time_,
+        rear_ax_state_[StateIndex::steering], rear_ax_state_[StateIndex::linear_velocity],
+        control_.curvature);
 }
 
 namespace {

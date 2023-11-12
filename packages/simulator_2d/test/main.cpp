@@ -14,10 +14,11 @@ void processTestCase(const std::vector<std::pair<int, int>>& script, double upda
         engine.setBaseControl(step.first, 0);
         for (int j = 0; j < step.second; ++j) {
             engine.advance(update_period);
+            const auto truck_state = *(engine.getBaseTruckState().get());
             std::cerr << std::fixed << std::setprecision(5)
-                << engine.getTime().seconds() << ' '
-                << engine.getBasePose().pos.x << ' '
-                << engine.getBaseTwist().velocity << '\n';
+                << truck_state.getTime().seconds() << ' '
+                << truck_state.getPose().pos.x << ' '
+                << truck_state.getTwist().velocity << '\n';
         }
     }
 }

@@ -1,3 +1,5 @@
+#include "simulator_2d/truck_state.h"
+
 #include "model/model.h"
 #include "geom/angle.h"
 #include "geom/pose.h"
@@ -18,13 +20,7 @@ class SimulatorEngine {
     void reset_base(double x, double y, double yaw,
         double steering, double linear_velocity);
 
-    const rclcpp::Time& getTime() const;
-    geom::Pose getBasePose() const;
-    model::Steering getCurrentSteering() const;
-    model::Steering getTargetSteering() const;
-    model::Twist getBaseTwist() const;
-    geom::Vec2 getBaseLinearVelocity() const;
-    geom::Vec2 getBaseAngularVelocity() const;
+    std::unique_ptr<TruckState> getBaseTruckState() const;
 
     void setBaseControl(double velocity, double acceleration, double curvature);
     void setBaseControl(double velocity, double curvature);
@@ -56,7 +52,6 @@ class SimulatorEngine {
         double integration_step_6;
         double inverse_integration_step;
         double inverse_wheelbase_length;
-        double wheelbase_width_2;
     } cache_;
 
     struct Control {

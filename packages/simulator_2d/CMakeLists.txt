@@ -17,7 +17,9 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-add_library(simulator_engine SHARED src/simulator_engine.cpp)
+add_library(simulator_engine SHARED 
+    src/simulator_engine.cpp
+    src/truck_state.cpp)
 
 ament_target_dependencies(
     simulator_engine
@@ -51,6 +53,7 @@ install(
 
 add_executable(
     ${PROJECT_NAME}_node
+    src/truck_state.cpp
     src/simulator_engine.cpp
     src/simulator_node.cpp
     src/main.cpp)

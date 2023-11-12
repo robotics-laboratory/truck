@@ -22,11 +22,11 @@ class SimulatorNode : public rclcpp::Node {
 
   private:
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
-    void publishTime();
-    void publishOdometryMessage();
-    void publishTransformMessage();
-    void publishTelemetryMessage();
-    void publishSimulationStateMessage();
+    void publishTime(const TruckState& truck_state);
+    void publishOdometryMessage(const TruckState& truck_state);
+    void publishTransformMessage(const TruckState& truck_state);
+    void publishTelemetryMessage(const TruckState& truck_state);
+    void publishSimulationStateMessage(const TruckState& truck_state);
     void publishSimulationState();
     void makeSimulationTick();
 
