@@ -8,7 +8,7 @@
 using namespace truck::simulator;
 
 void processTestCase(const std::vector<std::pair<int, int>>& script, double update_period) {
-    const auto model = truck::model::Model("test/model.yaml");
+    const auto model = truck::model::Model("/truck/packages/model/config/model.yaml");
     auto engine = SimulatorEngine(model);
     for (const auto step : script) {
         engine.setBaseControl(step.first, 0);
