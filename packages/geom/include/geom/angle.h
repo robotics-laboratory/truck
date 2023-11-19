@@ -55,7 +55,7 @@ class Angle {
 
     static constexpr Angle zero() noexcept { return Angle{0}; }
 
-    static double _0_2PI(double radians) noexcept {
+    constexpr static double _0_2PI(double radians) noexcept {
         return Angle(radians)._0_2PI().radians();
     }
 
