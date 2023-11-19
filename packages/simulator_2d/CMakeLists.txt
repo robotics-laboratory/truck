@@ -53,8 +53,6 @@ install(
 
 add_executable(
     ${PROJECT_NAME}_node
-    src/truck_state.cpp
-    src/simulator_engine.cpp
     src/simulator_node.cpp
     src/main.cpp)
 
@@ -81,9 +79,7 @@ install(
 )
 
 if(BUILD_TESTING)
-    find_package(ament_cmake_gtest REQUIRED)
-    ament_add_gtest(${PROJECT_NAME}_test test/main.cpp WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-    target_link_libraries(${PROJECT_NAME}_test simulator_engine)
+    add_subdirectory("test")
 endif()
 
 ament_package()
