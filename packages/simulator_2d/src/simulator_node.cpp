@@ -37,11 +37,11 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     params_ = Parameters{
         .update_period = declare_parameter("update_period", 0.01)};
 
-    const auto model = truck::model::Model(
-        declare_parameter<std::string>("model_config", "model.yaml"));
+    const auto model = std::make_unique<model::Model>(
+        model::load(this->get_logger(), this->declare_parameter("model_config", "")));
     engine_ = std::make_unique<SimulatorEngine>(
-        SimulatorEngine(model, declare_parameter("integration_step", 0.001), 
-        declare_parameter("calculations_precision", 1e-8)));
+        model, declare_parameter("integration_step", 0.001), 
+        declare_parameter("calculations_precision", 1e-8));
 
     // The zero state of the simulation.
     publishSimulationState();
@@ -66,7 +66,6 @@ void SimulatorNode::publishTime(const TruckState& truck_state) {
 }
 
 void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
-
     nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.frame_id = "odom_ekf";
     odom_msg.child_frame_id = "odom_ekf";
@@ -90,7 +89,6 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
 }
 
 void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
-
     geometry_msgs::msg::TransformStamped odom_to_base_transform_msg;
     odom_to_base_transform_msg.header.frame_id = "odom_ekf";
     odom_to_base_transform_msg.child_frame_id = "base";
@@ -122,7 +120,7 @@ void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
 
 void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state) {
     truck_msgs::msg::SimulationState state_msg;
-    state_msg.header.frame_id = "odom_ekf";
+    state_msg.header.frame_id = "base";
     state_msg.header.stamp = truck_state.getTime();
     state_msg.speed = truck_state.getTwist().velocity;
     state_msg.steering = truck_state.getCurrentSteering().middle.radians();

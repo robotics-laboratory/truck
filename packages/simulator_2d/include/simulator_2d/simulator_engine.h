@@ -11,14 +11,10 @@ namespace truck::simulator {
 
 class SimulatorEngine {
   public:
-    SimulatorEngine(const model::Model& model, 
+    SimulatorEngine(std::unique_ptr<model::Model> const& model, 
         double integration_step = 0.001, double precision = 1e-8);
 
-    void reset_rear(double x, double y, double yaw,
-        double steering, double linear_velocity);
-    void reset_rear();
-    void reset_base(double x, double y, double yaw,
-        double steering, double linear_velocity);
+    void reset_base(const geom::Pose& pose, double middle_steering, double linear_velocity);
 
     std::unique_ptr<TruckState> getBaseTruckState() const;
 
@@ -35,12 +31,15 @@ class SimulatorEngine {
         linear_velocity = 4
     };
 
-    typedef Eigen::Matrix<double, 5, 1> State;
+    using State = Eigen::Matrix<double, 5, 1>;
 
+    void reset_rear(double x, double y, double yaw,
+        double steering, double linear_velocity);
+    void reset_rear();
     double getCurrentRearCurvature() const;
-    State calculateStateDerivative(const State &state);
-    void validateAcceleration(double& target_velocity);
-    State calculateRK4();
+    State calculateStateDerivative(const State &state, double acceleration);
+    double getCurrentAcceleration();
+    State calculateRK4(double acceleration);
 
     struct Parameters {
         double integration_step;
@@ -54,9 +53,10 @@ class SimulatorEngine {
         double inverse_wheelbase_length;
     } cache_;
 
+    // The value is set in setControl and should not change in other methods.
     struct Control {
         double velocity = 0.0;
-        double acceleration = 0.0;
+        std::optional<double> acceleration = 0.0;
         double curvature = 0.0;
     } control_;
 
@@ -64,7 +64,7 @@ class SimulatorEngine {
 
     State rear_ax_state_;
 
-    const model::Model model_;
+    std::unique_ptr<model::Model> model_ = nullptr;
 };
 
 }  // namespace truck::simulator
