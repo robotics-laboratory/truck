@@ -8,9 +8,9 @@
 using namespace truck::simulator;
 
 void processTestCase(const std::vector<std::pair<int, int>>& script, double update_period) {
-    const auto model = std::make_unique<truck::model::Model>(
+    auto model = std::make_unique<truck::model::Model>(
         "/truck/packages/model/config/model.yaml");
-    auto engine = SimulatorEngine(model);
+    auto engine = SimulatorEngine(std::move(model));
     for (const auto step : script) {
         engine.setBaseControl(step.first, 0);
         for (int j = 0; j < step.second; ++j) {

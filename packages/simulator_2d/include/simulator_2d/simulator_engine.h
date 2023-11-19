@@ -11,7 +11,7 @@ namespace truck::simulator {
 
 class SimulatorEngine {
   public:
-    SimulatorEngine(std::unique_ptr<model::Model> const& model, 
+    SimulatorEngine(std::unique_ptr<model::Model> model, 
         double integration_step = 0.001, double precision = 1e-8);
 
     void reset_base(const geom::Pose& pose, double middle_steering, double linear_velocity);

@@ -37,10 +37,10 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     params_ = Parameters{
         .update_period = declare_parameter("update_period", 0.01)};
 
-    const auto model = std::make_unique<model::Model>(
+    auto model = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
     engine_ = std::make_unique<SimulatorEngine>(
-        model, declare_parameter("integration_step", 0.001), 
+        std::move(model), declare_parameter("integration_step", 0.001), 
         declare_parameter("calculations_precision", 1e-8));
 
     // The zero state of the simulation.

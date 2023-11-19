@@ -5,10 +5,10 @@
 
 namespace truck::simulator {
 
-SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> const& model,
+SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     double integration_step, double precision) {
         
-    model_ = std::make_unique<model::Model>(*(model.get()));
+    model_ = std::move(model);
 
     params_.integration_step = integration_step;
     params_.precision = precision;
@@ -42,9 +42,8 @@ void SimulatorEngine::reset_base(const geom::Pose& pose,
     const double base_curvature = std::tan(middle_steering) * cache_.inverse_wheelbase_length;
     const auto base_twist = model::Twist {base_curvature, linear_velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
-    const double steering = model_->rearTwistToSteering(rear_twist).middle.radians();
 
-    reset_rear(rear_x, rear_y, yaw, steering, rear_twist.velocity);
+    reset_rear(rear_x, rear_y, yaw, middle_steering, rear_twist.velocity);
 }
 
 std::unique_ptr<TruckState> SimulatorEngine::getBaseTruckState() const {
@@ -203,6 +202,9 @@ void SimulatorEngine::advance(double seconds) {
 
     for (int i = 0; i < integration_steps; ++i) {
         const double current_acceleration = getCurrentAcceleration();
+
+
+
         rear_ax_state_ += calculateRK4(current_acceleration);
     }
 }
