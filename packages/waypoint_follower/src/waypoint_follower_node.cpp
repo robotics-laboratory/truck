@@ -24,11 +24,10 @@ namespace {
 
 Limits<double> velocityLimits(const model::Model& model, double velocity, double time) {
     const auto& vel = model.baseVelocityLimits();
-    const auto& acc = model.baseAccelerationLimits();
 
     return {
-        std::max(.0, vel.clamp(velocity) + acc.min * time),
-        std::min(vel.max, vel.clamp(velocity) + acc.max * time)};
+        std::max(.0, vel.clamp(velocity) - model.baseMaxDeceleration() * time),
+        std::min(vel.max, vel.clamp(velocity) + model.baseMaxAcceleration() * time)};
 }
 
 }  // namespace

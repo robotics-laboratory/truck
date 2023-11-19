@@ -14,7 +14,8 @@ limits:
   max_abs_curvature: 2.0                   # 1/m
   steering_velocity: 2.0                   # rad/s
   velocity: { min: -0.5, max: +0.8 }       # m/s
-  acceleration: { min: -2.0, max: +1.0 }   # m/s^2
+  max_acceleration: 1.0   # m/s^2
+  max_deceleration: 2.0   # m/s^2
 
 wheel:
   radius: 0.0525    # m

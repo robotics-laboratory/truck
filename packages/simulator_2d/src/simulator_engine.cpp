@@ -77,10 +77,10 @@ void SimulatorEngine::setBaseControl(
     const bool is_speed_up = isOutOfRange(rear_twist.velocity, 
         rear_ax_state_[StateIndex::linear_velocity], params_.precision);
     if (is_speed_up) {
-        acceleration = model_->baseSpeedUpLimits().clamp(acceleration);
+        acceleration = std::max(acceleration, model_->baseMaxAcceleration());
     }
     else {
-        acceleration = model_->baseDecelerationLimits().clamp(acceleration);
+        acceleration = std::max(acceleration, model_->baseMaxDeceleration());
     }
 
     control_.curvature = rear_twist.curvature;
@@ -96,8 +96,8 @@ void SimulatorEngine::setBaseControl(double velocity, double curvature) {
         rear_ax_state_[StateIndex::linear_velocity], params_.precision);
 
     double acceleration = is_speed_up
-        ? model_->baseAccelerationLimits().max
-        : model_->baseAccelerationLimits().min;
+        ? model_->baseMaxAcceleration()
+        : model_->baseMaxDeceleration();
 
     setBaseControl(velocity, acceleration, curvature);
 }
@@ -144,11 +144,11 @@ double SimulatorEngine::getCurrentAcceleration() {
     if (action_sign == 1) {
         // Acceleration.
         current_acceleration = acceleration_sign 
-            * getOptionalValue(control_.acceleration, model_->baseAccelerationLimits().max);
+            * getOptionalValue(control_.acceleration, model_->baseMaxAcceleration());
     } else if (action_sign == -1) {
         // Deceleration.
         current_acceleration = acceleration_sign
-            * getOptionalValue(control_.acceleration, -model_->baseAccelerationLimits().min);
+            * getOptionalValue(control_.acceleration, model_->baseMaxDeceleration());
     }
 
     const double velocity_delta = current_acceleration * cache_.inverse_integration_step;

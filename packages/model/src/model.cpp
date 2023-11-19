@@ -15,27 +15,15 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_inner / (params_.wheel_base.length - cache_.width_half * tan_inner),
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
-        cache_.max_abs_rear_curvature = max_abs_rear_curvature;
-
         cache_.max_abs_curvature =
             std::min(rearToBaseCurvature(max_abs_rear_curvature), 
             params_.limits.max_abs_curvature);
 
         const double steering_limit 
-            = std::atan2(cache_.max_abs_rear_curvature, params_.wheel_base.length);
+            = std::atan2(max_abs_rear_curvature, params_.wheel_base.length);
         cache_.middle_steering_limits = {-steering_limit, steering_limit};
 
         cache_.base_curvature_limits = {-cache_.max_abs_curvature, cache_.max_abs_curvature};
-
-        cache_.base_speed_up_limits = {
-            -params_.limits.acceleration.max, 
-            params_.limits.acceleration.max
-        };
-
-        cache_.base_deceleration_limits = {
-            params_.limits.acceleration.min, 
-            -params_.limits.acceleration.min
-        };
     }
 }
 
@@ -71,21 +59,19 @@ double Model::rearToBaseCurvature(double rear_curvature)  const {
     return rear_curvature / ratio;
 }
 
-Limits<double> Model::baseVelocityLimits() const { return params_.limits.velocity; }
-
-Limits<double> Model::baseAccelerationLimits() const { return params_.limits.acceleration; }
-
-Limits<double> Model::baseSpeedUpLimits() const { return cache_.base_speed_up_limits; }
-
-Limits<double> Model::baseDecelerationLimits() const { return cache_.base_deceleration_limits; }
-
-Limits<double> Model::baseCurvatureLimits() const { return cache_.base_curvature_limits; }
-
 ServoAngles Model::servoHomeAngles() const { return params_.servo_home_angles; }
 
 double Model::baseMaxAbsCurvature() const { return cache_.max_abs_curvature; }
 
 double Model::steeringVelocity() const { return params_.limits.steering_velocity; }
+
+double Model::baseMaxAcceleration() const { return params_.limits.max_acceleration; }
+
+double Model::baseMaxDeceleration() const { return params_.limits.max_deceleration; }
+
+Limits<double> Model::baseVelocityLimits() const { return params_.limits.velocity; }
+
+Limits<double> Model::baseCurvatureLimits() const { return cache_.base_curvature_limits; }
 
 Limits<geom::Angle> Model::leftSteeringLimits() const {
     return {-params_.limits.steering.inner, params_.limits.steering.outer};

@@ -44,7 +44,8 @@ struct VehicleLimits {
     double steering_velocity;
     SteeringLimit steering;
     Limits<double> velocity;
-    Limits<double> acceleration;
+    double max_acceleration;
+    double max_deceleration;
 };
 
 struct ServoAngles {

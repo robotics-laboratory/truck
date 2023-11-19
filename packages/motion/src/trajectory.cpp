@@ -64,8 +64,8 @@ void throwIfVelocityViolated(const model::Model& model, const Trajectory& trajec
 void throwIfAccelerationViolated(const model::Model& model, const Trajectory& trajectory) {
     const Limits<double> limit{
         trajectory.overbraking ? -std::numeric_limits<double>::infinity()
-                               : model.baseAccelerationLimits().min,
-        model.baseAccelerationLimits().max};
+                               : -model.baseMaxDeceleration(),
+        model.baseMaxAcceleration()};
 
     for (size_t i = 0; i < trajectory.size(); ++i) {
         const auto& state = trajectory[i];

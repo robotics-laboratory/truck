@@ -65,7 +65,8 @@ VehicleLimits::VehicleLimits(const YAML::Node& node)
     , steering_velocity(node["steering_velocity"].as<double>())
     , steering{toSteeringLimits(node["steering"])}
     , velocity{toLimits<double>(node["velocity"])}
-    , acceleration{toLimits<double>(node["acceleration"])} {
+    , max_acceleration(node["max_acceleration"].as<double>())
+    , max_deceleration(node["max_deceleration"].as<double>()) {
     BOOST_VERIFY(max_abs_curvature >= 0);
 
     BOOST_VERIFY(0_deg <= steering.inner && steering.inner < 90_deg);
