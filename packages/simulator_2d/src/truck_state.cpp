@@ -52,7 +52,7 @@ std::unique_ptr<TruckState> TruckState::fromRearToBaseState(const model::Model& 
     double linear_velocity, double control_curvature) {
 
     const auto pose = getPose(model, x, y, yaw);
-    const double rear_curvature = getCurrentRearCurvature(model, steering);
+    const double rear_curvature = model.middleSteeringToRearCurvature(steering);
     const auto current_steering = getCurrentSteering(model, rear_curvature);
     const auto target_steering = getTargetSteering(model, control_curvature);
     const auto twist = getTwist(model, rear_curvature, linear_velocity);
@@ -72,12 +72,6 @@ geom::Pose TruckState::getPose(const model::Model& model,
     pose.pos.x = x + model.wheelBase().base_to_rear * pose.dir.x();
     pose.pos.y = y + model.wheelBase().base_to_rear * pose.dir.y();
     return pose;
-}
-
-double TruckState::getCurrentRearCurvature(
-    const model::Model& model, double steering) {
-
-    return tan(steering) / model.wheelBase().length;
 }
 
 model::Steering TruckState::getCurrentSteering(

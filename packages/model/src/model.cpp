@@ -4,6 +4,23 @@
 
 namespace truck::model {
 
+namespace {
+
+double getBaseToRearRatio(double base_curvature, double base_to_rear) {
+    return std::sqrt(1 - squared(base_curvature * base_to_rear));
+}
+
+double getRearToBaseRatio(double rear_curvature, double base_to_rear) {
+    return std::sqrt(1 + squared(rear_curvature * base_to_rear));
+}
+
+double rearToBaseCurvature(double rear_curvature, double base_to_rear) {
+    const double ratio = getRearToBaseRatio(rear_curvature, base_to_rear);
+    return rear_curvature / ratio;
+}
+
+} // namespace
+
 Model::Model(const std::string& config_path) : params_(config_path) {
     cache_.width_half = params_.wheel_base.width / 2;
 
@@ -16,7 +33,7 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
         cache_.max_abs_curvature =
-            std::min(rearToBaseCurvature(max_abs_rear_curvature), 
+            std::min(rearToBaseCurvature(max_abs_rear_curvature, params_.wheel_base.base_to_rear), 
             params_.limits.max_abs_curvature);
 
         const double steering_limit 
@@ -26,18 +43,6 @@ Model::Model(const std::string& config_path) : params_(config_path) {
         cache_.base_curvature_limits = {-cache_.max_abs_curvature, cache_.max_abs_curvature};
     }
 }
-
-namespace {
-
-double getBaseToRearRatio(double base_curvature, double base_to_rear) {
-    return std::sqrt(1 - squared(base_curvature * base_to_rear));
-}
-
-double getRearToBaseRatio(double rear_curvature, double base_to_rear) {
-    return std::sqrt(1 + squared(rear_curvature * base_to_rear));
-}
-
-} // namespace
 
 Twist Model::baseToRearTwist(Twist twist) const {
     const double ratio = getBaseToRearRatio(twist.curvature, params_.wheel_base.base_to_rear);
@@ -52,11 +57,6 @@ Twist Model::rearToBaseTwist(Twist twist) const {
 double Model::baseToRearAcceleration(double acceleration, double base_curvature) const {
     const double ratio = getBaseToRearRatio(base_curvature, params_.wheel_base.base_to_rear);
     return acceleration * ratio;
-}
-
-double Model::rearToBaseCurvature(double rear_curvature)  const {
-    const double ratio = getRearToBaseRatio(rear_curvature, params_.wheel_base.base_to_rear);
-    return rear_curvature / ratio;
 }
 
 ServoAngles Model::servoHomeAngles() const { return params_.servo_home_angles; }
@@ -95,6 +95,10 @@ Steering Model::rearCurvatureToSteering(double curvature) const {
         geom::Angle::fromRadians(std::atan2(first, 1 - second)),
         geom::Angle::fromRadians(std::atan2(first, 1 + second))
     };
+}
+
+double Model::middleSteeringToRearCurvature(double steering) const {
+    return tan(steering) / params_.wheel_base.length;
 }
 
 Steering Model::rearTwistToSteering(Twist twist) const {

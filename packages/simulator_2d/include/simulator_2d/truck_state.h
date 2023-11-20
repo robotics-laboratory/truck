@@ -28,8 +28,6 @@ class TruckState {
 
     static geom::Pose getPose(const model::Model& model, 
         double x, double y, double yaw);
-    static double getCurrentRearCurvature(
-        const model::Model& model, double steering);
     static model::Steering getCurrentSteering(
         const model::Model& model, double rear_curvature);
     static model::Steering getTargetSteering(

@@ -54,8 +54,8 @@ class Model {
     Twist rearToBaseTwist(Twist twist) const;
     Steering rearTwistToSteering(Twist twist) const;
     Steering rearCurvatureToSteering(double curvature) const;
+    double middleSteeringToRearCurvature(double steering) const;
     double baseToRearAcceleration(double acceleration, double base_curvature) const;
-    double rearToBaseCurvature(double rear_curvature) const;
     WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
     double linearVelocityToMotorRPS(double velocity) const;
     double motorRPStoLinearVelocity(double rps) const;
