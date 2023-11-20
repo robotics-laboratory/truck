@@ -57,6 +57,24 @@ Current installation dir is ```/truck/packages/install```. To run setup do
 source install/setup.bash
 ```
 
+### Test
+All commands below are given for the `packages` dir.
+
+To run tests:
+```bash
+colcon test --ctest-args tests --merge-install [package_selection_args]
+```
+
+Such a command will run tests of the specified package, as well as tests of all packages on which the specified package depends:
+```bash
+colcon test --ctest-args tests --merge-install --packages-up-to [package_name]
+```
+
+Such a command will run only the tests of the specified package:
+```bash
+colcon test --ctest-args tests --merge-install --packages-select [package_name]
+```
+
 ## Pipeline
 - `ros2 launch truck truck.yaml` - run full pipeline
 - `ros2 launch truck simulator.yaml` - run simulation (gazebo + part of pipeline), default port 11345.

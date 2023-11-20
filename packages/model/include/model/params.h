@@ -41,9 +41,11 @@ struct VehicleLimits {
     VehicleLimits(const YAML::Node& node);
 
     double max_abs_curvature;
+    double steering_velocity;
     SteeringLimit steering;
     Limits<double> velocity;
-    Limits<double> acceleration;
+    double max_acceleration;
+    double max_deceleration;
 };
 
 struct ServoAngles {
@@ -53,14 +55,21 @@ struct ServoAngles {
     geom::Angle right; 
 };
 
+struct Wheel {
+    Wheel(const YAML::Node& node);
+
+    double radius;
+    double width;
+};
+
 struct Params {
     Params(const YAML::Node& node);
     Params(const std::string& config_path);
 
     Shape shape;
     WheelBase wheel_base;
-    model::VehicleLimits limits;
-    double wheel_radius;
+    VehicleLimits limits;
+    Wheel wheel;
     double gear_ratio;
     ServoAngles servo_home_angles;
 };

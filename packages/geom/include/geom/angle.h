@@ -55,6 +55,10 @@ class Angle {
 
     static constexpr Angle zero() noexcept { return Angle{0}; }
 
+    constexpr static double _0_2PI(double radians) noexcept {
+        return Angle(radians)._0_2PI().radians();
+    }
+
     constexpr Angle _0_2PI() const noexcept {
         const double result = fmod(value_, 2 * M_PI);
         return (result < 0) ? Angle{result + 2 * M_PI} : Angle{result};

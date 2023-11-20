@@ -1,0 +1,26 @@
+launch:
+- include:
+    file: $(find-pkg-share truck)/launch/bridge.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+
+- include:
+    file: $(find-pkg-share truck)/launch/control.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+    - {name: "control_name", value: "ps4"}
+
+- include:
+    file: $(find-pkg-share model)/launch/model_tf.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+
+- include:
+    file: $(find-pkg-share visualization)/launch/visualization.yaml
+    arg:
+    - {name: "simulation", value: "true"}
+
+- include:
+    file: $(find-pkg-share simulator_2d)/launch/simulator_2d.yaml
+    arg:
+    - {name: "simulation", value: "true"}

@@ -106,6 +106,7 @@ namespace {
 
 std_msgs::msg::ColorRGBA modeToColor(
     const truck_msgs::msg::ControlMode::ConstSharedPtr& mode) {
+
     return color::make(*mode);
 }
 
@@ -170,10 +171,9 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
 }
 
 void VisualizationNode::publishEgo() const {
-    if (!state_.odom) {
+    if (!state_.odom || !state_.mode) {
         return;
     }
-
     visualization_msgs::msg::Marker msg;
     msg.header = state_.odom->header;
     msg.type = visualization_msgs::msg::Marker::CUBE;
@@ -192,7 +192,7 @@ void VisualizationNode::publishEgo() const {
 }
 
 void VisualizationNode::publishEgoTrack() const {
-    if (!state_.odom) {
+    if (!state_.odom || !state_.mode) {
         return;
     }
 

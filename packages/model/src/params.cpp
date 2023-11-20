@@ -62,9 +62,11 @@ WheelBase::WheelBase(const YAML::Node& node)
 
 VehicleLimits::VehicleLimits(const YAML::Node& node)
     : max_abs_curvature(node["max_abs_curvature"].as<double>())
+    , steering_velocity(node["steering_velocity"].as<double>())
     , steering{toSteeringLimits(node["steering"])}
     , velocity{toLimits<double>(node["velocity"])}
-    , acceleration{toLimits<double>(node["acceleration"])} {
+    , max_acceleration(node["max_acceleration"].as<double>())
+    , max_deceleration(node["max_deceleration"].as<double>()) {
     BOOST_VERIFY(max_abs_curvature >= 0);
 
     BOOST_VERIFY(0_deg <= steering.inner && steering.inner < 90_deg);
@@ -82,14 +84,20 @@ ServoAngles::ServoAngles(const YAML::Node& node)
     BOOST_VERIFY(0_deg <= right && right < 180_deg);
 }
 
+Wheel::Wheel(const YAML::Node& node)
+    : radius(node["radius"].as<double>())
+    , width(node["width"].as<double>()) {
+    BOOST_VERIFY(radius > 0);
+    BOOST_VERIFY(width > 0);
+}
+
 Params::Params(const YAML::Node& node)
     : shape(node["shape"])
     , wheel_base(node["wheel_base"])
     , limits(node["limits"])
-    , wheel_radius(node["wheel_radius"].as<double>())
+    , wheel(node["wheel"])
     , gear_ratio(node["gear_ratio"].as<double>())
     , servo_home_angles(node["servo_home_angles"]) {
-    BOOST_VERIFY(wheel_radius > 0);
     BOOST_VERIFY(gear_ratio > 0);
 }
 
