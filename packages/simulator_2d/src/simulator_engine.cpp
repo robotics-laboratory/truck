@@ -55,9 +55,16 @@ std::unique_ptr<TruckState> SimulatorEngine::getBaseTruckState() const {
 
 namespace {
 
-bool isOutOfRange(double value, double limit, double precision) {
-    return (limit >= 0 && value + precision >= limit)
-        || (limit < 0 && value - precision <= limit);
+int softSign(double number, double precision) {
+    if (number > precision) {
+        return 1;
+    }
+    
+    if (number < -precision) {
+        return -1;
+    }
+
+    return 0;
 }
 
 } // namespace
@@ -73,12 +80,12 @@ void SimulatorEngine::setBaseControl(
     const auto base_twist = model::Twist {curvature, velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
-    const bool is_speed_up = isOutOfRange(rear_twist.velocity, 
-        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
-    if (is_speed_up) {
+    const int action_sign = softSign(abs(rear_twist.velocity) 
+        - abs(rear_ax_state_[StateIndex::linear_velocity]), params_.precision);
+    if (action_sign == 1) {
         acceleration = std::max(acceleration, model_->baseMaxAcceleration());
     }
-    else {
+    else if (action_sign == -1) {
         acceleration = std::max(acceleration, model_->baseMaxDeceleration());
     }
 
@@ -91,29 +98,20 @@ void SimulatorEngine::setBaseControl(
 void SimulatorEngine::setBaseControl(double velocity, double curvature) {
     const auto base_twist = model::Twist {curvature, velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
-    const bool is_speed_up = isOutOfRange(rear_twist.velocity,
-        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
 
-    double acceleration = is_speed_up
-        ? model_->baseMaxAcceleration()
-        : model_->baseMaxDeceleration();
+    const int action_sign = softSign(abs(rear_twist.velocity) 
+        - abs(rear_ax_state_[StateIndex::linear_velocity]), params_.precision);
+    double acceleration = 0;
+    if (action_sign == 1) {
+        acceleration = model_->baseMaxAcceleration();
+    } else if (action_sign == -1) {
+        acceleration = model_->baseMaxDeceleration();
+    }
 
     setBaseControl(velocity, acceleration, curvature);
 }
 
 namespace {
-
-int softSign(double number, double precision) {
-    if (number > precision) {
-        return 1;
-    }
-    
-    if (number < -precision) {
-        return -1;
-    }
-
-    return 0;
-}
 
 double getOptionalValue(const std::optional<double>& opt, double max) {
     if (!opt) {
@@ -127,16 +125,15 @@ double getOptionalValue(const std::optional<double>& opt, double max) {
 
 double SimulatorEngine::getCurrentAcceleration() {
     double target_velocity = control_.velocity;
-    const bool need_stop =
-        (softSign(control_.velocity, params_.precision) *
-         softSign(rear_ax_state_[StateIndex::linear_velocity], params_.precision)) < 0;
+    const bool need_stop = (softSign(control_.velocity, params_.precision)
+        * softSign(rear_ax_state_[StateIndex::linear_velocity], params_.precision)) < 0;
     if (need_stop) {
         target_velocity = 0;
     }
 
-    const auto action_sign = softSign(abs(target_velocity) 
+    const int action_sign = softSign(abs(target_velocity) 
         - abs(rear_ax_state_[StateIndex::linear_velocity]), params_.precision);
-    const auto acceleration_sign = softSign(target_velocity 
+    const int acceleration_sign = softSign(target_velocity 
         - rear_ax_state_[StateIndex::linear_velocity], params_.precision);
 
     double current_acceleration = 0;
@@ -150,14 +147,15 @@ double SimulatorEngine::getCurrentAcceleration() {
             * getOptionalValue(control_.acceleration, model_->baseMaxDeceleration());
     }
 
-    const double velocity_delta = current_acceleration * cache_.inverse_integration_step;
+    const double velocity_delta = current_acceleration * params_.integration_step;
     const double new_velocity = rear_ax_state_[StateIndex::linear_velocity] + velocity_delta;
-    const bool target_speed_achieved = control_.acceleration > 0
-        ? new_velocity + params_.precision > target_velocity
-        : new_velocity - params_.precision < target_velocity;
+    const bool target_speed_achieved 
+        = (acceleration_sign > 0 && (new_velocity + params_.precision > target_velocity))
+        || (acceleration_sign < 0 && (new_velocity - params_.precision < target_velocity));
+
     if (target_speed_achieved) {
         current_acceleration = (target_velocity 
-            - rear_ax_state_[StateIndex::linear_velocity]) * params_.integration_step;
+            - rear_ax_state_[StateIndex::linear_velocity]) * cache_.inverse_integration_step;
     }
 
     return current_acceleration;
@@ -202,9 +200,6 @@ void SimulatorEngine::advance(double seconds) {
 
     for (int i = 0; i < integration_steps; ++i) {
         const double current_acceleration = getCurrentAcceleration();
-
-
-
         rear_ax_state_ += calculateRK4(current_acceleration);
     }
 }
