@@ -37,7 +37,7 @@ class SimulatorEngine {
         double steering, double linear_velocity);
     void resetRear();
 
-    geom::Pose rearToOdomBasePose() const;
+    geom::Pose getOdomBasePose() const;
     model::Steering getCurrentSteering(double rear_curvature) const;
     model::Steering getTargetSteering() const;
     model::Twist rearToOdomBaseTwist(double rear_curvature) const;

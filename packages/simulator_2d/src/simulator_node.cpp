@@ -72,16 +72,16 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     odom_msg.header.stamp = truck_state.getTime();
 
     // Set the pose.
-    const auto pose = truck_state.getPose();
+    const auto pose = truck_state.getBaseOdomPose();
     odom_msg.pose.pose.position.x = pose.pos.x;
     odom_msg.pose.pose.position.y = pose.pos.y;
     odom_msg.pose.pose.orientation = truck::geom::msg::toQuaternion(pose.dir);
 
     // Set the twist.
-    const auto linear_velocity = truck_state.getLinearVelocityVector();
+    const auto linear_velocity = truck_state.getBaseOdomLinearVelocity();
     odom_msg.twist.twist.linear.x = linear_velocity.x;
     odom_msg.twist.twist.linear.y = linear_velocity.y;
-    const double angular_velocity = truck_state.getAngularVelocityVector();
+    const double angular_velocity = truck_state.getBaseOdomAngularVelocity();
     odom_msg.twist.twist.angular.z = angular_velocity;
 
     signals_.odometry->publish(odom_msg);
@@ -94,7 +94,7 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
     odom_to_base_transform_msg.header.stamp = truck_state.getTime();
 
     // Set the transformation.
-    const auto pose = truck_state.getPose();
+    const auto pose = truck_state.getBaseOdomPose();
     odom_to_base_transform_msg.transform.translation.x = pose.pos.x;
     odom_to_base_transform_msg.transform.translation.y = pose.pos.y;
     odom_to_base_transform_msg.transform.rotation = truck::geom::msg::toQuaternion(pose.dir);
@@ -121,7 +121,7 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
     truck_msgs::msg::SimulationState state_msg;
     state_msg.header.frame_id = "base";
     state_msg.header.stamp = truck_state.getTime();
-    state_msg.speed = truck_state.getTwist().velocity;
+    state_msg.speed = truck_state.getBaseOdomTwist().velocity;
     state_msg.steering = truck_state.getCurrentSteering().middle.radians();
     signals_.state->publish(state_msg);
 }
