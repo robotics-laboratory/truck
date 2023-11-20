@@ -18,10 +18,10 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
 
-    reset_rear();
+    resetRear();
 }
 
-void SimulatorEngine::reset_rear(double x, double y, double yaw,
+void SimulatorEngine::resetRear(double x, double y, double yaw,
     double steering, double linear_velocity) {
 
     rear_ax_state_ = (SimulatorEngine::State() 
@@ -29,11 +29,11 @@ void SimulatorEngine::reset_rear(double x, double y, double yaw,
         .finished();
 }
 
-void SimulatorEngine::reset_rear() {
-    reset_rear(-model_->wheelBase().base_to_rear, 0, 0, 0, 0);
+void SimulatorEngine::resetRear() {
+    resetRear(-model_->wheelBase().base_to_rear, 0, 0, 0, 0);
 }
 
-void SimulatorEngine::reset_base(const geom::Pose& pose,
+void SimulatorEngine::resetBase(const geom::Pose& pose,
     double middle_steering, double linear_velocity) {
     
     const auto [rear_x, rear_y] = geom::Vec2{pose.pos.x, pose.pos.y} 
@@ -43,14 +43,69 @@ void SimulatorEngine::reset_base(const geom::Pose& pose,
     const auto base_twist = model::Twist {base_curvature, linear_velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
-    reset_rear(rear_x, rear_y, yaw, middle_steering, rear_twist.velocity);
+    resetRear(rear_x, rear_y, yaw, middle_steering, rear_twist.velocity);
 }
 
-std::unique_ptr<TruckState> SimulatorEngine::getBaseTruckState() const {
-    return TruckState::fromRearToBaseState(*model_.get(), rear_ax_state_[StateIndex::x],
-        rear_ax_state_[StateIndex::y], rear_ax_state_[StateIndex::yaw], time_,
-        rear_ax_state_[StateIndex::steering], rear_ax_state_[StateIndex::linear_velocity],
-        control_.curvature);
+geom::Pose SimulatorEngine::rearToOdomBasePose() {
+    const double x = rear_ax_state_[StateIndex::x];
+    const double y = rear_ax_state_[StateIndex::y];
+    const double yaw = rear_ax_state_[StateIndex::yaw];
+
+    geom::Pose pose;
+    pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
+    pose.pos = geom::Vec2{x, y} + model_->wheelBase().base_to_rear * pose.dir;
+    return pose;
+}
+
+model::Steering SimulatorEngine::getCurrentSteering(double rear_curvature) {
+    return model_->rearCurvatureToSteering(rear_curvature);
+}
+
+model::Steering SimulatorEngine::getTargetSteering() {
+    return model_->rearCurvatureToSteering(control_.curvature);
+}
+
+model::Twist SimulatorEngine::rearToOdomBaseTwist(double rear_curvature) {
+    const double double linear_velocity = rear_ax_state_[StateIndex::linear_velocity];
+    const auto twist = model::Twist {
+        rear_curvature,
+        linear_velocity
+    };
+
+    return model_->rearToBaseTwist(twist);
+}
+
+geom::Vec2 SimulatorEngine::rearToOdomBaseLinearVelocity(
+    truck::geom::AngleVec2 dir, double base_velocity) {
+
+    return dir * base_velocity;
+}
+
+double SimulatorEngine::rearToOdomBaseAngularVelocity(
+    double base_velocity, double rear_curvature) {
+
+    return base_velocity * rear_curvature;
+}
+
+TruckState SimulatorEngine::getTruckState() const {
+    const double steering = rear_ax_state_[StateIndex::steering];
+
+    const auto pose = getPose();
+    const double rear_curvature = model_.middleSteeringToRearCurvature(steering);
+    const auto current_steering = getCurrentSteering(rear_curvature);
+    const auto target_steering = getTargetSteering();
+    const auto twist = rearToOdomBaseTwist(rear_curvature);
+    const auto linear_velocity = rearToOdomBaseLinearVelocity(pose.dir, twist.velocity);
+    const auto angular_velocity = rearToOdomBaseAngularVelocity(twist.velocity, rear_curvature);
+    
+    return TruckState()
+        .setTime(time_)
+        .setBaseOdomPose(pose)
+        .setCurrentSteering(current_steering)
+        .setTargetSteering(target_steering)
+        .setBaseOdomTwist(twist)
+        .setBaseOdomLinearVelocity(linear_velocity)
+        .setBaseOdomAngularVelocity(angular_velocity)
 }
 
 namespace {

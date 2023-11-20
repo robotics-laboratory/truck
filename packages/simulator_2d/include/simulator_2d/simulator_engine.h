@@ -14,9 +14,9 @@ class SimulatorEngine {
     SimulatorEngine(std::unique_ptr<model::Model> model, 
         double integration_step = 0.001, double precision = 1e-8);
 
-    void reset_base(const geom::Pose& pose, double middle_steering, double linear_velocity);
+    void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
 
-    std::unique_ptr<TruckState> getBaseTruckState() const;
+    TruckState getTruckState() const;
 
     void setBaseControl(double velocity, double acceleration, double curvature);
     void setBaseControl(double velocity, double curvature);
@@ -33,10 +33,17 @@ class SimulatorEngine {
 
     using State = Eigen::Matrix<double, 5, 1>;
 
-    void reset_rear(double x, double y, double yaw,
+    void resetRear(double x, double y, double yaw,
         double steering, double linear_velocity);
-    void reset_rear();
-    double getCurrentRearCurvature() const;
+    void resetRear();
+
+    geom::Pose rearToOdomBasePose() const;
+    model::Steering getCurrentSteering(double rear_curvature) const;
+    model::Steering getTargetSteering() const;
+    model::Twist rearToOdomBaseTwist(double rear_curvature) const;
+    geom::Vec2 rearToOdomBaseLinearVelocity(truck::geom::AngleVec2 dir, double base_velocity) const;
+    double rearToOdomBaseAngularVelocity(double base_velocity, double rear_curvature) const;
+
     State calculateStateDerivative(const State &state, double acceleration);
     double getCurrentAcceleration();
     State calculateRK4(double acceleration);

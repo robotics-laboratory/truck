@@ -81,9 +81,8 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     const auto linear_velocity = truck_state.getLinearVelocityVector();
     odom_msg.twist.twist.linear.x = linear_velocity.x;
     odom_msg.twist.twist.linear.y = linear_velocity.y;
-    const auto angular_velocity = truck_state.getAngularVelocityVector();
-    odom_msg.twist.twist.angular.x = angular_velocity.x; 
-    odom_msg.twist.twist.angular.y = angular_velocity.y;
+    const double angular_velocity = truck_state.getAngularVelocityVector();
+    odom_msg.twist.twist.angular.z = angular_velocity;
 
     signals_.odometry->publish(odom_msg);
 }
@@ -128,7 +127,7 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
 }
 
 void SimulatorNode::publishSimulationState() {
-    const auto truck_state = *(engine_->getBaseTruckState().get());
+    const auto truck_state = engine_->getTruckState();
     publishTime(truck_state);
     publishOdometryMessage(truck_state);
     publishTransformMessage(truck_state);

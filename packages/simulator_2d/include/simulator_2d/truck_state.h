@@ -7,46 +7,31 @@ namespace truck::simulator {
 
 class TruckState {
   public:
-    TruckState(const rclcpp::Time& time, const geom::Pose& pose,
-        const model::Steering& current_steering, const model::Steering& target_steering,
-        const model::Twist& twist, const geom::Vec2& linear_velocity,
-        const geom::Vec2& angular_velocity);
-
-    static std::unique_ptr<TruckState> fromRearToBaseState(const model::Model& model,
-        double x, double y, double yaw, const rclcpp::Time& time, double steering, 
-        double linear_velocity, double control_curvature);
-
     const rclcpp::Time& getTime() const;
-    geom::Pose getPose() const;
+    geom::Pose getBaseOdomPose() const;
     model::Steering getCurrentSteering() const;
     model::Steering getTargetSteering() const;
-    model::Twist getTwist() const;
-    geom::Vec2 getLinearVelocityVector() const;
-    geom::Vec2 getAngularVelocityVector() const;
+    model::Twist getBaseOdomTwist() const;
+    geom::Vec2 getBaseOdomLinearVelocity() const;
+    double getBaseOdomAngularVelocity() const;
+
+    TruckState& setTime(const rclcpp::Time& time);
+    TruckState& setBaseOdomPose(const geom::Pose& pose);
+    TruckState& setCurrentSteering(const model::Steering& current_steering);
+    TruckState& setTargetSteering(const model::Steering& target_steering);
+    TruckState& setBaseOdomTwist(const model::Twist& twist);
+    TruckState& setBaseOdomLinearVelocity(const geom::Vec2& linear_velocity);
+    TruckState& setBaseOdomAngularVelocity(double angular_velocity);
 
   private:
-
-    static geom::Pose getPose(const model::Model& model, 
-        double x, double y, double yaw);
-    static model::Steering getCurrentSteering(
-        const model::Model& model, double rear_curvature);
-    static model::Steering getTargetSteering(
-        const model::Model& model, double control_curvature);
-    static model::Twist getTwist(const model::Model& model, 
-        double rear_curvature, double linear_velocity);
-    static geom::Vec2 getLinearVelocityVector(double yaw, 
-        double base_velocity);
-    static geom::Vec2 getAngularVelocityVector(double yaw, 
-        double base_velocity, double rear_curvature);
-    
     struct Cache {
         rclcpp::Time time;
-        geom::Pose pose;
+        geom::Pose base_odom_pose;
         model::Steering current_steering;
         model::Steering target_steering;
-        model::Twist twist;
-        geom::Vec2 linear_velocity;
-        geom::Vec2 angular_velocity;
+        model::Twist base_odom_twist;
+        geom::Vec2 base_odom_linear_velocity;
+        double base_odom_angular_velocity;
     } cache_;
 };
 
