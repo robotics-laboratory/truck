@@ -32,6 +32,7 @@ void processTestCase(const Script& script, double update_period) {
     auto model = std::make_unique<truck::model::Model>(
         "/truck/packages/model/config/model.yaml");
     auto engine = SimulatorEngine(std::move(model));
+    printTruckState(engine.getTruckState());
     for (const auto step : script) {
         if (step.acceleration) {
             engine.setBaseControl(step.velocity, *step.acceleration, step.curvature);
@@ -41,8 +42,7 @@ void processTestCase(const Script& script, double update_period) {
         
         for (int j = 0; j < step.iterations; ++j) {
             engine.advance(update_period);
-            const auto truck_state = engine.getTruckState();
-            printTruckState(truck_state);
+            printTruckState(engine.getTruckState());
         }
     }
 }
