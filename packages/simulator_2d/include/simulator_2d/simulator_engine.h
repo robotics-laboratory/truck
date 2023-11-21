@@ -41,12 +41,16 @@ class SimulatorEngine {
     model::Steering getCurrentSteering(double rear_curvature) const;
     model::Steering getTargetSteering() const;
     model::Twist rearToOdomBaseTwist(double rear_curvature) const;
-    geom::Vec2 rearToOdomBaseLinearVelocity(truck::geom::AngleVec2 dir, double base_velocity) const;
-    double rearToOdomBaseAngularVelocity(double base_velocity, double rear_curvature) const;
+    geom::Vec2 rearToOdomBaseLinearVelocity(
+        truck::geom::AngleVec2 dir,double base_velocity) const;
+    double rearToOdomBaseAngularVelocity(
+        double base_velocity, double rear_curvature) const;
 
-    State calculateStateDerivative(const State &state, double acceleration);
-    double getCurrentAcceleration();
-    State calculateRK4(double acceleration);
+    double getCurrentAcceleration() const;
+    double getCurrentSteeringVelocity() const;
+    State calculateStateDerivative(const State &state,
+        double acceleration, double steering_velocity) const;
+    State calculateRK4(double acceleration, double steering_velocity) const;
 
     struct Parameters {
         double integration_step;
