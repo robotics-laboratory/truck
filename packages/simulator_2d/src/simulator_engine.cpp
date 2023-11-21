@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace truck::simulator {
 
@@ -122,6 +123,16 @@ int softSign(double number, double precision) {
     return 0;
 }
 
+std::pair<int, double> actionSign(double target_velocity, double velocity, double precision) {
+    const bool need_stop = (softSign(target_velocity, precision)
+        * softSign(velocity, precision)) < 0;
+    if (need_stop) {
+        target_velocity = 0;
+    }
+
+    return {softSign(abs(target_velocity) - abs(velocity), precision), target_velocity};
+}
+
 } // namespace
 
 void SimulatorEngine::setBaseControl(
@@ -135,8 +146,8 @@ void SimulatorEngine::setBaseControl(
     const auto base_twist = model::Twist {curvature, velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
-    const int action_sign = softSign(abs(rear_twist.velocity) 
-        - abs(rear_ax_state_[StateIndex::linear_velocity]), params_.precision);
+    const int action_sign = actionSign(rear_twist.velocity,
+        rear_ax_state_[StateIndex::linear_velocity], params_.precision).first;
     if (action_sign == 1) {
         acceleration = std::max(acceleration, model_->baseMaxAcceleration());
     }
@@ -154,8 +165,8 @@ void SimulatorEngine::setBaseControl(double velocity, double curvature) {
     const auto base_twist = model::Twist {curvature, velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
-    const int action_sign = softSign(abs(rear_twist.velocity) 
-        - abs(rear_ax_state_[StateIndex::linear_velocity]), params_.precision);
+    const int action_sign = actionSign(rear_twist.velocity,
+        rear_ax_state_[StateIndex::linear_velocity], params_.precision).first;
     double acceleration = 0;
     if (action_sign == 1) {
         acceleration = model_->baseMaxAcceleration();
@@ -180,16 +191,12 @@ double getOptionalValue(const std::optional<double>& opt, double max) {
 
 double SimulatorEngine::getCurrentAcceleration() const {
     const double velocity = rear_ax_state_[StateIndex::linear_velocity];
+    
+    int action_sign;
+    double target_velocity;
+    std::tie(action_sign, target_velocity)
+        = actionSign(control_.velocity, velocity, params_.precision);
 
-    double target_velocity = control_.velocity;
-    const bool need_stop = (softSign(control_.velocity, params_.precision)
-        * softSign(velocity, params_.precision)) < 0;
-    if (need_stop) {
-        target_velocity = 0;
-    }
-
-    const int action_sign = softSign(abs(target_velocity) 
-        - abs(velocity), params_.precision);
     const int acceleration_sign = softSign(target_velocity 
         - velocity, params_.precision);
 
