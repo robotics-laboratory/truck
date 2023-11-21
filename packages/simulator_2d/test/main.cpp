@@ -20,11 +20,11 @@ using Script = std::vector<ScriptStep>;
 void printTruckState(const TruckState& truck_state) {
     std::cerr << "{" 
         << std::fixed << std::setprecision(5)
-        << "\"time\":" << truck_state.getTime().seconds() << ' '
-        << "\"x\":" << truck_state.getBaseOdomPose().pos.x << ' '
-        << "\"y\":" << truck_state.getBaseOdomPose().pos.y << ' '
-        << "\"velocity\":" << truck_state.getBaseOdomTwist().velocity
-        << "\"steering\":" << truck_state.getCurrentSteering().middle.radians()
+        << "\"time\":" << truck_state.getTime().seconds()
+        << ", \"x\":" << truck_state.getBaseOdomPose().pos.x
+        << ", \"y\":" << truck_state.getBaseOdomPose().pos.y
+        << ", \"velocity\":" << truck_state.getBaseOdomTwist().velocity
+        << ", \"steering\":" << truck_state.getCurrentSteering().middle.radians()
         << "}\n";
 }
 
