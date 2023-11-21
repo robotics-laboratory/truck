@@ -164,7 +164,7 @@ bool fillBraking(const model::Model& model, It begin, It end) {
     it->velocity = 0;
 
     // check exactly model limits, but not comfort deceleration
-    return a < -model.baseMaxDecelerationLimits();
+    return a < -model.baseMaxDeceleration();
 }
 
 void fillAfterEnd(It begin, It end) {
