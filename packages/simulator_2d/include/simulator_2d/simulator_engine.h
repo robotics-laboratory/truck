@@ -1,11 +1,13 @@
 #include "simulator_2d/truck_state.h"
 
+#include <optional>
+
+#include <eigen3/Eigen/Dense>
+
 #include "model/model.h"
 #include "geom/angle.h"
 #include "geom/pose.h"
 #include "geom/vector.h"
-
-#include <eigen3/Eigen/Dense>
 
 namespace truck::simulator {
 
