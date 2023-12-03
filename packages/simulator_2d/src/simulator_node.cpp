@@ -61,7 +61,7 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
 
 void SimulatorNode::publishTime(const TruckState& truck_state) {
     rosgraph_msgs::msg::Clock clock_msg;
-    clock_msg.clock = truck_state.getTime();
+    clock_msg.clock = truck_state.time();
     signals_.time->publish(clock_msg);
 }
 
@@ -69,19 +69,19 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.frame_id = "odom_ekf";
     odom_msg.child_frame_id = "odom_ekf";
-    odom_msg.header.stamp = truck_state.getTime();
+    odom_msg.header.stamp = truck_state.time();
 
     // Set the pose.
-    const auto pose = truck_state.getBaseOdomPose();
+    const auto pose = truck_state.odomBasePose();
     odom_msg.pose.pose.position.x = pose.pos.x;
     odom_msg.pose.pose.position.y = pose.pos.y;
     odom_msg.pose.pose.orientation = truck::geom::msg::toQuaternion(pose.dir);
 
     // Set the twist.
-    const auto linear_velocity = truck_state.getBaseOdomLinearVelocity();
+    const auto linear_velocity = truck_state.odomBaseLinearVelocity();
     odom_msg.twist.twist.linear.x = linear_velocity.x;
     odom_msg.twist.twist.linear.y = linear_velocity.y;
-    const double angular_velocity = truck_state.getBaseOdomAngularVelocity();
+    const double angular_velocity = truck_state.baseAngularVelocity();
     odom_msg.twist.twist.angular.z = angular_velocity;
 
     signals_.odometry->publish(odom_msg);
@@ -91,10 +91,10 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
     geometry_msgs::msg::TransformStamped odom_to_base_transform_msg;
     odom_to_base_transform_msg.header.frame_id = "odom_ekf";
     odom_to_base_transform_msg.child_frame_id = "base";
-    odom_to_base_transform_msg.header.stamp = truck_state.getTime();
+    odom_to_base_transform_msg.header.stamp = truck_state.time();
 
     // Set the transformation.
-    const auto pose = truck_state.getBaseOdomPose();
+    const auto pose = truck_state.odomBasePose();
     odom_to_base_transform_msg.transform.translation.x = pose.pos.x;
     odom_to_base_transform_msg.transform.translation.y = pose.pos.y;
     odom_to_base_transform_msg.transform.rotation = truck::geom::msg::toQuaternion(pose.dir);
@@ -107,11 +107,11 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
 void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
     truck_msgs::msg::HardwareTelemetry telemetry_msg;
     telemetry_msg.header.frame_id = "base";
-    telemetry_msg.header.stamp = truck_state.getTime();
-    const auto current_steering = truck_state.getCurrentSteering();
+    telemetry_msg.header.stamp = truck_state.time();
+    const auto current_steering = truck_state.currentSteering();
     telemetry_msg.current_left_steering = current_steering.left.radians();
     telemetry_msg.current_right_steering = current_steering.right.radians();
-    const auto target_steering = truck_state.getTargetSteering();
+    const auto target_steering = truck_state.targetSteering();
     telemetry_msg.target_left_steering = target_steering.left.radians();
     telemetry_msg.target_right_steering = target_steering.right.radians();
     signals_.telemetry->publish(telemetry_msg);
@@ -120,9 +120,9 @@ void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
 void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state) {
     truck_msgs::msg::SimulationState state_msg;
     state_msg.header.frame_id = "base";
-    state_msg.header.stamp = truck_state.getTime();
-    state_msg.speed = truck_state.getBaseOdomTwist().velocity;
-    state_msg.steering = truck_state.getCurrentSteering().middle.radians();
+    state_msg.header.stamp = truck_state.time();
+    state_msg.speed = truck_state.baseTwist().velocity;
+    state_msg.steering = truck_state.currentSteering().middle.radians();
     signals_.state->publish(state_msg);
 }
 

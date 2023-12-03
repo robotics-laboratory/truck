@@ -7,21 +7,21 @@ namespace truck::simulator {
 
 class TruckState {
   public:
-    const rclcpp::Time& getTime() const;
-    geom::Pose getBaseOdomPose() const;
-    model::Steering getCurrentSteering() const;
-    model::Steering getTargetSteering() const;
-    model::Twist getBaseOdomTwist() const;
-    geom::Vec2 getBaseOdomLinearVelocity() const;
-    double getBaseOdomAngularVelocity() const;
+    rclcpp::Time time() const;
+    geom::Pose odomBasePose() const;
+    model::Steering currentSteering() const;
+    model::Steering targetSteering() const;
+    model::Twist baseTwist() const;
+    geom::Vec2 odomBaseLinearVelocity() const;
+    double baseAngularVelocity() const;
 
-    TruckState& setTime(const rclcpp::Time& time);
-    TruckState& setBaseOdomPose(const geom::Pose& pose);
-    TruckState& setCurrentSteering(const model::Steering& current_steering);
-    TruckState& setTargetSteering(const model::Steering& target_steering);
-    TruckState& setBaseOdomTwist(const model::Twist& twist);
-    TruckState& setBaseOdomLinearVelocity(const geom::Vec2& linear_velocity);
-    TruckState& setBaseOdomAngularVelocity(double angular_velocity);
+    TruckState& time(const rclcpp::Time& time);
+    TruckState& odomBasePose(const geom::Pose& pose);
+    TruckState& currentSteering(const model::Steering& current_steering);
+    TruckState& targetSteering(const model::Steering& target_steering);
+    TruckState& baseTwist(const model::Twist& twist);
+    TruckState& odomBaseLinearVelocity(const geom::Vec2& linear_velocity);
+    TruckState& baseAngularVelocity(double angular_velocity);
 
   private:
     struct Cache {

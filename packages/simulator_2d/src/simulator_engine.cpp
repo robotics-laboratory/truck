@@ -82,7 +82,7 @@ geom::Vec2 SimulatorEngine::rearToOdomBaseLinearVelocity(
     return dir * base_velocity;
 }
 
-double SimulatorEngine::rearToOdomBaseAngularVelocity(
+double SimulatorEngine::rearToBaseAngularVelocity(
     double base_velocity, double rear_curvature) const {
 
     return base_velocity * rear_curvature;
@@ -97,16 +97,16 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto target_steering = getTargetSteering();
     const auto twist = rearToOdomBaseTwist(rear_curvature);
     const auto linear_velocity = rearToOdomBaseLinearVelocity(pose.dir, twist.velocity);
-    const auto angular_velocity = rearToOdomBaseAngularVelocity(twist.velocity, rear_curvature);
+    const auto angular_velocity = rearToBaseAngularVelocity(twist.velocity, rear_curvature);
     
     return TruckState()
-        .setTime(time_)
-        .setBaseOdomPose(pose)
-        .setCurrentSteering(current_steering)
-        .setTargetSteering(target_steering)
-        .setBaseOdomTwist(twist)
-        .setBaseOdomLinearVelocity(linear_velocity)
-        .setBaseOdomAngularVelocity(angular_velocity);
+        .time(time_)
+        .odomBasePose(pose)
+        .currentSteering(current_steering)
+        .targetSteering(target_steering)
+        .baseTwist(twist)
+        .odomBaseLinearVelocity(linear_velocity)
+        .baseAngularVelocity(angular_velocity);
 }
 
 namespace {
@@ -123,12 +123,27 @@ int softSign(double number, double precision) {
     return 0;
 }
 
-std::pair<int, double> actionSign(double target_velocity, double velocity, double precision) {
-    const bool need_stop = (softSign(target_velocity, precision)
+/**
+ * @param desired_velocity The velocity to strive for.
+ * @param velocity Current (initial) velocity.
+ * @param precision Precision of calculations.
+ * 
+ * @return A pair of values:
+ * first - the maneuver sign of the model;
+ * second - the target speed.
+ * 
+ * If the sign is positive, it is necessary to accelerate. 
+ * If the sign is negative, it is necessary to decelerate.
+ * 
+ * If the current and desired velocities are of different signs,
+ * the target speed will be 0 (the model must first stop,
+ * and then start moving in the opposite direction).
+ * Otherwise, the target and desired velocities are the same.
+ */
+std::pair<int, double> actionSign(double desired_velocity, double velocity, double precision) {
+    const bool need_stop = (softSign(desired_velocity, precision)
         * softSign(velocity, precision)) < 0;
-    if (need_stop) {
-        target_velocity = 0;
-    }
+    const double target_velocity = need_stop ? 0 : desired_velocity;
 
     return {softSign(abs(target_velocity) - abs(velocity), precision), target_velocity};
 }
@@ -146,8 +161,8 @@ void SimulatorEngine::setBaseControl(
     const auto base_twist = model::Twist {curvature, velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
-    const int action_sign = actionSign(rear_twist.velocity,
-        rear_ax_state_[StateIndex::linear_velocity], params_.precision).first;
+    const auto [action_sign, _] = actionSign(rear_twist.velocity,
+        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
     if (action_sign == 1) {
         acceleration = std::max(acceleration, model_->baseMaxAcceleration());
     }
@@ -192,9 +207,7 @@ double getOptionalValue(const std::optional<double>& opt, double max) {
 double SimulatorEngine::getCurrentAcceleration() const {
     const double velocity = rear_ax_state_[StateIndex::linear_velocity];
     
-    int action_sign;
-    double target_velocity;
-    std::tie(action_sign, target_velocity)
+    const auto [action_sign, target_velocity] 
         = actionSign(control_.velocity, velocity, params_.precision);
 
     const int acceleration_sign = softSign(target_velocity 

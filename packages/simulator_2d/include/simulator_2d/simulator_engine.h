@@ -45,7 +45,7 @@ class SimulatorEngine {
     model::Twist rearToOdomBaseTwist(double rear_curvature) const;
     geom::Vec2 rearToOdomBaseLinearVelocity(
         truck::geom::AngleVec2 dir,double base_velocity) const;
-    double rearToOdomBaseAngularVelocity(
+    double rearToBaseAngularVelocity(
         double base_velocity, double rear_curvature) const;
 
     double getCurrentAcceleration() const;
