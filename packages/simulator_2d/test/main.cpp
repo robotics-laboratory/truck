@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <vector>
+#include <optional>
 
 #include <gtest/gtest.h>
 
@@ -7,34 +8,66 @@
 
 using namespace truck::simulator;
 
-void processTestCase(const std::vector<std::pair<int, int>>& script, double update_period) {
+struct ScriptStep {
+    int iterations;
+    double velocity;
+    double curvature;
+    std::optional<double> acceleration;
+};
+
+using Script = std::vector<ScriptStep>;
+
+void printTruckState(const TruckState& truck_state) {
+    std::cerr << "{" 
+        << std::fixed << std::setprecision(5)
+        << "\"time\":" << truck_state.time().seconds()
+        << ", \"x\":" << truck_state.odomBasePose().pos.x
+        << ", \"y\":" << truck_state.odomBasePose().pos.y
+        << ", \"velocity\":" << truck_state.baseTwist().velocity
+        << ", \"steering\":" << truck_state.currentSteering().middle.radians()
+        << "}\n";
+}
+
+void processTestCase(const Script& script, double update_period) {
     auto model = std::make_unique<truck::model::Model>(
         "/truck/packages/model/config/model.yaml");
     auto engine = SimulatorEngine(std::move(model));
+    printTruckState(engine.getTruckState());
     for (const auto step : script) {
-        engine.setBaseControl(step.first, 0);
-        for (int j = 0; j < step.second; ++j) {
+        if (step.acceleration) {
+            engine.setBaseControl(step.velocity, *step.acceleration, step.curvature);
+        } else {
+            engine.setBaseControl(step.velocity, step.curvature);
+        }
+        
+        for (int j = 0; j < step.iterations; ++j) {
             engine.advance(update_period);
-            const auto truck_state = engine.getTruckState();
-            std::cerr << std::fixed << std::setprecision(5)
-                << truck_state.getTime().seconds() << ' '
-                << truck_state.getBaseOdomPose().pos.x << ' '
-                << truck_state.getBaseOdomTwist().velocity << '\n';
+            printTruckState(engine.getTruckState());
         }
     }
 }
 
 TEST(SimulatorEngine, straight) {
-    std::vector<std::pair<int, int>> script 
-        {{10, 500}};
+    Script script {{500, 10, 0, std::nullopt}};
     const double update_period = 0.01;
     
     processTestCase(script, update_period);
 }
 
 TEST(SimulatorEngine, straightBackward) {
-    std::vector<std::pair<int, int>> script 
-        {{10, 100}, {-10, 200}, {10, 300}, {0, 200}};
+    Script script {
+        {100, 10, 0, std::nullopt}, 
+        {200, -10, 0, std::nullopt}, 
+        {300, 10, 0, std::nullopt}, 
+        {200, 0, 0, std::nullopt}
+    };
+    const double update_period = 0.01;
+
+    processTestCase(script, update_period);
+}
+
+TEST(SimulatorEngine, circle) {
+    Script script {{500, 10, 10, std::nullopt}};
     const double update_period = 0.01;
 
     processTestCase(script, update_period);

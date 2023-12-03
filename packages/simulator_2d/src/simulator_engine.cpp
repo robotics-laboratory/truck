@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace truck::simulator {
 
@@ -81,7 +82,7 @@ geom::Vec2 SimulatorEngine::rearToOdomBaseLinearVelocity(
     return dir * base_velocity;
 }
 
-double SimulatorEngine::rearToOdomBaseAngularVelocity(
+double SimulatorEngine::rearToBaseAngularVelocity(
     double base_velocity, double rear_curvature) const {
 
     return base_velocity * rear_curvature;
@@ -96,16 +97,16 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto target_steering = getTargetSteering();
     const auto twist = rearToOdomBaseTwist(rear_curvature);
     const auto linear_velocity = rearToOdomBaseLinearVelocity(pose.dir, twist.velocity);
-    const auto angular_velocity = rearToOdomBaseAngularVelocity(twist.velocity, rear_curvature);
+    const auto angular_velocity = rearToBaseAngularVelocity(twist.velocity, rear_curvature);
     
     return TruckState()
-        .setTime(time_)
-        .setBaseOdomPose(pose)
-        .setCurrentSteering(current_steering)
-        .setTargetSteering(target_steering)
-        .setBaseOdomTwist(twist)
-        .setBaseOdomLinearVelocity(linear_velocity)
-        .setBaseOdomAngularVelocity(angular_velocity);
+        .time(time_)
+        .odomBasePose(pose)
+        .currentSteering(current_steering)
+        .targetSteering(target_steering)
+        .baseTwist(twist)
+        .odomBaseLinearVelocity(linear_velocity)
+        .baseAngularVelocity(angular_velocity);
 }
 
 namespace {
@@ -122,6 +123,31 @@ int softSign(double number, double precision) {
     return 0;
 }
 
+/**
+ * @param desired_velocity The velocity to strive for.
+ * @param velocity Current (initial) velocity.
+ * @param precision Precision of calculations.
+ * 
+ * @return A pair of values:
+ * first - the maneuver sign of the model;
+ * second - the target speed.
+ * 
+ * If the sign is positive, it is necessary to accelerate. 
+ * If the sign is negative, it is necessary to decelerate.
+ * 
+ * If the current and desired velocities are of different signs,
+ * the target speed will be 0 (the model must first stop,
+ * and then start moving in the opposite direction).
+ * Otherwise, the target and desired velocities are the same.
+ */
+std::pair<int, double> actionSign(double desired_velocity, double velocity, double precision) {
+    const bool need_stop = (softSign(desired_velocity, precision)
+        * softSign(velocity, precision)) < 0;
+    const double target_velocity = need_stop ? 0 : desired_velocity;
+
+    return {softSign(abs(target_velocity) - abs(velocity), precision), target_velocity};
+}
+
 } // namespace
 
 void SimulatorEngine::setBaseControl(
@@ -135,8 +161,8 @@ void SimulatorEngine::setBaseControl(
     const auto base_twist = model::Twist {curvature, velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
-    const int action_sign = softSign(abs(rear_twist.velocity) 
-        - abs(rear_ax_state_[StateIndex::linear_velocity]), params_.precision);
+    const auto [action_sign, _] = actionSign(rear_twist.velocity,
+        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
     if (action_sign == 1) {
         acceleration = std::max(acceleration, model_->baseMaxAcceleration());
     }
@@ -154,8 +180,8 @@ void SimulatorEngine::setBaseControl(double velocity, double curvature) {
     const auto base_twist = model::Twist {curvature, velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
-    const int action_sign = softSign(abs(rear_twist.velocity) 
-        - abs(rear_ax_state_[StateIndex::linear_velocity]), params_.precision);
+    const int action_sign = actionSign(rear_twist.velocity,
+        rear_ax_state_[StateIndex::linear_velocity], params_.precision).first;
     double acceleration = 0;
     if (action_sign == 1) {
         acceleration = model_->baseMaxAcceleration();
@@ -178,18 +204,14 @@ double getOptionalValue(const std::optional<double>& opt, double max) {
 
 } // namespace
 
-double SimulatorEngine::getCurrentAcceleration() {
-    double target_velocity = control_.velocity;
-    const bool need_stop = (softSign(control_.velocity, params_.precision)
-        * softSign(rear_ax_state_[StateIndex::linear_velocity], params_.precision)) < 0;
-    if (need_stop) {
-        target_velocity = 0;
-    }
+double SimulatorEngine::getCurrentAcceleration() const {
+    const double velocity = rear_ax_state_[StateIndex::linear_velocity];
+    
+    const auto [action_sign, target_velocity] 
+        = actionSign(control_.velocity, velocity, params_.precision);
 
-    const int action_sign = softSign(abs(target_velocity) 
-        - abs(rear_ax_state_[StateIndex::linear_velocity]), params_.precision);
     const int acceleration_sign = softSign(target_velocity 
-        - rear_ax_state_[StateIndex::linear_velocity], params_.precision);
+        - velocity, params_.precision);
 
     double current_acceleration = 0;
     if (action_sign == 1) {
@@ -203,37 +225,67 @@ double SimulatorEngine::getCurrentAcceleration() {
     }
 
     const double velocity_delta = current_acceleration * params_.integration_step;
-    const double new_velocity = rear_ax_state_[StateIndex::linear_velocity] + velocity_delta;
-    const bool target_speed_achieved 
+    const double new_velocity = velocity + velocity_delta;
+    const bool target_velocity_achieved 
         = (acceleration_sign > 0 && (new_velocity + params_.precision > target_velocity))
         || (acceleration_sign < 0 && (new_velocity - params_.precision < target_velocity));
 
-    if (target_speed_achieved) {
+    if (target_velocity_achieved) {
         current_acceleration = (target_velocity 
-            - rear_ax_state_[StateIndex::linear_velocity]) * cache_.inverse_integration_step;
+            - velocity) * cache_.inverse_integration_step;
     }
 
     return current_acceleration;
 }
 
+double SimulatorEngine::getCurrentSteeringVelocity() const {
+    const double steering = rear_ax_state_[StateIndex::steering];
+    const double target_steering = getTargetSteering().middle.radians();
+    const int velocity_sign = softSign(target_steering - steering, params_.precision);
+    double current_velocity = velocity_sign * model_->steeringVelocity();
+
+    const double steering_delta = current_velocity * params_.integration_step;
+    const double new_steering = steering + steering_delta;
+    const bool target_steering_achieved
+        = (velocity_sign > 0 && (new_steering + params_.precision > target_steering))
+        || (velocity_sign < 0 && (new_steering - params_.precision < target_steering));
+
+    if (target_steering_achieved) {
+        current_velocity = (target_steering 
+            - steering) * cache_.inverse_integration_step;
+    }
+
+    return current_velocity;
+}
+
 SimulatorEngine::State SimulatorEngine::calculateStateDerivative(
-    const SimulatorEngine::State &state, double acceleration) {
+    const SimulatorEngine::State &state, double acceleration, double steering_velocity) const {
     
+    const double yaw = state[StateIndex::yaw];
+    const double velocity = state[StateIndex::linear_velocity];
+    const double steering = state[StateIndex::steering];
+
     SimulatorEngine::State deriv;
     deriv.setZero();
-    deriv[StateIndex::x] = state[StateIndex::linear_velocity];
+    deriv[StateIndex::x] = cos(yaw) * velocity;
+    deriv[StateIndex::y] = sin(yaw) * velocity;
+    deriv[StateIndex::yaw] = tan(steering) * velocity * cache_.inverse_wheelbase_length;
     deriv[StateIndex::linear_velocity] = acceleration;
+    deriv[StateIndex::steering] = steering_velocity;
+
     return deriv;
 }
 
-SimulatorEngine::State SimulatorEngine::calculateRK4(double acceleration) {
-    const auto k1 = calculateStateDerivative(rear_ax_state_, acceleration);
+SimulatorEngine::State SimulatorEngine::calculateRK4(
+    double acceleration, double steering_velocity) const {
+
+    const auto k1 = calculateStateDerivative(rear_ax_state_, acceleration, steering_velocity);
     const auto k2 = calculateStateDerivative(
-        rear_ax_state_ + k1 * cache_.integration_step_2, acceleration);
+        rear_ax_state_ + k1 * cache_.integration_step_2, acceleration, steering_velocity);
     const auto k3 = calculateStateDerivative(
-        rear_ax_state_ + k2 * cache_.integration_step_2, acceleration);
+        rear_ax_state_ + k2 * cache_.integration_step_2, acceleration, steering_velocity);
     const auto k4 = calculateStateDerivative(
-        rear_ax_state_ + k3 * params_.integration_step, acceleration);
+        rear_ax_state_ + k3 * params_.integration_step, acceleration, steering_velocity);
 
     return (k1 + 2 * k2 + 2 * k3 + k4) * cache_.integration_step_6;
 }
@@ -255,7 +307,8 @@ void SimulatorEngine::advance(double seconds) {
 
     for (int i = 0; i < integration_steps; ++i) {
         const double current_acceleration = getCurrentAcceleration();
-        rear_ax_state_ += calculateRK4(current_acceleration);
+        const double current_steering_velocity = getCurrentSteeringVelocity();
+        rear_ax_state_ += calculateRK4(current_acceleration, current_steering_velocity);
     }
 }
 
