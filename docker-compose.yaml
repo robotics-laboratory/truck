@@ -3,7 +3,7 @@ version: "3"
 services:
   truck:
     container_name: "${CONTAINER_NAME:-truck-${USER}}"
-    image: registry.robotics-lab.ru/truck:0.8.0
+    image: registry.robotics-lab.ru/truck:0.8.1
     privileged: true
     runtime: "${DOCKER_RUNTIME:-runc}"
     build:
@@ -11,7 +11,7 @@ services:
       context: .
       tags:
         - "registry.robotics-lab.ru/truck:latest"
-        - "registry.robotics-lab.ru/truck:0.8.0"
+        - "registry.robotics-lab.ru/truck:0.8.1"
       x-bake:
         platforms: [linux/arm64/v8, linux/amd64]
         cache-to: "type=registry,ref=registry.robotics-lab.ru/truck:cache,mode=max"
