@@ -109,7 +109,7 @@ void VisualizationNode::initializeTopicHandlers() {
 
 void VisualizationNode::initializeCacheWheelBaseTfs() {
     auto base_rotation = tf2::Quaternion::getIdentity();
-    base_rotation.setRPY(M_PI_2, 0, 0);
+    base_rotation.setRPY(0, 0, 0);
 
     const auto front_x_offset 
         = model_->wheelBase().length - model_->wheelBase().base_to_rear;
@@ -256,7 +256,7 @@ visualization_msgs::msg::Marker getMarker(int marker_type,
 } // namespace
 
 void VisualizationNode::publishEgo() const {
-    if (!state_.odom || !state_.mode) {
+    if (!state_.odom || !state_.mode || !state_.telemetry) {
         return;
     }
 
@@ -274,16 +274,20 @@ void VisualizationNode::publishEgo() const {
     for (auto wheel : cache_.all_wheels) {
         auto rotation = tf2::Quaternion::getIdentity();
         if (wheel == WheelIndex::front_left) {
-            rotation.setRPY(0, 0, state_.telemetry->current_left_steering);
-        } 
-        else if (wheel == WheelIndex::front_right) {
-            rotation.setRPY(0, 0, state_.telemetry->current_right_steering);
+            rotation.setRPY(M_PI_2, 0, state_.telemetry->current_left_steering);
+        } else if (wheel == WheelIndex::front_right) {
+            rotation.setRPY(M_PI_2, 0, state_.telemetry->current_right_steering);
+        } else {
+            rotation.setRPY(M_PI_2, 0, 0);
         }
-        const auto tf = base_to_odom * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
+
+        const auto wheel_tf = base_to_odom 
+            * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
 
         auto wheel_msg = getMarker(visualization_msgs::msg::Marker::CYLINDER, wheel + 1,
             state_.odom->header, cache_.ego_wheel_scale, color);
-        tf2::toMsg(tf, wheel_msg.pose);
+        tf2::toMsg(wheel_tf, wheel_msg.pose);
+
         msg_array.markers.push_back(wheel_msg);
     }
     
