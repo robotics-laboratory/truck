@@ -109,7 +109,6 @@ void VisualizationNode::initializeTopicHandlers() {
 
 void VisualizationNode::initializeCacheWheelBaseTfs() {
     auto base_rotation = tf2::Quaternion::getIdentity();
-    base_rotation.setRPY(0, 0, 0);
 
     const auto front_x_offset 
         = model_->wheelBase().length - model_->wheelBase().base_to_rear;
@@ -268,6 +267,7 @@ void VisualizationNode::publishEgo() const {
         state_.odom->header, cache_.ego_body_scale, color);
     body_msg.pose = state_.odom->pose.pose;
     body_msg.pose.position.z = params_.ego_z_lev;
+    
     visualization_msgs::msg::MarkerArray msg_array;
     msg_array.markers.push_back(body_msg);
 
