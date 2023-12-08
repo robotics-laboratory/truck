@@ -23,6 +23,10 @@ struct Vec2 {
 
     static constexpr Vec2 fromAngle(Angle a) noexcept { return {cos(a), sin(a)}; }
 
+    static constexpr Vec2 fromPair(std::pair<double, double> pair) noexcept {
+        return {pair.first, pair.second};
+    }
+
     Vec2& operator+=(const Vec2& other) noexcept {
         x += other.x;
         y += other.y;
