@@ -64,6 +64,9 @@ class VisualizationNode : public rclcpp::Node {
 
         double trajectory_z_lev = 0.0;
         double trajectory_width = 0.0;
+
+        std::string mesh_body = "";
+        std::string mesh_wheel = "";
     } params_{};
 
     enum WheelIndex { 
@@ -74,8 +77,6 @@ class VisualizationNode : public rclcpp::Node {
     };
 
     struct Cache {
-        geometry_msgs::msg::Vector3 ego_body_scale;
-        geometry_msgs::msg::Vector3 ego_wheel_scale;
         std::array<tf2::Transform, 4> wheel_base_tfs;
         std::array<int, 4> all_wheels {
             WheelIndex::front_left,

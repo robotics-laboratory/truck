@@ -45,3 +45,8 @@ launch:
           param:
             - { name: "z_lev", value: 0.0 }
             - { name: "width", value: 0.1 }
+
+        - name: "mesh"
+          param:
+            - { name: "body", value: "https://storage.yandexcloud.net/the-lab-storage/truck/body.glb" }
+            - { name: "wheel", value: "https://storage.yandexcloud.net/the-lab-storage/truck/wheel.glb" }
