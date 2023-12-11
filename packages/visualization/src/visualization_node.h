@@ -10,12 +10,16 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <tf2_ros/buffer.h>
+#include <tf2_msgs/msg/tf_message.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/convert.h>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/time.hpp>
+
+#include <string>
 
 namespace truck::visualization {
 
@@ -24,11 +28,13 @@ class VisualizationNode : public rclcpp::Node {
     VisualizationNode();
 
   private:
+    void initializePtrFields();
     void initializeParams();
     void initializeTopicHandlers();
-    void initializeCacheWheelBaseTfs();
-    void initializeCache();
+    void initializeCacheBodyBaseTf(std::unique_ptr<tf2_ros::Buffer> &tf_buffer);
+    void initializeCacheWheelBaseTfs(std::unique_ptr<tf2_ros::Buffer> &tf_buffer);
 
+    void handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
     void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr trajectory);
     void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
     void handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg);
@@ -70,20 +76,29 @@ class VisualizationNode : public rclcpp::Node {
     } params_{};
 
     enum WheelIndex { 
-        front_left = 0, 
-        front_right = 1, 
-        rear_left = 2,
-        rear_right = 3 
+        kFrontLeft = 0, 
+        kFrontRight = 1, 
+        kRearLeft = 2,
+        kRearRight = 3 
+    };
+
+    static constexpr std::array<int, 4> kAllWheels {
+        WheelIndex::kFrontLeft,
+        WheelIndex::kFrontRight,
+        WheelIndex::kRearLeft,
+        WheelIndex::kRearRight
+    };
+
+    static constexpr std::array<const char*, 4> kWheelFrames {
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
     };
 
     struct Cache {
+        tf2::Transform body_base_tf;
         std::array<tf2::Transform, 4> wheel_base_tfs;
-        std::array<int, 4> all_wheels {
-            WheelIndex::front_left,
-            WheelIndex::front_right,
-            WheelIndex::rear_left,
-            WheelIndex::rear_right
-        };
     } cache_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
@@ -106,6 +121,8 @@ class VisualizationNode : public rclcpp::Node {
         rclcpp::Subscription<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         // foxglove has twitching if publish ego pose in base frame, use odom for smoother result!
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
+        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
+        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
     } slot_;
 
     struct Signals {

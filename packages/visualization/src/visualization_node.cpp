@@ -9,6 +9,7 @@
 #include "geom/segment.h"
 
 #include <boost/assert.hpp>
+#include <tf2_ros/qos.hpp>
 
 #include <array>
 #include <functional>
@@ -21,13 +22,15 @@ using namespace std::placeholders;
 using namespace geom::literals;
 
 VisualizationNode::VisualizationNode() : Node("visualization") {
+    initializePtrFields();
+    initializeParams();
+    initializeTopicHandlers();
+}
+
+void VisualizationNode::initializePtrFields() {
     model_ = model::makeUniquePtr(
         this->get_logger(),
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
-
-    initializeParams();
-    initializeTopicHandlers();
-    initializeCache();
 }
 
 void VisualizationNode::initializeParams() {
@@ -91,6 +94,16 @@ void VisualizationNode::initializeTopicHandlers() {
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleTrajectory, this, _1));
 
+    using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
+    TfCallback tf_call = std::bind(&VisualizationNode::handleTf, this, _1, false);
+    TfCallback static_tf_callback = std::bind(&VisualizationNode::handleTf, this, _1, true);
+
+    slot_.tf = this->create_subscription<tf2_msgs::msg::TFMessage>(
+        "/tf", tf2_ros::DynamicListenerQoS(100), tf_call);
+
+    slot_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
+        "/tf_static", tf2_ros::StaticListenerQoS(100), static_tf_callback);
+
     signal_.ego = Node::create_publisher<visualization_msgs::msg::MarkerArray>(
         "/visualization/ego", rclcpp::QoS(1).reliability(qos));
 
@@ -110,39 +123,43 @@ void VisualizationNode::initializeTopicHandlers() {
         rclcpp::QoS(1).reliability(qos));
 }
 
-void VisualizationNode::initializeCacheWheelBaseTfs() {
-    auto left_rotation = tf2::Quaternion::getIdentity();
-    auto right_rotation = tf2::Quaternion::getIdentity();
-    right_rotation.setRPY(0, 0, M_PI);
+namespace {
 
-    const auto front_x_offset = model_->wheelBase().length - model_->wheelBase().base_to_rear;
-    const auto rear_x_offset = -model_->wheelBase().base_to_rear;
-    const auto y_offset = model_->wheelBase().width / 2;
-    const auto z_offset = 0;
-
-    cache_.wheel_base_tfs[WheelIndex::front_left] = tf2::Transform {
-        left_rotation,
-        tf2::Vector3{front_x_offset, y_offset, z_offset}
-    };
-
-    cache_.wheel_base_tfs[WheelIndex::front_right] = tf2::Transform {
-        right_rotation,
-        tf2::Vector3{front_x_offset, -y_offset, z_offset}
-    };
-
-    cache_.wheel_base_tfs[WheelIndex::rear_left] = tf2::Transform {
-        left_rotation,
-        tf2::Vector3{rear_x_offset, y_offset, z_offset}
-    };
-
-    cache_.wheel_base_tfs[WheelIndex::rear_right] = tf2::Transform {
-        right_rotation,
-        tf2::Vector3{rear_x_offset, -y_offset, z_offset}
-    };
+tf2::Transform getLatestTranform(std::unique_ptr<tf2_ros::Buffer> &tf_buffer,
+    const std::string& source, const std::string& target) {
+    try {
+        const auto tf = tf_buffer->lookupTransform(target, source, rclcpp::Time(0)).transform;
+        tf2::Transform transform;
+        tf2::fromMsg(tf, transform);
+        return transform;
+    } catch (const tf2::TransformException& ex) {
+        return tf2::Transform::getIdentity();
+    }
 }
 
-void VisualizationNode::initializeCache() {
-    initializeCacheWheelBaseTfs();
+} // namespace
+
+void VisualizationNode::initializeCacheBodyBaseTf(std::unique_ptr<tf2_ros::Buffer> &tf_buffer) {
+    cache_.body_base_tf = getLatestTranform(tf_buffer, "base", "body");
+}
+
+void VisualizationNode::initializeCacheWheelBaseTfs(std::unique_ptr<tf2_ros::Buffer> &tf_buffer) {
+    for (auto wheel : kAllWheels) {
+        cache_.wheel_base_tfs[wheel] 
+            = getLatestTranform(tf_buffer, "base", kWheelFrames[wheel]);
+    }
+}
+
+void VisualizationNode::handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
+    auto tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    tf_buffer->setUsingDedicatedThread(true);
+
+    for (const auto& transform : msg->transforms) {
+        tf_buffer->setTransform(transform, "", is_static);
+    }
+
+    initializeCacheBodyBaseTf(tf_buffer);
+    initializeCacheWheelBaseTfs(tf_buffer);
 }
 
 void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg) {
@@ -228,7 +245,7 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
 
 namespace {
 
-visualization_msgs::msg::Marker getMarker(int id, const std_msgs::msg::Header &header,
+visualization_msgs::msg::Marker makeMeshMarker(int id, const std_msgs::msg::Header &header,
     const std::string mesh, const std_msgs::msg::ColorRGBA &color) {
 
     visualization_msgs::msg::Marker msg;
@@ -260,28 +277,32 @@ void VisualizationNode::publishEgo() const {
     tf2::fromMsg(state_.odom->pose.pose, base_to_odom);
 
     auto color = modeToColor(state_.mode);
-    auto body_msg = getMarker(0, state_.odom->header, params_.mesh_body, color);
+    auto body_msg = makeMeshMarker(0, state_.odom->header, params_.mesh_body, color);
 
-    body_msg.pose = state_.odom->pose.pose;
-    body_msg.pose.position.z = params_.ego_z_lev;
+    const auto body_tf = base_to_odom * cache_.body_base_tf;
+    tf2::toMsg(body_tf, body_msg.pose);
     
     visualization_msgs::msg::MarkerArray msg_array;
     msg_array.markers.push_back(body_msg);
 
-    for (auto wheel : cache_.all_wheels) {
-        double z_angle = 0;
-        if (wheel == WheelIndex::front_left) {
-            z_angle = state_.telemetry->current_left_steering;
-        } else if (wheel == WheelIndex::front_right) {
-            z_angle = state_.telemetry->current_right_steering;
-        }
+    for (auto wheel : kAllWheels) {
+        const double z_angle = [&]() {
+            switch (wheel) {
+                case WheelIndex::kFrontLeft:
+                    return state_.telemetry->current_left_steering;
+                case WheelIndex::kFrontRight:
+                    return state_.telemetry->current_right_steering;
+                default:
+                    return 0.0;
+            }
+        }();
 
         auto rotation = tf2::Quaternion::getIdentity();
         rotation.setRPY(0, 0, z_angle);
         const auto wheel_tf = base_to_odom 
             * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
 
-        auto wheel_msg = getMarker(wheel + 1, state_.odom->header, params_.mesh_wheel, color);
+        auto wheel_msg = makeMeshMarker(wheel + 1, state_.odom->header, params_.mesh_wheel, color);
         tf2::toMsg(wheel_tf, wheel_msg.pose);
 
         msg_array.markers.push_back(wheel_msg);

@@ -40,6 +40,8 @@ void SimulatorEngine::resetBase(const geom::Pose& pose,
     const auto [rear_x, rear_y] = geom::Vec2{pose.pos.x, pose.pos.y} 
         - model_->wheelBase().base_to_rear * pose.dir;
 
+    const double yaw = pose.dir.angle().radians();
+
     const double base_curvature = std::tan(middle_steering) * cache_.inverse_wheelbase_length;
     const auto base_twist = model::Twist {base_curvature, linear_velocity};
     const auto rear_twist = model_->baseToRearTwist(base_twist);
@@ -48,9 +50,9 @@ void SimulatorEngine::resetBase(const geom::Pose& pose,
 }
 
 geom::Pose SimulatorEngine::getOdomBasePose() const {
-    const double x = rear_ax_state_[StateIndex::x];
-    const double y = rear_ax_state_[StateIndex::y];
-    const double yaw = rear_ax_state_[StateIndex::yaw];
+    const double x = rear_ax_state_[StateIndex::kX];
+    const double y = rear_ax_state_[StateIndex::kY];
+    const double yaw = rear_ax_state_[StateIndex::kYaw];
 
     geom::Pose pose;
     pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
@@ -67,7 +69,7 @@ model::Steering SimulatorEngine::getTargetSteering() const {
 }
 
 model::Twist SimulatorEngine::rearToOdomBaseTwist(double rear_curvature) const {
-    const double linear_velocity = rear_ax_state_[StateIndex::linear_velocity];
+    const double linear_velocity = rear_ax_state_[StateIndex::kLinearVelocity];
     const auto twist = model::Twist {
         rear_curvature,
         linear_velocity
@@ -89,7 +91,7 @@ double SimulatorEngine::rearToBaseAngularVelocity(
 }
 
 TruckState SimulatorEngine::getTruckState() const {
-    const double steering = rear_ax_state_[StateIndex::steering];
+    const double steering = rear_ax_state_[StateIndex::kSteering];
 
     const auto pose = getOdomBasePose();
     const double rear_curvature = model_->middleSteeringToRearCurvature(steering);
@@ -162,7 +164,7 @@ void SimulatorEngine::setBaseControl(
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
     const auto [action_sign, _] = actionSign(rear_twist.velocity,
-        rear_ax_state_[StateIndex::linear_velocity], params_.precision);
+        rear_ax_state_[StateIndex::kLinearVelocity], params_.precision);
     if (action_sign == 1) {
         acceleration = std::max(acceleration, model_->baseMaxAcceleration());
     }
@@ -181,7 +183,7 @@ void SimulatorEngine::setBaseControl(double velocity, double curvature) {
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
     const int action_sign = actionSign(rear_twist.velocity,
-        rear_ax_state_[StateIndex::linear_velocity], params_.precision).first;
+        rear_ax_state_[StateIndex::kLinearVelocity], params_.precision).first;
     double acceleration = 0;
     if (action_sign == 1) {
         acceleration = model_->baseMaxAcceleration();
@@ -205,7 +207,7 @@ double getOptionalValue(const std::optional<double>& opt, double max) {
 } // namespace
 
 double SimulatorEngine::getCurrentAcceleration() const {
-    const double velocity = rear_ax_state_[StateIndex::linear_velocity];
+    const double velocity = rear_ax_state_[StateIndex::kLinearVelocity];
     
     const auto [action_sign, target_velocity] 
         = actionSign(control_.velocity, velocity, params_.precision);
@@ -239,7 +241,7 @@ double SimulatorEngine::getCurrentAcceleration() const {
 }
 
 double SimulatorEngine::getCurrentSteeringVelocity() const {
-    const double steering = rear_ax_state_[StateIndex::steering];
+    const double steering = rear_ax_state_[StateIndex::kSteering];
     const double target_steering = getTargetSteering().middle.radians();
     const int velocity_sign = softSign(target_steering - steering, params_.precision);
     double current_velocity = velocity_sign * model_->steeringVelocity();
@@ -261,17 +263,17 @@ double SimulatorEngine::getCurrentSteeringVelocity() const {
 SimulatorEngine::State SimulatorEngine::calculateStateDerivative(
     const SimulatorEngine::State &state, double acceleration, double steering_velocity) const {
     
-    const double yaw = state[StateIndex::yaw];
-    const double velocity = state[StateIndex::linear_velocity];
-    const double steering = state[StateIndex::steering];
+    const double yaw = state[StateIndex::kYaw];
+    const double velocity = state[StateIndex::kLinearVelocity];
+    const double steering = state[StateIndex::kSteering];
 
     SimulatorEngine::State deriv;
     deriv.setZero();
-    deriv[StateIndex::x] = cos(yaw) * velocity;
-    deriv[StateIndex::y] = sin(yaw) * velocity;
-    deriv[StateIndex::yaw] = tan(steering) * velocity * cache_.inverse_wheelbase_length;
-    deriv[StateIndex::linear_velocity] = acceleration;
-    deriv[StateIndex::steering] = steering_velocity;
+    deriv[StateIndex::kX] = cos(yaw) * velocity;
+    deriv[StateIndex::kY] = sin(yaw) * velocity;
+    deriv[StateIndex::kYaw] = tan(steering) * velocity * cache_.inverse_wheelbase_length;
+    deriv[StateIndex::kLinearVelocity] = acceleration;
+    deriv[StateIndex::kSteering] = steering_velocity;
 
     return deriv;
 }
