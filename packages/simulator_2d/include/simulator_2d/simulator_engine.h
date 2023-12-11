@@ -26,11 +26,11 @@ class SimulatorEngine {
 
   private:
     enum StateIndex { 
-        x = 0, 
-        y = 1, 
-        yaw = 2, 
-        steering = 3, 
-        linear_velocity = 4
+        kX = 0, 
+        kY = 1, 
+        kYaw = 2, 
+        kSteering = 3, 
+        kLinearVelocity = 4
     };
 
     using State = Eigen::Matrix<double, 5, 1>;

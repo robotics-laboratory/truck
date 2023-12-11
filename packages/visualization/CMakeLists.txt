@@ -7,6 +7,7 @@ find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
@@ -21,7 +22,8 @@ ament_target_dependencies(
     rclcpp model
     nav_msgs
     truck_msgs
-    visualization_msgs)
+    visualization_msgs
+    tf2_geometry_msgs)
 
 install(
     TARGETS visualization_node

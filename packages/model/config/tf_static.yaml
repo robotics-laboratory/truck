@@ -44,3 +44,30 @@
   child_frame_id: "d455::camera_imu_optical_frame"
   translation: {x: 0.0, y: 0.0, z: 0.0}
   rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+# truck parts
+
+- frame_id: "base"
+  child_frame_id: "body"
+  translation: {x: 0.0, y: 0.0, z: 0.0}
+  rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+- frame_id: "base"
+  child_frame_id: "front_left_wheel"
+  translation: {x: -0.2025, y: -0.11168, z: 0.01329}
+  rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+- frame_id: "base"
+  child_frame_id: "front_right_wheel"
+  translation: {x: 0.2025, y: -0.11168, z: 0.01329}
+  rotation: {x: 0.0, y: 0.0, z: 1.0, w: 0.0}
+
+- frame_id: "base"
+  child_frame_id: "rear_left_wheel"
+  translation: {x: 0.2025, y: -0.11168, z: 0.01329}
+  rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+- frame_id: "base"
+  child_frame_id: "rear_right_wheel"
+  translation: {x: -0.2025, y: -0.11168, z: 0.01329}
+  rotation: {x: 0.0, y: 0.0, z: 1.0, w: 0.0}
