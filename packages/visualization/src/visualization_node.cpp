@@ -9,7 +9,9 @@
 #include "geom/segment.h"
 
 #include <boost/assert.hpp>
+#include <tf2_ros/qos.hpp>
 
+#include <array>
 #include <functional>
 #include <utility>
 
@@ -22,17 +24,22 @@ using namespace std::chrono_literals;
 using namespace geom::literals;
 
 VisualizationNode::VisualizationNode() : Node("visualization") {
+    initializePtrFields();
+    initializeParams();
+    initializeTopicHandlers();
+}
+
+void VisualizationNode::initializePtrFields() {
     model_ = model::makeUniquePtr(
         this->get_logger(),
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
-
+  
     map_ = std::make_unique<map::Map>(
         map::Map::fromGeoJson(Node::declare_parameter<std::string>("map_config")));
+}
 
-    const auto qos = static_cast<rmw_qos_reliability_policy_t>(
-        this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
-
-    params_ = Parameters{
+void VisualizationNode::initializeParams() {
+    params_ = Parameters {
         .ttl = rclcpp::Duration::from_seconds(this->declare_parameter("ttl", 1.0)),
 
         .ego_z_lev = this->declare_parameter("ego.z_lev", 0.0),
@@ -53,8 +60,16 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         .trajectory_z_lev = this->declare_parameter("trajectory.z_lev", 0.0),
         .trajectory_width = this->declare_parameter("trajector.width", 0.12),
 
+        .mesh_body = this->declare_parameter("mesh.body", ""),
+        .mesh_wheel = this->declare_parameter("mesh.wheel", ""),
+      
         .map_z_lev = this->declare_parameter("map.z_lev", 0.0)
     };
+}
+
+void VisualizationNode::initializeTopicHandlers() {
+    const auto qos = static_cast<rmw_qos_reliability_policy_t>(
+        this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
     slot_.mode = Node::create_subscription<truck_msgs::msg::ControlMode>(
         "/control/mode",
@@ -71,6 +86,11 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleWaypoints, this, _1));
 
+    slot_.telemetry = Node::create_subscription<truck_msgs::msg::HardwareTelemetry>(
+        "/hardware/telemetry",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleTelemetry, this, _1));
+
     slot_.odom = Node::create_subscription<nav_msgs::msg::Odometry>(
         "/ekf/odometry/filtered",
         rclcpp::QoS(1).reliability(qos),
@@ -81,7 +101,17 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleTrajectory, this, _1));
 
-    signal_.ego = Node::create_publisher<visualization_msgs::msg::Marker>(
+    using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
+    TfCallback tf_call = std::bind(&VisualizationNode::handleTf, this, _1, false);
+    TfCallback static_tf_callback = std::bind(&VisualizationNode::handleTf, this, _1, true);
+
+    slot_.tf = this->create_subscription<tf2_msgs::msg::TFMessage>(
+        "/tf", tf2_ros::DynamicListenerQoS(100), tf_call);
+
+    slot_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
+        "/tf_static", tf2_ros::StaticListenerQoS(100), static_tf_callback);
+
+    signal_.ego = Node::create_publisher<visualization_msgs::msg::MarkerArray>(
         "/visualization/ego", rclcpp::QoS(1).reliability(qos));
 
     signal_.ego_track = Node::create_publisher<visualization_msgs::msg::Marker>(
@@ -104,6 +134,49 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         rclcpp::QoS(1).reliability(qos));
 
     timer_ = Node::create_wall_timer(1s, std::bind(&VisualizationNode::publishMap, this));
+}
+
+namespace {
+
+tf2::Transform getLatestTranform(std::unique_ptr<tf2_ros::Buffer> &tf_buffer,
+    const std::string& source, const std::string& target) {
+    try {
+        const auto tf = tf_buffer->lookupTransform(target, source, rclcpp::Time(0)).transform;
+        tf2::Transform transform;
+        tf2::fromMsg(tf, transform);
+        return transform;
+    } catch (const tf2::TransformException& ex) {
+        return tf2::Transform::getIdentity();
+    }
+}
+
+} // namespace
+
+void VisualizationNode::initializeCacheBodyBaseTf(std::unique_ptr<tf2_ros::Buffer> &tf_buffer) {
+    cache_.body_base_tf = getLatestTranform(tf_buffer, "base", "body");
+}
+
+void VisualizationNode::initializeCacheWheelBaseTfs(std::unique_ptr<tf2_ros::Buffer> &tf_buffer) {
+    for (auto wheel : kAllWheels) {
+        cache_.wheel_base_tfs[wheel] 
+            = getLatestTranform(tf_buffer, "base", kWheelFrames[wheel]);
+    }
+}
+
+void VisualizationNode::handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
+    auto tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    tf_buffer->setUsingDedicatedThread(true);
+
+    for (const auto& transform : msg->transforms) {
+        tf_buffer->setTransform(transform, "", is_static);
+    }
+
+    initializeCacheBodyBaseTf(tf_buffer);
+    initializeCacheWheelBaseTfs(tf_buffer);
+}
+
+void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg) {
+    state_.telemetry = msg;
 }
 
 void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom) {
@@ -183,25 +256,72 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
     publishEgo();
 }
 
-void VisualizationNode::publishEgo() const {
-    if (!state_.odom || !state_.mode) {
-        return;
-    }
+namespace {
+
+visualization_msgs::msg::Marker makeMeshMarker(int id, const std_msgs::msg::Header &header,
+    const std::string mesh, const std_msgs::msg::ColorRGBA &color) {
+
     visualization_msgs::msg::Marker msg;
-    msg.header = state_.odom->header;
-    msg.type = visualization_msgs::msg::Marker::CUBE;
+    msg.id = id;
+    msg.header = header;
     msg.action = visualization_msgs::msg::Marker::ADD;
     msg.frame_locked = true;
     // always keep last ego marker
 
-    msg.scale.x = model_->shape().length;
-    msg.scale.y = model_->shape().width;
-    msg.scale.z = params_.ego_height;
-    msg.pose = state_.odom->pose.pose;
-    msg.pose.position.z = params_.ego_z_lev;
-    msg.color = modeToColor(state_.mode);
+    msg.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
+    msg.mesh_resource = mesh;
+    msg.scale.x = 1;
+    msg.scale.y = 1;
+    msg.scale.z = 1;
 
-    signal_.ego->publish(msg);
+    msg.color = color;
+
+    return msg;
+}
+
+} // namespace
+
+void VisualizationNode::publishEgo() const {
+    if (!state_.odom || !state_.mode || !state_.telemetry) {
+        return;
+    }
+
+    tf2::Transform base_to_odom;
+    tf2::fromMsg(state_.odom->pose.pose, base_to_odom);
+
+    auto color = modeToColor(state_.mode);
+    auto body_msg = makeMeshMarker(0, state_.odom->header, params_.mesh_body, color);
+
+    const auto body_tf = base_to_odom * cache_.body_base_tf;
+    tf2::toMsg(body_tf, body_msg.pose);
+    
+    visualization_msgs::msg::MarkerArray msg_array;
+    msg_array.markers.push_back(body_msg);
+
+    for (auto wheel : kAllWheels) {
+        const double z_angle = [&]() {
+            switch (wheel) {
+                case WheelIndex::kFrontLeft:
+                    return state_.telemetry->current_left_steering;
+                case WheelIndex::kFrontRight:
+                    return state_.telemetry->current_right_steering;
+                default:
+                    return 0.0;
+            }
+        }();
+
+        auto rotation = tf2::Quaternion::getIdentity();
+        rotation.setRPY(0, 0, z_angle);
+        const auto wheel_tf = base_to_odom 
+            * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
+
+        auto wheel_msg = makeMeshMarker(wheel + 1, state_.odom->header, params_.mesh_wheel, color);
+        tf2::toMsg(wheel_tf, wheel_msg.pose);
+
+        msg_array.markers.push_back(wheel_msg);
+    }
+    
+    signal_.ego->publish(msg_array);
 }
 
 void VisualizationNode::publishEgoTrack() const {
