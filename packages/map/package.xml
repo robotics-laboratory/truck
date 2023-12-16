@@ -3,9 +3,9 @@
 <package format="3">
   <name>map</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="apmilko@outlook.com">root</maintainer>
-  <license>TODO: License declaration</license>
+  <description>map</description>
+  <maintainer email="apmilko@outlook.com">apmilko</maintainer>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

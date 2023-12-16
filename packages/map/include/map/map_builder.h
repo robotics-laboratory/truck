@@ -1,20 +1,19 @@
 #pragma once
 
-#include <geom/complex_polygon.h>
+#include "geom/complex_polygon.h"
 
 namespace truck::map {
 
 class Map {
   public:
-    Map(const std::string& path);
+    Map(const geom::ComplexPolygons& polygons);
 
-    const geom::ComplexPolygon& getComplexPolygon() const;
+    static Map fromGeoJson(const std::string& path);
+
+    const geom::ComplexPolygons& polygons() const;
 
   private:
-    void parseGeoJSON();
-
-    geom::ComplexPolygon map_;
-    std::string path_;
+    geom::ComplexPolygons polygons_;
 };
 
 }  // namespace truck::map

@@ -27,7 +27,7 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
 
     map_ = std::make_unique<map::Map>(
-        Node::declare_parameter<std::string>("map_config"));
+        map::Map::fromGeoJson(Node::declare_parameter<std::string>("map_config")));
 
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
@@ -53,8 +53,7 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         .trajectory_z_lev = this->declare_parameter("trajectory.z_lev", 0.0),
         .trajectory_width = this->declare_parameter("trajector.width", 0.12),
 
-        .map_z_lev_outer_poly = this->declare_parameter("map.z_lev.outer_poly", 0.0),
-        .map_z_lev_inner_poly = this->declare_parameter("map.z_lev.inner_poly", 0.005),
+        .map_z_lev = this->declare_parameter("map.z_lev", 0.0)
     };
 
     slot_.mode = Node::create_subscription<truck_msgs::msg::ControlMode>(
@@ -100,7 +99,7 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
         "/visualization/trajectory",
         rclcpp::QoS(1).reliability(qos));
 
-    signal_.map = Node::create_publisher<visualization_msgs::msg::MarkerArray>(
+    signal_.map = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/map",
         rclcpp::QoS(1).reliability(qos));
 
@@ -346,55 +345,26 @@ void VisualizationNode::handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedP
 }
 
 void VisualizationNode::publishMap() const {
-    int marker_id = 0;
-    visualization_msgs::msg::MarkerArray marker_array;
+    visualization_msgs::msg::Marker msg;
+    msg.header.stamp = now();
+    msg.header.frame_id = "odom_ekf";
+    msg.id = 0;
+    msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.color = color::gray(1.0);
+    msg.pose.position.z = params_.map_z_lev;
 
-    // draw outer polygon
-    marker_array.markers.push_back(
-        polygonToMarker(
-            map_->getComplexPolygon().outer_poly,
-            marker_id,
-            color::gray(0.2),
-            params_.map_z_lev_outer_poly
-        )
-    );
-    marker_id++;
+    const auto& polygons = map_->polygons();
+    VERIFY(polygons.size() == 1);
+    const auto& polygon = polygons[0];
 
-    // draw inner polygons
-    for (const geom::Polygon& inner_poly : map_->getComplexPolygon().inner_polys) {
-        marker_array.markers.push_back(
-            polygonToMarker(
-                    inner_poly,
-                    marker_id,
-                    color::red(0.8),
-                    params_.map_z_lev_inner_poly
-                )
-        );
-        marker_id++;
+    for (const geom::Triangle& triangle : polygon.triangles()) {
+        msg.points.push_back(geom::msg::toPoint(triangle.p1));
+        msg.points.push_back(geom::msg::toPoint(triangle.p2));
+        msg.points.push_back(geom::msg::toPoint(triangle.p3));
     }
 
-    signal_.map->publish(marker_array);
-}
-
-visualization_msgs::msg::Marker VisualizationNode::polygonToMarker(
-    const geom::Polygon& poly, int marker_id, std_msgs::msg::ColorRGBA color, double z_lev) const {
-    visualization_msgs::msg::Marker marker;
-    marker.header.stamp = now();
-    marker.header.frame_id = "odom_ekf";
-    marker.id = marker_id;
-    marker.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
-    marker.action = visualization_msgs::msg::Marker::ADD;
-    marker.lifetime = rclcpp::Duration::from_seconds(0);
-    marker.color = color;
-    marker.pose.position.z = z_lev;
-
-    for (size_t i = 1; i < poly.vertices.size() - 1; i++) {
-        marker.points.push_back(geom::msg::toPoint(poly.vertices[0]));
-        marker.points.push_back(geom::msg::toPoint(poly.vertices[i]));
-        marker.points.push_back(geom::msg::toPoint(poly.vertices[i + 1]));
-    }
-
-    return marker;
+    signal_.map->publish(msg);
 }
 
 }  // namespace truck::visualization
