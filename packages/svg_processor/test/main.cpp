@@ -121,14 +121,14 @@ TEST(ElementsSerializers, serialization) {
     EXPECT_EQ(circle_r, std::nullopt);
     elements::SerializedElement serialized_circle = elements::serializers::Serializer()(circle);
     EXPECT_EQ(
-        (serialized_circle == "<circle cx=\"10.1\" cy=\"20.2\"\\>") ||
-            (serialized_circle == "<circle cy=\"20.2\" cx=\"10.1\"\\>"),
+        (serialized_circle == "<circle cx=\"10.1\" cy=\"20.2\"/>") ||
+            (serialized_circle == "<circle cy=\"20.2\" cx=\"10.1\"/>"),
         true);
     circle.SetAttribute("cx", -1.1);
     serialized_circle = elements::serializers::Serializer()(circle);
     EXPECT_EQ(
-        (serialized_circle == "<circle cx=\"-1.1\" cy=\"20.2\"\\>") ||
-            (serialized_circle == "<circle cy=\"20.2\" cx=\"-1.1\"\\>"),
+        (serialized_circle == "<circle cx=\"-1.1\" cy=\"20.2\"/>") ||
+            (serialized_circle == "<circle cy=\"20.2\" cx=\"-1.1\"/>"),
         true);
     elements::Element polyline("pl");
     polyline.SetName("polyline")
@@ -141,12 +141,12 @@ TEST(ElementsSerializers, serialization) {
     EXPECT_DOUBLE_EQ(polyline_points->GetObject()[1].x, expected_points[1].x);
     EXPECT_DOUBLE_EQ(polyline_points->GetObject()[1].y, expected_points[1].y);
     elements::SerializedElement serialized_polyline = elements::serializers::Serializer()(polyline);
-    EXPECT_EQ(serialized_polyline, "<polyline points=\"1,2 3,4\"\\>");
+    EXPECT_EQ(serialized_polyline, "<polyline points=\"1,2 3,4\"/>");
 }
 
 TEST(ElementsDeserializers, deserialization) {
     auto circle = elements::deserializers::Deserializer()(
-        "<  circle    cx =  \" 10.1 \"   cy  = \"20.2 \"  \\>");
+        "<  circle    cx =  \" 10.1 \"   cy  = \"20.2 \"  />");
     EXPECT_EQ(circle.GetName(), "circle");
     EXPECT_EQ(circle.GetAttribute<attributes::IntAttribute>("cx")->GetTag(), "cx");
     EXPECT_DOUBLE_EQ(circle.GetAttribute<attributes::DoubleAttribute>("cx")->GetObject(), 10.1);
@@ -154,7 +154,7 @@ TEST(ElementsDeserializers, deserialization) {
     EXPECT_EQ(circle.GetAttribute<attributes::IntAttribute>("cy")->GetObject(), 20);
     EXPECT_EQ(circle.GetAttribute<attributes::PointsAttriubte>("r"), std::nullopt);
     auto polyline = elements::deserializers::Deserializer()(
-        "<polyline points=\"1,2 3,4\" id=\"0\" class=\"class1 class2\"\\>");
+        "<polyline points=\"1,2 3,4\" id=\"0\" class=\"class1 class2\"/>");
     EXPECT_EQ(polyline.GetName(), "polyline");
     EXPECT_EQ(polyline.GetAttribute<attributes::PointsAttriubte>("points")->GetTag(), "points");
     auto polyline_points = polyline.GetAttribute<attributes::PointsAttriubte>("points");
@@ -171,7 +171,7 @@ TEST(ElementsDeserializers, deserialization) {
 }
 
 TEST(SVG, Load) {
-    svg::SVG image("/root/truck/packages/svg_processor/data/test_in.svg");
+    svg::SVG image("/truck/packages/svg_processor/data/test_in.svg");
 
     EXPECT_EQ(image.GetName(), "svg");
     EXPECT_EQ(**image.GetAttribute<attributes::IntAttribute>("width"), 512);
@@ -221,7 +221,7 @@ TEST(SVG, Load) {
 }
 
 TEST(SVG, Save) {
-    svg::SVG image("/root/truck/packages/svg_processor/data/test_in.svg");
+    svg::SVG image("/truck/packages/svg_processor/data/test_in.svg");
 
     elements::Element line("line");
     line.SetAttribute(attributes::IntAttribute("x1", 10))
@@ -262,7 +262,7 @@ TEST(SVG, Save) {
     }
     EXPECT_EQ(i, 4);
 
-    image.Save("/root/truck/packages/svg_processor/data/test_out.svg");
+    image.Save("/truck/packages/svg_processor/data/test_out.svg");
 }
 
 int main(int argc, char* argv[]) {

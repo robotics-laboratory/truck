@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" height="512" width="512" version="1.1">
+	<circle id="1" class="figures shapes round" color="red" cy="22.22" cx="11.11" />
+	<rect id="2" class="figures" height="12" width="11" y="179" x="13.13" />
+	<line class="figures" id="3" y2="20" x2="20" y1="10" x1="10" />
+	<polyline class="figures" points="1,2 3,4" />
+</svg>

@@ -41,7 +41,7 @@ elements::SerializedElement Serializer::operator()(const Element& element) const
     for (const auto& [attribute_tag, serialized_attribute] : element.attributes_) {
         result += " " + serialized_attribute;
     }
-    result += "\\>";
+    result += "/>";
     return result;
 }
 
