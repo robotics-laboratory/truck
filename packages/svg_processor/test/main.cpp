@@ -171,7 +171,7 @@ TEST(ElementsDeserializers, deserialization) {
 }
 
 TEST(SVG, Load) {
-    svg::SVG image("/truck/packages/svg_processor/test/test_in.svg");
+    svg::SVG image("/root/truck/packages/svg_processor/data/test_in.svg");
 
     EXPECT_EQ(image.GetName(), "svg");
     EXPECT_EQ(**image.GetAttribute<attributes::IntAttribute>("width"), 512);
@@ -221,7 +221,7 @@ TEST(SVG, Load) {
 }
 
 TEST(SVG, Save) {
-    svg::SVG image("/truck/packages/svg_processor/data/test_in.svg");
+    svg::SVG image("/root/truck/packages/svg_processor/data/test_in.svg");
 
     elements::Element line("line");
     line.SetAttribute(attributes::IntAttribute("x1", 10))
@@ -262,5 +262,10 @@ TEST(SVG, Save) {
     }
     EXPECT_EQ(i, 4);
 
-    image.Save("/truck/packages/svg_processor/data/test_out.svg");
+    image.Save("/root/truck/packages/svg_processor/data/test_out.svg");
+}
+
+int main(int argc, char* argv[]) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

@@ -76,7 +76,6 @@ SVG& SVG::Load(std::string_view filename) {
 
     std::ifstream file(filename.data(), std::ios::in);
     if (file.is_open()) {
-        std::cerr << "open" << std::endl;
         std::string line;
         getline(file, line);
         svg_ = elements::deserializers::Deserializer()(line);
@@ -98,7 +97,6 @@ void SVG::Save(std::string_view filename) {
     std::ofstream file(filename.data(), std::ios::out | std::ios::trunc | std::ios::app);
 
     if (file.is_open()) {
-        std::cerr << "open" << std::endl;
         std::string header = "<" + svg_.GetName();
         for (const auto& [attribute_tag, serialized_attribute] : svg_.GetAttributesStorage()) {
             header += " " + serialized_attribute;
@@ -112,6 +110,8 @@ void SVG::Save(std::string_view filename) {
 
         std::string footer = "<\\" + svg_.GetName() + ">\n";
         file << footer;
+
+        file << std::flush;
 
         file.close();
     }
