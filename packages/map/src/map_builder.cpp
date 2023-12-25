@@ -1,5 +1,7 @@
 #include "map/map_builder.h"
 
+#include "common/exception.h"
+
 #include <nlohmann/json.hpp>
 
 #include <fstream>
@@ -17,25 +19,26 @@ Map Map::fromGeoJson(const std::string& path) {
             .get<std::vector<std::vector<std::pair<double, double>>>>();
 
         int polys_cnt = 0;
-        geom::Polygon outer_poly;
-        geom::Polygons inner_polys;
+        geom::Polygon outer;
+        geom::Polygons inners;
 
-        for (const auto& points_list : polys_list) {
+        for (size_t i = 0; i < polys_list.size(); i++) {
             std::vector<geom::Vec2> points;
-            for (const auto& point : points_list) {
+            for (const auto& point : polys_list[i]) {
+                VERIFY(point.first >= 0 && point.second >= 0);
                 points.push_back(geom::Vec2(point.first, point.second));
             }
 
             if (polys_cnt == 0) {
-                outer_poly = geom::Polygon(points);
+                outer = geom::Polygon(points);
             } else {
-                inner_polys.push_back(geom::Polygon(points));
+                inners.push_back(geom::Polygon(points));
             }
 
             polys_cnt++;
         }
 
-        polygons.push_back(geom::ComplexPolygon(outer_poly, inner_polys));
+        polygons.push_back(geom::ComplexPolygon(outer, inners));
     }
 
     return Map(polygons);

@@ -5,6 +5,7 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 find_package(ament_cmake REQUIRED)
 find_package(geom REQUIRED)
+find_package(common REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 add_library(
@@ -15,6 +16,7 @@ add_library(
 ament_target_dependencies(
     ${PROJECT_NAME}
     geom
+    common
     nlohmann_json
 )
 
@@ -28,6 +30,7 @@ ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(
     geom
+    common
     nlohmann_json
 )
 
@@ -42,6 +45,11 @@ install(
 install(
     DIRECTORY include/
     DESTINATION include/${PROJECT_NAME}
+)
+
+install(
+    DIRECTORY data
+    DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()
