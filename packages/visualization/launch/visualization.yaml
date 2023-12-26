@@ -3,6 +3,9 @@ launch:
       name: "model_config"
       default: "$(find-pkg-share model)/config/model.yaml"
   - arg:
+      name: "map_config"
+      default: "/truck/packages/map/data/map_6.geojson"
+  - arg:
       name: "simulation"
       default: "false"
   - arg:
@@ -17,6 +20,7 @@ launch:
         - { name: "ttl", value: 1.0 }
         - { name: "use_sim_time", value: "$(var simulation)" }
         - { name: "model_config", value: "$(var model_config)" }
+        - { name: "map_config", value: "$(var map_config)" }
 
         - name: "ego"
           param:
@@ -45,6 +49,10 @@ launch:
           param:
             - { name: "z_lev", value: 0.0 }
             - { name: "width", value: 0.1 }
+
+        - name: "map"
+          param:
+            - { name: "z_lev", value: 0.0 }
 
         - name: "mesh"
           param:

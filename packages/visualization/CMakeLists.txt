@@ -6,6 +6,7 @@ find_package(model REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(truck_msgs REQUIRED)
+find_package(map REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
@@ -22,6 +23,7 @@ ament_target_dependencies(
     rclcpp model
     nav_msgs
     truck_msgs
+    map
     visualization_msgs
     tf2_geometry_msgs)
 

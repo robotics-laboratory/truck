@@ -1,6 +1,7 @@
 #pragma once
 
 #include "model/model.h"
+#include "map/map_builder.h"
 #include "truck_msgs/msg/control.hpp"
 #include "truck_msgs/msg/control_mode.hpp"
 #include "truck_msgs/msg/trajectory.hpp"
@@ -47,6 +48,7 @@ class VisualizationNode : public rclcpp::Node {
     void publishEgoTrack() const;
     void publishArc() const;
     void publishWaypoints() const;
+    void publishMap() const;
 
     std_msgs::msg::ColorRGBA velocityToColor(double speed, double alpha=1.0) const;
 
@@ -73,6 +75,8 @@ class VisualizationNode : public rclcpp::Node {
 
         std::string mesh_body = "";
         std::string mesh_wheel = "";
+      
+        double map_z_lev = 0.0;
     } params_{};
 
     enum WheelIndex { 
@@ -102,6 +106,7 @@ class VisualizationNode : public rclcpp::Node {
     } cache_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
+    std::unique_ptr<map::Map> map_ = nullptr;
 
     struct State {
         size_t odom_seq_id = 0;
@@ -131,7 +136,10 @@ class VisualizationNode : public rclcpp::Node {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego_track = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr waypoints = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr map = nullptr;
     } signal_;
+
+    rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 };
 
 }  // namespace truck::visualization

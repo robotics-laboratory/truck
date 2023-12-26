@@ -1,21 +1,17 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>visualization</name>
+  <name>map</name>
   <version>0.0.0</version>
-  <description>visualization</description>
-  <maintainer email="simagin.mail@yandex.ru">Simagin Denis</maintainer>
+  <description>map</description>
+  <maintainer email="apmilko@outlook.com">apmilko</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <exec_depend>ros2launch</exec_depend>
 
-  <depend>rclcpp</depend>
-  <depend>map</depend>
-  <depend>model</depend>
-  <depend>nav_msgs</depend>
-  <depend>truck_msgs</depend>
-  <depend>visualization_msgs</depend>
+  <depend>geom</depend>
+  <depend>common</depend>
+  <depend>nlohmann_json</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

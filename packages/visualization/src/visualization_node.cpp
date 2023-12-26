@@ -19,6 +19,8 @@ namespace truck::visualization {
 
 using namespace std::placeholders;
 
+using namespace std::chrono_literals;
+
 using namespace geom::literals;
 
 VisualizationNode::VisualizationNode() : Node("visualization") {
@@ -31,6 +33,9 @@ void VisualizationNode::initializePtrFields() {
     model_ = model::makeUniquePtr(
         this->get_logger(),
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
+  
+    map_ = std::make_unique<map::Map>(
+        map::Map::fromGeoJson(Node::declare_parameter<std::string>("map_config")));
 }
 
 void VisualizationNode::initializeParams() {
@@ -57,6 +62,8 @@ void VisualizationNode::initializeParams() {
 
         .mesh_body = this->declare_parameter("mesh.body", ""),
         .mesh_wheel = this->declare_parameter("mesh.wheel", ""),
+      
+        .map_z_lev = this->declare_parameter("map.z_lev", 0.0)
     };
 }
 
@@ -121,6 +128,12 @@ void VisualizationNode::initializeTopicHandlers() {
     signal_.trajectory = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/trajectory",
         rclcpp::QoS(1).reliability(qos));
+
+    signal_.map = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/visualization/map",
+        rclcpp::QoS(1).reliability(qos));
+
+    timer_ = Node::create_wall_timer(1s, std::bind(&VisualizationNode::publishMap, this));
 }
 
 namespace {
@@ -449,6 +462,28 @@ void VisualizationNode::publishWaypoints() const {
 void VisualizationNode::handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg) {
     state_.waypoints = std::move(msg);
     publishWaypoints();
+}
+
+void VisualizationNode::publishMap() const {
+    visualization_msgs::msg::Marker msg;
+    msg.header.stamp = now();
+    msg.header.frame_id = "odom_ekf";
+    msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.color = color::gray(0.6);
+    msg.pose.position.z = params_.map_z_lev;
+
+    const auto& polygons = map_->polygons();
+    VERIFY(polygons.size() == 1);
+    const auto& polygon = polygons[0];
+
+    for (const geom::Triangle& triangle : polygon.triangles()) {
+        msg.points.push_back(geom::msg::toPoint(triangle.p1));
+        msg.points.push_back(geom::msg::toPoint(triangle.p2));
+        msg.points.push_back(geom::msg::toPoint(triangle.p3));
+    }
+
+    signal_.map->publish(msg);
 }
 
 }  // namespace truck::visualization
