@@ -26,7 +26,7 @@ std::vector<Triangle> Polygon::triangles() const noexcept {
     std::vector<Triangle> triangles;
 
     CGAL_Polygon cgal_polygon;
-    for (const Vec2& point : points) {
+    for (const Vec2& point : *this) {
         cgal_polygon.push_back(CGAL_Point(point.x, point.y));
     }
     

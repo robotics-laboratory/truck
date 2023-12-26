@@ -26,7 +26,7 @@ std::vector<Triangle> ComplexPolygon::triangles() const noexcept {
     std::vector<Triangle> triangles;
 
     CGAL_Polygon cgal_polygon_outer;
-    for (const Vec2& point : outer.points) {
+    for (const Vec2& point : outer) {
         cgal_polygon_outer.push_back(CGAL_Point(point.x, point.y));
     }
     
@@ -38,7 +38,7 @@ std::vector<Triangle> ComplexPolygon::triangles() const noexcept {
 
     for (const Polygon& inner : inners) {
         CGAL_Polygon cgal_polygon_inner;
-        for (const Vec2& point : inner.points) {
+        for (const Vec2& point : inner) {
             cgal_polygon_inner.push_back(CGAL_Point(point.x, point.y));
         }
 
