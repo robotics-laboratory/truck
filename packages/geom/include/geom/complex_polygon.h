@@ -9,15 +9,15 @@ namespace truck::geom {
 struct ComplexPolygon {
     ComplexPolygon() = default;
 
-    ComplexPolygon(const Polygon& outer_poly) : outer_poly(outer_poly) {}
+    ComplexPolygon(Polygon outer) : outer(std::move(outer)) {}
 
-    ComplexPolygon(const Polygon& outer_poly, const Polygons& inner_polys)
-        : outer_poly(outer_poly), inner_polys(inner_polys) {}
+    ComplexPolygon(Polygon outer, Polygons inners)
+        : outer(std::move(outer)), inners(std::move(inners)) {}
 
     std::vector<Triangle> triangles() const noexcept;
 
-    Polygon outer_poly;
-    Polygons inner_polys;
+    Polygon outer;
+    Polygons inners;
 };
 
 using ComplexPolygons = std::vector<ComplexPolygon>;

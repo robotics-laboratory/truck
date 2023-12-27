@@ -1,5 +1,7 @@
 #include "map/map_builder.h"
 
+#include "common/exception.h"
+
 #include <nlohmann/json.hpp>
 
 #include <fstream>
@@ -17,31 +19,32 @@ Map Map::fromGeoJson(const std::string& path) {
             .get<std::vector<std::vector<std::pair<double, double>>>>();
 
         int polys_cnt = 0;
-        geom::Polygon outer_poly;
-        geom::Polygons inner_polys;
+        geom::Polygon outer;
+        geom::Polygons inners;
 
-        for (const auto& points_list : polys_list) {
-            std::vector<geom::Vec2> points;
-            for (const auto& point : points_list) {
-                points.push_back(geom::Vec2(point.first, point.second));
+        for (size_t i = 0; i < polys_list.size(); i++) {
+            geom::Polygon simple_poly;
+            for (const auto& point : polys_list[i]) {
+                VERIFY(point.first >= 0 && point.second >= 0);
+                simple_poly.push_back(geom::Vec2(point.first, point.second));
             }
 
             if (polys_cnt == 0) {
-                outer_poly = geom::Polygon(points);
+                outer = std::move(simple_poly);
             } else {
-                inner_polys.push_back(geom::Polygon(points));
+                inners.push_back(std::move(simple_poly));
             }
 
             polys_cnt++;
         }
 
-        polygons.push_back(geom::ComplexPolygon(outer_poly, inner_polys));
+        polygons.push_back(geom::ComplexPolygon(std::move(outer), std::move(inners)));
     }
 
-    return Map(polygons);
+    return Map(std::move(polygons));
 }
 
-Map::Map(const geom::ComplexPolygons& polygons) : polygons_(polygons) {}
+Map::Map(geom::ComplexPolygons polygons) : polygons_(std::move(polygons)) {}
 
 const geom::ComplexPolygons& Map::polygons() const { return polygons_; }
 

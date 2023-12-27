@@ -6,7 +6,7 @@ namespace truck::map {
 
 class Map {
   public:
-    Map(const geom::ComplexPolygons& polygons);
+    Map(geom::ComplexPolygons polygons);
 
     static Map fromGeoJson(const std::string& path);
 

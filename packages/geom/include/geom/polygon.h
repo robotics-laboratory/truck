@@ -7,14 +7,10 @@
 
 namespace truck::geom {
 
-struct Polygon {
-    Polygon() = default;
-
-    Polygon(const std::vector<Vec2>& points) : points(points) {}
+struct Polygon : public std::vector<Vec2> {
+    using vector::vector;
 
     std::vector<Triangle> triangles() const noexcept;
-
-    std::vector<Vec2> points;
 };
 
 using Polygons = std::vector<Polygon>;
