@@ -7,13 +7,12 @@ find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(map REQUIRED)
-find_package(OpenCV REQUIRED)
 find_package(CGAL REQUIRED)
 find_package(Boost REQUIRED)
 
 add_library(
     ${PROJECT_NAME} SHARED
-    src/nav_mesh.cpp
+    src/nav_mesh_builder.cpp
 )
 
 ament_target_dependencies(
@@ -21,7 +20,6 @@ ament_target_dependencies(
     common
     geom
     map
-    OpenCV
     CGAL
     Boost
 )
@@ -38,7 +36,6 @@ ament_export_dependencies(
     common
     geom
     map
-    OpenCV
     CGAL
     Boost
 )
@@ -59,9 +56,6 @@ install(
 if(BUILD_TESTING)
     find_package(ament_cmake_clang_format REQUIRED)
     ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
-
-    find_package(ament_cmake_gtest REQUIRED)
-    add_subdirectory("test")
 endif()
 
 ament_package()

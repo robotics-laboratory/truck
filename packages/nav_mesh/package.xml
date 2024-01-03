@@ -12,7 +12,6 @@
   <depend>common</depend>
   <depend>geom</depend>
   <depend>map</depend>
-  <depend>OpenCV</depend>
   <depend>CGAL</depend>
   <depend>Boost</depend>
 
