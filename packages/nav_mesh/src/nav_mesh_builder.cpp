@@ -44,27 +44,27 @@ void extractSegmentsFromCGALPolygon(geom::Segments& segments, const CGAL::Polygo
 
 }  // namespace
 
-NavMeshBuilder::NavMeshBuilder(const NavMeshParams& params, const geom::ComplexPolygons& polygons) {
+NavMeshBuilder::NavMeshBuilder(const NavMeshParams& params) : params_(params) {}
+
+NavMeshBuild NavMeshBuilder::build(const geom::ComplexPolygons& polygons) const {
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
 
-    buildSkeleton(polygon);
-    buildLevelLines(polygon, params.offset);
-    buildMesh(params.dist);
+    NavMeshBuild nav_mesh_build;
 
-    if (params.filter.grid) {
-        gridFilter();
-    }
+    buildSkeleton(nav_mesh_build, polygon);
+    buildLevelLines(nav_mesh_build, polygon, params_.offset);
+    buildMesh(nav_mesh_build, params_.dist);
+    
+    return nav_mesh_build;
 }
 
-const NavMeshAttrs& NavMeshBuilder::attrs() const { return attrs_; }
-
-void NavMeshBuilder::buildSkeleton(const geom::ComplexPolygon& polygon) {
+void NavMeshBuilder::buildSkeleton(NavMeshBuild& build, const geom::ComplexPolygon& polygon) const {
     boost::shared_ptr<CGAL::Straight_skeleton_2<CGAL_K>> cgal_skeleton_ptr =
         CGAL::create_interior_straight_skeleton_2(toCGALPolygonWithHoles(polygon));
 
     for (const auto& cgal_edge_it : cgal_skeleton_ptr->halfedge_handles()) {
-        attrs_.skeleton.emplace_back(geom::Segment(
+        build.skeleton.emplace_back(geom::Segment(
             geom::Vec2(
                 cgal_edge_it->vertex()->point().x(),
                 cgal_edge_it->vertex()->point().y()),
@@ -74,7 +74,7 @@ void NavMeshBuilder::buildSkeleton(const geom::ComplexPolygon& polygon) {
     }
 }
 
-void NavMeshBuilder::buildLevelLines(const geom::ComplexPolygon& polygon, double offset) {
+void NavMeshBuilder::buildLevelLines(NavMeshBuild& build, const geom::ComplexPolygon& polygon, double offset) const {
     double cur_offset = offset;
 
     auto cgal_polys_with_holes = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(
@@ -82,10 +82,10 @@ void NavMeshBuilder::buildLevelLines(const geom::ComplexPolygon& polygon, double
 
     while (cgal_polys_with_holes.size() > 0) {
         for (const auto& cgal_poly_with_holes_ptr : cgal_polys_with_holes) {
-            extractSegmentsFromCGALPolygon(attrs_.level_lines, cgal_poly_with_holes_ptr->outer_boundary());
+            extractSegmentsFromCGALPolygon(build.level_lines, cgal_poly_with_holes_ptr->outer_boundary());
 
             for (const auto& cgal_poly_inner : cgal_poly_with_holes_ptr->holes()) {
-                extractSegmentsFromCGALPolygon(attrs_.level_lines, cgal_poly_inner);
+                extractSegmentsFromCGALPolygon(build.level_lines, cgal_poly_inner);
             }
         }
 
@@ -96,17 +96,21 @@ void NavMeshBuilder::buildLevelLines(const geom::ComplexPolygon& polygon, double
     }
 }
 
-void NavMeshBuilder::buildMesh(double dist) {
-    for (const geom::Segment& seg : attrs_.level_lines) {
+void NavMeshBuilder::buildMesh(NavMeshBuild& build, double dist) const {
+    for (const geom::Segment& seg : build.level_lines) {
         for (size_t i = 0; i < ceil<size_t>(seg.len() / dist); i++) {
-            attrs_.mesh.emplace_back(seg.pos(i * dist / seg.len()));
+            build.mesh.emplace_back(seg.pos(i * dist / seg.len()));
         }
+    }
+
+    if (params_.filter.grid) {
+        gridFilter();
     }
 }
 
-void NavMeshBuilder::gridFilter() {
+void NavMeshBuilder::gridFilter() const {
     /** @todo
-     * remove some points from 'attrs_.mesh'
+     * remove some points from 'build.mesh'
      */
 }
 

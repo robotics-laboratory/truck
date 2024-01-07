@@ -15,7 +15,7 @@ struct NavMeshParams {
     } filter;
 };
 
-struct NavMeshAttrs {
+struct NavMeshBuild {
     geom::Segments skeleton;
     geom::Segments level_lines;
     std::vector<geom::Vec2> mesh;
@@ -23,18 +23,18 @@ struct NavMeshAttrs {
 
 class NavMeshBuilder {
   public:
-    NavMeshBuilder(const NavMeshParams& params, const geom::ComplexPolygons& polygons);
+    NavMeshBuilder(const NavMeshParams& params);
 
-    const NavMeshAttrs& attrs() const;
+    NavMeshBuild build(const geom::ComplexPolygons& polygons) const;
 
   private:
-    void buildSkeleton(const geom::ComplexPolygon& polygon);
-    void buildLevelLines(const geom::ComplexPolygon& polygon, double offset);
-    void buildMesh(double dist);
+    void buildSkeleton(NavMeshBuild& build, const geom::ComplexPolygon& polygon) const;
+    void buildLevelLines(NavMeshBuild& build, const geom::ComplexPolygon& polygon, double offset) const;
+    void buildMesh(NavMeshBuild& build, double dist) const;
 
-    void gridFilter();
+    void gridFilter() const;
 
-    NavMeshAttrs attrs_;
+    NavMeshParams params_;
 };
 
 }  // namespace truck::nav_mesh
