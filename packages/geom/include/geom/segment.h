@@ -26,4 +26,6 @@ struct Segment {
 
 geom::Vec2 projection(const geom::Vec2& point, const geom::Segment& segment) noexcept;
 
+using Segments = std::vector<Segment>;
+
 }  // namespace truck::geom
