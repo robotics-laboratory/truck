@@ -23,6 +23,7 @@ add_library(
     src/line.cpp
     src/msg.cpp
     src/polygon.cpp
+    src/polyline.cpp
     src/pose.cpp
     src/segment.cpp
     src/transform.cpp

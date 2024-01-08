@@ -7,6 +7,7 @@
 #include "geom/distance.h"
 #include "geom/common.h"
 #include "geom/line.h"
+#include "geom/polyline.h"
 #include "geom/vector.h"
 
 #include <sstream>
@@ -314,6 +315,53 @@ TEST(Arc, try_build_arc) {
         ASSERT_GEOM_EQUAL(arc.radius, 1.0, eps);
         ASSERT_GEOM_EQUAL(arc.begin, {-1, 0}, eps);
         ASSERT_GEOM_EQUAL(arc.delta, -3 * PI_2, eps);
+    }
+}
+
+TEST(Polyline, uniform_iterator) {
+    constexpr double eps = 1e-7;
+    {
+        const Polyline polyline = {Vec2(0, 0), Vec2(0, 1), Vec2(3, 1), Vec2(3, 2)};
+        auto it = polyline.ubegin();
+        ASSERT_GEOM_EQUAL(*it, Vec2(0, 0), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(0, 1), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(1, 1), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(2, 1), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(3, 1), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(3, 2), eps);
+        ASSERT_TRUE(it == polyline.uend());
+        ++it;
+        ASSERT_TRUE(it == polyline.uend());
+        --it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(3, 1), eps);
+        --it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(2, 1), eps);
+        --it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(1, 1), eps);
+        --it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(0, 1), eps);
+        --it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(0, 0), eps);
+        ASSERT_TRUE(it == polyline.ubegin());
+    }
+    {
+        const Polyline polyline = {Vec2(0, 0), Vec2(1, 1)};
+        auto it = polyline.ubegin(0.5);
+        ASSERT_GEOM_EQUAL(*it, Vec2(0, 0), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(sqrt(0.125), sqrt(0.125)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(2 * sqrt(0.125), 2 * sqrt(0.125)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL(*it, Vec2(1, 1));
+        ASSERT_TRUE(it == polyline.uend(0.5));
+        --it.SetStepLength(1.0);
+        ASSERT_GEOM_EQUAL(*it, Vec2(1 - sqrt(2) / 2, 1 - sqrt(2) / 2), eps);
     }
 }
 
