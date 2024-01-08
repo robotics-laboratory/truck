@@ -44,7 +44,7 @@ __always_inline bool TryFitToGrid(
 __always_inline void DrivingByX(
     const geom::Vec2& rel_p1, const geom::Vec2& rel_p2, fastgrid::U8Grid& grid) noexcept {
     double k = (rel_p2.y - rel_p1.y) / (rel_p2.x - rel_p1.x);
-    double y = rel_p1.y;
+    double y = rel_p1.y / grid.resolution;
     for (int64_t x = grid.getIndex(rel_p1).x; x <= grid.getIndex(rel_p2).x; ++x, y += k) {
         grid.data[static_cast<int64_t>(y) * grid.size.width + x] = 1;
     }
@@ -53,7 +53,7 @@ __always_inline void DrivingByX(
 __always_inline void DrivingByY(
     const geom::Vec2& rel_p1, const geom::Vec2& rel_p2, fastgrid::U8Grid& grid) noexcept {
     double k = (rel_p2.x - rel_p1.x) / (rel_p2.y - rel_p1.y);
-    double x = rel_p1.x;
+    double x = rel_p1.x / grid.resolution;
     for (int64_t y = grid.toIndex(rel_p1).y; y <= grid.toIndex(rel_p2).y; ++y, x += k) {
         grid.data[y * grid.size.width + static_cast<int64_t>(x)] = 1;
     }
