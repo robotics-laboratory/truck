@@ -5,8 +5,11 @@
 #include "fastgrid/manhattan_distance.h"
 #include "fastgrid/distance_transform.h"
 #include "fastgrid/interpolation.h"
+#include "fastgrid/poly_to_grid.h"
 #include "geom/common.h"
 #include "geom/pose.h"
+#include "geom/polygon.h"
+#include "geom/complex_polygon.h"
 
 #include <cmath>
 #include <limits>
@@ -511,4 +514,89 @@ TEST(BilinearInterpolation, case_6) {
     EXPECT_NEAR(bilinear({-0.268328, 0.581378}), 0.4, eps);
     EXPECT_NEAR(bilinear({-0.0447214, 1.02859}), 0.8625, eps);
     EXPECT_NEAR(bilinear({-0.402492, 1.20748}), 1.195, eps);
+}
+
+TEST(PolyToGrid, case_1) {
+    Size size{.width = 3, .height = 3};
+    double resolution = 1.0;
+    Pose origin({0, 0}, AngleVec2::fromVector(1, 0));
+    auto holder = makeGrid<uint8_t>(size, resolution, origin);
+    auto& grid = *holder;
+
+    Polygon poly_1{Vec2(0, 0), Vec2(2, 2)};
+    PolyToGrid(poly_1, grid);
+
+    EXPECT_EQ(grid[0][0], 1);
+    EXPECT_EQ(grid[0][1], 0);
+    EXPECT_EQ(grid[0][2], 0);
+    EXPECT_EQ(grid[1][0], 0);
+    EXPECT_EQ(grid[1][1], 1);
+    EXPECT_EQ(grid[1][2], 0);
+    EXPECT_EQ(grid[2][0], 0);
+    EXPECT_EQ(grid[2][1], 0);
+    EXPECT_EQ(grid[2][2], 1);
+
+    grid.SetTo(0);
+
+    Polygon poly_2{Vec2(-1, -1), Vec2(3, 3)};
+    PolyToGrid(poly_2, grid);
+
+    EXPECT_EQ(grid[0][0], 1);
+    EXPECT_EQ(grid[0][1], 0);
+    EXPECT_EQ(grid[0][2], 0);
+    EXPECT_EQ(grid[1][0], 0);
+    EXPECT_EQ(grid[1][1], 1);
+    EXPECT_EQ(grid[1][2], 0);
+    EXPECT_EQ(grid[2][0], 0);
+    EXPECT_EQ(grid[2][1], 0);
+    EXPECT_EQ(grid[2][2], 1);
+
+    grid.SetTo(0);
+
+    Polygon poly_3{Vec2(1.3, 0.3), Vec2(2.7, 1.7)};
+    PolyToGrid(poly_3, grid);
+
+    EXPECT_EQ(grid[0][0], 0);
+    EXPECT_EQ(grid[0][1], 1);
+    EXPECT_EQ(grid[0][2], 0);
+    EXPECT_EQ(grid[1][0], 0);
+    EXPECT_EQ(grid[1][1], 0);
+    EXPECT_EQ(grid[1][2], 1);
+    EXPECT_EQ(grid[2][0], 0);
+    EXPECT_EQ(grid[2][1], 0);
+    EXPECT_EQ(grid[2][2], 0);
+
+    grid.SetTo(0);
+
+    Polygon poly_4{Vec2(0.1, 0.9), Vec2(2.9, 0.1), Vec2(2.1, 2.8), Vec2(0.2, 2.9)};
+    PolyToGrid(poly_4, grid);
+
+    EXPECT_EQ(grid[0][0], 1);
+    EXPECT_EQ(grid[0][1], 1);
+    EXPECT_EQ(grid[0][2], 1);
+    EXPECT_EQ(grid[1][0], 1);
+    EXPECT_EQ(grid[1][1], 0);
+    EXPECT_EQ(grid[1][2], 1);
+    EXPECT_EQ(grid[2][0], 1);
+    EXPECT_EQ(grid[2][1], 1);
+    EXPECT_EQ(grid[2][2], 1);
+
+    Size size_2{.width = 3, .height = 3};
+    double resolution_2 = 0.5;
+    Pose origin_2({0, 0}, AngleVec2::fromVector(0, 1));
+    auto holder_2 = makeGrid<uint8_t>(size_2, resolution_2, origin_2);
+    auto& grid_2 = *holder_2;
+
+    Polygon poly_5{Vec2(-3, 3), Vec2(0, 0)};
+    PolyToGrid(poly_5, grid_2);
+
+    EXPECT_EQ(grid_2[0][0], 1);
+    EXPECT_EQ(grid_2[0][1], 0);
+    EXPECT_EQ(grid_2[0][2], 0);
+    EXPECT_EQ(grid_2[1][0], 0);
+    EXPECT_EQ(grid_2[1][1], 1);
+    EXPECT_EQ(grid_2[1][2], 0);
+    EXPECT_EQ(grid_2[2][0], 0);
+    EXPECT_EQ(grid_2[2][1], 0);
+    EXPECT_EQ(grid_2[2][2], 1);
 }

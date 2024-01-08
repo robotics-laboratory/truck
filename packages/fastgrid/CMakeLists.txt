@@ -12,6 +12,7 @@ add_library(
     src/distance_transform.cpp
     src/grid.cpp
     src/manhattan_distance.cpp
+    src/poly_to_grid.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME} geom common)
@@ -42,8 +43,8 @@ if(BUILD_TESTING)
     find_package(ament_cmake_clang_format REQUIRED)
     ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
 
-    # add_subdirectory("test")
-    # add_subdirectory("benchmark")
+    add_subdirectory("test")
+    add_subdirectory("benchmark")
 endif()
 
 ament_package()

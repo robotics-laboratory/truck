@@ -84,7 +84,7 @@ struct Grid {
 
     std::optional<Index> tryGetIndex(const geom::Vec2& point) const noexcept {
         const auto index = toIndex(transform(point));
-        if (0 <= index.x || index.x < size.width || 0 <= index.y || index.y < size.height) {
+        if (0 <= index.x && index.x < size.width && 0 <= index.y && index.y < size.height) {
             return index;
         }
 
@@ -93,7 +93,7 @@ struct Grid {
 
     std::optional<int> tryGetPlainIndex(const geom::Vec2& point) const noexcept {
         const auto index = toIndex(transform(point));
-        if (0 <= index.x || index.x < size.width || 0 <= index.y || index.y < size.height) {
+        if (0 <= index.x && index.x < size.width && 0 <= index.y && index.y < size.height) {
             return index.y * size.width + index.x;
         }
 
