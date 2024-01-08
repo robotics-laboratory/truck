@@ -16,11 +16,11 @@ struct Polyline final : public std::vector<Vec2> {
 
     UniformIterator ubegin() const noexcept;
 
-    UniformIterator ubegin(const double step_length) const noexcept;
+    UniformIterator ubegin(double step_length) const noexcept;
 
     UniformIterator uend() const noexcept;
 
-    UniformIterator uend(const double step_length) const noexcept;
+    UniformIterator uend(double step_length) const noexcept;
 };
 
 class UniformIterator {
@@ -35,15 +35,14 @@ class UniformIterator {
 
     UniformIterator(const Container* polyline) noexcept;
 
-    UniformIterator(const Container* polyline, const double step_length) noexcept;
+    UniformIterator(const Container* polyline, double step_length) noexcept;
 
     UniformIterator(const Container* polyline, ContainerIterator current_iterator) noexcept;
 
     UniformIterator(
-        const Container* polyline, const double step_length,
-        ContainerIterator current_iterator) noexcept;
+        const Container* polyline, double step_length, ContainerIterator current_iterator) noexcept;
 
-    UniformIterator& SetStepLength(const double step_length) noexcept;
+    UniformIterator& SetStepLength(double step_length) noexcept;
 
     const Vec2& operator*() const noexcept;
 

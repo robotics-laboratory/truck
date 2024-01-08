@@ -4,13 +4,13 @@ namespace truck::geom {
 
 UniformIterator Polyline::ubegin() const noexcept { return UniformIterator(this); }
 
-UniformIterator Polyline::ubegin(const double step_length) const noexcept {
+UniformIterator Polyline::ubegin(double step_length) const noexcept {
     return UniformIterator(this, step_length);
 }
 
 UniformIterator Polyline::uend() const noexcept { return UniformIterator(this, this->end() - 1); }
 
-UniformIterator Polyline::uend(const double step_length) const noexcept {
+UniformIterator Polyline::uend(double step_length) const noexcept {
     return UniformIterator(this, step_length, this->end() - 1);
 }
 
@@ -20,7 +20,7 @@ UniformIterator::UniformIterator(const Container* polyline) noexcept
     , current_iterator_(polyline_->begin())
     , current_point_(*current_iterator_) {}
 
-UniformIterator::UniformIterator(const Container* polyline, const double step_length) noexcept
+UniformIterator::UniformIterator(const Container* polyline, double step_length) noexcept
     : polyline_(polyline)
     , step_length_(step_length)
     , current_iterator_(polyline_->begin())
@@ -34,14 +34,13 @@ UniformIterator::UniformIterator(
     , current_point_(*current_iterator_) {}
 
 UniformIterator::UniformIterator(
-    const Container* polyline, const double step_length,
-    ContainerIterator current_iterator) noexcept
+    const Container* polyline, double step_length, ContainerIterator current_iterator) noexcept
     : polyline_(polyline)
     , step_length_(step_length)
     , current_iterator_(current_iterator)
     , current_point_(*current_iterator_) {}
 
-UniformIterator& UniformIterator::SetStepLength(const double step_length) noexcept {
+UniformIterator& UniformIterator::SetStepLength(double step_length) noexcept {
     step_length_ = step_length;
     return *this;
 }
