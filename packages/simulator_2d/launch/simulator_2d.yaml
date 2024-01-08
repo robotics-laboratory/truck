@@ -1,16 +1,33 @@
 launch:
-- node:
-    pkg: "simulator_2d"
-    exec: "simulator_2d_node"
-    name: "simulator_2d_node"
-    output: "log"
-    param:
-    - {name: "qos", value: 0}
-    # path to truck mode config
-    - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
-    # timers period (seconds)
-    - {name: "update_period", value: 0.01}
-    # integration step per second
-    - {name: "integration_step", value: 0.001}
-    # precision of calculations
-    - {name: "calculations_precision", value: 0.00000001}
+  - arg:
+      name: "model_config"
+      default: "$(find-pkg-share model)/config/model.yaml"
+  - arg:
+      name: "map_config"
+      default: "/truck/packages/map/data/map_6.geojson"
+  - arg:
+      name: "update_period"
+      default: 0.01
+  - arg:
+      name: "integration_step"
+      default: 0.001
+  - arg:
+      name: "calculations_precision"
+      default: 0.00000001
+  - node:
+      pkg: "simulator_2d"
+      exec: "simulator_2d_node"
+      name: "simulator_2d_node"
+      output: "log"
+      param:
+        - {name: "qos", value: 0}
+        # path to truck model config
+        - {name: "model_config", value: "$(var model_config)"}
+        # path to map config
+        - {name: "map_config", value: "$(var map_config)"}
+        # timers period (seconds)
+        - {name: "update_period", value: "$(var update_period)"}
+        # integration step per second
+        - {name: "integration_step", value: "$(var integration_step)"}
+        # precision of calculations
+        - {name: "calculations_precision", value: "$(var calculations_precision)"}
