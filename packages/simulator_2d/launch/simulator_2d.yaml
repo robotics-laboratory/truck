@@ -6,6 +6,21 @@ launch:
       name: "map_config"
       default: "$(find-pkg-share map)/data/map_6.geojson"
   - arg:
+      name: "initial_ego_x"
+      default: "0.0"
+  - arg:
+      name: "initial_ego_y"
+      default: "0.0"
+  - arg:
+      name: "initial_ego_yaw"
+      default: "0.0"
+  - arg:
+      name: "initial_middle_steering"
+      default: "0.0"
+  - arg:
+      name: "initial_linear_velocity"
+      default: "0.0"
+  - arg:
       name: "update_period"
       default: "0.01"
   - arg:
@@ -25,6 +40,16 @@ launch:
         - {name: "model_config", value: "$(var model_config)"}
         # path to map config
         - {name: "map_config", value: "$(var map_config)"}
+        # the X coordinate of the center of the model at the beginning of the simulation
+        - {name: "initial_ego_x", value: "$(var initial_ego_x)"}
+        # the Y coordinate of the center of the model at the beginning of the simulation
+        - {name: "initial_ego_y", value: "$(var initial_ego_y)"}
+        # the yaw of the model at the beginning of the simulation
+        - {name: "initial_ego_yaw", value: "$(var initial_ego_yaw)"}
+        # the middle steering of the model at the beginning of the simulation
+        - {name: "initial_middle_steering", value: "$(var initial_middle_steering)"}
+        # the linear velocity of the model at the beginning of the simulation
+        - {name: "initial_linear_velocity", value: "$(var initial_linear_velocity)"}
         # timers period (seconds)
         - {name: "update_period", value: "$(var update_period)"}
         # integration step per second

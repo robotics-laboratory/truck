@@ -11,6 +11,18 @@ namespace truck::simulator {
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
+    initializeTopicHandlers();
+    initializeEngine();
+
+    params_ = Parameters{
+        .update_period = declare_parameter("update_period", 0.01)};
+
+    timer_ = create_wall_timer(
+        std::chrono::duration<double>(params_.update_period),
+        std::bind(&SimulatorNode::makeSimulationTick, this));    
+}
+
+void SimulatorNode::initializeTopicHandlers() {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
@@ -33,22 +45,27 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 
     signals_.state = Node::create_publisher<truck_msgs::msg::SimulationState>(
         "/simulator/state", rclcpp::QoS(1).reliability(qos));
+}
 
-    params_ = Parameters{
-        .update_period = declare_parameter("update_period", 0.01)};
-
+void SimulatorNode::initializeEngine() {
     auto model = std::make_unique<model::Model>(
-        model::load(this->get_logger(), this->declare_parameter("model_config", "")));
+        model::load(get_logger(), declare_parameter("model_config", "")));
+    auto x = declare_parameter("initial_ego_x", 0.0);
+    auto y = declare_parameter("initial_ego_y", 0.0);
+    auto yaw = declare_parameter("initial_ego_yaw", 0.0);
+    auto steering = declare_parameter("initial_middle_steering", 0.0);
+    auto velocity = declare_parameter("initial_linear_velocity", 0.0);
+    geom::Pose pose;
+    pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
+    pose.pos = geom::Vec2{x, y} + model->wheelBase().base_to_rear * pose.dir;
+
     engine_ = std::make_unique<SimulatorEngine>(
         std::move(model), declare_parameter("integration_step", 0.001), 
         declare_parameter("calculations_precision", 1e-8));
+    engine_->resetBase(pose, steering, velocity);
 
     // The zero state of the simulation.
     publishSimulationState();
-
-    timer_ = create_wall_timer(
-        std::chrono::duration<double>(params_.update_period),
-        std::bind(&SimulatorNode::makeSimulationTick, this));    
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {

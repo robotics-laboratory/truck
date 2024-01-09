@@ -21,13 +21,18 @@ class SimulatorNode : public rclcpp::Node {
     SimulatorNode();
 
   private:
+    void initializeTopicHandlers();
+    void initializeEngine();
+
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
+
     void publishTime(const TruckState& truck_state);
     void publishOdometryMessage(const TruckState& truck_state);
     void publishTransformMessage(const TruckState& truck_state);
     void publishTelemetryMessage(const TruckState& truck_state);
     void publishSimulationStateMessage(const TruckState& truck_state);
     void publishSimulationState();
+
     void makeSimulationTick();
 
     std::unique_ptr<SimulatorEngine> engine_ = nullptr;
