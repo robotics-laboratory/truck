@@ -1,10 +1,6 @@
 launch:
-  - arg:
-      name: "model_config"
-      default: "$(find-pkg-share model)/config/model.yaml"
-  - arg:
-      name: "map_config"
-      default: "/truck/packages/map/data/map_6.geojson"
+- arg: {name: "model_config", default: "$(find-pkg-share model)/config/model.yaml"}
+- arg: {name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson"}
 
 - include:
     file: $(find-pkg-share truck)/launch/bridge.yaml

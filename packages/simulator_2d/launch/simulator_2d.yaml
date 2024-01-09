@@ -4,16 +4,16 @@ launch:
       default: "$(find-pkg-share model)/config/model.yaml"
   - arg:
       name: "map_config"
-      default: "/truck/packages/map/data/map_6.geojson"
+      default: "$(find-pkg-share map)/data/map_6.geojson"
   - arg:
       name: "update_period"
-      default: 0.01
+      default: "0.01"
   - arg:
       name: "integration_step"
-      default: 0.001
+      default: "0.001"
   - arg:
       name: "calculations_precision"
-      default: 0.00000001
+      default: "0.00000001"
   - node:
       pkg: "simulator_2d"
       exec: "simulator_2d_node"
