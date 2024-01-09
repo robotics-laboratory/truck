@@ -36,8 +36,6 @@ struct Bilinear {
         const int x = static_cast<int>(point.x / domain.resolution);
         const int y = static_cast<int>(point.y / domain.resolution);
 
-        std::cerr << "x: " << x << " y: " << y << std::endl;
-
         const int index = y * domain.size.width + x;
 
         const double topLetf = grid.data[index];
