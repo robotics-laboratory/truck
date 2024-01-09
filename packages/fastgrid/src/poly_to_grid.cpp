@@ -6,41 +6,6 @@ namespace truck::fastgrid {
 
 namespace impl {
 
-__always_inline bool TryFitToGrid(
-    geom::Vec2& rel_p1, geom::Vec2& rel_p2, const fastgrid::U8Grid& grid) noexcept {
-    if (rel_p1.x > rel_p2.x) {
-        std::swap(rel_p1, rel_p2);
-    }
-    const double max_x = grid.size.width * grid.resolution;
-    if (rel_p2.x < 0 || max_x <= rel_p1.x) {
-        return false;
-    }
-    double k = (rel_p2.y - rel_p1.y) / (rel_p2.x - rel_p1.x);
-    if (rel_p1.x < 0) {
-        rel_p1 = geom::Vec2(grid.resolution / 2, rel_p1.y + k * (grid.resolution / 2 - rel_p1.x));
-    }
-    if (max_x <= rel_p2.x) {
-        rel_p2 = geom::Vec2(
-            max_x - grid.resolution / 2, rel_p2.y + k * (max_x - grid.resolution / 2 - rel_p2.x));
-    }
-    if (rel_p1.y > rel_p2.y) {
-        std::swap(rel_p1, rel_p2);
-    }
-    const double max_y = grid.size.height * grid.resolution;
-    if (rel_p2.y < 0 || max_y <= rel_p1.y) {
-        return false;
-    }
-    k = (rel_p2.x - rel_p1.x) / (rel_p2.y - rel_p1.y);
-    if (rel_p1.y < 0) {
-        rel_p1 = geom::Vec2(rel_p1.x + k * (grid.resolution / 2 - rel_p1.y), grid.resolution / 2);
-    }
-    if (max_y <= rel_p2.y) {
-        rel_p2 = geom::Vec2(
-            rel_p2.x + k * (max_y - grid.resolution / 2 - rel_p1.y), max_y - grid.resolution / 2);
-    }
-    return true;
-}
-
 __always_inline void DrivingByX(
     const geom::Vec2& rel_p1, const geom::Vec2& rel_p2, fastgrid::U8Grid& grid) noexcept {
     double k = (rel_p2.y - rel_p1.y) / (rel_p2.x - rel_p1.x);
@@ -63,9 +28,6 @@ __always_inline void SegmentToGrid(
     const geom::Vec2& p1, const geom::Vec2& p2, fastgrid::U8Grid& grid) noexcept {
     auto rel_p1 = grid.transform(p1);
     auto rel_p2 = grid.transform(p2);
-    if (!TryFitToGrid(rel_p1, rel_p2, grid)) {
-        return;
-    }
     if (abs(rel_p2.x - rel_p1.x) >= abs(rel_p2.y - rel_p1.y)) {
         if (rel_p1.x <= rel_p2.x) {
             DrivingByX(rel_p1, rel_p2, grid);
@@ -85,7 +47,7 @@ __always_inline void PolyToGrid(const geom::Polygon& poly, fastgrid::U8Grid& gri
     for (auto it = poly.begin(); it + 1 != poly.end(); ++it) {
         SegmentToGrid(*it, *(it + 1), grid);
     }
-    SegmentToGrid(*(poly.end() - 1), *poly.begin(), grid);
+    SegmentToGrid(poly.back(), poly.front(), grid);
 }
 
 __always_inline void PolyToGrid(const geom::ComplexPolygon& poly, U8Grid& grid) noexcept {

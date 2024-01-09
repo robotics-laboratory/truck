@@ -33,8 +33,10 @@ struct Bilinear {
 
     double GetRelative(const geom::Vec2& point) const noexcept {
         const double resolution = domain.resolution;
-        const int x = static_cast<int>(point.x / resolution);
-        const int y = static_cast<int>(point.y / resolution);
+        const int x = static_cast<int>(point.x / domain.resolution);
+        const int y = static_cast<int>(point.y / domain.resolution);
+
+        std::cerr << "x: " << x << " y: " << y << std::endl;
 
         const int index = y * domain.size.width + x;
 

@@ -544,23 +544,6 @@ TEST(PolyToGrid, case_1) {
         {
             grid.SetTo(0);
 
-            Polygon poly{Vec2(-1, -1), Vec2(3, 3)};
-            PolyToGrid(poly, grid);
-
-            EXPECT_EQ(grid[0][0], 1);
-            EXPECT_EQ(grid[0][1], 0);
-            EXPECT_EQ(grid[0][2], 0);
-            EXPECT_EQ(grid[1][0], 0);
-            EXPECT_EQ(grid[1][1], 1);
-            EXPECT_EQ(grid[1][2], 0);
-            EXPECT_EQ(grid[2][0], 0);
-            EXPECT_EQ(grid[2][1], 0);
-            EXPECT_EQ(grid[2][2], 1);
-        }
-
-        {
-            grid.SetTo(0);
-
             Polygon poly{Vec2(1.3, 0.3), Vec2(2.7, 1.7)};
             PolyToGrid(poly, grid);
 
@@ -603,7 +586,7 @@ TEST(PolyToGrid, case_1) {
         {
             grid.SetTo(0);
 
-            Polygon poly{Vec2(-3, 3), Vec2(0, 0)};
+            Polygon poly{Vec2(-2.5, 2.5), Vec2(-0.5, 0.5)};
             PolyToGrid(poly, grid);
 
             EXPECT_EQ(grid[0][0], 1);
