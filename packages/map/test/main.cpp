@@ -22,23 +22,23 @@ TEST(Map, clip) {
         const Pose pose = {{0, 0}, AngleVec2::fromVector(1, 0)};
 
         const auto grid = Grid<uint8_t>(size, resolution, pose);
-        const auto domain = Domain(grid);
 
-        const ComplexPolygon poly({Vec2(0, 1), Vec2(2, -1), Vec2(2.5, 1), Vec2(3, 2), Vec2(1, 5)});
+        const ComplexPolygon poly(
+            {Vec2(-0.5, 0.5), Vec2(1.5, -1.5), Vec2(2, 0.5), Vec2(2.5, 1.5), Vec2(0.5, 4.5)});
 
         auto map = Map({poly});
 
-        const auto clipped_polygons = map.clip(domain);
+        const auto clipped_polygons = map.clip(grid);
 
         EXPECT_EQ(clipped_polygons.size(), 1);
         const ComplexPolygon expected_poly(
-            {Vec2(0.625, 3.5),
-             Vec2(0.5, 3),
-             Vec2(0.5, 0.5),
-             Vec2(2.375, 0.5),
-             Vec2(2.5, 1.0),
-             Vec2(3.0, 2.0),
-             Vec2(2.0, 3.5)});
+            {Vec2(0.125, 3),
+             Vec2(0, 2.5),
+             Vec2(0, 0),
+             Vec2(1.875, 0),
+             Vec2(2, 0.5),
+             Vec2(2.5, 1.5),
+             Vec2(1.5, 3)});
         EXPECT_EQ(clipped_polygons[0].outer.size(), expected_poly.outer.size());
         for (size_t i = 0; i < expected_poly.outer.size(); ++i) {
             ASSERT_GEOM_EQUAL(clipped_polygons[0].outer[i], expected_poly.outer[i]);
@@ -51,24 +51,24 @@ TEST(Map, clip) {
         const Pose pose = {{0, 0}, AngleVec2::fromVector(0, 1)};
 
         const auto grid = Grid<uint8_t>(size, resolution, pose);
-        const auto domain = Domain(grid);
 
-        const ComplexPolygon poly({Vec2(-2, 0), Vec2(0, 2), Vec2(-2, 4), Vec2(-4, 2)});
+        const ComplexPolygon poly(
+            {Vec2(-1.5, -0.5), Vec2(0.5, 1.5), Vec2(-1.5, 3.5), Vec2(-3.5, 1.5)});
 
         auto map = Map({poly});
 
-        const auto clipped_polygons = map.clip(domain);
+        const auto clipped_polygons = map.clip(grid);
 
         EXPECT_EQ(clipped_polygons.size(), 1);
         const ComplexPolygon expected_poly(
-            {Vec2(-3.5, 1.5),
-             Vec2(-2.5, 0.5),
-             Vec2(-1.5, 0.5),
-             Vec2(-0.5, 1.5),
-             Vec2(-0.5, 2.5),
-             Vec2(-1.5, 3.5),
-             Vec2(-2.5, 3.5),
-             Vec2(-3.5, 2.5)});
+            {Vec2(-3, 1),
+             Vec2(-2, 0),
+             Vec2(-1, 0),
+             Vec2(0, 1),
+             Vec2(0, 2),
+             Vec2(-1, 3),
+             Vec2(-2, 3),
+             Vec2(-3, 2)});
         EXPECT_EQ(clipped_polygons[0].outer.size(), expected_poly.outer.size());
         for (size_t i = 0; i < expected_poly.outer.size(); ++i) {
             ASSERT_GEOM_EQUAL(clipped_polygons[0].outer[i], expected_poly.outer[i]);
