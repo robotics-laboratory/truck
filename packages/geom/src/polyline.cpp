@@ -10,56 +10,47 @@ UniformIterator Polyline::ubegin(double step_length) const noexcept {
 
 UniformIterator Polyline::uend() const noexcept { return UniformIterator(this, this->end() - 1); }
 
-UniformIterator Polyline::uend(double step_length) const noexcept {
-    return UniformIterator(this, step_length, this->end() - 1);
-}
-
 UniformIterator::UniformIterator(const Container* polyline) noexcept
     : polyline_(polyline)
     , step_length_(1.0)
-    , current_iterator_(polyline_->begin())
-    , current_point_(*current_iterator_) {}
+    , dist_from_milestone_(0.0)
+    , milestone_(polyline_->begin()) {}
 
 UniformIterator::UniformIterator(const Container* polyline, double step_length) noexcept
     : polyline_(polyline)
     , step_length_(step_length)
-    , current_iterator_(polyline_->begin())
-    , current_point_(*current_iterator_) {}
+    , dist_from_milestone_(0.0)
+    , milestone_(polyline_->begin()) {}
+
+UniformIterator::UniformIterator(const Container* polyline, ContainerIterator milestone) noexcept
+    : polyline_(polyline), step_length_(1.0), dist_from_milestone_(0.0), milestone_(milestone) {}
 
 UniformIterator::UniformIterator(
-    const Container* polyline, ContainerIterator current_iterator) noexcept
-    : polyline_(polyline)
-    , step_length_(1.0)
-    , current_iterator_(current_iterator)
-    , current_point_(*current_iterator_) {}
-
-UniformIterator::UniformIterator(
-    const Container* polyline, double step_length, ContainerIterator current_iterator) noexcept
+    const Container* polyline, double step_length, ContainerIterator milestone) noexcept
     : polyline_(polyline)
     , step_length_(step_length)
-    , current_iterator_(current_iterator)
-    , current_point_(*current_iterator_) {}
+    , dist_from_milestone_(0.0)
+    , milestone_(milestone) {}
 
 UniformIterator& UniformIterator::SetStepLength(double step_length) noexcept {
     step_length_ = step_length;
     return *this;
 }
 
-const Vec2& UniformIterator::operator*() const noexcept { return current_point_; }
-
-const Vec2* UniformIterator::operator->() const noexcept { return &current_point_; }
+Pose UniformIterator::operator*() const noexcept { return GetPose(); }
 
 UniformIterator& UniformIterator::operator++() noexcept {
     double step_left = step_length_;
-    while (current_iterator_ + 1 != polyline_->end()) {
-        Vec2 dir = (*(current_iterator_ + 1) - current_point_);
-        if (dir.len() > step_left + precision) {
-            current_point_ += dir.unit() * step_left;
+    while (milestone_ + 1 != polyline_->end()) {
+        double dist_to_next_milestone =
+            (*(milestone_ + 1) - *milestone_).len() - dist_from_milestone_;
+        if (dist_to_next_milestone > step_left) {
+            dist_from_milestone_ += step_left;
             break;
         }
-        step_left -= dir.len();
-        ++current_iterator_;
-        current_point_ = *current_iterator_;
+        step_left -= dist_to_next_milestone;
+        ++milestone_;
+        dist_from_milestone_ = 0.0;
     }
     return *this;
 }
@@ -71,41 +62,27 @@ UniformIterator UniformIterator::operator++(int) noexcept {
     return it;
 }
 
-UniformIterator& UniformIterator::operator--() noexcept {
-    double step_left = step_length_;
-    while (current_iterator_ != polyline_->begin()) {
-        Vec2 dir = (*(current_iterator_ - 1) - current_point_);
-        if (dir.len() > step_left + precision) {
-            current_point_ += dir.unit() * step_left;
-            break;
-        }
-        step_left -= dir.len();
-        --current_iterator_;
-        current_point_ = *current_iterator_;
-    }
-    return *this;
-}
-
-UniformIterator UniformIterator::operator--(int) noexcept {
-    UniformIterator it = *this;
-    --it;
-    Swap(it);
-    return it;
-}
-
 bool operator==(const UniformIterator& first, const UniformIterator& second) noexcept {
-    return first.current_iterator_ == second.current_iterator_ &&
-           abs(first.current_point_.x - second.current_point_.x) < UniformIterator::precision &&
-           abs(first.current_point_.y - second.current_point_.y) < UniformIterator::precision;
+    return first.milestone_ == second.milestone_ &&
+           first.dist_from_milestone_ == second.dist_from_milestone_;
 }
 
 bool operator!=(const UniformIterator& first, const UniformIterator& second) noexcept {
     return !(first == second);
 }
 
+geom::Pose UniformIterator::GetPose() const noexcept {
+    geom::AngleVec2 dir =
+        (milestone_ + 1 == polyline_->end()
+             ? AngleVec2::fromVector(*milestone_ - *(milestone_ - 1))
+             : AngleVec2::fromVector(*(milestone_ + 1) - *milestone_));
+    return geom::Pose(*milestone_ + dist_from_milestone_ * dir.vec(), dir);
+}
+
 void UniformIterator::Swap(UniformIterator& other) noexcept {
-    std::swap(current_iterator_, other.current_iterator_);
-    std::swap(current_point_, other.current_point_);
+    std::swap(step_length_, other.step_length_);
+    std::swap(dist_from_milestone_, other.dist_from_milestone_);
+    std::swap(milestone_, other.milestone_);
 }
 
 }  // namespace truck::geom

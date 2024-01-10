@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geom/vector.h"
+#include "geom/pose.h"
 
 #include <vector>
 #include <iterator>
@@ -19,15 +20,11 @@ struct Polyline final : public std::vector<Vec2> {
     UniformIterator ubegin(double step_length) const noexcept;
 
     UniformIterator uend() const noexcept;
-
-    UniformIterator uend(double step_length) const noexcept;
 };
 
 class UniformIterator {
   public:
-    static constexpr double precision = 1e-7;
-
-    using IteratorCategory = std::bidirectional_iterator_tag;
+    using IteratorCategory = std::forward_iterator_tag;
     using Container = Polyline;
     using ContainerIterator = Container::const_iterator;
 
@@ -37,37 +34,34 @@ class UniformIterator {
 
     UniformIterator(const Container* polyline, double step_length) noexcept;
 
-    UniformIterator(const Container* polyline, ContainerIterator current_iterator) noexcept;
+    UniformIterator(const Container* polyline, ContainerIterator milestone) noexcept;
 
     UniformIterator(
-        const Container* polyline, double step_length, ContainerIterator current_iterator) noexcept;
+        const Container* polyline, double step_length, ContainerIterator milestone) noexcept;
 
     UniformIterator& SetStepLength(double step_length) noexcept;
 
-    const Vec2& operator*() const noexcept;
-
-    const Vec2* operator->() const noexcept;
+    Pose operator*() const noexcept;
 
     UniformIterator& operator++() noexcept;
 
     UniformIterator operator++(int) noexcept;
-
-    UniformIterator& operator--() noexcept;
-
-    UniformIterator operator--(int) noexcept;
 
     friend bool operator==(const UniformIterator& first, const UniformIterator& second) noexcept;
 
     friend bool operator!=(const UniformIterator& first, const UniformIterator& second) noexcept;
 
   private:
+    geom::Pose GetPose() const noexcept;
+
     void Swap(UniformIterator& other) noexcept;
 
     const Container* polyline_ = nullptr;
 
     double step_length_ = 1.0;
-    ContainerIterator current_iterator_;
-    Vec2 current_point_;
+
+    double dist_from_milestone_ = 0.0;
+    ContainerIterator milestone_;
 };
 
 }  // namespace truck::geom
