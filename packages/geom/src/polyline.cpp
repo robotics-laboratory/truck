@@ -2,6 +2,13 @@
 
 namespace truck::geom {
 
+Polyline::Polyline(std::vector<Vec2> other) : std::vector<Vec2>(std::move(other)) {}
+
+Polyline& Polyline::operator=(std::vector<Vec2> other) & {
+    std::vector<Vec2>::operator=(std::move(other));
+    return *this;
+}
+
 UniformIterator Polyline::ubegin() const noexcept { return UniformIterator(this); }
 
 UniformIterator Polyline::ubegin(double step_length) const noexcept {

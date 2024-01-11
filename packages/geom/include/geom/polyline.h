@@ -13,6 +13,10 @@ class UniformIterator;
 struct Polyline final : public std::vector<Vec2> {
     using vector::vector;
 
+    Polyline(std::vector<Vec2> other);
+
+    Polyline& operator=(std::vector<Vec2> other) &;
+
     friend UniformIterator;
 
     UniformIterator ubegin() const noexcept;
