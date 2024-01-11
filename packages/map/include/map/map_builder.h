@@ -24,9 +24,12 @@ class Map {
             clipped_polygon.outer = clip(grid, polygon.outer);
             clipped_polygon.inners.reserve(polygon.inners.size());
             for (const auto& inner : polygon.inners) {
-                clipped_polygon.inners.emplace_back(clip(grid, inner));
+                auto clipped_inner = clip(grid, inner);
+                if (!clipped_inner.empty()) {
+                    clipped_polygon.inners.push_back(std::move(clipped_inner));
+                }
             }
-            clipped_polygons.push_back(clipped_polygon);
+            clipped_polygons.push_back(std::move(clipped_polygon));
         }
         return clipped_polygons;
     }
@@ -34,21 +37,17 @@ class Map {
   private:
     template<typename T>
     geom::Polygon clip(const fastgrid::Grid<T>& grid, const geom::Polygon& polygon) const noexcept {
-        const double x_min = 0.0;
-        const double y_min = 0.0;
-        const double x_max = grid.resolution * grid.size.width;
-        const double y_max = grid.resolution * grid.size.height;
+        VERIFY(grid.origin);
 
-        const geom::Polygon clip_polygon = {
-            geom::Vec2(x_min, y_min),
-            geom::Vec2(x_max, y_min),
-            geom::Vec2(x_max, y_max),
-            geom::Vec2(x_min, y_max)};
+        auto pose = grid.origin->pose;
+        const geom::Polygon clip_polygon{
+            pose.pos,
+            pose.pos + pose.dir.vec() * grid.resolution * grid.size.width,
+            pose.pos + pose.dir.vec() * grid.resolution * grid.size.width +
+                pose.dir.vec().left() * grid.resolution * grid.size.height,
+            pose.pos + pose.dir.vec().left() * grid.resolution * grid.size.height};
 
-        geom::Polygon clipped_polygon = polygon;
-        for (auto& vertex : clipped_polygon) {
-            vertex = grid.transform(vertex);
-        }
+        auto clipped_polygon = polygon;
 
         auto clip_vertex_1 = clip_polygon.back();
         for (const auto& clip_vertex_2 : clip_polygon) {
@@ -73,11 +72,6 @@ class Map {
                 current_vertex_1 = current_vertex_2;
             }
             clip_vertex_1 = clip_vertex_2;
-        }
-
-        const auto inv_tf = grid.origin->tf.inv();
-        for (auto& vertex : clipped_polygon) {
-            vertex = inv_tf(vertex);
         }
 
         return clipped_polygon;
