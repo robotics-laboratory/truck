@@ -5,11 +5,8 @@
 #include "map/map_builder.h"
 
 #include <cmath>
-#include <limits>
 #include <memory>
 #include <vector>
-
-#include <iostream>
 
 using namespace truck::geom;
 using namespace truck::map;
