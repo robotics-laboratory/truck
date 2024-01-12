@@ -13,7 +13,7 @@ launch:
     param:
     # use /clock topic time
     - {name: "use_sim_time", value: "$(var simulation)"}
-    # path to truck mode config
+    # path to truck model config
     - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
     # path to control config
     - {name: "control_config", value: "$(find-pkg-share control_proxy)/config/$(var control_name).yaml"}

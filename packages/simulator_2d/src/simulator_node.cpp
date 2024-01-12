@@ -4,13 +4,28 @@
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include <cmath>
+#include <fstream>
 
 namespace truck::simulator {
 
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
+    params_ = Parameters{
+        .update_period = declare_parameter("update_period", 0.01)};
+
+    initializeTopicHandlers();
+    initializeEngine();
+
+    timer_ = create_wall_timer(
+        std::chrono::duration<double>(params_.update_period),
+        std::bind(&SimulatorNode::makeSimulationTick, this));    
+}
+
+void SimulatorNode::initializeTopicHandlers() {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
@@ -33,22 +48,32 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 
     signals_.state = Node::create_publisher<truck_msgs::msg::SimulationState>(
         "/simulator/state", rclcpp::QoS(1).reliability(qos));
+}
 
-    params_ = Parameters{
-        .update_period = declare_parameter("update_period", 0.01)};
-
+void SimulatorNode::initializeEngine() {
     auto model = std::make_unique<model::Model>(
-        model::load(this->get_logger(), this->declare_parameter("model_config", "")));
+        model::load(get_logger(), declare_parameter("model_config", "")));
+
+    const auto initial_ego_state_path = declare_parameter("initial_ego_state_config", "");
+    const auto initial_ego_state = nlohmann::json::parse(std::ifstream(initial_ego_state_path));
+
+    const auto x = initial_ego_state["x"];
+    const auto y = initial_ego_state["y"];
+    const auto yaw = initial_ego_state["yaw"];
+    const auto steering = initial_ego_state["middle_steering"];
+    const auto velocity = initial_ego_state["linear_velocity"];
+
+    geom::Pose pose;
+    pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
+    pose.pos = geom::Vec2{x, y} + model->wheelBase().base_to_rear * pose.dir;
+
     engine_ = std::make_unique<SimulatorEngine>(
         std::move(model), declare_parameter("integration_step", 0.001), 
         declare_parameter("calculations_precision", 1e-8));
+    engine_->resetBase(pose, steering, velocity);
 
     // The zero state of the simulation.
     publishSimulationState();
-
-    timer_ = create_wall_timer(
-        std::chrono::duration<double>(params_.update_period),
-        std::bind(&SimulatorNode::makeSimulationTick, this));    
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {
