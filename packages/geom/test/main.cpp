@@ -7,7 +7,9 @@
 #include "geom/distance.h"
 #include "geom/common.h"
 #include "geom/line.h"
+#include "geom/polygon.h"
 #include "geom/polyline.h"
+#include "geom/uniform_stepper.h"
 #include "geom/vector.h"
 
 #include <sstream>
@@ -318,7 +320,7 @@ TEST(Arc, try_build_arc) {
     }
 }
 
-TEST(Polyline, uniform_iterator) {
+TEST(UniformStepper, stepping) {
     constexpr double eps = 1e-7;
     {
         const Polyline polyline = {Vec2(0, 0), Vec2(0, 1), Vec2(3, 1), Vec2(3, 2)};
@@ -358,6 +360,15 @@ TEST(Polyline, uniform_iterator) {
         ++it;
         ASSERT_GEOM_EQUAL((*it).pos, Vec2(1, 1));
         ASSERT_TRUE(it == polyline.uend());
+    }
+    {
+        const Polygon polygon = {Vec2(0, 0), Vec2(1, 0), Vec2(1, 1)};
+        auto it = UniformStepper(&polygon, polygon.begin() + 1);
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(1, 0), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(1, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
     }
 }
 
