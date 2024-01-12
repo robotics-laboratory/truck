@@ -4,18 +4,21 @@
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include <cmath>
+#include <fstream>
 
 namespace truck::simulator {
 
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
-    initializeTopicHandlers();
-    initializeEngine();
-
     params_ = Parameters{
         .update_period = declare_parameter("update_period", 0.01)};
+
+    initializeTopicHandlers();
+    initializeEngine();
 
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
@@ -50,11 +53,16 @@ void SimulatorNode::initializeTopicHandlers() {
 void SimulatorNode::initializeEngine() {
     auto model = std::make_unique<model::Model>(
         model::load(get_logger(), declare_parameter("model_config", "")));
-    auto x = declare_parameter("initial_ego_x", 0.0);
-    auto y = declare_parameter("initial_ego_y", 0.0);
-    auto yaw = declare_parameter("initial_ego_yaw", 0.0);
-    auto steering = declare_parameter("initial_middle_steering", 0.0);
-    auto velocity = declare_parameter("initial_linear_velocity", 0.0);
+
+    const auto initial_ego_state_path = declare_parameter("initial_ego_state_config", "");
+    const auto initial_ego_state = nlohmann::json::parse(std::ifstream(initial_ego_state_path));
+
+    const auto x = initial_ego_state["x"];
+    const auto y = initial_ego_state["y"];
+    const auto yaw = initial_ego_state["yaw"];
+    const auto steering = initial_ego_state["middle_steering"];
+    const auto velocity = initial_ego_state["linear_velocity"];
+
     geom::Pose pose;
     pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
     pose.pos = geom::Vec2{x, y} + model->wheelBase().base_to_rear * pose.dir;

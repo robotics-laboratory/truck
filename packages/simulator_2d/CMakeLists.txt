@@ -10,6 +10,7 @@ find_package(geom REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 20)
@@ -24,7 +25,8 @@ add_library(simulator_engine SHARED
 ament_target_dependencies(
     simulator_engine
     model
-    geom)
+    geom
+    nlohmann_json)
 
 target_include_directories(
     simulator_engine PUBLIC
@@ -36,7 +38,8 @@ ament_export_targets(simulator_engine_targets HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(
     model
-    geom)
+    geom
+    nlohmann_json)
 
 install(
   TARGETS simulator_engine
@@ -76,6 +79,11 @@ install(
 install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+    DIRECTORY config
+    DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

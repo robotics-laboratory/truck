@@ -1,42 +1,34 @@
 launch:
-- arg: {name: "model_config", default: "$(find-pkg-share model)/config/model.yaml"}
-- arg: {name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson"}
-- arg: {name: "initial_ego_x", default: "4.0"}
-- arg: {name: "initial_ego_y", default: "5.0"}
-- arg: {name: "initial_ego_yaw", default: "0.0"}
-- arg: {name: "initial_middle_steering", default: "0.0"}
-- arg: {name: "initial_linear_velocity", default: "0.0"}
+- arg: { name: "model_config", default: "$(find-pkg-share model)/config/model.yaml" }
+- arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
+- arg: { name: "initial_ego_state_config", default: "$(find-pkg-share simulator_2d)/config/initial_ego_state.json" }
 
 - include:
     file: $(find-pkg-share truck)/launch/bridge.yaml
     arg:
-      - {name: "simulation", value: "true"}
+      - { name: "simulation", value: "true" }
 
 - include:
     file: $(find-pkg-share truck)/launch/control.yaml
     arg:
-      - {name: "simulation", value: "true"}
-      - {name: "control_name", value: "ps4"}
+      - { name: "simulation", value: "true" }
+      - { name: "control_name", value: "ps4" }
 
 - include:
     file: $(find-pkg-share model)/launch/model_tf.yaml
     arg:
-      - {name: "simulation", value: "true"}
+      - { name: "simulation", value: "true" }
 
 - include:
     file: $(find-pkg-share visualization)/launch/visualization.yaml
     arg:
-      - {name: "simulation", value: "true"}
-      - {name: "model_config", value: "$(var model_config)"}
-      - {name: "map_config", value: "$(var map_config)"}
+      - { name: "simulation", value: "true" }
+      - { name: "model_config", value: "$(var model_config)" }
+      - { name: "map_config", value: "$(var map_config)" }
 
 - include:
     file: $(find-pkg-share simulator_2d)/launch/simulator_2d.yaml
     arg:
-      - {name: "model_config", value: "$(var model_config)"}
-      - {name: "map_config", value: "$(var map_config)"}
-      - {name: "initial_ego_x", value: "$(var initial_ego_x)"}
-      - {name: "initial_ego_y", value: "$(var initial_ego_y)"}
-      - {name: "initial_ego_yaw", value: "$(var initial_ego_yaw)"}
-      - {name: "initial_middle_steering", value: "$(var initial_middle_steering)"}
-      - {name: "initial_linear_velocity", value: "$(var initial_linear_velocity)"}
+      - { name: "model_config", value: "$(var model_config)" }
+      - { name: "map_config", value: "$(var map_config)" }
+      - { name: "initial_ego_state_config", value: "$(var initial_ego_state_config)" }
