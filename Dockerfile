@@ -535,6 +535,24 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export TRUCK_CONTROL=ipega\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
 
+### PREPARE FOR CGAL
+
+RUN apt-get update -q \
+    && apt-get install -yq install libmpfr-dev
+
+### INSTALL CGAL
+
+WORKDIR /usr/include
+
+ARG CGAL_VERSION="5.6"
+
+RUN wget -qO - https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.tar.gz | tar -xz \
+    && cd cgal-{CGAL_VERSION} && mkdir -p build && cd build \
+    && cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+    && make install \
+    && rm -rf /tmp/*
+
 ### SETUP ENTRYPOINT
 
 WORKDIR /truck
