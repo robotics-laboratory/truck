@@ -17,7 +17,6 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
 
     params_.integration_step = integration_step;
     params_.precision = precision;
-    params_.rays_number = rays_number;
 
     cache_.integration_step_2 = integration_step / 2;
     cache_.integration_step_6 = integration_step / 6;
@@ -119,21 +118,20 @@ namespace {
 bool checkIntersection(const geom::Ray& ray, const geom::Segment& segment,
     geom::Vec2& intersection, double precision) {
 
-    geom::Vec2 ray_dir = ray.dir.vec();
-    geom::Vec2 segment_dir = segment;
+    auto ray_dir = ray.dir.vec();
+    auto segment_dir = static_cast<geom::Vec2>(segment);
 
-    double det = geom::cross(ray_dir, segment_dir);
+    auto det = geom::cross(ray_dir, segment_dir);
     if (det < precision) {
         return false;
     }
 
-     geom::Vec2 originToSegmentBegin = segment.begin - ray.origin;
+    auto originToSegmentBegin = segment.begin - ray.origin;
 
+    auto t = geom::cross(originToSegmentBegin, segment_dir) / det;
+    auto u = geom::cross(-originToSegmentBegin, ray_dir) / det;
 
-    double t = geom::cross(segment_dir, originToSegmentBegin) / det;
-    double u = geom::cross(ray_dir, -originToSegmentBegin) / det;
-
-    if (t >= 0 && u >= 0 && u <= 1) {
+    if (t >= -precision && u >= -precision && u <= 1 + precision) {
         intersection = ray.origin + t * ray_dir;
         return true;
     }
