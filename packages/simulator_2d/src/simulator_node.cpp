@@ -97,7 +97,8 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     if (control->has_acceleration) {
         engine_->setBaseControl(control->velocity, control->acceleration, control->curvature);
     } else {
-        engine_->setBaseControl(control->velocity, control->curvature);
+        //engine_->setBaseControl(control->velocity, control->curvature);
+        engine_->setBaseControl(0.1, 0);
     }
 }
 
