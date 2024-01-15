@@ -4,6 +4,8 @@
 #include "geom/segment.h"
 #include "geom/vector.h"
 
+#include <optional>
+
 namespace truck::geom {
 
 struct Ray {
@@ -13,7 +15,7 @@ struct Ray {
     AngleVec2 dir;
 };
 
-bool checkIntersection(const Ray& ray, const Segment& segment,
-    Vec2& intersection, double precision) noexcept;
+std::optional<Vec2> getIntersection(const Ray& ray,
+    const Segment& segment, double precision) noexcept;
 
 }  // namespace truck::geom
