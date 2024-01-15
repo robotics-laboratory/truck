@@ -1,4 +1,6 @@
 [core]
-    remote = public
-['remote "public"']
-    url = https://the-lab-bucket.storage.yandexcloud.net/dvc/
+    remote = main
+['remote "main"']
+    url = s3://the-lab-bucket/dvc
+    endpointurl = https://storage.yandexcloud.net
+    region = ru-central1
