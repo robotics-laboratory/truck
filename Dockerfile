@@ -508,6 +508,17 @@ RUN wget -qO - https://github.com/ethz-asl/libpointmatcher/archive/refs/tags/${L
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
+### INSTALL CGAL
+
+ARG CGAL_VERSION="5.6"
+
+RUN wget -qO - https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.tar.gz | tar -xz \
+    && cd cgal-${CGAL_VERSION} && mkdir -p build && cd build \
+    && cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
 ### INSTALL DEV PKGS
 
 COPY requirements.txt /tmp/requirements.txt
@@ -535,17 +546,6 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export TRUCK_SIMULATION=false\n" >> /root/.bashrc \
     && printf "export TRUCK_CONTROL=ipega\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
-
-### INSTALL CGAL
-
-ARG CGAL_VERSION="5.6"
-
-RUN wget -qO - https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.tar.gz | tar -xz \
-    && cd cgal-${CGAL_VERSION} \
-    && cmake . \
-        -DCMAKE_BUILD_TYPE=Release \
-    && make -j$(nproc) install \
-    && rm -rf /tmp/*
 
 ### SETUP ENTRYPOINT
 
