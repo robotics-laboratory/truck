@@ -14,15 +14,25 @@ namespace truck::simulator {
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
-    params_ = Parameters{
-        .update_period = declare_parameter("update_period", 0.01)};
-
+    initializeParams();
     initializeTopicHandlers();
     initializeEngine();
 
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
         std::bind(&SimulatorNode::makeSimulationTick, this));    
+}
+
+void SimulatorNode::initializeParams() {
+    params_.update_period = declare_parameter("update_period", 0.01);
+
+    const auto lidar_config_path = declare_parameter("lidar_config", "");
+    const auto lidar_config = nlohmann::json::parse(std::ifstream(lidar_config_path));
+    params_.lidar_config.angle_min = lidar_config["angle_min"];
+    params_.lidar_config.angle_max = lidar_config["angle_max"];
+    params_.lidar_config.angle_increment = lidar_config["angle_increment"];
+    params_.lidar_config.range_min = lidar_config["range_min"];
+    params_.lidar_config.range_max = lidar_config["range_max"];
 }
 
 void SimulatorNode::initializeTopicHandlers() {
@@ -73,7 +83,8 @@ void SimulatorNode::initializeEngine() {
     engine_ = std::make_unique<SimulatorEngine>(
         std::move(model), declare_parameter("integration_step", 0.001), 
         declare_parameter("calculations_precision", 1e-8),
-        declare_parameter("rays_number", 3200));
+        params_.lidar_config.angle_min, params_.lidar_config.angle_max, 
+        params_.lidar_config.angle_increment);
     engine_->resetBase(pose, steering, velocity);
     engine_->resetMap(declare_parameter("map_config", ""));
 
@@ -85,7 +96,8 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     if (control->has_acceleration) {
         engine_->setBaseControl(control->velocity, control->acceleration, control->curvature);
     } else {
-        engine_->setBaseControl(control->velocity, control->curvature);
+        //engine_->setBaseControl(control->velocity, control->curvature);
+        engine_->setBaseControl(0.1, 0);
     }
 }
 
@@ -160,6 +172,12 @@ void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
     sensor_msgs::msg::LaserScan scan_msg;
     scan_msg.header.frame_id = "odom_ekf";
     scan_msg.header.stamp = truck_state.time();
+    scan_msg.angle_min = params_.lidar_config.angle_min;
+    scan_msg.angle_max = params_.lidar_config.angle_max;
+    scan_msg.angle_increment = params_.lidar_config.angle_increment;
+    scan_msg.range_min = params_.lidar_config.range_min;
+    scan_msg.range_max = params_.lidar_config.range_max;
+    scan_msg.scan_time = params_.update_period;
     scan_msg.ranges = truck_state.lidarRanges();
     signals_.scan->publish(scan_msg);
 }

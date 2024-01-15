@@ -22,6 +22,7 @@ class SimulatorNode : public rclcpp::Node {
     SimulatorNode();
 
   private:
+    void initializeParams();
     void initializeTopicHandlers();
     void initializeEngine();
 
@@ -43,6 +44,13 @@ class SimulatorNode : public rclcpp::Node {
 
     struct Parameters {
         double update_period;
+        struct LidarConfig {
+            float angle_min;
+            float angle_max;
+            float angle_increment;
+            float range_min;
+            float range_max;
+        } lidar_config;
     } params_;
 
     struct Slots {
