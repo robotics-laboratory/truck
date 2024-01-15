@@ -72,4 +72,28 @@ std::vector<Triangle> ComplexPolygon::triangles() const noexcept {
     return triangles;
 }
 
+Segments ComplexPolygon::segments() const noexcept {
+    size_t size = outer.size();
+    for (const auto inner : inners) {
+        size += inner.size();
+    }
+
+    Segments segments(size);
+    auto current_segments = outer.segments();
+    segments.insert(segments.begin(), 
+            std::make_move_iterator(current_segments.begin()), 
+            std::make_move_iterator(current_segments.end()));
+
+    size_t last_index = outer.size();
+    
+    for (const auto inner : inners) {
+        current_segments = inner.segments();
+        segments.insert(segments.begin() + last_index, 
+            std::make_move_iterator(current_segments.begin()), 
+            std::make_move_iterator(current_segments.end()));
+    }
+
+    return segments;
+}
+
 }  // namespace truck::geom
