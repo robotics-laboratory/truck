@@ -85,6 +85,7 @@ void SimulatorNode::initializeEngine() {
         declare_parameter("calculations_precision", 1e-8),
         params_.lidar_config.angle_min, params_.lidar_config.angle_max, 
         params_.lidar_config.angle_increment);
+        declare_parameter("rays_number", 3200));
     engine_->resetBase(pose, steering, velocity);
     engine_->resetMap(declare_parameter("map_config", ""));
 

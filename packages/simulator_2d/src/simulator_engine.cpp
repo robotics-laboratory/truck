@@ -17,6 +17,7 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
 
     params_.integration_step = integration_step;
     params_.precision = precision;
+    params_.rays_number = rays_number;
 
     cache_.integration_step_2 = integration_step / 2;
     cache_.integration_step_6 = integration_step / 6;
@@ -114,6 +115,31 @@ double SimulatorEngine::rearToBaseAngularVelocity(
 }
 
 namespace {
+
+bool checkIntersection(const geom::Ray& ray, const geom::Segment& segment,
+    geom::Vec2& intersection, double precision) {
+
+    geom::Vec2 ray_dir = ray.dir.vec();
+    geom::Vec2 segment_dir = segment;
+
+    double det = geom::cross(ray_dir, segment_dir);
+    if (det < precision) {
+        return false;
+    }
+
+     geom::Vec2 originToSegmentBegin = segment.begin - ray.origin;
+
+
+    double t = geom::cross(segment_dir, originToSegmentBegin) / det;
+    double u = geom::cross(ray_dir, -originToSegmentBegin) / det;
+
+    if (t >= 0 && u >= 0 && u <= 1) {
+        intersection = ray.origin + t * ray_dir;
+        return true;
+    }
+
+    return false;
+}
 
 float findClosestIntersectionDistance(const geom::Ray& ray, 
     const geom::Segments& obstacles, double precision) {
