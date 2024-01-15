@@ -10,19 +10,21 @@
 namespace truck::simulator {
 
 SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
-    double integration_step, double precision, int rays_number) {
+    double integration_step, double precision, 
+    float angle_min, float angle_max, float angle_increment) {
         
     model_ = std::move(model);
 
     params_.integration_step = integration_step;
     params_.precision = precision;
-    params_.rays_number = rays_number;
 
     cache_.integration_step_2 = integration_step / 2;
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
-    cache_.ray_angle_offset = geom::AngleVec2(geom::Angle::fromRadians(2 * M_PI / rays_number));
+    cache_.lidar_rays_number = std::round((angle_max - angle_min) / angle_increment);
+    cache_.lidar_angle_min = geom::AngleVec2(geom::Angle::fromRadians(angle_min));
+    cache_.lidar_angle_increment = geom::AngleVec2(geom::Angle::fromRadians(angle_increment));
 
     resetRear();
 }
@@ -116,21 +118,20 @@ namespace {
 bool checkIntersection(const geom::Ray& ray, const geom::Segment& segment,
     geom::Vec2& intersection, double precision) {
 
-    geom::Vec2 ray_dir = ray.dir.vec();
-    geom::Vec2 segment_dir = segment;
+    auto ray_dir = ray.dir.vec();
+    auto segment_dir = static_cast<geom::Vec2>(segment);
 
-    double det = geom::cross(ray_dir, segment_dir);
+    auto det = geom::cross(ray_dir, segment_dir);
     if (det < precision) {
         return false;
     }
 
-     geom::Vec2 originToSegmentBegin = segment.begin - ray.origin;
+    auto originToSegmentBegin = segment.begin - ray.origin;
 
+    auto t = geom::cross(originToSegmentBegin, segment_dir) / det;
+    auto u = geom::cross(-originToSegmentBegin, ray_dir) / det;
 
-    double t = geom::cross(segment_dir, originToSegmentBegin) / det;
-    double u = geom::cross(ray_dir, -originToSegmentBegin) / det;
-
-    if (t >= 0 && u >= 0 && u <= 1) {
+    if (t >= -precision && u >= -precision && u <= 1 + precision) {
         intersection = ray.origin + t * ray_dir;
         return true;
     }
@@ -160,12 +161,12 @@ float findClosestIntersectionDistance(const geom::Ray& ray,
 } // namespace
 
 std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& pose) const {
-    std::vector<float> ranges(params_.rays_number);
-    geom::Ray current_ray(pose.pos, pose.dir);
+    std::vector<float> ranges(cache_.lidar_rays_number);
+    geom::Ray current_ray(pose.pos, pose.dir + cache_.lidar_angle_min);
 
     for (auto& range : ranges) {
         range = findClosestIntersectionDistance(current_ray, obstacles_, params_.precision);
-        current_ray.dir += cache_.ray_angle_offset;
+        current_ray.dir += cache_.lidar_angle_increment;
     }
 
     return ranges;

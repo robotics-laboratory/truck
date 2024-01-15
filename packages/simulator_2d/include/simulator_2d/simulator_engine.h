@@ -18,7 +18,8 @@ namespace truck::simulator {
 class SimulatorEngine {
   public:
     SimulatorEngine(std::unique_ptr<model::Model> model, 
-        double integration_step = 0.001, double precision = 1e-8, int rays_number = 3200);
+        double integration_step = 1e-3, double precision = 1e-8,
+        float angle_min = 0, float angle_max = 2 * M_PI, float angle_increment = 2e-3);
 
     void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
     void resetMap(const std::string& path);
@@ -63,8 +64,7 @@ class SimulatorEngine {
 
     struct Parameters {
         double integration_step;
-        double precision;    
-        int rays_number;    
+        double precision;
     } params_;
 
     struct Cache {
@@ -72,7 +72,9 @@ class SimulatorEngine {
         double integration_step_6;
         double inverse_integration_step;
         double inverse_wheelbase_length;
-        geom::AngleVec2 ray_angle_offset;
+        int lidar_rays_number;
+        geom::AngleVec2 lidar_angle_min;
+        geom::AngleVec2 lidar_angle_increment;
     } cache_;
 
     // The value is set in setControl and should not change in other methods.
