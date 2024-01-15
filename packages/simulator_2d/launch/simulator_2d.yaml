@@ -17,6 +17,9 @@ launch:
   - arg:
       name: "calculations_precision"
       default: "1e-6"
+  - arg:
+      name: "rays_number"
+      default: "3200"
   - node:
       pkg: "simulator_2d"
       exec: "simulator_2d_node"
@@ -36,3 +39,5 @@ launch:
         - { name: "integration_step", value: "$(var integration_step)" }
         # precision of calculations
         - { name: "calculations_precision", value: "$(var calculations_precision)" }
+        # lidar rays number
+        - { name: "rays_number", value: "$(var rays_number)" }

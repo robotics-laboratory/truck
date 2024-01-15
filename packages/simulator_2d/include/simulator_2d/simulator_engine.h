@@ -1,22 +1,28 @@
 #include "simulator_2d/truck_state.h"
 
-#include <optional>
+#include "model/model.h"
+#include "geom/angle.h"
+#include "geom/angle_vector.h"
+#include "geom/pose.h"
+#include "geom/segment.h"
+#include "geom/vector.h"
 
 #include <eigen3/Eigen/Dense>
 
-#include "model/model.h"
-#include "geom/angle.h"
-#include "geom/pose.h"
-#include "geom/vector.h"
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace truck::simulator {
 
 class SimulatorEngine {
   public:
     SimulatorEngine(std::unique_ptr<model::Model> model, 
-        double integration_step = 0.001, double precision = 1e-8);
+        double integration_step = 0.001, double precision = 1e-8, int rays_number = 3200);
 
     void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
+    void resetMap(const std::string& path);
+    void eraseMap();
 
     TruckState getTruckState() const;
 
@@ -47,6 +53,7 @@ class SimulatorEngine {
         truck::geom::AngleVec2 dir,double base_velocity) const;
     double rearToBaseAngularVelocity(
         double base_velocity, double rear_curvature) const;
+    std::vector<float> getLidarRanges(const geom::Pose& pose) const;
 
     double getCurrentAcceleration() const;
     double getCurrentSteeringVelocity() const;
@@ -57,6 +64,7 @@ class SimulatorEngine {
     struct Parameters {
         double integration_step;
         double precision;    
+        int rays_number;    
     } params_;
 
     struct Cache {
@@ -64,6 +72,7 @@ class SimulatorEngine {
         double integration_step_6;
         double inverse_integration_step;
         double inverse_wheelbase_length;
+        geom::AngleVec2 ray_angle_offset;
     } cache_;
 
     // The value is set in setControl and should not change in other methods.
@@ -78,6 +87,8 @@ class SimulatorEngine {
     State rear_ax_state_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
+
+    geom::Segments obstacles_;
 };
 
 }  // namespace truck::simulator

@@ -48,6 +48,9 @@ void SimulatorNode::initializeTopicHandlers() {
 
     signals_.state = Node::create_publisher<truck_msgs::msg::SimulationState>(
         "/simulator/state", rclcpp::QoS(1).reliability(qos));
+
+    signals_.scan = Node::create_publisher<sensor_msgs::msg::LaserScan>(
+        "/lidar/scan", rclcpp::QoS(1).reliability(qos));
 }
 
 void SimulatorNode::initializeEngine() {
@@ -69,8 +72,10 @@ void SimulatorNode::initializeEngine() {
 
     engine_ = std::make_unique<SimulatorEngine>(
         std::move(model), declare_parameter("integration_step", 0.001), 
-        declare_parameter("calculations_precision", 1e-8));
+        declare_parameter("calculations_precision", 1e-8),
+        declare_parameter("rays_number", 3200));
     engine_->resetBase(pose, steering, velocity);
+    engine_->resetMap(declare_parameter("map_config", ""));
 
     // The zero state of the simulation.
     publishSimulationState();
@@ -151,6 +156,14 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
     signals_.state->publish(state_msg);
 }
 
+void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
+    sensor_msgs::msg::LaserScan scan_msg;
+    scan_msg.header.frame_id = "odom_ekf";
+    scan_msg.header.stamp = truck_state.time();
+    scan_msg.ranges = truck_state.lidarRanges();
+    signals_.scan->publish(scan_msg);
+}
+
 void SimulatorNode::publishSimulationState() {
     const auto truck_state = engine_->getTruckState();
     publishTime(truck_state);
@@ -158,6 +171,7 @@ void SimulatorNode::publishSimulationState() {
     publishTransformMessage(truck_state);
     publishTelemetryMessage(truck_state);
     publishSimulationStateMessage(truck_state);
+    publishLaserScanMessage(truck_state);
 }
 
 void SimulatorNode::makeSimulationTick() {

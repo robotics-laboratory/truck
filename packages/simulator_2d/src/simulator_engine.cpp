@@ -1,5 +1,8 @@
 #include "simulator_2d/simulator_engine.h"
 
+#include "map/map_builder.h"
+#include "geom/ray.h"
+
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -7,17 +10,19 @@
 namespace truck::simulator {
 
 SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
-    double integration_step, double precision) {
+    double integration_step, double precision, int rays_number) {
         
     model_ = std::move(model);
 
     params_.integration_step = integration_step;
     params_.precision = precision;
+    params_.rays_number = rays_number;
 
     cache_.integration_step_2 = integration_step / 2;
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
+    cache_.ray_angle_offset = geom::AngleVec2(geom::Angle::fromRadians(2 * M_PI / rays_number));
 
     resetRear();
 }
@@ -47,6 +52,22 @@ void SimulatorEngine::resetBase(const geom::Pose& pose,
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
     resetRear(rear_x, rear_y, yaw, middle_steering, rear_twist.velocity);
+}
+
+void SimulatorEngine::resetMap(const std::string& path) {
+    obstacles_.clear();
+    const auto map = map::Map::fromGeoJson(path);
+    const auto polygons = map.polygons();
+    for (const auto &polygon: polygons) {
+        auto segments = polygon.segments();
+        obstacles_.insert(obstacles_.end(), 
+            std::make_move_iterator(segments.begin()), 
+            std::make_move_iterator(segments.end()));
+    }
+}
+
+void SimulatorEngine::eraseMap() {
+    obstacles_.clear();
 }
 
 geom::Pose SimulatorEngine::getOdomBasePose() const {
@@ -90,6 +111,66 @@ double SimulatorEngine::rearToBaseAngularVelocity(
     return base_velocity * rear_curvature;
 }
 
+namespace {
+
+bool checkIntersection(const geom::Ray& ray, const geom::Segment& segment,
+    geom::Vec2& intersection, double precision) {
+
+    geom::Vec2 ray_dir = ray.dir.vec();
+    geom::Vec2 segment_dir = segment;
+
+    double det = geom::cross(ray_dir, segment_dir);
+    if (det < precision) {
+        return false;
+    }
+
+     geom::Vec2 originToSegmentBegin = segment.begin - ray.origin;
+
+
+    double t = geom::cross(segment_dir, originToSegmentBegin) / det;
+    double u = geom::cross(ray_dir, -originToSegmentBegin) / det;
+
+    if (t >= 0 && u >= 0 && u <= 1) {
+        intersection = ray.origin + t * ray_dir;
+        return true;
+    }
+
+    return false;
+}
+
+float findClosestIntersectionDistance(const geom::Ray& ray, 
+    const geom::Segments& obstacles, double precision) {
+
+    auto min_distance = std::numeric_limits<double>::infinity();
+    geom::Vec2 intersection;
+
+    for (const auto& segment : obstacles) {
+        if (checkIntersection(ray, segment, intersection, precision)) {
+            auto distance 
+                = std::hypot(intersection.x - ray.origin.x, intersection.y - ray.origin.y);
+            if (distance < min_distance) {
+                min_distance = distance;
+            }
+        }
+    }
+
+    return static_cast<float>(min_distance);
+}
+
+} // namespace
+
+std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& pose) const {
+    std::vector<float> ranges(params_.rays_number);
+    geom::Ray current_ray(pose.pos, pose.dir);
+
+    for (auto& range : ranges) {
+        range = findClosestIntersectionDistance(current_ray, obstacles_, params_.precision);
+        current_ray.dir += cache_.ray_angle_offset;
+    }
+
+    return ranges;
+}
+
 TruckState SimulatorEngine::getTruckState() const {
     const double steering = rear_ax_state_[StateIndex::kSteering];
 
@@ -100,6 +181,7 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto twist = rearToOdomBaseTwist(rear_curvature);
     const auto linear_velocity = rearToOdomBaseLinearVelocity(pose.dir, twist.velocity);
     const auto angular_velocity = rearToBaseAngularVelocity(twist.velocity, rear_curvature);
+    auto lidar_ranges = getLidarRanges(pose);
     
     return TruckState()
         .time(time_)
@@ -108,7 +190,8 @@ TruckState SimulatorEngine::getTruckState() const {
         .targetSteering(target_steering)
         .baseTwist(twist)
         .odomBaseLinearVelocity(linear_velocity)
-        .baseAngularVelocity(angular_velocity);
+        .baseAngularVelocity(angular_velocity)
+        .lidarRanges(lidar_ranges);
 }
 
 namespace {
