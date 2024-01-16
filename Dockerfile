@@ -530,7 +530,7 @@ RUN apt-get update -q \
         less \
         tmux \
         vim \
-    && python3 -m pip install --no-cache-dir -U -r /tmp/requirements.txt \
+    && python3 -m pip install --no-cache-dir --ignore-installed -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
