@@ -169,7 +169,7 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
 
 void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
     sensor_msgs::msg::LaserScan scan_msg;
-    scan_msg.header.frame_id = "odom_ekf";
+    scan_msg.header.frame_id = "base";
     scan_msg.header.stamp = truck_state.time();
     scan_msg.angle_min = params_.lidar_config.angle_min;
     scan_msg.angle_max = params_.lidar_config.angle_max;
