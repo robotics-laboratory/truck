@@ -1,7 +1,8 @@
 #pragma once
 
-#include "geom/vector.h"
 #include "geom/angle_vector.h"
+#include "geom/segment.h"
+#include "geom/vector.h"
 
 namespace truck::geom {
 
@@ -12,6 +13,7 @@ struct Ray {
     AngleVec2 dir;
 };
 
-using Rays = std::vector<Ray>;
+bool checkIntersection(const Ray& ray, const Segment& segment,
+    Vec2& intersection, double precision) noexcept;
 
 }  // namespace truck::geom

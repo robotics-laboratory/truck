@@ -25,6 +25,7 @@ add_library(
     src/polygon.cpp
     src/polyline.cpp
     src/pose.cpp
+    src/ray.cpp
     src/segment.cpp
     src/transform.cpp
     src/vector.cpp
