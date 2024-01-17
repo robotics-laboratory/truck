@@ -21,15 +21,22 @@ class Map {
         clipped_polygons.reserve(polygons_.size());
         for (const auto& polygon : polygons_) {
             geom::ComplexPolygon clipped_polygon;
-            clipped_polygon.outer = clip(grid, polygon.outer);
+            if (!polygon.outer.empty()) {
+                clipped_polygon.outer = clip(grid, polygon.outer);
+            }
             clipped_polygon.inners.reserve(polygon.inners.size());
             for (const auto& inner : polygon.inners) {
+                if (inner.empty()) {
+                    continue;
+                }
                 auto clipped_inner = clip(grid, inner);
                 if (!clipped_inner.empty()) {
                     clipped_polygon.inners.push_back(std::move(clipped_inner));
                 }
             }
-            clipped_polygons.push_back(std::move(clipped_polygon));
+            if (!clipped_polygon.outer.empty() || !clipped_polygon.inners.empty()) {
+                clipped_polygons.push_back(std::move(clipped_polygon));
+            }
         }
         return clipped_polygons;
     }
@@ -37,9 +44,7 @@ class Map {
   private:
     template<typename T>
     geom::Polygon clip(const fastgrid::Grid<T>& grid, const geom::Polygon& polygon) const noexcept {
-        VERIFY(grid.origin);
-
-        auto pose = grid.origin->pose;
+        auto pose = VERIFY(grid.origin)->pose;
         const geom::Polygon clip_polygon{
             pose.pos,
             pose.pos + pose.dir.vec() * grid.resolution * grid.size.width,
