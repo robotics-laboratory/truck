@@ -58,6 +58,7 @@ RUN apt-get update -q && \
         curl \
         git \
         gnupg2 \
+        libmpfr-dev \
         libboost-dev \
         libpython3-dev \
         make \
@@ -507,6 +508,17 @@ RUN wget -qO - https://github.com/ethz-asl/libpointmatcher/archive/refs/tags/${L
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
+### INSTALL CGAL
+
+ARG CGAL_VERSION="5.6"
+
+RUN wget -qO - https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.tar.gz | tar -xz \
+    && cd cgal-${CGAL_VERSION} && mkdir -p build && cd build \
+    && cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
 ### INSTALL DEV PKGS
 
 COPY requirements.txt /tmp/requirements.txt
@@ -518,7 +530,7 @@ RUN apt-get update -q \
         less \
         tmux \
         vim \
-    && python3 -m pip install --no-cache-dir -U -r /tmp/requirements.txt \
+    && python3 -m pip install --no-cache-dir --ignore-installed -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 

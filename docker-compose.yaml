@@ -3,19 +3,22 @@ version: "3"
 services:
   truck:
     container_name: "${CONTAINER_NAME:-truck-${USER}}"
-    image: registry.robotics-lab.ru/truck:0.8.1
+    image: "registry.robotics-lab.ru/truck:0.9.0"
     privileged: true
     runtime: "${DOCKER_RUNTIME:-runc}"
     build:
       dockerfile: Dockerfile
       context: .
-      tags:
-        - "registry.robotics-lab.ru/truck:latest"
-        - "registry.robotics-lab.ru/truck:0.8.1"
       x-bake:
-        platforms: [linux/arm64/v8, linux/amd64]
-        cache-to: "type=registry,ref=registry.robotics-lab.ru/truck:cache,mode=max"
-        cache-from: "type=registry,ref=registry.robotics-lab.ru/truck:cache"
+        platforms:
+          - linux/arm64
+          - linux/amd64
+        cache-from:
+          - type=registry,ref=registry.robotics-lab.ru/truck:cache-arm64
+          - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64
+        # cache-to:
+        #   - type=registry,ref=registry.robotics-lab.ru/truck:cache-arm64,mode=max
+        #   - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64,mode=max
     ports:
       - "${FOXGLOVE_PORT:-8765}:8765"
       - "${VIDEO_STREAMING_PORT:-8889}:8889"
