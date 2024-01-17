@@ -122,17 +122,38 @@ bool checkIntersection(const geom::Ray& ray, const geom::Segment& segment,
     auto segment_dir = static_cast<geom::Vec2>(segment);
 
     auto det = geom::cross(ray_dir, segment_dir);
-    if (det < precision) {
+    if (std::abs(det) < precision) {
         return false;
     }
 
     auto originToSegmentBegin = segment.begin - ray.origin;
 
-    auto t = geom::cross(originToSegmentBegin, segment_dir) / det;
-    auto u = geom::cross(-originToSegmentBegin, ray_dir) / det;
+    auto t = geom::cross(segment_dir, originToSegmentBegin) / det;
+    auto u = geom::cross(ray_dir, originToSegmentBegin) / det;
 
     if (t >= -precision && u >= -precision && u <= 1 + precision) {
         intersection = ray.origin + t * ray_dir;
+
+        //*
+        if (!geom::equal(intersection, segment.begin + u * segment_dir, precision)) {
+            return false;
+        }
+        //*
+        RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
+            "angle = " + std::to_string(ray.dir.angle().radians())
+                + " rX = " + std::to_string(ray.origin.x)
+                + " rY = " + std::to_string(ray.origin.y)
+                + " rdirX = " + std::to_string(ray_dir.x)
+                + " rdirY = " + std::to_string(ray_dir.y)
+                + " saX = " + std::to_string(segment.begin.x)
+                + " saY = " + std::to_string(segment.begin.y)
+                + " sbX = " + std::to_string(segment.end.x)
+                + " sbY = " + std::to_string(segment.end.y)
+                + " iX = " + std::to_string(intersection.x)
+                + " iY = " + std::to_string(intersection.y)
+                + " t = " + std::to_string(t));
+        //*/
+
         return true;
     }
 
