@@ -22,7 +22,7 @@ TEST(NavMeshViewer, draw_map_2) {
         .res = 50,
         .path = "/truck/packages/nav_mesh_viewer/data/map_2.png",
 
-        .color = NavMeshViewerParams::Color {
+        .color_rgb = NavMeshViewerParams::ColorRGB {
             .background = { 0, 0, 0 },
             .outer_polygon = { 252, 252, 252 },
             .inner_polygon = { 227, 227, 227 },
@@ -50,8 +50,8 @@ TEST(NavMeshViewer, draw_map_2) {
     NavMeshBuilder nav_mesh_builder = NavMeshBuilder(nav_mesh_params);
     NavMeshBuild nav_mesh_build = nav_mesh_builder.build(polygons);
     
-    NavMeshViewer nav_mesh_viewer = NavMeshViewer(nav_mesh_viewer_params);
-    nav_mesh_viewer.draw(polygons, nav_mesh_build);
+    NavMeshViewer nav_mesh_viewer = NavMeshViewer();
+    nav_mesh_viewer.draw(nav_mesh_viewer_params, polygons, nav_mesh_build);
 }
 
 TEST(NavMeshViewer, draw_map_5) {
@@ -67,7 +67,7 @@ TEST(NavMeshViewer, draw_map_5) {
         .res = 50,
         .path = "/truck/packages/nav_mesh_viewer/data/map_5.png",
 
-        .color = NavMeshViewerParams::Color {
+        .color_rgb = NavMeshViewerParams::ColorRGB {
             .background = { 0, 0, 0 },
             .outer_polygon = { 252, 252, 252 },
             .inner_polygon = { 227, 227, 227 },
@@ -95,8 +95,8 @@ TEST(NavMeshViewer, draw_map_5) {
     NavMeshBuilder nav_mesh_builder = NavMeshBuilder(nav_mesh_params);
     NavMeshBuild nav_mesh_build = nav_mesh_builder.build(polygons);
     
-    NavMeshViewer nav_mesh_viewer = NavMeshViewer(nav_mesh_viewer_params);
-    nav_mesh_viewer.draw(polygons, nav_mesh_build);
+    NavMeshViewer nav_mesh_viewer = NavMeshViewer();
+    nav_mesh_viewer.draw(nav_mesh_viewer_params, polygons, nav_mesh_build);
 }
 
 TEST(NavMeshViewer, draw_map_6) {
@@ -112,7 +112,7 @@ TEST(NavMeshViewer, draw_map_6) {
         .res = 50,
         .path = "/truck/packages/nav_mesh_viewer/data/map_6.png",
 
-        .color = NavMeshViewerParams::Color {
+        .color_rgb = NavMeshViewerParams::ColorRGB {
             .background = { 0, 0, 0 },
             .outer_polygon = { 252, 252, 252 },
             .inner_polygon = { 227, 227, 227 },
@@ -140,8 +140,8 @@ TEST(NavMeshViewer, draw_map_6) {
     NavMeshBuilder nav_mesh_builder = NavMeshBuilder(nav_mesh_params);
     NavMeshBuild nav_mesh_build = nav_mesh_builder.build(polygons);
     
-    NavMeshViewer nav_mesh_viewer = NavMeshViewer(nav_mesh_viewer_params);
-    nav_mesh_viewer.draw(polygons, nav_mesh_build);
+    NavMeshViewer nav_mesh_viewer = NavMeshViewer();
+    nav_mesh_viewer.draw(nav_mesh_viewer_params, polygons, nav_mesh_build);
 }
 
 int main(int argc, char *argv[]) {

@@ -9,114 +9,119 @@ namespace truck::nav_mesh_viewer {
 
 namespace {
 
-cv::Scalar toCVScalar(const std::vector<int>& color) {
-    VERIFY(color.size() == 3);
-    return cv::Scalar(color[2], color[1], color[0]);
+cv::Scalar toCVScalar(const std::vector<int>& color_rgb) {
+    VERIFY(color_rgb.size() == 3);
+    return cv::Scalar(color_rgb[2], color_rgb[1], color_rgb[0]);
 }
 
-cv::Point toCVPoint(const geom::Vec2& point, const geom::Vec2& origin, double res) {
+cv::Point toCVPoint(const geom::Vec2& origin, double res, const geom::Vec2& point) {
     return cv::Point(point.x * res, point.y * res) - cv::Point(origin.x, origin.y);
 }
 
 std::vector<cv::Point> toCVPoints(
-    const std::vector<geom::Vec2>& points, const geom::Vec2& origin, double res) {
+    const geom::Vec2& origin, double res, const std::vector<geom::Vec2>& points) {
     std::vector<cv::Point> cv_points;
 
     for (const geom::Vec2& point : points) {
-        cv_points.emplace_back(toCVPoint(point, origin, res));
+        cv_points.emplace_back(toCVPoint(origin, res, point));
     }
 
     return cv_points;
 }
 
 void drawPolygon(
-    const geom::ComplexPolygon& polygon, const NavMeshViewerParams& params,
-    const geom::Vec2& origin, cv::Mat& frame) {
-    cv::fillConvexPoly(
+    const NavMeshViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const geom::ComplexPolygon& polygon) {
+    cv::fillPoly(
         frame,
-        toCVPoints(polygon.outer, origin, params.res),
-        toCVScalar(params.color.outer_polygon));
+        toCVPoints(origin, params.res, polygon.outer),
+        toCVScalar(params.color_rgb.outer_polygon));
 
     for (const geom::Polygon& inner : polygon.inners) {
-        cv::fillConvexPoly(
+        cv::fillPoly(
             frame,
-            toCVPoints(inner, origin, params.res),
-            toCVScalar(params.color.inner_polygon));
+            toCVPoints(origin, params.res, inner),
+            toCVScalar(params.color_rgb.inner_polygon));
     }
 }
 
 void drawSkeleton(
-    const geom::Segments& skeleton, const NavMeshViewerParams& params,
-    const geom::Vec2& origin, cv::Mat& frame) {
+    const NavMeshViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const geom::Segments& skeleton) {
     for (const geom::Segment& seg : skeleton) {
         cv::line(
             frame,
-            toCVPoint(seg.begin, origin, params.res),
-            toCVPoint(seg.end, origin, params.res),
-            toCVScalar(params.color.skeleton),
+            toCVPoint(origin, params.res, seg.begin),
+            toCVPoint(origin, params.res, seg.end),
+            toCVScalar(params.color_rgb.skeleton),
             params.thickness.skeleton);
     }
 }
 
 void drawLevelLines(
-    const geom::Segments& level_lines, const NavMeshViewerParams& params,
-    const geom::Vec2& origin, cv::Mat& frame) {
+    const NavMeshViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const geom::Segments& level_lines) {
     for (const geom::Segment& seg : level_lines) {
         cv::line(
             frame,
-            toCVPoint(seg.begin, origin, params.res),
-            toCVPoint(seg.end, origin, params.res),
-            toCVScalar(params.color.level_lines),
+            toCVPoint(origin, params.res, seg.begin),
+            toCVPoint(origin, params.res, seg.end),
+            toCVScalar(params.color_rgb.level_lines),
             params.thickness.level_lines);
     }
 }
 
 void drawMesh(
-    const std::vector<geom::Vec2>& mesh, const NavMeshViewerParams& params,
-    const geom::Vec2& origin, cv::Mat& frame) {
+    const NavMeshViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const std::vector<geom::Vec2>& mesh) {
     for (const geom::Vec2& point : mesh) {
         cv::circle(
             frame,
-            toCVPoint(point, origin, params.res),
+            toCVPoint(origin, params.res, point),
             params.thickness.mesh,
-            toCVScalar(params.color.mesh),
+            toCVScalar(params.color_rgb.mesh),
             cv::FILLED);
     }
 }
 
 }  // namespace
 
-NavMeshViewer::NavMeshViewer(const NavMeshViewerParams& params) : params_(params) {}
+NavMeshViewer::NavMeshViewer() {}
 
 void NavMeshViewer::draw(
+    const NavMeshViewerParams& params,
     const geom::ComplexPolygons& polygons, const nav_mesh::NavMeshBuild& nav_mesh_build) {
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
 
     // set image borders via outer polygon's borders
-    cv::Rect bb = cv::boundingRect(toCVPoints(polygon.outer, geom::Vec2(0, 0), params_.res));
-    cv::Mat frame = cv::Mat(bb.size(), CV_8UC3, toCVScalar(params_.color.background));
+    cv::Rect bb = cv::boundingRect(toCVPoints(geom::Vec2(0, 0), params.res, polygon.outer));
+    cv::Mat frame = cv::Mat(bb.size(), CV_8UC3, toCVScalar(params.color_rgb.background));
 
     geom::Vec2 bb_origin(bb.x, bb.y);
 
-    if (params_.enable.polygon) {
-        drawPolygon(polygon, params_, bb_origin, frame);
+    if (params.enable.polygon) {
+        drawPolygon(params, bb_origin, frame, polygon);
     }
 
-    if (params_.enable.skeleton) {
-        drawSkeleton(nav_mesh_build.skeleton, params_, bb_origin, frame);
+    if (params.enable.skeleton) {
+        drawSkeleton(params, bb_origin, frame, nav_mesh_build.skeleton);
     }
 
-    if (params_.enable.level_lines) {
-        drawLevelLines(nav_mesh_build.level_lines, params_, bb_origin, frame);
+    if (params.enable.level_lines) {
+        drawLevelLines(params, bb_origin, frame, nav_mesh_build.level_lines);
     }
 
-    if (params_.enable.mesh) {
-        drawMesh(nav_mesh_build.mesh, params_, bb_origin, frame);
+    if (params.enable.mesh) {
+        drawMesh(params, bb_origin, frame, nav_mesh_build.mesh);
     }
 
+    /**
+     * Rotate an image around 'x' axis to avoid .png map mirroring
+     * relative to the x-axis of the .geojson map
+     */
     cv::flip(frame, frame, 0);
-    cv::imwrite(params_.path, frame);
+    cv::imwrite(params.path, frame);
 }
 
 }  // namespace truck::nav_mesh_viewer
