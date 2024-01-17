@@ -1,10 +1,10 @@
 #pragma once
 
-#include "map/map_builder.h"
-
+#include "geom/vector.h"
 #include "geom/segment.h"
+#include "geom/complex_polygon.h"
 
-namespace truck::nav_mesh {
+namespace truck::nav_mesh::builder {
 
 struct NavMeshParams {
     double dist;
@@ -37,4 +37,4 @@ class NavMeshBuilder {
     NavMeshParams params_;
 };
 
-}  // namespace truck::nav_mesh
+}  // namespace truck::nav_mesh::builder

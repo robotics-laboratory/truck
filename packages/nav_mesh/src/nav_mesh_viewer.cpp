@@ -1,11 +1,11 @@
-#include "nav_mesh_viewer/nav_mesh_viewer.h"
+#include "nav_mesh/nav_mesh_viewer.h"
+
+#include "common/exception.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "common/exception.h"
-
-namespace truck::nav_mesh_viewer {
+namespace truck::nav_mesh::viewer {
 
 namespace {
 
@@ -28,6 +28,7 @@ std::vector<cv::Point> toCVPoints(
 
     return cv_points;
 }
+
 
 void drawPolygon(
     const NavMeshViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
@@ -90,7 +91,7 @@ NavMeshViewer::NavMeshViewer() {}
 
 void NavMeshViewer::draw(
     const NavMeshViewerParams& params,
-    const geom::ComplexPolygons& polygons, const nav_mesh::NavMeshBuild& nav_mesh_build) {
+    const geom::ComplexPolygons& polygons, const builder::NavMeshBuild& nav_mesh_build) {
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
 
@@ -124,4 +125,4 @@ void NavMeshViewer::draw(
     cv::imwrite(params.path, frame);
 }
 
-}  // namespace truck::nav_mesh_viewer
+}  // namespace truck::nav_mesh::viewer

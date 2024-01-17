@@ -1,9 +1,8 @@
 #pragma once
 
-#include "map/map_builder.h"
 #include "nav_mesh/nav_mesh_builder.h"
 
-namespace truck::nav_mesh_viewer {
+namespace truck::nav_mesh::viewer {
 
 struct NavMeshViewerParams {
     double res = 50;
@@ -38,7 +37,7 @@ class NavMeshViewer {
 
     void draw(
         const NavMeshViewerParams& params,
-        const geom::ComplexPolygons& polygons, const nav_mesh::NavMeshBuild& nav_mesh_build);
+        const geom::ComplexPolygons& polygons, const builder::NavMeshBuild& nav_mesh_build);
 };
 
-}  // namespace truck::nav_mesh_viewer
+}  // namespace truck::nav_mesh::viewer

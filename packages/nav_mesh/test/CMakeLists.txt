@@ -1,5 +1,5 @@
 ament_add_gtest(${PROJECT_NAME}_tests main.cpp)
-target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME}_builder ${PROJECT_NAME}_viewer)
 
 set_tests_properties(${Tests} PROPERTIES TIMEOUT 1)
 
