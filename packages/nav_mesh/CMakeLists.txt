@@ -9,14 +9,20 @@ find_package(geom REQUIRED)
 find_package(map REQUIRED)
 find_package(CGAL REQUIRED)
 find_package(Boost REQUIRED)
+find_package(OpenCV REQUIRED)
 
 add_library(
-    ${PROJECT_NAME} SHARED
+    ${PROJECT_NAME}_builder SHARED
     src/nav_mesh_builder.cpp
 )
 
+add_library(
+    ${PROJECT_NAME}_viewer SHARED
+    src/nav_mesh_viewer.cpp
+)
+
 ament_target_dependencies(
-    ${PROJECT_NAME}
+    ${PROJECT_NAME}_builder
     common
     geom
     map
@@ -24,13 +30,26 @@ ament_target_dependencies(
     Boost
 )
 
+ament_target_dependencies(
+    ${PROJECT_NAME}_viewer
+    common
+    geom
+    OpenCV
+)
+
 target_include_directories(
-    ${PROJECT_NAME} PUBLIC
+    ${PROJECT_NAME}_builder PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 
-ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
+target_include_directories(
+    ${PROJECT_NAME}_viewer PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+
+ament_export_targets(${PROJECT_NAME}_targets HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(
     common
@@ -38,11 +57,12 @@ ament_export_dependencies(
     map
     CGAL
     Boost
+    OpenCV
 )
 
 install(
-    TARGETS ${PROJECT_NAME}
-    EXPORT ${PROJECT_NAME}
+    TARGETS ${PROJECT_NAME}_builder ${PROJECT_NAME}_viewer
+    EXPORT ${PROJECT_NAME}_targets
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
@@ -56,6 +76,9 @@ install(
 if(BUILD_TESTING)
     find_package(ament_cmake_clang_format REQUIRED)
     ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+
+    find_package(ament_cmake_gtest REQUIRED)
+    add_subdirectory("test")
 endif()
 
 ament_package()

@@ -8,7 +8,7 @@
 #include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
 #include <CGAL/create_offset_polygons_from_polygon_with_holes_2.h>
 
-namespace truck::nav_mesh {
+namespace truck::nav_mesh::builder {
 
 using CGAL_K = CGAL::Exact_predicates_inexact_constructions_kernel;
 
@@ -114,4 +114,4 @@ void NavMeshBuilder::gridFilter() const {
      */
 }
 
-}  // namespace truck::nav_mesh
+}  // namespace truck::nav_mesh::builder
