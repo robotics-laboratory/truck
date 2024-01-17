@@ -9,6 +9,8 @@
 #include "geom/line.h"
 #include "geom/polygon.h"
 #include "geom/polyline.h"
+#include "geom/ray.h"
+#include "geom/segment.h"
 #include "geom/uniform_stepper.h"
 #include "geom/vector.h"
 
@@ -465,6 +467,66 @@ TEST(Polygon, clip) {
              ++it_1, ++it_2) {
             ASSERT_GEOM_EQUAL(*it_1, *it_2, eps);
         }
+    }
+}
+
+void processRayTest(const Vec2& ray_origin, const AngleVec2& ray_dir,
+    const Vec2& segment_begin, const Vec2& segment_end, double precision) {
+
+    Ray ray(ray_origin, ray_dir);
+    Segment segment(segment_begin, segment_end);
+    Vec2 intersection;
+    bool result = checkIntersection(ray, segment, intersection, precision);
+
+    ASSERT_FALSE(result);
+}
+
+void processRayTest(const Vec2& ray_origin, const AngleVec2& ray_dir, 
+    const Vec2& segment_begin, const Vec2& segment_end, 
+    const Vec2& correct_intersection, double precision) {
+
+    Ray ray(ray_origin, ray_dir);
+    Segment segment(segment_begin, segment_end);
+    Vec2 intersection;
+    bool result = checkIntersection(ray, segment, intersection, precision);
+
+    ASSERT_TRUE(result);
+    ASSERT_GEOM_EQUAL(intersection, correct_intersection, precision);
+}
+
+TEST(Ray, segment_intersections) {
+    using namespace truck::geom;
+
+    constexpr double precision = 1e-4;
+    
+    {
+        Vec2 ray_origin(4, 0), segment_begin(2, 2), segment_end(6, 2), correct_intersection(4, 2);
+        AngleVec2 ray_dir(Angle::fromDegrees(90));
+
+        processRayTest(ray_origin, ray_dir, segment_begin, 
+            segment_end, correct_intersection, precision);
+    }
+
+    {
+        Vec2 ray_origin(3, 0), segment_begin(2, 2), segment_end(6, 2), correct_intersection(5, 2);
+        AngleVec2 ray_dir(Angle::fromDegrees(45));
+
+        processRayTest(ray_origin, ray_dir, segment_begin, 
+            segment_end, correct_intersection, precision);
+    }
+
+    {
+        Vec2 ray_origin(3, 0), segment_begin(2, 2), segment_end(6, 2);
+        AngleVec2 ray_dir(Angle::fromDegrees(135));
+
+        processRayTest(ray_origin, ray_dir, segment_begin, segment_end, precision);
+    }
+
+    {
+        Vec2 ray_origin(4, 3), segment_begin(2, 2), segment_end(6, 2);
+        AngleVec2 ray_dir(Angle::fromDegrees(90));
+
+        processRayTest(ray_origin, ray_dir, segment_begin, segment_end, precision);
     }
 }
 
