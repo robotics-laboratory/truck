@@ -19,7 +19,7 @@ launch:
       default: "1e-3"
   - arg:
       name: "calculations_precision"
-      default: "1e-6"
+      default: "1e-4"
   - node:
       pkg: "simulator_2d"
       exec: "simulator_2d_node"
