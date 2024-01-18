@@ -1,71 +1,146 @@
 #include "collision/map.h"
 
 #include "common/math.h"
+
+#include "fastgrid/distance_transform.h"
+
 #include "geom/msg.h"
 
 #include <opencv2/imgproc.hpp>
 
+#include <vector>
+
 namespace truck::collision {
 
-Map Map::emptyLikeThis() const {
-    return Map {
-        .origin = origin,
-        .resolution = resolution,
-        .size = size,
-        .data = cv::Mat()
-    };
+CollisionMap& CollisionMap::SetOccupancyGrid(
+    nav_msgs::msg::OccupancyGrid::ConstSharedPtr occupancy_grid) noexcept {
+    state_.occupancy_grid = std::move(occupancy_grid);
+    bit_map_.is_consistent = false;
+    distance_map_.is_consistent = false;
+    return *this;
 }
 
-Map distanceTransform(const Map& map) {
-    // initialize binary grid matrix
-    auto result = map.emptyLikeThis();
-
-    cv::distanceTransform(map.data, result.data, cv::DIST_L2, cv::DIST_MASK_PRECISE);
-    return result;
+CollisionMap& CollisionMap::SetMap(std::shared_ptr<const map::Map> map) noexcept {
+    state_.map = std::move(map);
+    bit_map_.is_consistent = false;
+    distance_map_.is_consistent = false;
+    return *this;
 }
 
-Map Map::fromOccupancyGrid(const nav_msgs::msg::OccupancyGrid& map) {
-    cv::Mat grid = cv::Mat(map.info.height, map.info.width, CV_8UC1);
+fastgrid::U8Grid CollisionMap::GetBitMap() noexcept {
+    if (!state_.occupancy_grid) {
+        return fastgrid::U8Grid(fastgrid::Size{.width = 0, .height = 0}, 0.0);
+    }
 
-    // fill binary grid matrix with values based on occupancy grid values
-    for (uint32_t i = 0; i < map.info.height; i++) {
-        for (uint32_t j = 0; j < map.info.width; j++) {
-            int8_t grid_cell = map.data.at(i * map.info.width + j);
-            grid.at<uchar>(i, j) = grid_cell == 0 ? 1 : 0;
+    if (bit_map_.is_consistent) {
+        return bit_map_.holder.grid;
+    }
+
+    auto occupancy_grid_size = fastgrid::Size{
+        .width = static_cast<int>(state_.occupancy_grid->info.width),
+        .height = static_cast<int>(state_.occupancy_grid->info.height)};
+
+    if (bit_map_.holder.grid.size != occupancy_grid_size) {
+        bit_map_.holder = fastgrid::makeGrid<uint8_t>(
+            occupancy_grid_size, state_.occupancy_grid->info.resolution);
+    }
+
+    auto& grid = bit_map_.holder.grid;
+
+    grid.resolution = state_.occupancy_grid->info.resolution;
+    grid.origin = geom::toPose(state_.occupancy_grid->info.origin);
+
+    for (int i = 0; i < occupancy_grid_size.height; ++i) {
+        for (int j = 0; j < occupancy_grid_size.width; ++j) {
+            int8_t grid_cell = state_.occupancy_grid->data.at(i * occupancy_grid_size.width + j);
+            grid.data[i * grid.size.width + j] = (grid_cell == 0);
         }
     }
 
-    return Map {
-        .origin = geom::toPose(map.info.origin),
-        .resolution = map.info.resolution,
-        .size = {
-            static_cast<int>(map.info.width),
-            static_cast<int>(map.info.height)
-        },
-        .data = grid
-    };
+    if (state_.map) {
+        auto polygons = state_.map->clip(grid);
+        cv::Mat mat = cv::Mat::ones(cv::Size(grid.size.width, grid.size.height), CV_8UC1);
+        for (const auto& polygon : polygons) {
+            if (!polygon.outer.empty()) {
+                mat.setTo(0);
+                std::vector<cv::Point> points;
+                points.reserve(polygon.outer.size());
+                for (const auto& point : polygon.outer) {
+                    auto tf_point = grid.transform(point);
+                    points.push_back(cv::Point(tf_point.x, tf_point.y));
+                }
+                cv::fillPoly(mat, std::move(points), 1, cv::LINE_8);
+            }
+            for (const auto& inner : polygon.inners) {
+                std::vector<cv::Point> points;
+                points.reserve(inner.size());
+                for (const auto& point : inner) {
+                    auto tf_point = grid.transform(point);
+                    points.push_back(cv::Point(tf_point.x, tf_point.y));
+                }
+                cv::fillPoly(mat, std::move(points), 0, cv::LINE_8);
+            }
+        }
+
+        for (int i = 0; i < grid.size.height; ++i) {
+            for (int j = 0; j < grid.size.width; ++j) {
+                int8_t grid_cell = mat.at<int8_t>(i * grid.size.width + j);
+                grid.data[i * grid.size.width + j] &= (grid_cell != 0);
+            }
+        }
+    }
+
+    bit_map_.is_consistent = true;
+
+    return grid;
 }
 
-nav_msgs::msg::OccupancyGrid Map::makeCostMap(
-        const std_msgs::msg::Header& header,
-        double kMaxDist) const {
+fastgrid::F32Grid CollisionMap::GetDistanceMap() noexcept {
+    if (!state_.occupancy_grid) {
+        return fastgrid::F32Grid(fastgrid::Size{.width = 0, .height = 0}, 0.0);
+    }
+
+    if (distance_map_.is_consistent) {
+        return distance_map_.holder.grid;
+    }
+
+    auto bit_map_grid = GetBitMap();
+
+    if (distance_map_.holder.grid.size != bit_map_grid.size) {
+        distance_map_.holder = fastgrid::makeGridLike<float>(bit_map_grid);
+        distance_map_.buffer =
+            fastgrid::makeGrid<int>(bit_map_grid.size.extend(2), bit_map_grid.resolution);
+    }
+
+    auto& grid = distance_map_.holder.grid;
+
+    grid.resolution = bit_map_grid.resolution;
+    grid.origin = bit_map_grid.origin;
+
+    fastgrid::distanceTransformApprox3(bit_map_grid, distance_map_.buffer.grid, grid);
+
+    bit_map_.is_consistent = true;
+
+    return grid;
+}
+
+nav_msgs::msg::OccupancyGrid CollisionMap::MakeCostMap(
+    const std_msgs::msg::Header& header, double kMaxDist) noexcept {
+    auto grid = GetDistanceMap();
+
     nav_msgs::msg::OccupancyGrid msg;
 
-    const double max = kMaxDist / resolution;
-
     msg.header = header;
-    msg.info.resolution = resolution;
-    msg.info.width = size.width;
-    msg.info.height = size.height;
-    msg.info.origin = geom::msg::toPose(origin);
+    msg.info.resolution = grid.resolution;
+    msg.info.width = grid.size.width;
+    msg.info.height = grid.size.height;
+    msg.info.origin = geom::msg::toPose(grid.origin->pose);
+    msg.data = std::vector<int8_t>(grid.size());
 
-    msg.data = std::vector<int8_t>(size.width * size.height);
-
-
-    for (int i = 0; i < size.height; i++) {
-        for (int j = 0; j < size.width; j++) {
-            const double cost = 1 - Limits(0., 1.).clamp(data.at<float>(i, j) / max);
-            msg.data.at(i * size.width + j) = 100 * cost;
+    for (int i = 0; i < grid.size.height; ++i) {
+        for (int j = 0; j < grid.size.width; ++j) {
+            msg.data.at(i * grid.size.width + j) = static_cast<int8_t>(
+                100 * (1 - Limits(0., 1.).clamp(grid.data[i * grid.size.width + j] / kMaxDist)));
         }
     }
 

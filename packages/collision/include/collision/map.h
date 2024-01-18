@@ -1,27 +1,47 @@
 #pragma once
 
+#include "geom/complex_polygon.h"
 #include "geom/pose.h"
 
 #include <nav_msgs/msg/occupancy_grid.hpp>
+
+#include "fastgrid/grid.h"
+#include "fastgrid/holder.h"
+
+#include "map/map_builder.h"
 
 #include <opencv2/core.hpp>
 
 namespace truck::collision {
 
-struct Map {
-    static Map fromOccupancyGrid(const nav_msgs::msg::OccupancyGrid& grid);
-    Map emptyLikeThis() const;
+class CollisionMap {
+  public:
+    CollisionMap& SetOccupancyGrid(
+        nav_msgs::msg::OccupancyGrid::ConstSharedPtr occupancy_grid) noexcept;
+    CollisionMap& SetMap(std::shared_ptr<const map::Map> map) noexcept;
 
-    nav_msgs::msg::OccupancyGrid makeCostMap(
-        const std_msgs::msg::Header& header,
-        double kMaxDist) const;
+    fastgrid::U8Grid GetBitMap() noexcept;
+    fastgrid::F32Grid GetDistanceMap() noexcept;
 
-    geom::Pose origin;
-    double resolution;
-    cv::Size size;
-    cv::Mat data;
+    nav_msgs::msg::OccupancyGrid MakeCostMap(
+        const std_msgs::msg::Header& header, double kMaxDist) noexcept;
+
+  private:
+    struct State {
+        nav_msgs::msg::OccupancyGrid::ConstSharedPtr occupancy_grid = nullptr;
+        std::shared_ptr<const map::Map> map = nullptr;
+    } state_;
+
+    struct BitMap {
+        bool is_consistent = true;
+        fastgrid::U8GridHolder holder;
+    } bit_map_;
+
+    struct DistanceMap {
+        bool is_consistent = true;
+        fastgrid::F32GridHolder holder;
+        fastgrid::S32GridHolder buffer;
+    } distance_map_;
 };
-
-Map distanceTransform(const Map& map);
 
 }  // namespace truck::collision

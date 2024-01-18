@@ -15,8 +15,8 @@ Map Map::fromGeoJson(const std::string& path) {
     // iterate through every complex polygon
     for (const auto& elem : geojson_features) {
         // get list of outer (0 index) and inner polygons (1+ index) for a current complex polygon
-        auto polys_list = elem["geometry"]["coordinates"] \
-            .get<std::vector<std::vector<std::pair<double, double>>>>();
+        auto polys_list = elem["geometry"]["coordinates"]
+                              .get<std::vector<std::vector<std::pair<double, double>>>>();
 
         int polys_cnt = 0;
         geom::Polygon outer;

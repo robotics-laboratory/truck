@@ -51,7 +51,6 @@ class PlannerNode : public rclcpp::Node {
 
     struct State {
         std::shared_ptr<search::Grid> grid = nullptr;
-        std::shared_ptr<collision::Map> distance_transform = nullptr;
 
         nav_msgs::msg::Odometry::SharedPtr odom = nullptr;
         nav_msgs::msg::OccupancyGrid::SharedPtr occupancy_grid = nullptr;
@@ -76,6 +75,7 @@ class PlannerNode : public rclcpp::Node {
 
     std::unique_ptr<model::Model> model_ = nullptr;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
+    std::shared_ptr<collision::CollisionMap> collision_map_ = nullptr;
     std::shared_ptr<collision::StaticCollisionChecker> checker_ = nullptr;
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 };

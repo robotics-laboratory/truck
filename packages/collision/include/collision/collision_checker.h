@@ -2,6 +2,8 @@
 
 #include "collision/map.h"
 
+#include "fastgrid/interpolation.h"
+
 #include "geom/pose.h"
 #include "geom/transform.h"
 #include "geom/vector.h"
@@ -20,7 +22,7 @@ class StaticCollisionChecker {
     StaticCollisionChecker(const model::Shape& shape);
 
     bool initialized() const;
-    void reset(Map distance_transform);
+    void reset(const fastgrid::F32Grid& distance_map);
 
     double distance(const geom::Pose& ego_pose) const;
     double distance(const geom::Vec2& point) const;
@@ -29,11 +31,8 @@ class StaticCollisionChecker {
     model::Shape shape_;
 
     struct State {
-        Map distance_transform;
-        geom::Transform tf;
-    };
-
-    std::optional<State> state_ = std::nullopt;
+        std::optional<fastgrid::Bilinear<float>> distance_transform = std::nullopt;
+    } state_;
 };
 
 }  // namespace truck::collision

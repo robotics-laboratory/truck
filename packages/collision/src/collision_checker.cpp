@@ -8,34 +8,28 @@ namespace truck::collision {
 
 StaticCollisionChecker::StaticCollisionChecker(const model::Shape& shape) : shape_(shape) {}
 
-bool StaticCollisionChecker::initialized() const { return state_.has_value(); }
+bool StaticCollisionChecker::initialized() const { return state_.distance_transform.has_value(); }
 
-void StaticCollisionChecker::reset(Map disntace_transform) {
-    const auto& origin = disntace_transform.origin;
-    const auto tf = geom::Transform(origin.pos, origin.dir);
-
-    state_ = State{
-        .distance_transform = std::move(disntace_transform),
-        .tf = tf.inv(),
-    };
+void StaticCollisionChecker::reset(const fastgrid::F32Grid& distance_map) {
+    state_.distance_transform = fastgrid::Bilinear<float>(distance_map);
 }
 
 double StaticCollisionChecker::distance(const geom::Vec2& point) const {
     VERIFY(initialized());
-    const auto grid_point = state_->tf(point);
-
-    // find relevant indices of distance transform matrix
-    const auto x = floor<int>(grid_point.x / state_->distance_transform.resolution);
-    const auto y = floor<int>(grid_point.y / state_->distance_transform.resolution);
+    const auto [x, y] = state_.distance_transform->domain.Transform(point);
 
     // check borders
-    if ((x < 0) || (y < 0)\
-            || (state_->distance_transform.size.height <= y)
-            || (state_->distance_transform.size.width <= x)) {
+    if ((x < 0) || (y < 0) ||
+        (state_.distance_transform->domain.size.height *
+             state_.distance_transform->domain.resolution <=
+         y) ||
+        (state_.distance_transform->domain.size.width *
+             state_.distance_transform->domain.resolution <=
+         x)) {
         return kMaxDistance;
     }
 
-    return state_->distance_transform.data.at<float>(y, x) * state_->distance_transform.resolution;
+    return state_.distance_transform->Get(point);
 }
 
 double StaticCollisionChecker::distance(const geom::Pose& ego_pose) const {

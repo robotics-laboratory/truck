@@ -3,6 +3,8 @@
 #include "geom/common.h"
 #include "geom/vector.h"
 
+#include <optional>
+
 namespace truck::geom {
 
 // ax + by + c = 0
@@ -30,6 +32,8 @@ struct Line {
 };
 
 bool equal(const Line& l1, const Line& l2, double eps) noexcept;
+
+std::optional<Vec2> intersect(const Line& l1, const Line& l2) noexcept;
 
 std::ostream& operator<<(std::ostream& out, const Line& l) noexcept;
 

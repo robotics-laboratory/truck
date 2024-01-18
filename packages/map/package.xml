@@ -11,6 +11,7 @@
 
   <depend>geom</depend>
   <depend>common</depend>
+  <depend>fastgrid</depend>
   <depend>nlohmann_json</depend>
 
   <test_depend>ament_lint_auto</test_depend>
