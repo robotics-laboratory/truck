@@ -95,6 +95,7 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
 
+    collision_map_ = std::make_shared<collision::CollisionMap>();
     checker_ = std::make_unique<collision::StaticCollisionChecker>(model_->shape());
 
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
@@ -148,7 +149,7 @@ motion::Trajectory makeTrajectory(const std::deque<LinkedPose>& path) {
 }  // namespace
 
 void WaypointFollowerNode::publishGridCostMap() {
-    if (!state_.distance_transform) {
+    if (!collision_map_->GetDistanceMap().data) {
         return;
     }
 
@@ -157,12 +158,12 @@ void WaypointFollowerNode::publishGridCostMap() {
     }
 
     constexpr double kMaxDistance = 10.0;
-    const auto msg = state_.distance_transform->makeCostMap(state_.grid->header, kMaxDistance);
+    const auto msg = collision_map_->MakeCostMap(state_.grid->header, kMaxDistance);
     signal_.distance_transform->publish(msg);
 }
 
 void WaypointFollowerNode::publishTrajectory() {
-    if (!state_.odometry || !state_.distance_transform) {
+    if (!state_.odometry || !collision_map_->GetDistanceMap().data) {
         return;
     }
 
@@ -174,7 +175,7 @@ void WaypointFollowerNode::publishTrajectory() {
         follower_->reset();
     }
 
-    checker_->reset(*state_.distance_transform);
+    checker_->reset(collision_map_);
 
     motion::Trajectory trajectory = makeTrajectory(follower_->path());
     bool collision = false;
@@ -291,8 +292,7 @@ void WaypointFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     msg->info.origin = geom::msg::toPose(tf_opt->apply(geom::toPose(msg->info.origin)));
 
     // distance transfor - cpu intensive operation
-    state_.distance_transform = std::make_shared<collision::Map>(
-        collision::distanceTransform(collision::Map::fromOccupancyGrid(*msg)));
+    collision_map_->SetOccupancyGrid(msg);
 
     state_.grid = msg;
 }

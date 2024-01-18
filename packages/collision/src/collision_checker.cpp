@@ -8,37 +8,29 @@ namespace truck::collision {
 
 StaticCollisionChecker::StaticCollisionChecker(const model::Shape& shape) : shape_(shape) {}
 
-bool StaticCollisionChecker::initialized() const { return state_.has_value(); }
+bool StaticCollisionChecker::initialized() const { return state_.collision_map != nullptr; }
 
-void StaticCollisionChecker::reset(Map disntace_transform) {
-    const auto& origin = disntace_transform.origin;
-    const auto tf = geom::Transform(origin.pos, origin.dir);
-
-    state_ = State{
-        .distance_transform = std::move(disntace_transform),
-        .tf = tf.inv(),
-    };
+void StaticCollisionChecker::reset(std::shared_ptr<CollisionMap> collision_map) {
+    state_.collision_map = std::move(collision_map);
 }
 
-double StaticCollisionChecker::distance(const geom::Vec2& point) const {
+double StaticCollisionChecker::distance(const geom::Vec2& point) const noexcept {
     VERIFY(initialized());
-    const auto grid_point = state_->tf(point);
 
-    // find relevant indices of distance transform matrix
-    const auto x = floor<int>(grid_point.x / state_->distance_transform.resolution);
-    const auto y = floor<int>(grid_point.y / state_->distance_transform.resolution);
+    auto interpolation = fastgrid::Bilinear<float>(state_.collision_map->GetDistanceMap());
+    const auto [x, y] = interpolation.domain.Transform(point);
 
     // check borders
-    if ((x < 0) || (y < 0)\
-            || (state_->distance_transform.size.height <= y)
-            || (state_->distance_transform.size.width <= x)) {
+    if ((x < 0) || (y < 0) ||
+        (interpolation.domain.size.height * interpolation.domain.resolution <= y) ||
+        (interpolation.domain.size.width * interpolation.domain.resolution <= x)) {
         return kMaxDistance;
     }
 
-    return state_->distance_transform.data.at<float>(y, x) * state_->distance_transform.resolution;
+    return interpolation.Get(point);
 }
 
-double StaticCollisionChecker::distance(const geom::Pose& ego_pose) const {
+double StaticCollisionChecker::distance(const geom::Pose& ego_pose) const noexcept {
     double min_dist = kMaxDistance;
     std::vector<geom::Vec2> points = shape_.getCircleDecomposition(ego_pose);
 

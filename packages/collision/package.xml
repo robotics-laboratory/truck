@@ -9,7 +9,9 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>common</depend>
+  <depend>fastgrid</depend>
   <depend>geom</depend>
+  <depend>map</depend>
   <depend>model</depend>
   <depend>nav_msgs</depend>
   <depend>OpenCV</depend>

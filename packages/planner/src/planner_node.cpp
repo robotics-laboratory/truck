@@ -18,7 +18,7 @@ std_msgs::msg::ColorRGBA toColorRGBA(const std::vector<double>& vector) {
     return color;
 }
 
-} // namespace
+}  // namespace
 
 PlannerNode::PlannerNode() : Node("planner") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
@@ -87,6 +87,7 @@ PlannerNode::PlannerNode() : Node("planner") {
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_buffer_->setUsingDedicatedThread(true);
 
+    collision_map_ = std::make_shared<collision::CollisionMap>();
     checker_ = std::make_shared<collision::StaticCollisionChecker>(model_->shape());
 
     timer_ = this->create_wall_timer(200ms, bind(&PlannerNode::doPlanningLoop, this));
@@ -113,13 +114,11 @@ void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     msg->header.frame_id = target;
     msg->info.origin = geom::msg::toPose(tf_opt->apply(geom::toPose(msg->info.origin)));
 
-    state_.distance_transform = std::make_shared<collision::Map>(
-        collision::distanceTransform(collision::Map::fromOccupancyGrid(*msg)));
-
     state_.occupancy_grid = msg;
 
     // update collision checker
-    checker_->reset(*state_.distance_transform);
+    collision_map_->SetOccupancyGrid(msg);
+    checker_->reset(collision_map_);
 }
 
 void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {

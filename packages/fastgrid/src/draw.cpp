@@ -1,5 +1,6 @@
 #include "fastgrid/draw.h"
 
+#include "common/math.h"
 #include "common/exception.h"
 
 #include <opencv2/imgproc.hpp>
@@ -15,7 +16,7 @@ __always_inline std::vector<cv::Point> PolyToInput(const geom::Polygon& poly, co
     input.reserve(poly.size());
     for (const auto& vertex : poly) {
         const auto point = grid.transform(vertex);
-        input.push_back(cv::Point(point.x, point.y));
+        input.push_back(cv::Point(floor<int>(point.x), floor<int>(point.y)));
     }
 
     return input;
@@ -30,7 +31,7 @@ __always_inline std::vector<std::vector<cv::Point>> ComplexPolyToInput(
         std::vector<cv::Point> points;
         for (const auto& vertex : complex_poly.outer) {
             const auto point = grid.transform(vertex);
-            points.push_back(cv::Point(point.x, point.y));
+            points.push_back(cv::Point(floor<int>(point.x), floor<int>(point.y)));
         }
         input.push_back(std::move(points));
     }
@@ -39,7 +40,7 @@ __always_inline std::vector<std::vector<cv::Point>> ComplexPolyToInput(
         std::vector<cv::Point> points;
         for (const auto& vertex : inner) {
             const auto point = grid.transform(vertex);
-            points.push_back(cv::Point(point.x, point.y));
+            points.push_back(cv::Point(floor<int>(point.x), floor<int>(point.y)));
         }
         input.push_back(std::move(points));
     }
