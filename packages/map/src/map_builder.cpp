@@ -2,10 +2,6 @@
 
 #include "common/exception.h"
 
-#include "geom/line.h"
-
-#include <iostream>
-
 #include <nlohmann/json.hpp>
 
 #include <fstream>
