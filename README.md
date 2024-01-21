@@ -4,20 +4,5 @@
 
 It is intended to be an educational reasearch project, so, among our goals is to maintain a rich set of study materials and detailed [documentation](https://github.com/robotics-laboratory/truck/blob/master/doc/README.md).
 
-## Get Started. How to launch container
 
-### UNIX-like (Linux/MacOS)
-```
-docker compose up -d
-```
-
-### Windows
-```
-cmd /C 'set "USER=%USERNAME%" && docker compose up -d'
-```
-
-\
-Then you can attach to the container, its name will look like truck-&lt;your username&gt;
-```
-docker exec -it <container name> bash
-```
+### [Getting started](./doc/getting_started.md)

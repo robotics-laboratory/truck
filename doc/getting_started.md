@@ -20,13 +20,26 @@ docker-compose up -d truck-jetson
 
 # just run another shell (preferred)
 # exit doesn't stop the container
-docker exec -it truck bash
+docker exec -it truck-<username> bash
 
 # also you 
 
 # stop container
-docker stop truck
+docker stop truck-<username>
 ```
+
+### Docker compose for Windows
+
+#### Windows PowerShell
+```
+cmd /C 'set "USER=%USERNAME%" && set "PWD=%cd%" && docker compose up -d'
+```
+
+#### Windows Command Prompt
+```
+set "USER=%USERNAME%" && set "PWD=%cd%" && docker compose up -d
+```
+
 ### Build and push
 If you need to build container after any changes, follow this steps. Up version in ```docker-compose.yaml``` if orresponding dockerfile is changed.
 

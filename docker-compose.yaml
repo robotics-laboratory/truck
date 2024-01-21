@@ -21,7 +21,7 @@ services:
       - "${VIDEO_STREAMING_PORT:-8889}:8889"
       - "${GAZEBO_PORT:-11345}:11345"
     volumes:
-      - ".:/truck"
+      - "${PWD}:/truck"
       - "/dev:/dev"
 
 networks:
