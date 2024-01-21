@@ -111,7 +111,7 @@ Start bluetoothctl. Enable the agent and set it as default:
 [bluetooth]# default-agent
 ```
 
-Power on the Bluetooth controller, and set it as discoverable: 
+Power on the Bluetooth controller, and set it as discoverable:
 ```
 [bluetooth]# power on
 [bluetooth]# discoverable on
