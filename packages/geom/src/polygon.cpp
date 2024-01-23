@@ -85,6 +85,10 @@ Orientation Polygon::orientation() const noexcept {
     return (orientation_sign > 0 ? Orientation::COUNTERCLOCKWISE : Orientation::CLOCKWISE);
 }
 
+/** Implementation of Sutherland–Hodgman algorithm
+ *
+ * See https://en.wikipedia.org/wiki/Sutherland–Hodgman_algorithm
+ */
 Polygon clip(
     const Polygon& clip_polygon, const Polygon& subject_polygon, const double eps) noexcept {
     VERIFY(clip_polygon.isConvex());
