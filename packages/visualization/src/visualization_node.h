@@ -1,7 +1,7 @@
 #pragma once
 
 #include "model/model.h"
-#include "map/map_builder.h"
+#include "map/map.h"
 #include "truck_msgs/msg/control.hpp"
 #include "truck_msgs/msg/control_mode.hpp"
 #include "truck_msgs/msg/trajectory.hpp"
