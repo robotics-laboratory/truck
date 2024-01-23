@@ -10,7 +10,7 @@ find_package(nlohmann_json REQUIRED)
 
 add_library(
     ${PROJECT_NAME} SHARED
-    src/map_builder.cpp
+    src/map.cpp
 )
 
 ament_target_dependencies(

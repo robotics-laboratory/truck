@@ -93,7 +93,8 @@ Polygon clip(
     const Polygon& clip_polygon, const Polygon& subject_polygon, const double eps) noexcept {
     VERIFY(clip_polygon.isConvex());
 
-    int orientation_sign = static_cast<int>(clip_polygon.orientation());
+    int orientation_sign =
+        sign(cross(clip_polygon[1] - clip_polygon[0], clip_polygon[2] - clip_polygon[1]));
 
     auto clipped_polygon = subject_polygon;
 

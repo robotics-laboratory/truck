@@ -407,7 +407,15 @@ TEST(Polygon, orientation) {
         ASSERT_EQ(poly.orientation(), Orientation::COUNTERCLOCKWISE);
     }
     {
+        const Polygon poly{Vec2(2, 2), Vec2(0, 3), Vec2(0, 0), Vec2(1, -1), Vec2(4, 0), Vec2(4, 2)};
+        ASSERT_EQ(poly.orientation(), Orientation::COUNTERCLOCKWISE);
+    }
+    {
         const Polygon poly{Vec2(0, 0), Vec2(0, 1), Vec2(1, 1), Vec2(1, 0)};
+        ASSERT_EQ(poly.orientation(), Orientation::CLOCKWISE);
+    }
+    {
+        const Polygon poly{Vec2(2, 2), Vec2(4, 2), Vec2(4, 0), Vec2(1, -1), Vec2(0, 0), Vec2(0, 3)};
         ASSERT_EQ(poly.orientation(), Orientation::CLOCKWISE);
     }
 }

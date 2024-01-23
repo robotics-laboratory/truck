@@ -1,4 +1,4 @@
-#include "map/map_builder.h"
+#include "map/map.h"
 
 #include "common/exception.h"
 
