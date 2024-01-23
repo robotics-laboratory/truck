@@ -27,6 +27,11 @@ T clamp(const T& val, const T& abs_limit) {
     return clamp(val, -abs_limit, abs_limit);
 }
 
+template<typename T>
+inline constexpr int sign(const T& x) {
+    return (T(0) < x) - (x < T(0));
+}
+
 template<class T>
 struct Limits {
     Limits() = default;
@@ -43,7 +48,6 @@ struct Limits {
 
     T min, max;
 };
-
 
 template<class Int, class Float>
 Int ceil(Float value) {

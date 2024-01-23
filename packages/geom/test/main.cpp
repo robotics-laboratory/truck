@@ -197,6 +197,24 @@ TEST(Line, make) {
     ASSERT_GEOM_EQUAL(l, l3);
 }
 
+TEST(Line, intersect) {
+    constexpr double eps = 1e-7;
+
+    {
+        auto l1 = Line::fromTwoPoints(Vec2(0, 0), Vec2(1, 1));
+        auto l2 = Line::fromTwoPoints(Vec2(0, 1), Vec2(1, 0));
+
+        ASSERT_GEOM_EQUAL(*intersect(l1, l2), Vec2(0.5, 0.5), eps);
+    }
+
+    {
+        auto l1 = Line::fromTwoPoints(Vec2(0, 0), Vec2(0, 1));
+        auto l2 = Line::fromTwoPoints(Vec2(1, 0), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(l1, l2), std::nullopt);
+    }
+}
+
 TEST(Distance, point_point) {
     const Vec2 a = {1, 1};
     const Vec2 b = {0, 2};
@@ -369,6 +387,84 @@ TEST(UniformStepper, stepping) {
         ++it;
         ASSERT_GEOM_EQUAL((*it).pos, Vec2(1, 1), eps);
         ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+    }
+}
+
+TEST(Polygon, isComplex) {
+    {
+        const Polygon poly{Vec2(0, 0), Vec2(1, 0), Vec2(1, 1)};
+        ASSERT_TRUE(poly.isConvex());
+    }
+    {
+        const Polygon poly{Vec2(0, 0), Vec2(4, 0), Vec2(4, 3), Vec2(2, 2), Vec2(0, 3)};
+        ASSERT_FALSE(poly.isConvex());
+    }
+}
+
+TEST(Polygon, orientation) {
+    {
+        const Polygon poly{Vec2(0, 0), Vec2(1, 0), Vec2(1, 1), Vec2(0, 1)};
+        ASSERT_EQ(poly.orientation(), Orientation::COUNTERCLOCKWISE);
+    }
+    {
+        const Polygon poly{Vec2(2, 2), Vec2(0, 3), Vec2(0, 0), Vec2(1, -1), Vec2(4, 0), Vec2(4, 2)};
+        ASSERT_EQ(poly.orientation(), Orientation::COUNTERCLOCKWISE);
+    }
+    {
+        const Polygon poly{Vec2(0, 0), Vec2(0, 1), Vec2(1, 1), Vec2(1, 0)};
+        ASSERT_EQ(poly.orientation(), Orientation::CLOCKWISE);
+    }
+    {
+        const Polygon poly{Vec2(2, 2), Vec2(4, 2), Vec2(4, 0), Vec2(1, -1), Vec2(0, 0), Vec2(0, 3)};
+        ASSERT_EQ(poly.orientation(), Orientation::CLOCKWISE);
+    }
+}
+
+TEST(Polygon, clip) {
+    constexpr double eps = 1e-7;
+    {
+        const Polygon clip_polygon{Vec2(0, 0), Vec2(3, 0), Vec2(3, 3), Vec2(0, 3)};
+        const Polygon subject_polygon{
+            Vec2(-0.5, 0.5), Vec2(1.5, -1.5), Vec2(2, 0.5), Vec2(2.5, 1.5), Vec2(0.5, 4.5)};
+
+        const Polygon expected_polygon{
+            Vec2(0.125, 3),
+            Vec2(0, 2.5),
+            Vec2(0, 0),
+            Vec2(1.875, 0),
+            Vec2(2, 0.5),
+            Vec2(2.5, 1.5),
+            Vec2(1.5, 3)};
+        const auto clipped_polygon = clip(clip_polygon, subject_polygon);
+
+        EXPECT_EQ(expected_polygon.size(), clipped_polygon.size());
+        for (auto it_1 = expected_polygon.begin(), it_2 = clipped_polygon.begin();
+             it_1 != expected_polygon.end();
+             ++it_1, ++it_2) {
+            ASSERT_GEOM_EQUAL(*it_1, *it_2, eps);
+        }
+    }
+    {
+        const Polygon clip_polygon{Vec2(0, 0), Vec2(0, 3), Vec2(3, 3), Vec2(3, 0)};
+        const Polygon subject_polygon{
+            Vec2(-0.5, 0.5), Vec2(1.5, -1.5), Vec2(2, 0.5), Vec2(2.5, 1.5), Vec2(0.5, 4.5)};
+
+        const Polygon expected_polygon{
+            Vec2(0.125, 3),
+            Vec2(0, 2.5),
+            Vec2(0, 0),
+            Vec2(1.875, 0),
+            Vec2(2, 0.5),
+            Vec2(2.5, 1.5),
+            Vec2(1.5, 3)};
+        const auto clipped_polygon = clip(clip_polygon, subject_polygon);
+
+        EXPECT_EQ(expected_polygon.size(), clipped_polygon.size());
+        for (auto it_1 = expected_polygon.begin(), it_2 = clipped_polygon.begin();
+             it_1 != expected_polygon.end();
+             ++it_1, ++it_2) {
+            ASSERT_GEOM_EQUAL(*it_1, *it_2, eps);
+        }
     }
 }
 
