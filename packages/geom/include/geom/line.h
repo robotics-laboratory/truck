@@ -33,7 +33,7 @@ struct Line {
 
 bool equal(const Line& l1, const Line& l2, double eps) noexcept;
 
-std::optional<Vec2> intersect(const Line& l1, const Line& l2) noexcept;
+std::optional<Vec2> intersect(const Line& l1, const Line& l2, const double eps = 1e-4) noexcept;
 
 std::ostream& operator<<(std::ostream& out, const Line& l) noexcept;
 

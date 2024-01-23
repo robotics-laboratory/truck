@@ -1,14 +1,16 @@
 #include "geom/line.h"
 
+#include "common/math.h"
+
 namespace truck::geom {
 
 bool equal(const Line& a, const Line& b, double eps) noexcept {
     return equal(a.normal() * b.c, b.normal() * a.c, eps);
 }
 
-std::optional<Vec2> intersect(const Line& l1, const Line& l2) noexcept {
+std::optional<Vec2> intersect(const Line& l1, const Line& l2, const double eps) noexcept {
     double det = cross(Vec2(l1.a, l1.b), Vec2(l2.a, l2.b));
-    if (det == 0) {
+    if (abs(det) < eps) {
         return std::nullopt;
     }
     return Vec2(
