@@ -1,7 +1,6 @@
 #pragma once
 
 #include "geom/complex_polygon.h"
-#include "geom/line.h"
 
 namespace truck::map {
 
