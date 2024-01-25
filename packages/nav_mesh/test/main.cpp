@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "map/map_builder.h"
+#include "map/map.h"
 #include "nav_mesh/nav_mesh_builder.h"
 #include "nav_mesh/nav_mesh_viewer.h"
 
