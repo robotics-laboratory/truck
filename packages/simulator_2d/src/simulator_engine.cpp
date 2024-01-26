@@ -1,6 +1,6 @@
 #include "simulator_2d/simulator_engine.h"
 
-#include "map/map_builder.h"
+#include "map/map.h"
 #include "geom/ray.h"
 
 #include <algorithm>
