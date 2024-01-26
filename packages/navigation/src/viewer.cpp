@@ -1,11 +1,11 @@
-#include "nav_mesh/nav_mesh_viewer.h"
+#include "navigation/viewer.h"
 
 #include "common/exception.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-namespace truck::nav_mesh::viewer {
+namespace truck::navigation::viewer {
 
 namespace {
 
@@ -31,7 +31,7 @@ std::vector<cv::Point> toCVPoints(
 
 
 void drawPolygon(
-    const NavMeshViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
     const geom::ComplexPolygon& polygon) {
     cv::fillPoly(
         frame,
@@ -47,7 +47,7 @@ void drawPolygon(
 }
 
 void drawSkeleton(
-    const NavMeshViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
     const geom::Segments& skeleton) {
     for (const geom::Segment& seg : skeleton) {
         cv::line(
@@ -60,7 +60,7 @@ void drawSkeleton(
 }
 
 void drawLevelLines(
-    const NavMeshViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
     const geom::Segments& level_lines) {
     for (const geom::Segment& seg : level_lines) {
         cv::line(
@@ -73,7 +73,7 @@ void drawLevelLines(
 }
 
 void drawMesh(
-    const NavMeshViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
     const std::vector<geom::Vec2>& mesh) {
     for (const geom::Vec2& point : mesh) {
         cv::circle(
@@ -87,11 +87,11 @@ void drawMesh(
 
 }  // namespace
 
-NavMeshViewer::NavMeshViewer() {}
+Viewer::Viewer() {}
 
-void NavMeshViewer::draw(
-    const NavMeshViewerParams& params,
-    const geom::ComplexPolygons& polygons, const builder::NavMeshBuild& nav_mesh_build) {
+void Viewer::draw(
+    const ViewerParams& params,
+    const geom::ComplexPolygons& polygons, const mesh::MeshBuild& mesh_build) {
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
 
@@ -106,15 +106,15 @@ void NavMeshViewer::draw(
     }
 
     if (params.enable.skeleton) {
-        drawSkeleton(params, bb_origin, frame, nav_mesh_build.skeleton);
+        drawSkeleton(params, bb_origin, frame, mesh_build.skeleton);
     }
 
     if (params.enable.level_lines) {
-        drawLevelLines(params, bb_origin, frame, nav_mesh_build.level_lines);
+        drawLevelLines(params, bb_origin, frame, mesh_build.level_lines);
     }
 
     if (params.enable.mesh) {
-        drawMesh(params, bb_origin, frame, nav_mesh_build.mesh);
+        drawMesh(params, bb_origin, frame, mesh_build.mesh);
     }
 
     /**
@@ -125,4 +125,4 @@ void NavMeshViewer::draw(
     cv::imwrite(params.path, frame);
 }
 
-}  // namespace truck::nav_mesh::viewer
+}  // namespace truck::navigation::viewer

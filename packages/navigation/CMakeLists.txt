@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(nav_mesh)
+project(navigation)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
@@ -12,17 +12,17 @@ find_package(Boost REQUIRED)
 find_package(OpenCV REQUIRED)
 
 add_library(
-    ${PROJECT_NAME}_builder SHARED
-    src/nav_mesh_builder.cpp
+    ${PROJECT_NAME}_mesh SHARED
+    src/mesh_builder.cpp
 )
 
 add_library(
     ${PROJECT_NAME}_viewer SHARED
-    src/nav_mesh_viewer.cpp
+    src/viewer.cpp
 )
 
 ament_target_dependencies(
-    ${PROJECT_NAME}_builder
+    ${PROJECT_NAME}_mesh
     common
     geom
     map
@@ -38,7 +38,7 @@ ament_target_dependencies(
 )
 
 target_include_directories(
-    ${PROJECT_NAME}_builder PUBLIC
+    ${PROJECT_NAME}_mesh PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
@@ -61,7 +61,7 @@ ament_export_dependencies(
 )
 
 install(
-    TARGETS ${PROJECT_NAME}_builder ${PROJECT_NAME}_viewer
+    TARGETS ${PROJECT_NAME}_mesh ${PROJECT_NAME}_viewer
     EXPORT ${PROJECT_NAME}_targets
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib

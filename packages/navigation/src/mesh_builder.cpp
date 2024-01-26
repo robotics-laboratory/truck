@@ -1,4 +1,4 @@
-#include "nav_mesh/nav_mesh_builder.h"
+#include "navigation/mesh_builder.h"
 
 #include "common/math.h"
 #include "common/exception.h"
@@ -8,7 +8,7 @@
 #include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
 #include <CGAL/create_offset_polygons_from_polygon_with_holes_2.h>
 
-namespace truck::nav_mesh::builder {
+namespace truck::navigation::mesh {
 
 using CGAL_K = CGAL::Exact_predicates_inexact_constructions_kernel;
 
@@ -44,27 +44,27 @@ void extractSegmentsFromCGALPolygon(geom::Segments& segments, const CGAL::Polygo
 
 }  // namespace
 
-NavMeshBuilder::NavMeshBuilder(const NavMeshParams& params) : params_(params) {}
+MeshBuilder::MeshBuilder(const MeshParams& params) : params_(params) {}
 
-NavMeshBuild NavMeshBuilder::build(const geom::ComplexPolygons& polygons) const {
+MeshBuild MeshBuilder::build(const geom::ComplexPolygons& polygons) const {
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
 
-    NavMeshBuild nav_mesh_build;
+    MeshBuild mesh_build;
 
-    buildSkeleton(nav_mesh_build, polygon);
-    buildLevelLines(nav_mesh_build, polygon, params_.offset);
-    buildMesh(nav_mesh_build, params_.dist);
+    buildSkeleton(mesh_build, polygon);
+    buildLevelLines(mesh_build, polygon, params_.offset);
+    buildMesh(mesh_build, params_.dist);
     
-    return nav_mesh_build;
+    return mesh_build;
 }
 
-void NavMeshBuilder::buildSkeleton(NavMeshBuild& build, const geom::ComplexPolygon& polygon) const {
+void MeshBuilder::buildSkeleton(MeshBuild& mesh_build, const geom::ComplexPolygon& polygon) const {
     boost::shared_ptr<CGAL::Straight_skeleton_2<CGAL_K>> cgal_skeleton_ptr =
         CGAL::create_interior_straight_skeleton_2(toCGALPolygonWithHoles(polygon));
 
     for (const auto& cgal_edge_it : cgal_skeleton_ptr->halfedge_handles()) {
-        build.skeleton.emplace_back(geom::Segment(
+        mesh_build.skeleton.emplace_back(geom::Segment(
             geom::Vec2(
                 cgal_edge_it->vertex()->point().x(),
                 cgal_edge_it->vertex()->point().y()),
@@ -74,7 +74,7 @@ void NavMeshBuilder::buildSkeleton(NavMeshBuild& build, const geom::ComplexPolyg
     }
 }
 
-void NavMeshBuilder::buildLevelLines(NavMeshBuild& build, const geom::ComplexPolygon& polygon, double offset) const {
+void MeshBuilder::buildLevelLines(MeshBuild& mesh_build, const geom::ComplexPolygon& polygon, double offset) const {
     double cur_offset = offset;
 
     auto cgal_polys_with_holes = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(
@@ -82,10 +82,10 @@ void NavMeshBuilder::buildLevelLines(NavMeshBuild& build, const geom::ComplexPol
 
     while (cgal_polys_with_holes.size() > 0) {
         for (const auto& cgal_poly_with_holes_ptr : cgal_polys_with_holes) {
-            extractSegmentsFromCGALPolygon(build.level_lines, cgal_poly_with_holes_ptr->outer_boundary());
+            extractSegmentsFromCGALPolygon(mesh_build.level_lines, cgal_poly_with_holes_ptr->outer_boundary());
 
             for (const auto& cgal_poly_inner : cgal_poly_with_holes_ptr->holes()) {
-                extractSegmentsFromCGALPolygon(build.level_lines, cgal_poly_inner);
+                extractSegmentsFromCGALPolygon(mesh_build.level_lines, cgal_poly_inner);
             }
         }
 
@@ -96,10 +96,10 @@ void NavMeshBuilder::buildLevelLines(NavMeshBuild& build, const geom::ComplexPol
     }
 }
 
-void NavMeshBuilder::buildMesh(NavMeshBuild& build, double dist) const {
-    for (const geom::Segment& seg : build.level_lines) {
+void MeshBuilder::buildMesh(MeshBuild& mesh_build, double dist) const {
+    for (const geom::Segment& seg : mesh_build.level_lines) {
         for (size_t i = 0; i < ceil<size_t>(seg.len() / dist); i++) {
-            build.mesh.emplace_back(seg.pos(i * dist / seg.len()));
+            mesh_build.mesh.emplace_back(seg.pos(i * dist / seg.len()));
         }
     }
 
@@ -108,10 +108,10 @@ void NavMeshBuilder::buildMesh(NavMeshBuild& build, double dist) const {
     }
 }
 
-void NavMeshBuilder::gridFilter() const {
+void MeshBuilder::gridFilter() const {
     /** @todo
      * remove some points from 'build.mesh'
      */
 }
 
-}  // namespace truck::nav_mesh::builder
+}  // namespace truck::navigation::mesh

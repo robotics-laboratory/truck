@@ -1,10 +1,10 @@
 #pragma once
 
-#include "nav_mesh/nav_mesh_builder.h"
+#include "navigation/mesh_builder.h"
 
-namespace truck::nav_mesh::viewer {
+namespace truck::navigation::viewer {
 
-struct NavMeshViewerParams {
+struct ViewerParams {
     double res = 50;
     std::string path = "";
 
@@ -31,13 +31,13 @@ struct NavMeshViewerParams {
     } enable;
 };
 
-class NavMeshViewer {
+class Viewer {
   public:
-    NavMeshViewer();
+    Viewer();
 
     void draw(
-        const NavMeshViewerParams& params,
-        const geom::ComplexPolygons& polygons, const builder::NavMeshBuild& nav_mesh_build);
+        const ViewerParams& params,
+        const geom::ComplexPolygons& polygons, const mesh::MeshBuild& mesh_build);
 };
 
-}  // namespace truck::nav_mesh::viewer
+}  // namespace truck::navigation::viewer
