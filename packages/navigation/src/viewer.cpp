@@ -85,13 +85,26 @@ void drawMesh(
     }
 }
 
+void drawEdges(
+    const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const std::vector<geom::Segment>& edges) {
+    for (const geom::Segment& edge : edges) {
+        cv::line(
+            frame,
+            toCVPoint(origin, params.res, edge.begin),
+            toCVPoint(origin, params.res, edge.end),
+            toCVScalar(params.color_rgb.edges),
+            params.thickness.edges);
+    }
+}
+
 }  // namespace
 
 Viewer::Viewer() {}
 
 void Viewer::draw(
-    const ViewerParams& params,
-    const geom::ComplexPolygons& polygons, const mesh::MeshBuild& mesh_build) {
+    const ViewerParams& params, const geom::ComplexPolygons& polygons,
+    const mesh::MeshBuild& mesh_build, const graph::GraphBuild& graph_build) {
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
 
@@ -115,6 +128,10 @@ void Viewer::draw(
 
     if (params.enable.mesh) {
         drawMesh(params, bb_origin, frame, mesh_build.mesh);
+    }
+
+    if (params.enable.edges) {
+        drawEdges(params, bb_origin, frame, graph_build.edges);
     }
 
     /**

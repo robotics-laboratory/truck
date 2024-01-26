@@ -1,6 +1,7 @@
 #pragma once
 
 #include "navigation/mesh_builder.h"
+#include "navigation/graph_builder.h"
 
 namespace truck::navigation::viewer {
 
@@ -15,12 +16,14 @@ struct ViewerParams {
         std::vector<int> level_lines = {255, 0, 0};
         std::vector<int> skeleton = {0, 200, 0};
         std::vector<int> mesh = {0, 0, 255};
+        std::vector<int> edges = {50, 50, 50};
     } color_rgb;
 
     struct Thickness {
         double level_lines = 1.0;
         double skeleton = 2.0;
         double mesh = 5.0;
+        double edges = 1.0;
     } thickness;
 
     struct Enable {
@@ -28,6 +31,7 @@ struct ViewerParams {
         bool skeleton = false;
         bool level_lines = false;
         bool mesh = false;
+        bool edges = false;
     } enable;
 };
 
@@ -36,8 +40,8 @@ class Viewer {
     Viewer();
 
     void draw(
-        const ViewerParams& params,
-        const geom::ComplexPolygons& polygons, const mesh::MeshBuild& mesh_build);
+        const ViewerParams& params, const geom::ComplexPolygons& polygons,
+        const mesh::MeshBuild& mesh_build, const graph::GraphBuild& graph_build);
 };
 
 }  // namespace truck::navigation::viewer

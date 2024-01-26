@@ -17,6 +17,11 @@ add_library(
 )
 
 add_library(
+    ${PROJECT_NAME}_graph SHARED
+    src/graph_builder.cpp
+)
+
+add_library(
     ${PROJECT_NAME}_viewer SHARED
     src/viewer.cpp
 )
@@ -31,6 +36,13 @@ ament_target_dependencies(
 )
 
 ament_target_dependencies(
+    ${PROJECT_NAME}_graph
+    common
+    geom
+    Boost
+)
+
+ament_target_dependencies(
     ${PROJECT_NAME}_viewer
     common
     geom
@@ -39,6 +51,12 @@ ament_target_dependencies(
 
 target_include_directories(
     ${PROJECT_NAME}_mesh PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+
+target_include_directories(
+    ${PROJECT_NAME}_graph PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
@@ -61,7 +79,7 @@ ament_export_dependencies(
 )
 
 install(
-    TARGETS ${PROJECT_NAME}_mesh ${PROJECT_NAME}_viewer
+    TARGETS ${PROJECT_NAME}_mesh ${PROJECT_NAME}_graph ${PROJECT_NAME}_viewer
     EXPORT ${PROJECT_NAME}_targets
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
