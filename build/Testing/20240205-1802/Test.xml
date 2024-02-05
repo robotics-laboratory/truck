@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="(empty)"
+	BuildStamp="20240205-1802-Experimental"
+	Name="dc6d1f16d82d"
+	Generator="ctest-3.16.3"
+	CompilerName="/usr/bin/aarch64-linux-gnu-g++"
+	CompilerVersion="9.4.0"
+	OSName="Linux"
+	Hostname="dc6d1f16d82d"
+	OSRelease="5.15.122-tegra"
+	OSVersion="#1 SMP PREEMPT Thu Nov 30 10:30:37 PST 2023"
+	OSPlatform="aarch64"
+	Is64Bits="1"
+	VendorString=""
+	VendorID="Unknown Manufacturer"
+	FamilyID="8"
+	ModelID="0"
+	ProcessorCacheSize="0"
+	NumberOfLogicalCPU="8"
+	NumberOfPhysicalCPU="1"
+	TotalVirtualMemory="7828"
+	TotalPhysicalMemory="15656"
+	LogicalProcessorsPerPhysical="8"
+	ProcessorClockFrequency="0"
+	>
+	<Testing>
+		<StartDateTime>Feb 05 18:02 UTC</StartDateTime>
+		<StartTestTime>1707156135</StartTestTime>
+		<TestList/>
+		<EndDateTime>Feb 05 18:02 UTC</EndDateTime>
+		<EndTestTime>1707156135</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>

@@ -88,7 +88,13 @@
         "hash_map": "cpp",
         "hash_set": "cpp",
         "shared_mutex": "cpp",
-        "pointers": "cpp"
+        "pointers": "cpp",
+        "executor": "cpp",
+        "buffer": "cpp",
+        "io_context": "cpp",
+        "netfwd": "cpp",
+        "socket": "cpp"
     },
-    "cmake.sourceDirectory": "${workspaceFolder}/packages/truck_gazebo"
+    "cmake.sourceDirectory": "${workspaceFolder}/packages/truck_gazebo",
+    "C_Cpp.errorSquiggles": "disabled"
 }
