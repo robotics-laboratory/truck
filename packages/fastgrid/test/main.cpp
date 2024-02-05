@@ -514,7 +514,7 @@ TEST(BilinearInterpolation, case_6) {
     EXPECT_NEAR(bilinear({-0.402492, 1.20748}), 1.195, eps);
 }
 
-TEST(PolyToGrid, case_1) {
+TEST(Draw, regular_polygon_drawing) {
     constexpr double eps = 1e-7;
 
     Size size{.width = 3, .height = 3};
@@ -575,7 +575,7 @@ TEST(PolyToGrid, case_1) {
     }
 }
 
-TEST(PolyToGrid, case_2) {
+TEST(Draw, transformed_polygon_drawing) {
     Size size{.width = 3, .height = 3};
     double resolution = 0.5;
     Pose origin({0, 0}, AngleVec2::fromVector(0, 1));
@@ -600,7 +600,7 @@ TEST(PolyToGrid, case_2) {
     }
 }
 
-TEST(ComplexPolyToGrid, case_1) {
+TEST(Draw, complex_polygon_with_hole_drawing) {
     constexpr double eps = 1e-7;
 
     Size size{.width = 3, .height = 3};
@@ -634,7 +634,7 @@ TEST(ComplexPolyToGrid, case_1) {
     }
 }
 
-TEST(ComplexPolyToGrid, case_2) {
+TEST(Draw, complex_polygon_with_multiple_holes_drawing) {
     constexpr double eps = 1e-7;
 
     Size size{.width = 5, .height = 5};
