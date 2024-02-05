@@ -13,7 +13,7 @@ add_library(
     src/distance_transform.cpp
     src/grid.cpp
     src/manhattan_distance.cpp
-    src/poly_to_grid.cpp
+    src/draw.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME} common geom OpenCV)

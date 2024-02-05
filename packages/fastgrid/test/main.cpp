@@ -5,7 +5,7 @@
 #include "fastgrid/manhattan_distance.h"
 #include "fastgrid/distance_transform.h"
 #include "fastgrid/interpolation.h"
-#include "fastgrid/poly_to_grid.h"
+#include "fastgrid/Draw.h"
 #include "geom/common.h"
 #include "geom/pose.h"
 
@@ -527,7 +527,7 @@ TEST(PolyToGrid, case_1) {
         grid.SetTo(1);
 
         Polygon poly{Vec2(1, 0), Vec2(3, 0), Vec2(3, 2 - eps), Vec2(1, 2 - eps)};
-        PolyToGrid(poly, grid);
+        Draw(poly, grid);
 
         EXPECT_EQ(grid[0][0], 1);
         EXPECT_EQ(grid[0][1], 0);
@@ -544,7 +544,7 @@ TEST(PolyToGrid, case_1) {
         grid.SetTo(1);
 
         Polygon poly{Vec2(1.3, 0.3), Vec2(2.7, 1.7), Vec2(2.9, 2.7), Vec2(1.2, 2.3)};
-        PolyToGrid(poly, grid);
+        Draw(poly, grid);
 
         EXPECT_EQ(grid[0][0], 1);
         EXPECT_EQ(grid[0][1], 0);
@@ -561,7 +561,7 @@ TEST(PolyToGrid, case_1) {
         grid.SetTo(1);
 
         Polygon poly{Vec2(-0.1, -0.9), Vec2(3.9, 0.1), Vec2(3.1, 2.8), Vec2(0.2, 3.2)};
-        PolyToGrid(poly, grid);
+        Draw(poly, grid);
 
         EXPECT_EQ(grid[0][0], 0);
         EXPECT_EQ(grid[0][1], 0);
@@ -586,7 +586,7 @@ TEST(PolyToGrid, case_2) {
         grid.SetTo(1);
 
         Polygon poly{Vec2(-2.5, 2.5), Vec2(-0.5, 0.5), Vec2(-2.5, 0.5)};
-        PolyToGrid(poly, grid);
+        Draw(poly, grid);
 
         EXPECT_EQ(grid[0][0], 0);
         EXPECT_EQ(grid[0][1], 1);
@@ -620,7 +620,7 @@ TEST(ComplexPolyToGrid, case_1) {
              Vec2(2 + eps, 2 + eps),
              Vec2(2 + eps, 1 - eps)}};
 
-        ComplexPolyToGrid(poly, grid);
+        Draw(poly, grid);
 
         EXPECT_EQ(grid[0][0], 0);
         EXPECT_EQ(grid[0][1], 0);
@@ -658,7 +658,7 @@ TEST(ComplexPolyToGrid, case_2) {
              Vec2(4 + eps, 4 + eps),
              Vec2(4 + eps, 3 - eps)}};
 
-        ComplexPolyToGrid(poly, grid);
+        Draw(poly, grid);
 
         EXPECT_EQ(grid[0][0], 0);
         EXPECT_EQ(grid[0][1], 0);

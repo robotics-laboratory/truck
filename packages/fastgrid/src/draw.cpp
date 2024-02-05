@@ -1,4 +1,4 @@
-#include "fastgrid/poly_to_grid.h"
+#include "fastgrid/draw.h"
 
 #include "common/exception.h"
 
@@ -52,20 +52,20 @@ __always_inline void FillPoly(cv::InputArrayOfArrays input, U8Grid& grid) {
     cv::fillPoly(mat, input, 0, cv::LINE_8);
 }
 
-__always_inline void PolyToGrid(const geom::Polygon& poly, U8Grid& grid) {
+__always_inline void Draw(const geom::Polygon& poly, U8Grid& grid) {
     FillPoly(PolyToInput(poly, grid), grid);
 }
 
-__always_inline void ComplexPolyToGrid(const geom::ComplexPolygon& complex_poly, U8Grid& grid) {
+__always_inline void Draw(const geom::ComplexPolygon& complex_poly, U8Grid& grid) {
     FillPoly(ComplexPolyToInput(complex_poly, grid), grid);
 }
 
 }  // namespace impl
 
-void PolyToGrid(const geom::Polygon& poly, U8Grid& grid) { impl::PolyToGrid(poly, grid); }
+void Draw(const geom::Polygon& poly, U8Grid& grid) { impl::Draw(poly, grid); }
 
-void ComplexPolyToGrid(const geom::ComplexPolygon& complex_poly, U8Grid& grid) {
-    impl::ComplexPolyToGrid(complex_poly, grid);
+void Draw(const geom::ComplexPolygon& complex_poly, U8Grid& grid) {
+    impl::Draw(complex_poly, grid);
 }
 
 }  // namespace truck::fastgrid
