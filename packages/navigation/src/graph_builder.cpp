@@ -16,19 +16,23 @@ using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
 
 namespace {
 
+geom::Vec2 toVec2(const RTreePoint& rtree_point) {
+    return geom::Vec2(rtree_point.get<0>(), rtree_point.get<1>());
+}
+
 RTreePoint toRTreePoint(const geom::Vec2& point) {
     return RTreePoint(point.x, point.y);
 }
 
-geom::Vec2 toVec2(const RTreePoint& rtree_point) {
-    return geom::Vec2(rtree_point.get<0>(), rtree_point.get<1>());
+RTreeIndexedPoint toRTreeIndexedPoint(const geom::Vec2& point, size_t index) {
+    return RTreeIndexedPoint(toRTreePoint(point), index);
 }
 
 RTree toRTree(const std::vector<geom::Vec2>& points) {
     RTree rtree;
 
     for (size_t i = 0; i < points.size(); i++) {
-        rtree.insert(RTreeIndexedPoint(toRTreePoint(points[i]), i));
+        rtree.insert(toRTreeIndexedPoint(points[i], i));
     }
 
     return rtree;
@@ -38,7 +42,7 @@ RTreeIndexedPoints getNeighborsKNearest(const RTree& rtree, const geom::Vec2& po
     RTreeIndexedPoints rtree_indexed_points;
 
     rtree.query(
-        bg::index::nearest(toRTreePoint(point), k_nearest),
+        bg::index::nearest(toRTreePoint(point), k_nearest + 1),
         std::back_inserter(rtree_indexed_points)
     );
 
@@ -57,12 +61,12 @@ RTreeIndexedPoints getNeighborsInSearchRadius(const RTree& rtree, const geom::Ve
     return rtree_indexed_points;
 }
 
-RTreeIndexedPoints getNeighbors(const RTree& rtree, const geom::Vec2& point, const GraphParams::Neighbor& neighbor_params) {
-    switch (neighbor_params.mode) {
-        case GraphParams::Neighbor::Mode::kNearest:
-            return getNeighborsKNearest(rtree, point, neighbor_params.k_nearest);
-        case GraphParams::Neighbor::Mode::searchRadius:
-            return getNeighborsInSearchRadius(rtree, point, neighbor_params.search_radius);
+RTreeIndexedPoints getNeighbors(const RTree& rtree, const geom::Vec2& point, const GraphParams& params) {
+    switch (params.mode) {
+        case GraphParams::Mode::kNearest:
+            return getNeighborsKNearest(rtree, point, params.k_nearest);
+        case GraphParams::Mode::searchRadius:
+            return getNeighborsInSearchRadius(rtree, point, params.search_radius);
         default:
             VERIFY(false);
             break;
@@ -73,42 +77,64 @@ RTreeIndexedPoints getNeighbors(const RTree& rtree, const geom::Vec2& point, con
 
 GraphBuilder::GraphBuilder(const GraphParams& params) : params_(params) {}
 
-GraphBuild GraphBuilder::build(const std::vector<geom::Vec2>& mesh) {
-    GraphBuild graph_build;
-
-    buildEdges(graph_build, mesh);
-    // buildRoute();
-
-    return graph_build;
+GraphBuilder& GraphBuilder::setNodes(const std::vector<geom::Vec2>& nodes) {
+    nodes_ = nodes;
+    return *this;
 }
 
-void GraphBuilder::buildEdges(GraphBuild& graph_build, const std::vector<geom::Vec2>& mesh) {
+GraphBuilder& GraphBuilder::setComplexPolygons(const geom::ComplexPolygons& polygons) {
+    polygons_ = polygons;
+    return *this;
+}
+
+GraphBuilder& GraphBuilder::build() {
+    RTree rtree_nodes = toRTree(nodes_);
+    
     weights_ = std::vector<std::vector<std::optional<double>>>(
-        mesh.size(), std::vector<std::optional<double>>(mesh.size(), std::nullopt));
+        nodes_.size(), std::vector<std::optional<double>>(nodes_.size(), std::nullopt));
 
-    RTree rtree_mesh = toRTree(mesh);
-
-    // iterate through every mesh point
-    for (const auto& cur_it : rtree_mesh) {
+    // iterate through every node
+    for (const auto& cur_it : rtree_nodes) {
         geom::Vec2 cur_point = toVec2(cur_it.first);
         size_t cur_point_index = cur_it.second;
 
-        // iterate through every neighbor of current mesh point
-        for (const auto& neighbor_it : getNeighbors(rtree_mesh, cur_point, params_.neighbor)) {
+        // iterate through every neighbor of a current node
+        for (const auto& neighbor_it : getNeighbors(rtree_nodes, cur_point, params_)) {
             geom::Vec2 neighbor_point = toVec2(neighbor_it.first);
             size_t neighbor_point_index = neighbor_it.second;
 
-            geom::Segment edge(cur_point, neighbor_point);
+            if (cur_point_index != neighbor_point_index) {
+                geom::Segment edge(cur_point, neighbor_point);
 
-            graph_build.edges.emplace_back(edge);
-
-            weights_[cur_point_index][neighbor_point_index] = edge.len();
+                if (collisionFreeEdge()) {
+                    weights_[cur_point_index][neighbor_point_index] = edge.len();
+                    weights_[neighbor_point_index][cur_point_index] = edge.len();
+                }
+            }
         }
     }
+
+    // get unique edges from weight matrix
+    for (size_t i = 0; i < weights_.size(); i++) {
+        for (size_t j = i + 1; j < weights_.size(); j++) {
+            if (weights_[i][j].has_value()) {
+                edges_.emplace_back(geom::Segment(nodes_[i], nodes_[j]));
+            }
+        }
+    }
+
+    return *this;
 }
 
-void GraphBuilder::buildRoute() {
-    /** @todo */
+const std::vector<geom::Vec2>& GraphBuilder::getNodes() const { return nodes_; }
+
+const geom::Segments& GraphBuilder::getEdges() const { return edges_; }
+
+const std::vector<std::vector<std::optional<double>>>& GraphBuilder::getWeights() const { return weights_; }
+
+bool GraphBuilder::collisionFreeEdge() const {
+    /** @todo work with 'polygons_' */
+    return true;
 }
 
 }  // namespace truck::navigation::graph

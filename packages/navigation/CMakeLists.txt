@@ -19,6 +19,7 @@ add_library(
 add_library(
     ${PROJECT_NAME}_graph SHARED
     src/graph_builder.cpp
+    src/search.cpp
 )
 
 add_library(

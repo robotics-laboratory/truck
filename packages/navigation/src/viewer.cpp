@@ -88,13 +88,26 @@ void drawMesh(
 void drawEdges(
     const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
     const std::vector<geom::Segment>& edges) {
-    for (const geom::Segment& edge : edges) {
+    for (const geom::Segment& seg : edges) {
         cv::line(
             frame,
-            toCVPoint(origin, params.res, edge.begin),
-            toCVPoint(origin, params.res, edge.end),
+            toCVPoint(origin, params.res, seg.begin),
+            toCVPoint(origin, params.res, seg.end),
             toCVScalar(params.color_rgb.edges),
             params.thickness.edges);
+    }
+}
+
+void drawRoute(
+    const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const std::vector<geom::Segment>& route) {
+    for (const geom::Segment& seg : route) {
+        cv::line(
+            frame,
+            toCVPoint(origin, params.res, seg.begin),
+            toCVPoint(origin, params.res, seg.end),
+            toCVScalar(params.color_rgb.route),
+            params.thickness.route);
     }
 }
 
@@ -103,8 +116,13 @@ void drawEdges(
 Viewer::Viewer() {}
 
 void Viewer::draw(
-    const ViewerParams& params, const geom::ComplexPolygons& polygons,
-    const mesh::MeshBuild& mesh_build, const graph::GraphBuild& graph_build) {
+    const ViewerParams& params,
+    geom::ComplexPolygons polygons,
+    std::optional<std::vector<geom::Vec2>> mesh,
+    std::optional<geom::Segments> skeleton,
+    std::optional<geom::Segments> level_lines,
+    std::optional<geom::Segments> edges,
+    std::optional<geom::Segments> route) {
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
 
@@ -114,25 +132,27 @@ void Viewer::draw(
 
     geom::Vec2 bb_origin(bb.x, bb.y);
 
-    if (params.enable.polygon) {
-        drawPolygon(params, bb_origin, frame, polygon);
+    drawPolygon(params, bb_origin, frame, polygon);
+
+    if (skeleton.has_value()) {
+        drawSkeleton(params, bb_origin, frame, skeleton.value());
     }
 
-    if (params.enable.skeleton) {
-        drawSkeleton(params, bb_origin, frame, mesh_build.skeleton);
+    if (level_lines.has_value()) {
+        drawLevelLines(params, bb_origin, frame, level_lines.value());
     }
 
-    if (params.enable.level_lines) {
-        drawLevelLines(params, bb_origin, frame, mesh_build.level_lines);
+    if (route.has_value()) {
+        drawRoute(params, bb_origin, frame, route.value());
     }
 
-    if (params.enable.mesh) {
-        drawMesh(params, bb_origin, frame, mesh_build.mesh);
+    if (edges.has_value()) {
+        drawEdges(params, bb_origin, frame, edges.value());
     }
 
-    if (params.enable.edges) {
-        drawEdges(params, bb_origin, frame, graph_build.edges);
-    }
+    if (mesh.has_value()) {
+        drawMesh(params, bb_origin, frame, mesh.value());
+    }    
 
     /**
      * Rotate an image around 'x' axis to avoid .png map mirroring

@@ -3,15 +3,17 @@
 #include "map/map.h"
 #include "navigation/viewer.h"
 #include "navigation/mesh_builder.h"
+#include "navigation/graph_builder.h"
+#include "navigation/search.h"
 
 using namespace truck;
 using namespace truck::navigation;
 
 const std::string ROOT = "/truck/packages";
 
-TEST(Navigation, map_empty) {
+TEST(Navigation, map) {
     const std::string MAP = "map_6";
-    const std::string FILE_NAME = MAP + "_empty";
+    const std::string FILE_NAME = MAP;
 
     geom::ComplexPolygons polygons =
         map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
@@ -19,11 +21,10 @@ TEST(Navigation, map_empty) {
     viewer::ViewerParams viewer_params{
         .path = ROOT + "/navigation/data/" + FILE_NAME + ".png",
         .color_rgb = {},
-        .thickness = {},
-        .enable = {.polygon = true}};
+        .thickness = {}};
 
     viewer::Viewer viewer = viewer::Viewer();
-    viewer.draw(viewer_params, polygons, {}, {});
+    viewer.draw(viewer_params, polygons);
 }
 
 TEST(Navigation, map_mesh) {
@@ -36,23 +37,24 @@ TEST(Navigation, map_mesh) {
     viewer::ViewerParams viewer_params{
         .path = ROOT + "/navigation/data/" + FILE_NAME + ".png",
         .color_rgb = {},
-        .thickness = {},
-        .enable = {
-            .polygon = true,
-            .mesh = true,
-        }};
+        .thickness = {}};
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
     mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
     viewer::Viewer viewer = viewer::Viewer();
-    viewer.draw(viewer_params, polygons, mesh_build, {});
+    viewer.draw(
+        viewer_params,
+        polygons,
+        mesh_build.mesh,
+        mesh_build.skeleton,
+        mesh_build.level_lines);
 }
 
-TEST(Navigation, map_mesh_skeleton_level_lines) {
+TEST(Navigation, map_graph) {
     const std::string MAP = "map_6";
-    const std::string FILE_NAME = MAP + "_mesh_skeleton_level_lines";
+    const std::string FILE_NAME = MAP + "_graph";
 
     geom::ComplexPolygons polygons =
         map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
@@ -60,86 +62,39 @@ TEST(Navigation, map_mesh_skeleton_level_lines) {
     viewer::ViewerParams viewer_params{
         .path = ROOT + "/navigation/data/" + FILE_NAME + ".png",
         .color_rgb = {},
-        .thickness = {},
-        .enable = {
-            .polygon = true,
-            .skeleton = true,
-            .level_lines = true,
-            .mesh = true,
-        }};
-
-    mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
-    mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
-    mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
-
-    viewer::Viewer viewer = viewer::Viewer();
-    viewer.draw(viewer_params, polygons, mesh_build, {});
-}
-
-TEST(Navigation, map_mesh_edges_knn) {
-    const std::string MAP = "map_6";
-    const std::string FILE_NAME = MAP + "_mesh_edges_knn";
-
-    geom::ComplexPolygons polygons =
-        map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
-
-    viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png",
-        .color_rgb = {},
-        .thickness = {},
-        .enable = {
-            .polygon = true,
-            .mesh = true,
-            .edges = true
-        }};
+        .thickness = {}};
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
     mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
     graph::GraphParams graph_params{
-        .neighbor = {
-            .mode = graph::GraphParams::Neighbor::Mode::kNearest,
-            .k_nearest = 5
-        }};
-    graph::GraphBuilder graph_builder = graph::GraphBuilder(graph_params);
-    graph::GraphBuild graph_build = graph_builder.build(mesh_build.mesh);
+        .mode = graph::GraphParams::Mode::searchRadius, .search_radius = 3.6};
+    graph::GraphBuilder graph_builder =
+        graph::GraphBuilder(graph_params)
+            .setNodes(mesh_build.mesh)
+            .setComplexPolygons(polygons)
+            .build();
+    
+    const auto& edges = graph_builder.getEdges();
+
+    size_t from_node = 108;
+    size_t to_node = 354;
+
+    const auto& route = 
+        search::toSegments(
+            search::Dijkstra(graph_builder.getWeights(), from_node, to_node),
+            mesh_build.mesh);
 
     viewer::Viewer viewer = viewer::Viewer();
-    viewer.draw(viewer_params, polygons, mesh_build, graph_build);
-}
-
-TEST(Navigation, map_mesh_edges_search_rad) {
-    const std::string MAP = "map_6";
-    const std::string FILE_NAME = MAP + "_mesh_edges_search_rad";
-
-    geom::ComplexPolygons polygons =
-        map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
-
-    viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png",
-        .color_rgb = {},
-        .thickness = {},
-        .enable = {
-            .polygon = true,
-            .mesh = true,
-            .edges = true
-        }};
-
-    mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
-    mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
-    mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
-
-    graph::GraphParams graph_params{
-        .neighbor = {
-            .mode = graph::GraphParams::Neighbor::Mode::searchRadius,
-            .search_radius = 1.8
-        }};
-    graph::GraphBuilder graph_builder = graph::GraphBuilder(graph_params);
-    graph::GraphBuild graph_build = graph_builder.build(mesh_build.mesh);
-
-    viewer::Viewer viewer = viewer::Viewer();
-    viewer.draw(viewer_params, polygons, mesh_build, graph_build);
+    viewer.draw(
+        viewer_params,
+        polygons,
+        mesh_build.mesh,
+        std::nullopt,
+        std::nullopt,
+        edges,
+        route);
 }
 
 int main(int argc, char *argv[]) {

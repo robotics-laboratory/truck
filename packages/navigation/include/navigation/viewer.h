@@ -17,6 +17,7 @@ struct ViewerParams {
         std::vector<int> skeleton = {0, 200, 0};
         std::vector<int> mesh = {0, 0, 255};
         std::vector<int> edges = {50, 50, 50};
+        std::vector<int> route = {0, 200, 0};
     } color_rgb;
 
     struct Thickness {
@@ -24,15 +25,8 @@ struct ViewerParams {
         double skeleton = 2.0;
         double mesh = 5.0;
         double edges = 1.0;
+        double route = 20.0;
     } thickness;
-
-    struct Enable {
-        bool polygon = false;
-        bool skeleton = false;
-        bool level_lines = false;
-        bool mesh = false;
-        bool edges = false;
-    } enable;
 };
 
 class Viewer {
@@ -40,8 +34,13 @@ class Viewer {
     Viewer();
 
     void draw(
-        const ViewerParams& params, const geom::ComplexPolygons& polygons,
-        const mesh::MeshBuild& mesh_build, const graph::GraphBuild& graph_build);
+        const ViewerParams& params,
+        geom::ComplexPolygons polygons,
+        std::optional<std::vector<geom::Vec2>> mesh = std::nullopt,
+        std::optional<geom::Segments> skeleton = std::nullopt,
+        std::optional<geom::Segments> level_lines = std::nullopt,
+        std::optional<geom::Segments> edges = std::nullopt,
+        std::optional<geom::Segments> route = std::nullopt);
 };
 
 }  // namespace truck::navigation::viewer
