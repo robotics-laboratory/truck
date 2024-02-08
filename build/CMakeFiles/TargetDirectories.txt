@@ -1,9 +1,0 @@
-/truck/build/CMakeFiles/install/strip.dir
-/truck/build/CMakeFiles/install/local.dir
-/truck/build/CMakeFiles/install.dir
-/truck/build/CMakeFiles/list_install_components.dir
-/truck/build/CMakeFiles/rebuild_cache.dir
-/truck/build/CMakeFiles/edit_cache.dir
-/truck/build/CMakeFiles/test.dir
-/truck/build/CMakeFiles/truck_gazebo_uninstall.dir
-/truck/build/CMakeFiles/uninstall.dir
