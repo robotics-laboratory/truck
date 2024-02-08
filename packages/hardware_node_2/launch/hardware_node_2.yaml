@@ -1,0 +1,20 @@
+launch:
+- node:
+    pkg: "hardware_node_2"
+    exec: "hardware_node_2"
+    name: "hardware_node_2"
+    output: "log"
+    param:
+    - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
+    
+    - {name: "nodeId", value: 39}
+   
+    - {name: "odriveAxis", value: "axis1"}
+    
+    - {name: "interface", value: "vxcan1"}
+    
+    - {name: "odriveTimeout", value: 250}
+
+    - {name: "statusReportRate", value: 1.0}
+
+    - {name: "telemetryReportRate", value: 20.0}

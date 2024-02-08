@@ -9,10 +9,10 @@
 #include "truck_msgs/msg/hardware_status.hpp"
 #include "truck_msgs/msg/hardware_telemetry.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "truck_msgs/msg/controller_status.hpp"  // New msg
 
 #include <memory>
 #include <string>
+#include <cstring>
 
 namespace truck::hardware_node {
 
@@ -24,8 +24,6 @@ class HardwareNode : public rclcpp::Node {
     uint8_t prevMode_ = truck_msgs::msg::ControlMode::OFF;
 
     SocketInterface canInterface = SocketInterface();
-
-    truck_msgs::msg::ControllerStatus ctrMessage = truck_msgs::msg::ControllerStatus();
 
     std::unique_ptr<model::Model> model_ = nullptr;
 
@@ -43,6 +41,8 @@ class HardwareNode : public rclcpp::Node {
 
     void commandCallback(const truck_msgs::msg::Control& msg);
 
+    void send(uint32_t can_id, uint8_t can_dlc, const void* data);
+
     void enableMotor();
 
     void disableMotor();
@@ -50,8 +50,6 @@ class HardwareNode : public rclcpp::Node {
     void pushStatus();
 
     void pushTelemetry();
-
-    inline bool verifyLength(const std::string& name, uint8_t expected, uint8_t length);
 
     struct Params {
         uint16_t nodeId;

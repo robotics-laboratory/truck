@@ -23,7 +23,7 @@ enum CmdId : uint32_t {
     kGetTorques = 0x01c,            // ControllerStatus  - publisher
 };
 
-enum AxisState {
+enum AxisState : uint8_t {
     AXIS_STATE_UNDEFINED,
     AXIS_STATE_IDLE,
     AXIS_STATE_STARTUP_SEQUENCE,
@@ -43,6 +43,7 @@ HardwareNode::HardwareNode() : Node("hardware_node") {
     initializePtrFields();
     initializeParams();
     initializeTopicHandlers();
+    initializeTimers();
     initializeOdrive();
     RCLCPP_INFO(this->get_logger(), "Hardware node initialized");
 }
@@ -50,20 +51,26 @@ HardwareNode::HardwareNode() : Node("hardware_node") {
 void HardwareNode::initializePtrFields() {
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
-    RCLCPP_INFO(this->get_logger(), "Curvature: %f", model_->baseMaxAbsCurvature());
+    RCLCPP_INFO(this->get_logger(), "curvature: %f", model_->baseMaxAbsCurvature());
 }
 
 void HardwareNode::initializeParams() {
-    params_.nodeId = this->declare_parameter("node_id", 1);
-    params_.modelConfig = this->declare_parameter("model_config", "");
+    params_.nodeId = this->declare_parameter("node_id", 39);
+    RCLCPP_INFO(this->get_logger(), "node_id: %d", params_.nodeId);
     params_.odriveAxis = this->declare_parameter("odrive_axis", "axis1");
+    RCLCPP_INFO(this->get_logger(), "axis: %s", params_.odriveAxis.c_str());
     params_.interface = this->declare_parameter("interface", "vxcan1");
+    RCLCPP_INFO(this->get_logger(), "interface: %s", params_.interface.c_str());
     params_.odriveTimeout =
         std::chrono::milliseconds(this->declare_parameter<long int>("odrive_timeout", 250));
+    RCLCPP_INFO(this->get_logger(), "odrive timeout: %d", params_.odriveTimeout);
     params_.statusReportRate =
         std::chrono::duration<double>(this->declare_parameter("status_report_rate", 1.0));
+    RCLCPP_INFO(this->get_logger(), "status report rate: %.2f", params_.statusReportRate.count());
     params_.telemetryReportRate =
         std::chrono::duration<double>(this->declare_parameter("telemetry_report_rate", 20.0));
+    RCLCPP_INFO(
+        this->get_logger(), "telemetry report rate: %.2f", params_.telemetryReportRate.count());
 }
 
 void HardwareNode::initializeTopicHandlers() {
@@ -94,11 +101,10 @@ void HardwareNode::initializeTopicHandlers() {
 
 void HardwareNode::initializeTimers() {
     timers_.statusTimer = this->create_wall_timer(
-        std::chrono::duration<double>(1 / params_.statusReportRate.count()),
-        std::bind(&HardwareNode::pushStatus, this));
+        params_.statusReportRate, std::bind(&HardwareNode::pushStatus, this));
+
     timers_.telemetryTimer = this->create_wall_timer(
-        std::chrono::duration<double>(1 / params_.telemetryReportRate.count()),
-        std::bind(&HardwareNode::pushTelemetry, this));
+        params_.telemetryReportRate, std::bind(&HardwareNode::pushTelemetry, this));
 }
 
 void HardwareNode::modeCallback(const truck_msgs::msg::ControlMode& msg) {
@@ -107,38 +113,43 @@ void HardwareNode::modeCallback(const truck_msgs::msg::ControlMode& msg) {
     }
     if (prevMode_ == truck_msgs::msg::ControlMode::OFF &&
         msg.mode != truck_msgs::msg::ControlMode::OFF) {
-        RCLCPP_INFO(this->get_logger(), "Mode change: OFF -> ANY - Enabling motor");
+        RCLCPP_INFO(this->get_logger(), "mode change: OFF -> ANY - enabling motor");
         enableMotor();
         return;
     }
     if (prevMode_ != truck_msgs::msg::ControlMode::OFF &&
         msg.mode == truck_msgs::msg::ControlMode::OFF) {
-        RCLCPP_INFO(this->get_logger(), "Mode change: ANY -> OFF - Disabling motor");
+        RCLCPP_INFO(this->get_logger(), "mode change: ANY -> OFF - disabling motor");
     }
     prevMode_ = msg.mode;
     timers_.statusTimer.reset();
     pushStatus();
 }
 
-inline bool HardwareNode::verifyLength(const std::string& name, uint8_t expected, uint8_t length) {
-    bool valid = expected == length;
-    RCLCPP_DEBUG(this->get_logger(), "received %s", name.c_str());
-    if (!valid)
-        RCLCPP_WARN(
-            this->get_logger(),
-            "Incorrect %s frame length: %d != %d",
-            name.c_str(),
-            length,
-            expected);
-    return valid;
+void HardwareNode::send(uint32_t can_id, uint8_t can_dlc, const void* data = nullptr) {
+    struct can_frame frame;
+    memset(&frame, 0, sizeof(frame));
+    if (data != nullptr) {
+        frame.can_id = can_id;
+        frame.can_dlc = can_dlc;
+        memcpy(frame.data, data, can_dlc);
+        std::ostringstream logMsg;
+        logMsg << "sent packet: can_id = 0x" << std::hex << can_id << ", dlc = " << std::dec
+               << (int)can_dlc << ", data = ";
+        for (int i = 0; i < can_dlc; ++i) {
+            logMsg << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[i] << " ";
+        }
+        RCLCPP_INFO(this->get_logger(), "%s", logMsg.str().c_str());
+    }
+    canInterface.sendCanFrame(frame);
 }
 
 void HardwareNode::initializeOdrive() {
     auto accelMps = model_->baseMaxAcceleration();
     auto accelRps = model_->linearVelocityToMotorRPS(accelMps);
-    RCLCPP_INFO(
-        this->get_logger(), "Max acceleration: %.1f m/s^2 | %.1f turns/s^2", accelMps, accelRps);
-    // self._axis.controller.config.vel_ramp_rate = accel_rps ?
+    RCLCPP_INFO(this->get_logger(), "acceleration: %.1f m/s^2, %.1f turns/s^2", accelMps, accelRps);
+    uint32_t id = (params_.nodeId << 5) | CmdId::kSetAxisState;
+    send(id, sizeof(accelRps), &accelRps);
     disableMotor();
 }
 
@@ -147,29 +158,31 @@ void HardwareNode::commandCallback(const truck_msgs::msg::Control& msg) {
         disableMotor();
     }
     auto rpm = model_->linearVelocityToMotorRPS(msg.velocity);
-    // self._axis.controller.input_vel = rpm ?
+    uint32_t id = (params_.nodeId << 5) | CmdId::kSetInputVel;
+    send(id, 8, &rpm);
     truck::model::Twist twist = truck::model::Twist{msg.curvature, msg.velocity};
     twist = model_->baseToRearTwist(twist);
     auto steering = model_->rearTwistToSteering(twist);
-    RCLCPP_DEBUG(this->get_logger(), "Center curvature: %.2f", msg.curvature);
-    RCLCPP_DEBUG(this->get_logger(), "Rear curvature: %.2f", twist.curvature);
+    RCLCPP_INFO(this->get_logger(), "center curv: %.2f", msg.curvature);
+    RCLCPP_INFO(this->get_logger(), "rear curv: %.2f", twist.curvature);
 }
 
 void HardwareNode::enableMotor() {
-    // self._axis.controller.input_vel = 0 ?
-    struct can_frame frame;
-    frame.can_id = (params_.nodeId << 5) | CmdId::kSetAxisState;
-    frame.can_dlc = 4;
-    frame.data[0] = AxisState::AXIS_STATE_CLOSED_LOOP_CONTROL;
-    canInterface.sendCanFrame(frame);
+    double rpm = 0.0;
+    uint32_t id1 = (params_.nodeId << 5) | CmdId::kSetInputVel;
+    send(id1, sizeof(rpm), &rpm);
+
+    uint8_t state = AxisState::AXIS_STATE_CLOSED_LOOP_CONTROL;
+    uint32_t id2 = (params_.nodeId << 5) | CmdId::kSetAxisState;
+    send(id2, sizeof(state), &state);
+    RCLCPP_INFO(this->get_logger(), "motor enabled");
 }
 
 void HardwareNode::disableMotor() {
-    struct can_frame frame;
-    frame.can_id = (params_.nodeId << 5) | CmdId::kSetAxisState;
-    frame.can_dlc = 4;
-    frame.data[0] = AxisState::AXIS_STATE_IDLE;
-    canInterface.sendCanFrame(frame);
+    uint32_t id = (params_.nodeId << 5) | CmdId::kSetAxisState;
+    uint8_t state = CmdId::kSetAxisState;
+    send(id, sizeof(state), &state);
+    RCLCPP_INFO(this->get_logger(), "motor disabled");
 }
 
 void HardwareNode::pushTelemetry() {
@@ -178,13 +191,27 @@ void HardwareNode::pushTelemetry() {
     header.frame_id = "base";
     auto telemetry = truck_msgs::msg::HardwareTelemetry();
     telemetry.header = header;
+    auto st1 = CmdId::kGetEncoderEstimates;
+
+    struct can_frame frame;
+    canInterface.processReceivedFrame(frame);  // write(socket, &frame, sizeof(frame));
+
+    /*
+    std::ostringstream logMsg;
+        logMsg << "recieved packet: can_id = 0x" << std::hex << frame.can_id << ", dlc = " <<
+    std::dec << (int)frame.can_dlc << ", data = "; for (int i = 0; i < frame.can_dlc; ++i) { logMsg
+    << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[i] << " ";
+        }
+    RCLCPP_INFO(this->get_logger(), "%s", logMsg.str().c_str());
+    */
+
     /*
     telemetry = HardwareTelemetry(
         header=header,
         current_rps=self._axis.encoder.vel_estimate,
-        target_rps=self._axis.controller.input_vel, ?
+        target_rps=self._axis.controller.input_vel,
 
-        battery_voltage=self._odrive.vbus_voltage,
+        battery_voltage=self._odrive.vbus_voltage, (params_nodeId << 5) | kGetBusVoltageCurrent;
         battery_current=self._odrive.ibus,
     )
     */

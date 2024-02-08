@@ -27,6 +27,11 @@ class SocketInterface {
         return (nbytes != -1);
     }
 
+    bool processReceivedFrame(can_frame& frame) {
+        ssize_t nbytes = read(s, &frame, sizeof(frame));
+        return (nbytes != -1);
+    }
+
   private:
     int s;
     struct ifreq ifr;
