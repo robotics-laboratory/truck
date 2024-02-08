@@ -11,6 +11,8 @@
 #include <sys/socket.h>
 #include <cstring>
 
+#include "rclcpp/logger.hpp"
+
 class SocketInterface {
   public:
     SocketInterface() {
@@ -22,14 +24,14 @@ class SocketInterface {
         bind(s, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
     }
 
-    bool sendCanFrame(const can_frame& frame) {
+    ssize_t sendCanFrame(const can_frame& frame) {
         ssize_t nbytes = write(s, &frame, sizeof(frame));
-        return (nbytes != -1);
+        return nbytes;
     }
 
-    bool processReceivedFrame(can_frame& frame) {
+    ssize_t processReceivedFrame(can_frame& frame) {
         ssize_t nbytes = read(s, &frame, sizeof(frame));
-        return (nbytes != -1);
+        return nbytes;
     }
 
   private:

@@ -40,8 +40,8 @@ class HardwareNode : public rclcpp::Node {
     void modeCallback(const truck_msgs::msg::ControlMode& msg);
 
     void commandCallback(const truck_msgs::msg::Control& msg);
-    
-    void send(uint32_t can_id, uint8_t can_dlc, const void* data);
+
+    void send(uint32_t cmdId, uint8_t can_dlc, const void* data);
 
     void enableMotor();
 
