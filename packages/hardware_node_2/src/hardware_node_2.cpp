@@ -103,12 +103,12 @@ void HardwareNode::initializeTopicHandlers() {
 }
 
 void HardwareNode::initializeTimers() {
-    timers_.statusTimer =
-        this->create_wall_timer(100ms, std::bind(&HardwareNode::pushStatus, this));
-
+    timers_.statusTimer = this->create_wall_timer(
+        100ms, std::bind(&HardwareNode::pushStatus, this));
+    
     RCLCPP_INFO(this->get_logger(), "status timer: ");
-    timers_.telemetryTimer =
-        this->create_wall_timer(100ms, std::bind(&HardwareNode::pushTelemetry, this));
+    timers_.telemetryTimer = this->create_wall_timer(
+        100ms, std::bind(&HardwareNode::pushTelemetry, this));
 }
 
 void HardwareNode::modeCallback(const truck_msgs::msg::ControlMode& msg) {
@@ -129,6 +129,7 @@ void HardwareNode::modeCallback(const truck_msgs::msg::ControlMode& msg) {
     timers_.statusTimer.reset();
     pushStatus();
 }
+
 
 void HardwareNode::send(uint32_t cmdId, uint8_t can_dlc, const void* data = nullptr) {
     auto id = (params_.nodeId << 5) | cmdId;
@@ -179,14 +180,15 @@ void HardwareNode::disableMotor() {
 }
 
 void HardwareNode::pushTelemetry() {
-    auto telemetry = truck_msgs::msg::HardwareTelemetry();
 
+    auto telemetry = truck_msgs::msg::HardwareTelemetry();
+    
     auto header = std_msgs::msg::Header();
     header.stamp = now();
     header.frame_id = "base";
     telemetry.header = header;
 
-    send(CmdId::kGetEncoderEstimates, 0);
+    send(CmdId::kGetEncoderEstimates , 0);
 
     send(CmdId::kGetBusVoltageCurrent, 0);
 
@@ -196,7 +198,7 @@ void HardwareNode::pushTelemetry() {
 
     auto command = frame.can_id & 0x1f;
     RCLCPP_INFO(this->get_logger(), "cmdId: %d", command);
-
+    
     /*
     telemetry = HardwareTelemetry(
         header=header,
