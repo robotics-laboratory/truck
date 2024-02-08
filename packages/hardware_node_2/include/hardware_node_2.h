@@ -40,7 +40,7 @@ class HardwareNode : public rclcpp::Node {
     void modeCallback(const truck_msgs::msg::ControlMode& msg);
 
     void commandCallback(const truck_msgs::msg::Control& msg);
-
+    
     void send(uint32_t can_id, uint8_t can_dlc, const void* data);
 
     void enableMotor();
@@ -53,7 +53,6 @@ class HardwareNode : public rclcpp::Node {
 
     struct Params {
         uint16_t nodeId;
-        std::string modelConfig;
         std::string odriveAxis;
         std::string interface;
         std::chrono::milliseconds odriveTimeout;
