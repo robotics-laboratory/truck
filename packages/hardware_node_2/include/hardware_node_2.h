@@ -1,8 +1,6 @@
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
 #include "model/model.h"
-#include "socket_can.h"
 
 #include "truck_msgs/msg/control.hpp"
 #include "truck_msgs/msg/control_mode.hpp"
@@ -10,6 +8,16 @@
 #include "truck_msgs/msg/hardware_telemetry.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 
+#include <rclcpp/rclcpp.hpp>
+#include <functional>
+#include <utility>
+#include <linux/can.h>
+#include <linux/can/raw.h>
+#include <sys/eventfd.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <net/if.h>
 #include <memory>
 #include <string>
 #include <cstring>
@@ -23,8 +31,6 @@ class HardwareNode : public rclcpp::Node {
   private:
     uint8_t prevMode_ = truck_msgs::msg::ControlMode::OFF;
 
-    SocketInterface canInterface = SocketInterface();
-
     std::unique_ptr<model::Model> model_ = nullptr;
 
     void initializePtrFields();
@@ -37,11 +43,15 @@ class HardwareNode : public rclcpp::Node {
 
     void initializeOdrive();
 
+    void initializeSocketCan();
+
     void modeCallback(const truck_msgs::msg::ControlMode& msg);
 
     void commandCallback(const truck_msgs::msg::Control& msg);
 
-    void send(uint32_t cmdId, uint8_t can_dlc, const void* data);
+    void sendFrame(uint32_t cmdId, uint8_t can_dlc, const void* data);
+
+    can_frame readFrame();
 
     void enableMotor();
 
@@ -50,6 +60,12 @@ class HardwareNode : public rclcpp::Node {
     void pushStatus();
 
     void pushTelemetry();
+
+    struct SocketCan {
+        int socket;
+        struct ifreq ifr;
+        struct sockaddr_can addr;
+    } can_{};
 
     struct Params {
         uint16_t nodeId;
