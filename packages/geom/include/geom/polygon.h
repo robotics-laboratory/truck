@@ -2,6 +2,7 @@
 
 #include "geom/vector.h"
 #include "geom/triangle.h"
+#include "geom/segment.h"
 
 #include <vector>
 
@@ -23,9 +24,13 @@ struct Polygon : public std::vector<Vec2> {
     using vector::vector;
     using vector::operator=;
 
+    std::vector<Segment> edges() const noexcept;
+
     std::vector<Triangle> triangles() const noexcept;
 
     bool isConvex() const noexcept;
+
+    bool isIntersectSegment(const Segment& seg) const noexcept;
 
     Orientation orientation() const noexcept;
 };

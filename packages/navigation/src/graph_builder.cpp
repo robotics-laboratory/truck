@@ -106,7 +106,7 @@ GraphBuilder& GraphBuilder::build() {
             if (cur_point_index != neighbor_point_index) {
                 geom::Segment edge(cur_point, neighbor_point);
 
-                if (collisionFreeEdge()) {
+                if (collisionFreeEdge(edge)) {
                     weights_[cur_point_index][neighbor_point_index] = edge.len();
                     weights_[neighbor_point_index][cur_point_index] = edge.len();
                 }
@@ -132,8 +132,19 @@ const geom::Segments& GraphBuilder::getEdges() const { return edges_; }
 
 const std::vector<std::vector<std::optional<double>>>& GraphBuilder::getWeights() const { return weights_; }
 
-bool GraphBuilder::collisionFreeEdge() const {
-    /** @todo work with 'polygons_' */
+bool GraphBuilder::collisionFreeEdge(const geom::Segment& edge) const {
+    for (const geom::ComplexPolygon &polygon : polygons_) {
+        if (polygon.outer.isIntersectSegment(edge)) {
+            return false;
+        }
+
+        for (const geom::Polygon& inner_poly : polygon.inners) {
+            if (inner_poly.isIntersectSegment(edge)) {
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 

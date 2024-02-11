@@ -26,7 +26,7 @@ class GraphBuilder {
     const std::vector<std::vector<std::optional<double>>>& getWeights() const;
 
   private:
-    bool collisionFreeEdge() const;
+    bool collisionFreeEdge(const geom::Segment& edge) const;
 
     geom::Segments edges_;
     std::vector<geom::Vec2> nodes_;

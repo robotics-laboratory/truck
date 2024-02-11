@@ -26,6 +26,18 @@ using CGAL_Face_handle = CGAL_CDT::Face_handle;
 using CGAL_Point = CGAL_CDT::Point;
 using CGAL_Polygon = CGAL::Polygon_2<CGAL_K>;
 
+std::vector<Segment> Polygon::edges() const noexcept {
+    std::vector<Segment> edges;
+    
+    for (auto it = this->begin(); it != this->end(); it++) {
+        if (std::next(it) != this->end()) {
+            edges.emplace_back(geom::Segment(*it, *std::next(it)));
+        }
+    }
+
+    return edges;
+}
+
 std::vector<Triangle> Polygon::triangles() const noexcept {
     CGAL_CDT cgal_cdt;
     std::vector<Triangle> triangles;
@@ -69,6 +81,16 @@ bool Polygon::isConvex() const noexcept {
         }
     }
     return true;
+}
+
+bool Polygon::isIntersectSegment(const Segment& seg) const noexcept {
+    for (const Segment& poly_edge : edges()) {
+        if (geom::intersect(seg, poly_edge)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 Orientation Polygon::orientation() const noexcept {
