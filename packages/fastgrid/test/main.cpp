@@ -5,7 +5,7 @@
 #include "fastgrid/manhattan_distance.h"
 #include "fastgrid/distance_transform.h"
 #include "fastgrid/interpolation.h"
-#include "fastgrid/Draw.h"
+#include "fastgrid/draw.h"
 #include "geom/common.h"
 #include "geom/pose.h"
 
