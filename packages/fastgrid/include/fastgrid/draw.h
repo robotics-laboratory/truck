@@ -1,3 +1,5 @@
+#pragma once
+
 #include "fastgrid/grid.h"
 #include "fastgrid/holder.h"
 
