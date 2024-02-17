@@ -72,7 +72,7 @@ TruckState& TruckState::baseAngularVelocity(double angular_velocity) {
     return *this;
 }
 
-TruckState& TruckState::lidarRanges(std::vector<float>& lidar_ranges) {
+TruckState& TruckState::lidarRanges(std::vector<float>&& lidar_ranges) {
     cache_.lidar_ranges = std::move(lidar_ranges);
     return *this;
 }

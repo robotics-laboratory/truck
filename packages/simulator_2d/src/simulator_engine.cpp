@@ -170,7 +170,7 @@ TruckState SimulatorEngine::getTruckState() const {
         .baseTwist(twist)
         .odomBaseLinearVelocity(linear_velocity)
         .baseAngularVelocity(angular_velocity)
-        .lidarRanges(lidar_ranges);
+        .lidarRanges(std::move(lidar_ranges));
 }
 
 namespace {
