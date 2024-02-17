@@ -6,15 +6,14 @@
 
 namespace truck::geom {
 
-bool checkIntersection(const Ray& ray, const Segment& segment,
-    Vec2& intersection, double precision) noexcept {
+std::optional<Vec2> getIntersection(const Ray& ray, const Segment& segment, double precision) noexcept {
 
     auto ray_dir = ray.dir.vec();
     auto segment_dir = static_cast<Vec2>(segment);
 
     auto det = cross(segment_dir, ray_dir);
     if (std::abs(det) < precision) {
-        return false;
+        return {};
     }
 
     auto rayOriginToSegmentBegin = segment.begin - ray.origin;
@@ -23,11 +22,10 @@ bool checkIntersection(const Ray& ray, const Segment& segment,
     auto u = cross(ray_dir, rayOriginToSegmentBegin) / det;
 
     if (t >= -precision && u >= -precision && u <= 1 + precision) {
-        intersection = ray.origin + t * ray_dir;
-        return true;
+        return ray.origin + t * ray_dir;
     }
 
-    return false;
+    return {};
 }
 
 }  // namespace truck::geom

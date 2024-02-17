@@ -119,15 +119,17 @@ float findClosestIntersectionDistance(const geom::Ray& ray,
     const geom::Segments& obstacles, double precision) {
 
     auto min_distance = std::numeric_limits<double>::infinity();
-    geom::Vec2 intersection;
 
     for (const auto& segment : obstacles) {
-        if (geom::checkIntersection(ray, segment, intersection, precision)) {
-            auto distance 
-                = std::hypot(intersection.x - ray.origin.x, intersection.y - ray.origin.y);
-            if (distance < min_distance) {
-                min_distance = distance;
-            }
+        const auto intersection = geom::getIntersection(ray, segment, precision);
+        if (!intersection) {
+            continue;
+        }
+
+        const auto difference = (*intersection) - ray.origin;
+        const auto distance = std::hypot(difference.x, difference.y);
+        if (distance < min_distance) {
+            min_distance = distance;
         }
     }
 

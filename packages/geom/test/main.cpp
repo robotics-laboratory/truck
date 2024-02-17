@@ -475,10 +475,9 @@ void processRayTest(const Vec2& ray_origin, const AngleVec2& ray_dir,
 
     Ray ray(ray_origin, ray_dir);
     Segment segment(segment_begin, segment_end);
-    Vec2 intersection;
-    bool result = checkIntersection(ray, segment, intersection, precision);
+    const auto intersection = getIntersection(ray, segment, precision);
 
-    ASSERT_FALSE(result);
+    ASSERT_FALSE(intersection);
 }
 
 void processRayTest(const Vec2& ray_origin, const AngleVec2& ray_dir, 
@@ -487,11 +486,10 @@ void processRayTest(const Vec2& ray_origin, const AngleVec2& ray_dir,
 
     Ray ray(ray_origin, ray_dir);
     Segment segment(segment_begin, segment_end);
-    Vec2 intersection;
-    bool result = checkIntersection(ray, segment, intersection, precision);
+    const auto intersection = getIntersection(ray, segment, precision);
 
-    ASSERT_TRUE(result);
-    ASSERT_GEOM_EQUAL(intersection, correct_intersection, precision);
+    ASSERT_TRUE(intersection);
+    ASSERT_GEOM_EQUAL(*intersection, correct_intersection, precision);
 }
 
 TEST(Ray, segment_intersections) {
