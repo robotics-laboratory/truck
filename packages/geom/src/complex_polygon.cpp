@@ -78,17 +78,17 @@ Segments ComplexPolygon::segments() const noexcept {
         size += inner.size();
     }
 
-    Segments segments(size);
+    Segments segments;
+    segments.reserve(size);
+
     auto current_segments = outer.segments();
-    segments.insert(segments.begin(), 
+    segments.insert(segments.end(), 
             std::make_move_iterator(current_segments.begin()), 
             std::make_move_iterator(current_segments.end()));
 
-    size_t last_index = outer.size();
-    
     for (const auto inner : inners) {
         current_segments = inner.segments();
-        segments.insert(segments.begin() + last_index, 
+        segments.insert(segments.end(), 
             std::make_move_iterator(current_segments.begin()), 
             std::make_move_iterator(current_segments.end()));
     }

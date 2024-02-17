@@ -6,7 +6,6 @@
 namespace truck::geom {
 
 struct Segment {
-    Segment() : begin({0, 0}), end({0, 0}) {}
     Segment(const Vec2& begin, const Vec2& end) : begin(begin), end(end) {}
 
     operator Vec2() const noexcept { return end - begin; }
