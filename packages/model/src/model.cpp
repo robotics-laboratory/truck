@@ -130,4 +130,6 @@ const WheelBase& Model::wheelBase() const { return params_.wheel_base; }
 
 const Wheel& Model::wheel() const { return params_.wheel; }
 
+const Lidar& Model::lidar() const { return params_.lidar; }
+
 }  // namespace truck::model

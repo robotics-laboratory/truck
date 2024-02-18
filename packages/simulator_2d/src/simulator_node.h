@@ -22,7 +22,6 @@ class SimulatorNode : public rclcpp::Node {
     SimulatorNode();
 
   private:
-    void initializeParams();
     void initializeTopicHandlers();
     void initializeEngine();
 

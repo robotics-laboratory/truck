@@ -14,25 +14,12 @@ namespace truck::simulator {
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
-    initializeParams();
     initializeTopicHandlers();
     initializeEngine();
 
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
         std::bind(&SimulatorNode::makeSimulationTick, this));    
-}
-
-void SimulatorNode::initializeParams() {
-    params_.update_period = declare_parameter("update_period", 0.01);
-
-    const auto lidar_config_path = declare_parameter("lidar_config", "");
-    const auto lidar_config = nlohmann::json::parse(std::ifstream(lidar_config_path));
-    params_.lidar_config.angle_min = lidar_config["angle_min"];
-    params_.lidar_config.angle_max = lidar_config["angle_max"];
-    params_.lidar_config.angle_increment = lidar_config["angle_increment"];
-    params_.lidar_config.range_min = lidar_config["range_min"];
-    params_.lidar_config.range_max = lidar_config["range_max"];
 }
 
 void SimulatorNode::initializeTopicHandlers() {
@@ -66,6 +53,13 @@ void SimulatorNode::initializeTopicHandlers() {
 void SimulatorNode::initializeEngine() {
     auto model = std::make_unique<model::Model>(
         model::load(get_logger(), declare_parameter("model_config", "")));
+
+    params_.update_period = declare_parameter("update_period", 0.01);
+    params_.lidar_config.angle_min = static_cast<float>(model->lidar().angle_min.radians());
+    params_.lidar_config.angle_max = static_cast<float>(model->lidar().angle_max.radians());
+    params_.lidar_config.angle_increment = static_cast<float>(model->lidar().angle_increment.radians());
+    params_.lidar_config.range_min = model->lidar().range_min;
+    params_.lidar_config.range_max = model->lidar().range_max;
 
     const auto initial_ego_state_path = declare_parameter("initial_ego_state_config", "");
     const auto initial_ego_state = nlohmann::json::parse(std::ifstream(initial_ego_state_path));

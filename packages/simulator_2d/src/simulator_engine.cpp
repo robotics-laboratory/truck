@@ -10,8 +10,7 @@
 namespace truck::simulator {
 
 SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
-    double integration_step, double precision, 
-    float angle_min, float angle_max, float angle_increment) {
+    double integration_step, double precision) {
         
     model_ = std::move(model);
 
@@ -22,9 +21,14 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
-    cache_.lidar_rays_number = std::round((angle_max - angle_min) / angle_increment);
-    cache_.lidar_angle_min = geom::AngleVec2(geom::Angle::fromRadians(angle_min));
-    cache_.lidar_angle_increment = geom::AngleVec2(geom::Angle::fromRadians(angle_increment));
+
+    const double angle_min_rad = model_->lidar().angle_min.radians();
+    const double angle_max_rad = model_->lidar().angle_max.radians();
+    const double angle_increment_rad = model_->lidar().angle_increment.radians();
+
+    cache_.lidar_rays_number = std::round((angle_max_rad - angle_min_rad) / angle_increment_rad);
+    cache_.lidar_angle_min = geom::AngleVec2(model_->lidar().angle_min);
+    cache_.lidar_angle_increment = geom::AngleVec2(model_->lidar().angle_increment);
 
     resetRear();
 }

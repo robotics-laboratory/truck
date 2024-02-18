@@ -18,8 +18,7 @@ namespace truck::simulator {
 class SimulatorEngine {
   public:
     SimulatorEngine(std::unique_ptr<model::Model> model, 
-        double integration_step = 1e-3, double precision = 1e-8,
-        float angle_min = 0, float angle_max = 2 * M_PI, float angle_increment = 2e-3);
+        double integration_step = 1e-3, double precision = 1e-8);
 
     void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
     void resetMap(const std::string& path);
