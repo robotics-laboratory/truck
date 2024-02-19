@@ -81,11 +81,9 @@ void SimulatorNode::initializeEngine() {
     pose.pos = geom::Vec2{x, y} + model->wheelBase().base_to_rear * pose.dir;
 
     engine_ = std::make_unique<SimulatorEngine>(
-        std::move(model), declare_parameter("integration_step", 0.001), 
-        declare_parameter("calculations_precision", 1e-8),
-        params_.lidar_config.angle_min, params_.lidar_config.angle_max, 
-        params_.lidar_config.angle_increment);
-        declare_parameter("rays_number", 3200));
+        std::move(model),
+        declare_parameter("integration_step", 0.001), 
+        declare_parameter("calculations_precision", 1e-8));
     engine_->resetBase(pose, steering, velocity);
     engine_->setBaseToLidar(params_.lidar_config.from_base);
     engine_->resetMap(declare_parameter("map_config", ""));
