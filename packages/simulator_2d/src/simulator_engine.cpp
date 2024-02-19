@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
 
 namespace truck::simulator {
@@ -58,6 +59,10 @@ void SimulatorEngine::resetBase(const geom::Pose& pose,
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
     resetRear(rear_x, rear_y, yaw, middle_steering, rear_twist.velocity);
+}
+
+void SimulatorEngine::setBaseToLidar(geom::Vec2 base_to_lidar) {
+    cache_.base_to_lidar = base_to_lidar;
 }
 
 void SimulatorEngine::resetMap(const std::string& path) {
@@ -119,36 +124,58 @@ double SimulatorEngine::rearToBaseAngularVelocity(
 
 namespace {
 
-float findClosestIntersectionDistance(const geom::Ray& ray, 
-    const geom::Segments& obstacles, double precision) {
+geom::Angle getAngleBetween(const geom::Vec2& origin, 
+    const geom::Vec2& dir, const geom::Vec2& point) {
 
-    auto min_distance = std::numeric_limits<double>::infinity();
+    const auto origin_to_point = point - origin;
+    auto origin_to_point_angle = geom::angleBetween(dir, origin_to_point);
+    return origin_to_point_angle._0_2PI();
+}
 
-    for (const auto& segment : obstacles) {
-        const auto intersection = geom::getIntersection(ray, segment, precision);
-        if (!intersection) {
-            continue;
-        }
+float getIntersectionDistance(const geom::Ray& ray, 
+    const geom::Segment& segment, double precision) {
 
-        const auto difference = (*intersection) - ray.origin;
-        const auto distance = std::hypot(difference.x, difference.y);
-        if (distance < min_distance) {
-            min_distance = distance;
-        }
+    const auto intersection = geom::getIntersection(ray, segment, precision);
+    if (!intersection) {
+        return std::numeric_limits<float>::max();
     }
 
-    return static_cast<float>(min_distance);
+    const auto difference = (*intersection) - ray.origin;
+    const auto distance = std::hypot(difference.x, difference.y);
+
+    return static_cast<float>(distance);
 }
 
 } // namespace
 
-std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& pose) const {
-    std::vector<float> ranges(cache_.lidar_rays_number);
-    geom::Ray current_ray(pose.pos, pose.dir + cache_.lidar_angle_min);
+std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_pose) const {
+    std::vector<float> ranges(cache_.lidar_rays_number, std::numeric_limits<float>::max());
+    
+    const auto origin = odom_base_pose.pos + cache_.base_to_lidar;
+    const auto dir = (odom_base_pose.dir + cache_.lidar_angle_min);
+    const auto dir_vector = dir.vec();
+    const auto dir_angle_rad = dir.angle()._0_2PI().radians();
+    const auto increment_rad = cache_.lidar_angle_increment.angle().radians();
 
-    for (auto& range : ranges) {
-        range = findClosestIntersectionDistance(current_ray, obstacles_, params_.precision);
-        current_ray.dir += cache_.lidar_angle_increment;
+    for (const auto& segment : obstacles_) {
+        const auto lidar_to_begin_angle 
+            = getAngleBetween(origin, dir_vector, segment.begin);
+        const auto lidar_to_end_angle 
+            = getAngleBetween(origin, dir_vector, segment.end);
+
+        auto min_angle_rad = std::min(lidar_to_begin_angle, lidar_to_end_angle).radians();
+        min_angle_rad = std::max(dir_angle_rad, min_angle_rad);
+
+        const int index = std::ceil((min_angle_rad - dir_angle_rad) / increment_rad);
+        const auto multIncrement = geom::AngleVec2(index * cache_.lidar_angle_increment.angle());
+        geom::Ray current_ray(origin, odom_base_pose.dir + multIncrement);
+
+        const auto max_angle = geom::AngleVec2(std::max(lidar_to_begin_angle, lidar_to_end_angle));
+        for (size_t i = index; i < ranges.size() && current_ray.dir < max_angle; ++i) {
+            const auto distance = getIntersectionDistance(current_ray, segment, params_.precision);
+            ranges[i] = std::min(ranges[i], distance);
+            current_ray.dir += cache_.lidar_angle_increment;
+        }
     }
 
     return ranges;

@@ -3,6 +3,7 @@
 #include "geom/msg.h"
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_ros/qos.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -25,6 +26,11 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 void SimulatorNode::initializeTopicHandlers() {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
+
+    slots_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
+        "/tf_static", 
+        tf2_ros::StaticListenerQoS(100), 
+        std::bind(&SimulatorNode::handleTf, this, _1));
 
     slots_.control = Node::create_subscription<truck_msgs::msg::Control>(
         "/control/command",
@@ -81,17 +87,33 @@ void SimulatorNode::initializeEngine() {
         params_.lidar_config.angle_increment);
         declare_parameter("rays_number", 3200));
     engine_->resetBase(pose, steering, velocity);
+    engine_->setBaseToLidar(params_.lidar_config.from_base);
     engine_->resetMap(declare_parameter("map_config", ""));
 
     // The zero state of the simulation.
     publishSimulationState();
 }
 
+void SimulatorNode::handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg) {
+    for (const auto& transform_msg : msg->transforms) {
+        if (transform_msg.child_frame_id == "lidar_link") {
+            const auto translation = transform_msg.transform.translation;
+            params_.lidar_config.from_base = {translation.x + 5, translation.y + 1};
+            if (engine_) {
+                engine_->setBaseToLidar(params_.lidar_config.from_base);
+            }
+
+            return;
+        }
+    }
+}
+
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {
     if (control->has_acceleration) {
         engine_->setBaseControl(control->velocity, control->acceleration, control->curvature);
     } else {
-        engine_->setBaseControl(control->velocity, control->curvature);
+        //engine_->setBaseControl(control->velocity, control->curvature);
+        engine_->setBaseControl(1, 0);
     }
 }
 
@@ -129,14 +151,24 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
     odom_to_base_transform_msg.child_frame_id = "base";
     odom_to_base_transform_msg.header.stamp = truck_state.time();
 
-    // Set the transformation.
     const auto pose = truck_state.odomBasePose();
     odom_to_base_transform_msg.transform.translation.x = pose.pos.x;
     odom_to_base_transform_msg.transform.translation.y = pose.pos.y;
     odom_to_base_transform_msg.transform.rotation = truck::geom::msg::toQuaternion(pose.dir);
 
+    geometry_msgs::msg::TransformStamped odom_to_lidar_transform_msg;
+    odom_to_lidar_transform_msg.header.frame_id = "odom_ekf";
+    odom_to_lidar_transform_msg.child_frame_id = "lidar_link";
+    odom_to_lidar_transform_msg.header.stamp = truck_state.time();
+
+    odom_to_lidar_transform_msg.transform.translation.x 
+        = pose.pos.x + params_.lidar_config.from_base.x;
+    odom_to_lidar_transform_msg.transform.translation.y 
+        = pose.pos.y + params_.lidar_config.from_base.y;
+
     tf2_msgs::msg::TFMessage tf_msg;
     tf_msg.transforms.push_back(odom_to_base_transform_msg);
+    tf_msg.transforms.push_back(odom_to_lidar_transform_msg);
     signals_.tf_publisher->publish(tf_msg);
 }
 
@@ -164,7 +196,7 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
 
 void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
     sensor_msgs::msg::LaserScan scan_msg;
-    scan_msg.header.frame_id = "base";
+    scan_msg.header.frame_id = "lidar_link";
     scan_msg.header.stamp = truck_state.time();
     scan_msg.angle_min = params_.lidar_config.angle_min;
     scan_msg.angle_max = params_.lidar_config.angle_max;

@@ -17,10 +17,11 @@ namespace truck::simulator {
 
 class SimulatorEngine {
   public:
-    SimulatorEngine(std::unique_ptr<model::Model> model, 
+    SimulatorEngine(std::unique_ptr<model::Model> model,
         double integration_step = 1e-3, double precision = 1e-8);
 
     void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
+    void setBaseToLidar(geom::Vec2 base_to_lidar);
     void resetMap(const std::string& path);
     void eraseMap();
 
@@ -53,7 +54,7 @@ class SimulatorEngine {
         truck::geom::AngleVec2 dir,double base_velocity) const;
     double rearToBaseAngularVelocity(
         double base_velocity, double rear_curvature) const;
-    std::vector<float> getLidarRanges(const geom::Pose& pose) const;
+    std::vector<float> getLidarRanges(const geom::Pose& odom_base_pose) const;
 
     double getCurrentAcceleration() const;
     double getCurrentSteeringVelocity() const;
@@ -71,6 +72,7 @@ class SimulatorEngine {
         double integration_step_6;
         double inverse_integration_step;
         double inverse_wheelbase_length;
+        geom::Vec2 base_to_lidar;
         int lidar_rays_number;
         geom::AngleVec2 lidar_angle_min;
         geom::AngleVec2 lidar_angle_increment;
