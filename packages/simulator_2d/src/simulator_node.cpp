@@ -98,7 +98,7 @@ void SimulatorNode::handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg) {
     for (const auto& transform_msg : msg->transforms) {
         if (transform_msg.child_frame_id == "lidar_link") {
             const auto translation = transform_msg.transform.translation;
-            params_.lidar_config.from_base = {translation.x + 5, translation.y + 1};
+            params_.lidar_config.from_base = {translation.x, translation.y};
             if (engine_) {
                 engine_->setBaseToLidar(params_.lidar_config.from_base);
             }
@@ -112,8 +112,7 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     if (control->has_acceleration) {
         engine_->setBaseControl(control->velocity, control->acceleration, control->curvature);
     } else {
-        //engine_->setBaseControl(control->velocity, control->curvature);
-        engine_->setBaseControl(1, 0);
+        engine_->setBaseControl(control->velocity, control->curvature);
     }
 }
 
