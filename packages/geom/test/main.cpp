@@ -470,28 +470,6 @@ TEST(Polygon, clip) {
     }
 }
 
-void processRayTest(const Vec2& ray_origin, const AngleVec2& ray_dir,
-    const Vec2& segment_begin, const Vec2& segment_end, double precision) {
-
-    Ray ray(ray_origin, ray_dir);
-    Segment segment(segment_begin, segment_end);
-    const auto intersection = getIntersection(ray, segment, precision);
-
-    ASSERT_FALSE(intersection);
-}
-
-void processRayTest(const Vec2& ray_origin, const AngleVec2& ray_dir, 
-    const Vec2& segment_begin, const Vec2& segment_end, 
-    const Vec2& correct_intersection, double precision) {
-
-    Ray ray(ray_origin, ray_dir);
-    Segment segment(segment_begin, segment_end);
-    const auto intersection = getIntersection(ray, segment, precision);
-
-    ASSERT_TRUE(intersection);
-    ASSERT_GEOM_EQUAL(*intersection, correct_intersection, precision);
-}
-
 TEST(Ray, segment_intersections) {
     using namespace truck::geom;
 
@@ -501,30 +479,46 @@ TEST(Ray, segment_intersections) {
         Vec2 ray_origin(4, 0), segment_begin(2, 2), segment_end(6, 2), correct_intersection(4, 2);
         AngleVec2 ray_dir(Angle::fromDegrees(90));
 
-        processRayTest(ray_origin, ray_dir, segment_begin, 
-            segment_end, correct_intersection, precision);
+        Ray ray(ray_origin, ray_dir);
+        Segment segment(segment_begin, segment_end);
+        const auto intersection = getIntersection(ray, segment, precision);
+
+        ASSERT_TRUE(intersection);
+        ASSERT_GEOM_EQUAL(*intersection, correct_intersection, precision);
     }
 
     {
         Vec2 ray_origin(3, 0), segment_begin(2, 2), segment_end(6, 2), correct_intersection(5, 2);
         AngleVec2 ray_dir(Angle::fromDegrees(45));
 
-        processRayTest(ray_origin, ray_dir, segment_begin, 
-            segment_end, correct_intersection, precision);
+        Ray ray(ray_origin, ray_dir);
+        Segment segment(segment_begin, segment_end);
+        const auto intersection = getIntersection(ray, segment, precision);
+
+        ASSERT_TRUE(intersection);
+        ASSERT_GEOM_EQUAL(*intersection, correct_intersection, precision);
     }
 
     {
         Vec2 ray_origin(3, 0), segment_begin(2, 2), segment_end(6, 2);
         AngleVec2 ray_dir(Angle::fromDegrees(135));
 
-        processRayTest(ray_origin, ray_dir, segment_begin, segment_end, precision);
+        Ray ray(ray_origin, ray_dir);
+        Segment segment(segment_begin, segment_end);
+        const auto intersection = getIntersection(ray, segment, precision);
+
+        ASSERT_FALSE(intersection);
     }
 
     {
         Vec2 ray_origin(4, 3), segment_begin(2, 2), segment_end(6, 2);
         AngleVec2 ray_dir(Angle::fromDegrees(90));
 
-        processRayTest(ray_origin, ray_dir, segment_begin, segment_end, precision);
+        Ray ray(ray_origin, ray_dir);
+        Segment segment(segment_begin, segment_end);
+        const auto intersection = getIntersection(ray, segment, precision);
+
+        ASSERT_FALSE(intersection);
     }
 }
 
