@@ -2,9 +2,6 @@
 
 #include "common/exception.h"
 
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-
 namespace truck::navigation::viewer {
 
 namespace {
@@ -29,20 +26,19 @@ std::vector<cv::Point> toCVPoints(
     return cv_points;
 }
 
-
 void drawPolygon(
     const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
     const geom::ComplexPolygon& polygon) {
     cv::fillPoly(
         frame,
         toCVPoints(origin, params.res, polygon.outer),
-        toCVScalar(params.color_rgb.outer_polygon));
+        toCVScalar(params.color_rgb.polygon.outer));
 
     for (const geom::Polygon& inner : polygon.inners) {
         cv::fillPoly(
             frame,
             toCVPoints(origin, params.res, inner),
-            toCVScalar(params.color_rgb.inner_polygon));
+            toCVScalar(params.color_rgb.polygon.inner));
     }
 }
 
@@ -54,8 +50,8 @@ void drawSkeleton(
             frame,
             toCVPoint(origin, params.res, seg.begin),
             toCVPoint(origin, params.res, seg.end),
-            toCVScalar(params.color_rgb.skeleton),
-            params.thickness.skeleton);
+            toCVScalar(params.color_rgb.mesh_build.skeleton),
+            params.thickness.mesh_build.skeleton);
     }
 }
 
@@ -67,8 +63,8 @@ void drawLevelLines(
             frame,
             toCVPoint(origin, params.res, seg.begin),
             toCVPoint(origin, params.res, seg.end),
-            toCVScalar(params.color_rgb.level_lines),
-            params.thickness.level_lines);
+            toCVScalar(params.color_rgb.mesh_build.level_lines),
+            params.thickness.mesh_build.level_lines);
     }
 }
 
@@ -79,87 +75,95 @@ void drawMesh(
         cv::circle(
             frame,
             toCVPoint(origin, params.res, point),
-            params.thickness.mesh,
-            toCVScalar(params.color_rgb.mesh),
+            params.thickness.mesh_build.mesh,
+            toCVScalar(params.color_rgb.mesh_build.mesh),
             cv::FILLED);
     }
 }
 
 void drawEdges(
     const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
-    const std::vector<geom::Segment>& edges) {
-    for (const geom::Segment& seg : edges) {
+    const graph::Graph& graph) {
+    for (const graph::Edge& edge : graph.edges) {
+        const geom::Vec2& from = graph.nodes[edge.from].point;
+        const geom::Vec2& to = graph.nodes[edge.to].point;
         cv::line(
             frame,
-            toCVPoint(origin, params.res, seg.begin),
-            toCVPoint(origin, params.res, seg.end),
-            toCVScalar(params.color_rgb.edges),
-            params.thickness.edges);
+            toCVPoint(origin, params.res, from),
+            toCVPoint(origin, params.res, to),
+            toCVScalar(params.color_rgb.graph.edges),
+            params.thickness.graph.edges);
     }
 }
 
-void drawRoute(
+void drawNodes(
     const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
-    const std::vector<geom::Segment>& route) {
-    for (const geom::Segment& seg : route) {
+    const graph::Graph& graph) {
+    for (const graph::Node& node : graph.nodes) {
+        cv::circle(
+            frame,
+            toCVPoint(origin, params.res, node.point),
+            params.thickness.graph.nodes,
+            toCVScalar(params.color_rgb.graph.nodes),
+            cv::FILLED);
+    }
+}
+
+void drawPath(
+    const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
+    const geom::Polyline& path) {
+    if (path.size() == 0) {
+        return;
+    }
+
+    for (size_t i = 0; i < path.size() - 1; i++) {
+        const geom::Vec2& from = path[i];
+        const geom::Vec2& to = path[i + 1];
         cv::line(
             frame,
-            toCVPoint(origin, params.res, seg.begin),
-            toCVPoint(origin, params.res, seg.end),
-            toCVScalar(params.color_rgb.route),
-            params.thickness.route);
+            toCVPoint(origin, params.res, from),
+            toCVPoint(origin, params.res, to),
+            toCVScalar(params.color_rgb.path),
+            params.thickness.path);
     }
 }
 
 }  // namespace
 
-Viewer::Viewer() {}
+Viewer::Viewer(const ViewerParams& params, const geom::ComplexPolygon& polygon)
+    : params_(params) {
+    bbox_ = cv::boundingRect(toCVPoints(geom::Vec2(0, 0), params.res, polygon.outer));
+    bbox_origin_ = geom::Vec2(bbox_.x, bbox_.y);
 
-void Viewer::draw(
-    const ViewerParams& params,
-    geom::ComplexPolygons polygons,
-    std::optional<std::vector<geom::Vec2>> mesh,
-    std::optional<geom::Segments> skeleton,
-    std::optional<geom::Segments> level_lines,
-    std::optional<geom::Segments> edges,
-    std::optional<geom::Segments> route) {
-    VERIFY(polygons.size() == 1);
-    const auto& polygon = polygons[0];
+    frame_ = cv::Mat(bbox_.size(), CV_8UC3, toCVScalar(params.color_rgb.background));
+}
 
-    // set image borders via outer polygon's borders
-    cv::Rect bb = cv::boundingRect(toCVPoints(geom::Vec2(0, 0), params.res, polygon.outer));
-    cv::Mat frame = cv::Mat(bb.size(), CV_8UC3, toCVScalar(params.color_rgb.background));
+void Viewer::setPolygon(const geom::ComplexPolygon& polygon) {
+    drawPolygon(params_, bbox_origin_, frame_, polygon);
+}
 
-    geom::Vec2 bb_origin(bb.x, bb.y);
+void Viewer::setMeshBuild(const navigation::mesh::MeshBuild& mesh_build) {
+    drawMesh(params_, bbox_origin_, frame_, mesh_build.mesh);
+    drawLevelLines(params_, bbox_origin_, frame_, mesh_build.level_lines);
+    drawSkeleton(params_, bbox_origin_, frame_, mesh_build.skeleton);
+}
 
-    drawPolygon(params, bb_origin, frame, polygon);
+void Viewer::setGraph(const navigation::graph::Graph& graph) {
+    drawEdges(params_, bbox_origin_, frame_, graph);
+    drawNodes(params_, bbox_origin_, frame_, graph);
+}
 
-    if (skeleton.has_value()) {
-        drawSkeleton(params, bb_origin, frame, skeleton.value());
-    }
+void Viewer::setPath(const geom::Polyline& path) {
+    drawPath(params_, bbox_origin_, frame_, path);
+}
 
-    if (level_lines.has_value()) {
-        drawLevelLines(params, bb_origin, frame, level_lines.value());
-    }
-
-    if (route.has_value()) {
-        drawRoute(params, bb_origin, frame, route.value());
-    }
-
-    if (edges.has_value()) {
-        drawEdges(params, bb_origin, frame, edges.value());
-    }
-
-    if (mesh.has_value()) {
-        drawMesh(params, bb_origin, frame, mesh.value());
-    }    
-
+void Viewer::draw() {
     /**
      * Rotate an image around 'x' axis to avoid .png map mirroring
      * relative to the x-axis of the .geojson map
      */
-    cv::flip(frame, frame, 0);
-    cv::imwrite(params.path, frame);
+    cv::flip(frame_, frame_, 0);
+    cv::imwrite(params_.path, frame_);
 }
 
 }  // namespace truck::navigation::viewer

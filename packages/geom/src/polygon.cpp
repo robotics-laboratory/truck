@@ -4,6 +4,7 @@
 #include "common/math.h"
 
 #include "geom/line.h"
+#include "geom/intersection.h"
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
@@ -26,16 +27,14 @@ using CGAL_Face_handle = CGAL_CDT::Face_handle;
 using CGAL_Point = CGAL_CDT::Point;
 using CGAL_Polygon = CGAL::Polygon_2<CGAL_K>;
 
-std::vector<Segment> Polygon::edges() const noexcept {
-    std::vector<Segment> edges;
-    
-    for (auto it = this->begin(); it != this->end(); it++) {
-        if (std::next(it) != this->end()) {
-            edges.emplace_back(geom::Segment(*it, *std::next(it)));
-        }
-    }
+size_t Polygon::segmentNumber() const noexcept {
+    return this->size() - 1;
+}
 
-    return edges;
+Segment Polygon::segment(size_t i) const noexcept {
+    VERIFY(i < segmentNumber());
+    auto it = this->begin();
+    return Segment(*(it + i), *(it + i + 1));
 }
 
 std::vector<Triangle> Polygon::triangles() const noexcept {
@@ -81,16 +80,6 @@ bool Polygon::isConvex() const noexcept {
         }
     }
     return true;
-}
-
-bool Polygon::isIntersectSegment(const Segment& seg) const noexcept {
-    for (const Segment& poly_edge : edges()) {
-        if (geom::intersect(seg, poly_edge)) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 Orientation Polygon::orientation() const noexcept {

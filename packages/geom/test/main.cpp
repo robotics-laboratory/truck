@@ -6,6 +6,7 @@
 #include "geom/arc.h"
 #include "geom/distance.h"
 #include "geom/common.h"
+#include "geom/intersection.h"
 #include "geom/line.h"
 #include "geom/polygon.h"
 #include "geom/polyline.h"
@@ -212,6 +213,36 @@ TEST(Line, intersect) {
         auto l2 = Line::fromTwoPoints(Vec2(1, 0), Vec2(1, 1));
 
         ASSERT_EQ(intersect(l1, l2), std::nullopt);
+    }
+}
+
+TEST(Segment, intersect) {
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(1, 0), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), false);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(0, 1), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), true);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(0, 1.001), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), false);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(1, 0), Vec2(1, 2));
+        auto seg2 = Segment(Vec2(0, 1), Vec2(2, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), true);
     }
 }
 
@@ -465,6 +496,29 @@ TEST(Polygon, clip) {
              ++it_1, ++it_2) {
             ASSERT_GEOM_EQUAL(*it_1, *it_2, eps);
         }
+    }
+}
+
+TEST(Polygon, intersect) {
+    {
+        auto poly = Polygon{Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)};
+        auto seg = Segment(Vec2(0, 0), Vec2(0, 1));
+
+        ASSERT_EQ(intersect(poly, seg), true);
+    }
+
+    {
+        auto poly = Polygon{Vec2(0.001, 0), Vec2(0.001, 1), Vec2(1, 0)};
+        auto seg = Segment(Vec2(0, 0), Vec2(0, 1));
+
+        ASSERT_EQ(intersect(poly, seg), false);
+    }
+
+    {
+        auto poly = Polygon{Vec2(0, 0), Vec2(0, 3), Vec2(2, 3), Vec2(0, 2)};
+        auto seg = Segment(Vec2(1, 1), Vec2(1, 2));
+
+        ASSERT_EQ(intersect(poly, seg), false);
     }
 }
 

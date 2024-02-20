@@ -23,8 +23,12 @@ TEST(Navigation, map) {
         .color_rgb = {},
         .thickness = {}};
 
-    viewer::Viewer viewer = viewer::Viewer();
-    viewer.draw(viewer_params, polygons);
+    VERIFY(polygons.size() == 1);
+    const auto& polygon = polygons[0];
+
+    viewer::Viewer viewer = viewer::Viewer(viewer_params, polygon);
+    viewer.setPolygon(polygon);
+    viewer.draw();
 }
 
 TEST(Navigation, map_mesh) {
@@ -43,13 +47,13 @@ TEST(Navigation, map_mesh) {
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
     mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
-    viewer::Viewer viewer = viewer::Viewer();
-    viewer.draw(
-        viewer_params,
-        polygons,
-        mesh_build.mesh,
-        mesh_build.skeleton,
-        mesh_build.level_lines);
+    VERIFY(polygons.size() == 1);
+    const auto& polygon = polygons[0];
+
+    viewer::Viewer viewer = viewer::Viewer(viewer_params, polygon);
+    viewer.setPolygon(polygon);
+    viewer.setMeshBuild(mesh_build);
+    viewer.draw();
 }
 
 TEST(Navigation, map_graph) {
@@ -70,31 +74,19 @@ TEST(Navigation, map_graph) {
 
     graph::GraphParams graph_params{
         .mode = graph::GraphParams::Mode::searchRadius, .search_radius = 3.6};
-    graph::GraphBuilder graph_builder =
-        graph::GraphBuilder(graph_params)
-            .setNodes(mesh_build.mesh)
-            .setComplexPolygons(polygons)
-            .build();
-    
-    const auto& edges = graph_builder.getEdges();
+    graph::GraphBuilder graph_builder = graph::GraphBuilder(graph_params);
+    graph::Graph graph = graph_builder.build(mesh_build.mesh, polygons);
 
-    size_t from_node = 108;
-    size_t to_node = 354;
+    geom::Polyline path = search::toPolyline(graph, search::findShortestPath(graph, 28, 306));
 
-    const auto& route = 
-        search::toSegments(
-            search::Dijkstra(graph_builder.getWeights(), from_node, to_node),
-            mesh_build.mesh);
+    VERIFY(polygons.size() == 1);
+    const auto& polygon = polygons[0];
 
-    viewer::Viewer viewer = viewer::Viewer();
-    viewer.draw(
-        viewer_params,
-        polygons,
-        mesh_build.mesh,
-        std::nullopt,
-        std::nullopt,
-        edges,
-        route);
+    viewer::Viewer viewer = viewer::Viewer(viewer_params, polygon);
+    viewer.setPolygon(polygon);
+    viewer.setPath(path);
+    viewer.setGraph(graph);
+    viewer.draw();
 }
 
 int main(int argc, char *argv[]) {

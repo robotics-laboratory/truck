@@ -24,13 +24,13 @@ struct Polygon : public std::vector<Vec2> {
     using vector::vector;
     using vector::operator=;
 
-    std::vector<Segment> edges() const noexcept;
+    size_t segmentNumber() const noexcept;
+
+    Segment segment(size_t i) const noexcept;
 
     std::vector<Triangle> triangles() const noexcept;
 
     bool isConvex() const noexcept;
-
-    bool isIntersectSegment(const Segment& seg) const noexcept;
 
     Orientation orientation() const noexcept;
 };

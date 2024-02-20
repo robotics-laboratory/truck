@@ -26,8 +26,6 @@ struct Segment {
 
 geom::Vec2 projection(const geom::Vec2& point, const geom::Segment& segment) noexcept;
 
-bool intersect(const geom::Segment& seg1, const geom::Segment& seg2) noexcept;
-
 using Segments = std::vector<Segment>;
 
 }  // namespace truck::geom

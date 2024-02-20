@@ -1,9 +1,6 @@
 #pragma once
 
-#include "geom/segment.h"
 #include "geom/complex_polygon.h"
-
-#include <optional>
 
 namespace truck::navigation::graph {
 
@@ -13,27 +10,35 @@ struct GraphParams {
     double search_radius = 2;
 };
 
+using NodeId = size_t;
+using EdgeId = size_t;
+
+struct Node {
+    NodeId id;
+    geom::Vec2 point;
+    std::vector<EdgeId> edges;
+};
+
+struct Edge {
+    NodeId from, to;
+    double weight;
+};
+
+using Nodes = std::vector<Node>;
+using Edges = std::vector<Edge>;
+
+struct Graph {
+    Nodes nodes;
+    Edges edges;
+};
+
 class GraphBuilder {
   public:
     GraphBuilder(const GraphParams& params);
 
-    GraphBuilder& setNodes(const std::vector<geom::Vec2>& nodes);
-    GraphBuilder& setComplexPolygons(const geom::ComplexPolygons& polygons);
-    GraphBuilder& build();
-
-    const geom::Segments& getEdges() const;
-    const std::vector<geom::Vec2>& getNodes() const;
-    const std::vector<std::vector<std::optional<double>>>& getWeights() const;
+    Graph build(const std::vector<geom::Vec2>& mesh, const geom::ComplexPolygons& polygons) const;
 
   private:
-    bool collisionFreeEdge(const geom::Segment& edge) const;
-
-    geom::Segments edges_;
-    std::vector<geom::Vec2> nodes_;
-    std::vector<std::vector<std::optional<double>>> weights_;
-
-    geom::ComplexPolygons polygons_;
-
     GraphParams params_;
 };
 
