@@ -7,6 +7,7 @@
 #include "truck_msgs/msg/trajectory.hpp"
 #include "truck_msgs/msg/waypoints.hpp"
 #include "truck_msgs/msg/hardware_telemetry.hpp"
+#include "truck_msgs/msg/navigation_mesh.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
@@ -42,6 +43,7 @@ class VisualizationNode : public rclcpp::Node {
     void handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg);
     void handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg);
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
+    void handleNavigationMesh(truck_msgs::msg::NavigationMesh::ConstSharedPtr msg);
 
     void publishTrajectory() const;
     void publishEgo() const;
@@ -49,6 +51,7 @@ class VisualizationNode : public rclcpp::Node {
     void publishArc() const;
     void publishWaypoints() const;
     void publishMap() const;
+    void publishNavigationMesh() const;
 
     std_msgs::msg::ColorRGBA velocityToColor(double speed, double alpha=1.0) const;
 
@@ -77,6 +80,9 @@ class VisualizationNode : public rclcpp::Node {
         std::string mesh_wheel = "";
       
         double map_z_lev = 0.0;
+
+        double nav_mesh_z_lev = 0.0;
+        double nav_mesh_radius = 0.0;
     } params_{};
 
     enum WheelIndex { 
@@ -116,6 +122,7 @@ class VisualizationNode : public rclcpp::Node {
         truck_msgs::msg::Trajectory::ConstSharedPtr trajectory = nullptr;
         truck_msgs::msg::HardwareTelemetry::ConstSharedPtr telemetry = nullptr;
         truck_msgs::msg::Waypoints::ConstSharedPtr waypoints = nullptr;
+        truck_msgs::msg::NavigationMesh::ConstSharedPtr nav_mesh = nullptr; 
     } state_;
 
     struct Slots {
@@ -128,6 +135,7 @@ class VisualizationNode : public rclcpp::Node {
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
         rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
         rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::NavigationMesh>::SharedPtr nav_mesh = nullptr;
     } slot_;
 
     struct Signals {
@@ -137,6 +145,7 @@ class VisualizationNode : public rclcpp::Node {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr waypoints = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr map = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr nav_mesh = nullptr;
     } signal_;
 
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;

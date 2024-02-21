@@ -53,6 +53,11 @@ launch:
         - name: "map"
           param:
             - { name: "z_lev", value: 0.0 }
+        
+        - name: "nav_mesh"
+          param:
+            - { name: "z_lev", value: 0.0 }
+            - { name: "radius", value: 0.03 }
 
         - name: "mesh"
           param:

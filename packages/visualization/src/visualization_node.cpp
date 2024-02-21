@@ -63,7 +63,10 @@ void VisualizationNode::initializeParams() {
         .mesh_body = this->declare_parameter("mesh.body", ""),
         .mesh_wheel = this->declare_parameter("mesh.wheel", ""),
       
-        .map_z_lev = this->declare_parameter("map.z_lev", 0.0)
+        .map_z_lev = this->declare_parameter("map.z_lev", 0.0),
+
+        .nav_mesh_z_lev = this->declare_parameter("nav_mesh.z_lev", 0.0),
+        .nav_mesh_radius = this->declare_parameter("nav_mesh.radius", 0.0)
     };
 }
 
@@ -100,6 +103,11 @@ void VisualizationNode::initializeTopicHandlers() {
         "/motion/trajectory",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleTrajectory, this, _1));
+    
+    slot_.nav_mesh = Node::create_subscription<truck_msgs::msg::NavigationMesh>(
+        "/navigation_mesh",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleNavigationMesh, this, _1));
 
     using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
     TfCallback tf_call = std::bind(&VisualizationNode::handleTf, this, _1, false);
@@ -131,6 +139,10 @@ void VisualizationNode::initializeTopicHandlers() {
 
     signal_.map = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/map",
+        rclcpp::QoS(1).reliability(qos));
+
+    signal_.nav_mesh = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/visualization/navigation_mesh",
         rclcpp::QoS(1).reliability(qos));
 
     timer_ = Node::create_wall_timer(1s, std::bind(&VisualizationNode::publishMap, this));
@@ -484,6 +496,36 @@ void VisualizationNode::publishMap() const {
     }
 
     signal_.map->publish(msg);
+}
+
+void VisualizationNode::handleNavigationMesh(truck_msgs::msg::NavigationMesh::ConstSharedPtr msg) {
+    state_.nav_mesh = std::move(msg);
+    publishNavigationMesh();
+}
+
+void VisualizationNode::publishNavigationMesh() const {
+    if (!state_.nav_mesh) {
+        return;
+    }
+
+    const double size = 2 * params_.nav_mesh_radius;
+
+    visualization_msgs::msg::Marker msg;
+    msg.header.stamp = now();
+    msg.header.frame_id = "odom_ekf";
+    msg.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.color = color::white(0.8);
+    msg.scale.x = size;
+    msg.scale.y = size;
+    msg.scale.z = size;
+    msg.pose.position.z = params_.nav_mesh_z_lev;
+
+    for (const auto& point : state_.nav_mesh->points) {
+        msg.points.push_back(point);
+    }
+
+    signal_.nav_mesh->publish(msg);
 }
 
 }  // namespace truck::visualization
