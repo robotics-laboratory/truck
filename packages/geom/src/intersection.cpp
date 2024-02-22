@@ -1,4 +1,4 @@
-#include "geom/ray.h"
+#include "geom/intersection.h"
 #include "geom/segment.h"
 #include "geom/vector.h"
 
@@ -6,7 +6,7 @@
 
 namespace truck::geom {
 
-std::optional<Vec2> getIntersection(const Ray& ray, const Segment& segment, double precision) noexcept {
+std::optional<Vec2> intersect(const Ray& ray, const Segment& segment, double precision) noexcept {
 
     auto ray_dir = ray.dir.vec();
     auto segment_dir = static_cast<Vec2>(segment);

@@ -9,7 +9,7 @@
 #include "geom/line.h"
 #include "geom/polygon.h"
 #include "geom/polyline.h"
-#include "geom/ray.h"
+#include "geom/intersection.h"
 #include "geom/segment.h"
 #include "geom/uniform_stepper.h"
 #include "geom/vector.h"
@@ -481,7 +481,7 @@ TEST(Ray, segment_intersections) {
 
         Ray ray(ray_origin, ray_dir);
         Segment segment(segment_begin, segment_end);
-        const auto intersection = getIntersection(ray, segment, precision);
+        const auto intersection = intersect(ray, segment, precision);
 
         ASSERT_TRUE(intersection);
         ASSERT_GEOM_EQUAL(*intersection, correct_intersection, precision);
@@ -493,7 +493,7 @@ TEST(Ray, segment_intersections) {
 
         Ray ray(ray_origin, ray_dir);
         Segment segment(segment_begin, segment_end);
-        const auto intersection = getIntersection(ray, segment, precision);
+        const auto intersection = intersect(ray, segment, precision);
 
         ASSERT_TRUE(intersection);
         ASSERT_GEOM_EQUAL(*intersection, correct_intersection, precision);
@@ -505,7 +505,7 @@ TEST(Ray, segment_intersections) {
 
         Ray ray(ray_origin, ray_dir);
         Segment segment(segment_begin, segment_end);
-        const auto intersection = getIntersection(ray, segment, precision);
+        const auto intersection = intersect(ray, segment, precision);
 
         ASSERT_FALSE(intersection);
     }
@@ -516,7 +516,7 @@ TEST(Ray, segment_intersections) {
 
         Ray ray(ray_origin, ray_dir);
         Segment segment(segment_begin, segment_end);
-        const auto intersection = getIntersection(ray, segment, precision);
+        const auto intersection = intersect(ray, segment, precision);
 
         ASSERT_FALSE(intersection);
     }

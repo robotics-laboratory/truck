@@ -1,7 +1,7 @@
 #include "simulator_2d/simulator_engine.h"
 
 #include "map/map.h"
-#include "geom/ray.h"
+#include "geom/intersection.h"
 
 #include <algorithm>
 #include <cmath>
@@ -135,7 +135,7 @@ geom::Angle getAngleBetween(const geom::Vec2& origin,
 float getIntersectionDistance(const geom::Ray& ray, 
     const geom::Segment& segment, double precision) {
 
-    const auto intersection = geom::getIntersection(ray, segment, precision);
+    const auto intersection = geom::intersect(ray, segment, precision);
     if (!intersection) {
         return std::numeric_limits<float>::max();
     }
