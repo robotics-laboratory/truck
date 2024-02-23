@@ -65,6 +65,7 @@ struct Wheel {
 struct Lidar {
     Lidar(const YAML::Node& node);
 
+    geom::Vec2 from_base;
     geom::Angle angle_min;
     geom::Angle angle_max;
     geom::Angle angle_increment;

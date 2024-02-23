@@ -3,7 +3,6 @@
 #include "geom/msg.h"
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <tf2_ros/qos.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -26,11 +25,6 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 void SimulatorNode::initializeTopicHandlers() {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
-
-    slots_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
-        "/tf_static", 
-        tf2_ros::StaticListenerQoS(100), 
-        std::bind(&SimulatorNode::handleTf, this, _1));
 
     slots_.control = Node::create_subscription<truck_msgs::msg::Control>(
         "/control/command",
@@ -61,6 +55,7 @@ void SimulatorNode::initializeEngine() {
         model::load(get_logger(), declare_parameter("model_config", "")));
 
     params_.update_period = declare_parameter("update_period", 0.01);
+    params_.lidar_config.from_base = model->lidar().from_base;
     params_.lidar_config.angle_min = static_cast<float>(model->lidar().angle_min.radians());
     params_.lidar_config.angle_max = static_cast<float>(model->lidar().angle_max.radians());
     params_.lidar_config.angle_increment = static_cast<float>(model->lidar().angle_increment.radians());
@@ -85,25 +80,10 @@ void SimulatorNode::initializeEngine() {
         declare_parameter("integration_step", 0.001), 
         declare_parameter("calculations_precision", 1e-8));
     engine_->resetBase(pose, steering, velocity);
-    engine_->setBaseToLidar(params_.lidar_config.from_base);
     engine_->resetMap(declare_parameter("map_config", ""));
 
     // The zero state of the simulation.
     publishSimulationState();
-}
-
-void SimulatorNode::handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg) {
-    for (const auto& transform_msg : msg->transforms) {
-        if (transform_msg.child_frame_id == "lidar_link") {
-            const auto translation = transform_msg.transform.translation;
-            params_.lidar_config.from_base = {translation.x, translation.y};
-            if (engine_) {
-                engine_->setBaseToLidar(params_.lidar_config.from_base);
-            }
-
-            return;
-        }
-    }
 }
 
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {

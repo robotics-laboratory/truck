@@ -21,7 +21,6 @@ class SimulatorEngine {
         double integration_step = 1e-3, double precision = 1e-8);
 
     void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
-    void setBaseToLidar(geom::Vec2 base_to_lidar);
     void resetMap(const std::string& path);
     void eraseMap();
 

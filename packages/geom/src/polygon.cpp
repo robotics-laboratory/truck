@@ -141,7 +141,7 @@ Segments Polygon::segments() const noexcept {
     for (size_t i = 1; i < points.size(); ++i) {
         Vec2 begin = {points[i - 1].x, points[i - 1].y};
         Vec2 end = {points[i].x, points[i].y};
-        segments.push_back({begin, end});
+        segments.emplace_back(begin, end);
     }
 
     return segments;

@@ -25,7 +25,7 @@ class TruckState {
     TruckState& baseTwist(const model::Twist& twist);
     TruckState& odomBaseLinearVelocity(const geom::Vec2& linear_velocity);
     TruckState& baseAngularVelocity(double angular_velocity);
-    TruckState& lidarRanges(std::vector<float>&& lidar_ranges);
+    TruckState& lidarRanges(std::vector<float> lidar_ranges);
 
   private:
     struct Cache {

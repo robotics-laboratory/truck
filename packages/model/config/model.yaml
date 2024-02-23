@@ -14,11 +14,12 @@ wheel:
   width: 0.058            # m
 
 lidar:
-  angle_min: 0.0          # deg
-  angle_max: 360.0        # deg
-  angle_increment: 0.1125 # deg
-  range_min: 0.0          # m
-  range_max: 25.0         # m
+  from_base: { x: 0.0, y: 0.0 } # m
+  angle_min: 0.0                # deg
+  angle_max: 360.0              # deg
+  angle_increment: 0.1125       # deg
+  range_min: 0.0                # m
+  range_max: 25.0               # m
 
 limits:
   steering: { inner: 40.0, outer: 40.0 } # deg

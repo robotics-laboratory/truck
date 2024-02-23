@@ -1,6 +1,8 @@
 #include "simulator_2d/simulator_engine.h"
 
 #include "map/map.h"
+#include "geom/distance.h"
+#include "geom/swap.h"
 #include "geom/intersection.h"
 
 #include <algorithm>
@@ -22,6 +24,7 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
+    cache_.base_to_lidar = model_->lidar().from_base;
 
     const double angle_min_rad = model_->lidar().angle_min.radians();
     const double angle_max_rad = model_->lidar().angle_max.radians();
@@ -59,10 +62,6 @@ void SimulatorEngine::resetBase(const geom::Pose& pose,
     const auto rear_twist = model_->baseToRearTwist(base_twist);
 
     resetRear(rear_x, rear_y, yaw, middle_steering, rear_twist.velocity);
-}
-
-void SimulatorEngine::setBaseToLidar(geom::Vec2 base_to_lidar) {
-    cache_.base_to_lidar = base_to_lidar;
 }
 
 void SimulatorEngine::resetMap(const std::string& path) {
@@ -124,7 +123,14 @@ double SimulatorEngine::rearToBaseAngularVelocity(
 
 namespace {
 
-geom::Angle getAngleBetween(const geom::Vec2& origin, 
+geom::Vec2 getLidarOrigin(const geom::Pose& odom_base_pose) {
+    const auto dir_vec = odom_base_pose.dir.vec();
+    const auto x = odom_base_pose.pos.x * dir_vec.x - odom_base_pose.pos.y * dir_vec.y;
+    const auto y = odom_base_pose.pos.y * dir_vec.x + odom_base_pose.pos.x * dir_vec.y;
+    return geom::Vec2(x, y);
+}
+
+geom::Angle getOrientedAngle(const geom::Vec2& origin, 
     const geom::Vec2& dir, const geom::Vec2& point) {
 
     const auto origin_to_point = point - origin;
@@ -140,9 +146,7 @@ float getIntersectionDistance(const geom::Ray& ray,
         return std::numeric_limits<float>::max();
     }
 
-    const auto difference = (*intersection) - ray.origin;
-    const auto distance = std::hypot(difference.x, difference.y);
-
+    const auto distance = geom::distance(*intersection, ray.origin);
     return static_cast<float>(distance);
 }
 
@@ -151,27 +155,32 @@ float getIntersectionDistance(const geom::Ray& ray,
 std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_pose) const {
     std::vector<float> ranges(cache_.lidar_rays_number, std::numeric_limits<float>::max());
     
-    const auto origin = odom_base_pose.pos + cache_.base_to_lidar;
+    const auto origin = getLidarOrigin(odom_base_pose);
     const auto dir = (odom_base_pose.dir + cache_.lidar_angle_min);
     const auto dir_vector = dir.vec();
     const auto dir_angle_rad = dir.angle()._0_2PI().radians();
     const auto increment_rad = cache_.lidar_angle_increment.angle().radians();
 
     for (const auto& segment : obstacles_) {
-        const auto lidar_to_begin_angle 
-            = getAngleBetween(origin, dir_vector, segment.begin);
-        const auto lidar_to_end_angle 
-            = getAngleBetween(origin, dir_vector, segment.end);
+        auto begin_oriented_angle 
+            = getOrientedAngle(origin, dir_vector, segment.begin);
+        auto end_oriented_angle 
+            = getOrientedAngle(origin, dir_vector, segment.end);
 
-        auto min_angle_rad = std::min(lidar_to_begin_angle, lidar_to_end_angle).radians();
-        min_angle_rad = std::max(dir_angle_rad, min_angle_rad);
+        if (begin_oriented_angle > end_oriented_angle) {
+            geom::swap(begin_oriented_angle, end_oriented_angle);
+        }
 
-        const int index = std::ceil((min_angle_rad - dir_angle_rad) / increment_rad);
-        const auto multIncrement = geom::AngleVec2(index * cache_.lidar_angle_increment.angle());
+        const int begin_index 
+            = std::ceil((begin_oriented_angle.radians() - dir_angle_rad) / increment_rad);
+        const int end_index = 1 
+            + std::floor((end_oriented_angle.radians() - dir_angle_rad) / increment_rad);
+
+        const auto multIncrement = geom::AngleVec2(
+            begin_index * cache_.lidar_angle_increment.angle());
         geom::Ray current_ray(origin, odom_base_pose.dir + multIncrement);
 
-        const auto max_angle = geom::AngleVec2(std::max(lidar_to_begin_angle, lidar_to_end_angle));
-        for (size_t i = index; i < ranges.size() && current_ray.dir < max_angle; ++i) {
+        for (int i = begin_index; i != end_index; i = (i + 1) % cache_.lidar_rays_number) {
             const auto distance = getIntersectionDistance(current_ray, segment, params_.precision);
             ranges[i] = std::min(ranges[i], distance);
             current_ray.dir += cache_.lidar_angle_increment;

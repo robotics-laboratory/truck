@@ -25,7 +25,6 @@ class SimulatorNode : public rclcpp::Node {
     void initializeTopicHandlers();
     void initializeEngine();
 
-    void handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg);
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
 
     void publishTime(const TruckState& truck_state);
@@ -55,7 +54,6 @@ class SimulatorNode : public rclcpp::Node {
     } params_;
 
     struct Slots {
-        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
         rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
     } slots_;
 

@@ -83,14 +83,14 @@ Segments ComplexPolygon::segments() const noexcept {
 
     auto current_segments = outer.segments();
     segments.insert(segments.end(), 
-            std::make_move_iterator(current_segments.begin()), 
-            std::make_move_iterator(current_segments.end()));
+            current_segments.begin(), 
+            current_segments.end());
 
     for (const auto inner : inners) {
         current_segments = inner.segments();
         segments.insert(segments.end(), 
-            std::make_move_iterator(current_segments.begin()), 
-            std::make_move_iterator(current_segments.end()));
+            current_segments.begin(), 
+            current_segments.end());
     }
 
     return segments;

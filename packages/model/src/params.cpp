@@ -15,6 +15,12 @@ Limits<double> toLimits(const YAML::Node& node) {
     return {node["min"].as<double>(), node["max"].as<double>()};
 }
 
+geom::Vec2 toVector(const YAML::Node& node) {
+    const auto x = node["x"].as<double>();
+    const auto y = node["y"].as<double>();
+    return geom::Vec2(x, y);
+}
+
 }  // namespace
 
 using namespace geom::literals;
@@ -92,7 +98,8 @@ Wheel::Wheel(const YAML::Node& node)
 }
 
 Lidar::Lidar(const YAML::Node& node)
-    : angle_min(geom::Angle::fromDegrees(node["angle_min"].as<double>()))
+    : from_base(toVector(node["from_base"]))
+    , angle_min(geom::Angle::fromDegrees(node["angle_min"].as<double>()))
     , angle_max(geom::Angle::fromDegrees(node["angle_max"].as<double>()))
     , angle_increment(geom::Angle::fromDegrees(node["angle_increment"].as<double>()))
     , range_min(node["range_min"].as<float>())
