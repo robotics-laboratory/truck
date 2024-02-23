@@ -142,6 +142,8 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
         = pose.pos.x + params_.lidar_config.from_base.x;
     odom_to_lidar_transform_msg.transform.translation.y 
         = pose.pos.y + params_.lidar_config.from_base.y;
+    odom_to_lidar_transform_msg.transform.rotation 
+        = odom_to_base_transform_msg.transform.rotation;
 
     tf2_msgs::msg::TFMessage tf_msg;
     tf_msg.transforms.push_back(odom_to_base_transform_msg);

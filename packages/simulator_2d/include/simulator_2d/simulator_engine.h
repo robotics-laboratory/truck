@@ -74,7 +74,7 @@ class SimulatorEngine {
         geom::Vec2 base_to_lidar;
         int lidar_rays_number;
         geom::AngleVec2 lidar_angle_min;
-        geom::AngleVec2 lidar_angle_increment;
+        geom::Angle lidar_angle_increment;
     } cache_;
 
     // The value is set in setControl and should not change in other methods.

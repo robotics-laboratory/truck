@@ -30,9 +30,9 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     const double angle_max_rad = model_->lidar().angle_max.radians();
     const double angle_increment_rad = model_->lidar().angle_increment.radians();
 
-    cache_.lidar_rays_number = std::round((angle_max_rad - angle_min_rad) / angle_increment_rad);
+    cache_.lidar_rays_number = (angle_max_rad - angle_min_rad) / angle_increment_rad;
     cache_.lidar_angle_min = geom::AngleVec2(model_->lidar().angle_min);
-    cache_.lidar_angle_increment = geom::AngleVec2(model_->lidar().angle_increment);
+    cache_.lidar_angle_increment = model_->lidar().angle_increment;
 
     resetRear();
 }
@@ -123,10 +123,28 @@ double SimulatorEngine::rearToBaseAngularVelocity(
 
 namespace {
 
-geom::Vec2 getLidarOrigin(const geom::Pose& odom_base_pose) {
+int softSign(double number, double precision) {
+    if (number > precision) {
+        return 1;
+    }
+    
+    if (number < -precision) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int mod(int number, int divider) {
+    return (number % divider + divider) % divider;
+}
+
+geom::Vec2 getLidarOrigin(const geom::Pose& odom_base_pose, const geom::Vec2& from_base) {
     const auto dir_vec = odom_base_pose.dir.vec();
-    const auto x = odom_base_pose.pos.x * dir_vec.x - odom_base_pose.pos.y * dir_vec.y;
-    const auto y = odom_base_pose.pos.y * dir_vec.x + odom_base_pose.pos.x * dir_vec.y;
+    const auto x = odom_base_pose.pos.x 
+        + from_base.x * dir_vec.x - from_base.y * dir_vec.y;
+    const auto y = odom_base_pose.pos.y
+        + from_base.y * dir_vec.x + from_base.x * dir_vec.y;
     return geom::Vec2(x, y);
 }
 
@@ -136,6 +154,10 @@ geom::Angle getOrientedAngle(const geom::Vec2& origin,
     const auto origin_to_point = point - origin;
     auto origin_to_point_angle = geom::angleBetween(dir, origin_to_point);
     return origin_to_point_angle._0_2PI();
+}
+
+double ceil_with_precision(double number, double precision) {
+    return std::ceil(number / precision) * precision;
 }
 
 float getIntersectionDistance(const geom::Ray& ray, 
@@ -154,12 +176,11 @@ float getIntersectionDistance(const geom::Ray& ray,
 
 std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_pose) const {
     std::vector<float> ranges(cache_.lidar_rays_number, std::numeric_limits<float>::max());
-    
-    const auto origin = getLidarOrigin(odom_base_pose);
+
+    const auto origin = getLidarOrigin(odom_base_pose, cache_.base_to_lidar);
     const auto dir = (odom_base_pose.dir + cache_.lidar_angle_min);
     const auto dir_vector = dir.vec();
-    const auto dir_angle_rad = dir.angle()._0_2PI().radians();
-    const auto increment_rad = cache_.lidar_angle_increment.angle().radians();
+    const auto increment_rad = cache_.lidar_angle_increment.radians();
 
     for (const auto& segment : obstacles_) {
         auto begin_oriented_angle 
@@ -167,24 +188,38 @@ std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_p
         auto end_oriented_angle 
             = getOrientedAngle(origin, dir_vector, segment.end);
 
-        if (begin_oriented_angle > end_oriented_angle) {
-            geom::swap(begin_oriented_angle, end_oriented_angle);
+        const auto sign = softSign(end_oriented_angle.radians() 
+            - begin_oriented_angle.radians(), params_.precision);
+
+        if (sign == 0) {
+            continue;
         }
 
-        const int begin_index 
-            = std::ceil((begin_oriented_angle.radians() - dir_angle_rad) / increment_rad);
-        const int end_index = 1 
-            + std::floor((end_oriented_angle.radians() - dir_angle_rad) / increment_rad);
+        int begin_index = ceil_with_precision(
+            begin_oriented_angle.radians() / increment_rad, 
+            params_.precision);
+        int end_index = end_oriented_angle.radians() / increment_rad;
+
+        if (begin_index >= cache_.lidar_rays_number
+            && end_index >= cache_.lidar_rays_number) {
+            continue;
+        }
+
+        begin_index = std::min(begin_index, cache_.lidar_rays_number - 1);
+        end_index = std::min(end_index, cache_.lidar_rays_number - 1);
 
         const auto multIncrement = geom::AngleVec2(
-            begin_index * cache_.lidar_angle_increment.angle());
-        geom::Ray current_ray(origin, odom_base_pose.dir + multIncrement);
+            begin_index * cache_.lidar_angle_increment);
+        geom::Ray current_ray(origin, dir + multIncrement);
 
-        for (int i = begin_index; i != end_index; i = (i + 1) % cache_.lidar_rays_number) {
+        int index = begin_index - sign;
+        auto increment = geom::AngleVec2(sign * cache_.lidar_angle_increment);
+        do {
+            index = mod(index + sign, cache_.lidar_rays_number);
             const auto distance = getIntersectionDistance(current_ray, segment, params_.precision);
-            ranges[i] = std::min(ranges[i], distance);
-            current_ray.dir += cache_.lidar_angle_increment;
-        }
+            ranges[index] = std::min(ranges[index], distance);
+            current_ray.dir += increment;
+        } while (index != end_index);
     }
 
     return ranges;
@@ -214,18 +249,6 @@ TruckState SimulatorEngine::getTruckState() const {
 }
 
 namespace {
-
-int softSign(double number, double precision) {
-    if (number > precision) {
-        return 1;
-    }
-    
-    if (number < -precision) {
-        return -1;
-    }
-
-    return 0;
-}
 
 /**
  * @param desired_velocity The velocity to strive for.
