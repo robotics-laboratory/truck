@@ -1,9 +1,12 @@
 #include <pugixml.hpp>
 
+#include <sstream>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 #include "geom/vector.h"
+#include "geom/polyline.h"
 
 namespace truck::sdd {
 
@@ -43,6 +46,10 @@ struct Marker final : public Element {
     Type type = Type::Circle;
 };
 
+struct Polyline final : public Element {
+    geom::Polyline points;
+};
+
 class SDD {
   public:
     SDD() = delete;
@@ -55,9 +62,18 @@ class SDD {
 
     void DrawMarker(const Marker& marker) noexcept;
 
+    void DrawPolyline(const Polyline& polyline) noexcept;
+
     Size GetSize() const noexcept;
 
-    static std::string ColorName(Color color) noexcept;
+    template<typename T, std::enable_if_t<std::is_arithmetic_v<T>>>
+    static std::string ToString(T value) noexcept {
+        std::stringstream sstream;
+        sstream << value;
+        return sstream.str();
+    }
+
+    static std::string ToString(Color color) noexcept;
 
     ~SDD();
 

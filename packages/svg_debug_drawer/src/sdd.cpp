@@ -5,7 +5,7 @@
 #include <fstream>
 #include <stdexcept>
 
-#include <iostream>
+#include <algorithm>
 
 namespace truck::sdd {
 
@@ -62,8 +62,25 @@ void SDD::DrawMarker(const Marker& marker) noexcept {
             break;
     }
     node.append_attribute("id").set_value(marker.id.data());
-    node.append_attribute("fill").set_value(ColorName(marker.color).data());
+    node.append_attribute("fill").set_value(ToString(marker.color).data());
     DrawTitle(node, marker.id);
+}
+
+void SDD::DrawPolyline(const Polyline& polyline) noexcept {
+    pugi::xml_node node = root_.append_child("polyline");
+    std::stringstream sstream;
+    for (auto it = polyline.points.begin(); it != polyline.points.end(); ++it) {
+        sstream << it->x << ',' << it->y;
+        if (it + 1 != polyline.points.end()) {
+            sstream << ' ';
+        }
+    }
+    node.append_attribute("points").set_value(sstream.str().data());
+    node.append_attribute("fill").set_value("none");
+    node.append_attribute("stroke").set_value(ToString(polyline.color).data());
+    auto size = GetSize();
+    double scale = 0.005 * std::max(size.width, size.height);  // 0.5% of image longest side
+    node.append_attribute("stroke-width").set_value(std::to_string(scale).data());
 }
 
 Size SDD::GetSize() const noexcept {
@@ -72,7 +89,7 @@ Size SDD::GetSize() const noexcept {
         .width = svg.attribute("width").as_ullong(), .height = svg.attribute("height").as_ullong()};
 }
 
-std::string SDD::ColorName(Color color) noexcept {
+std::string SDD::ToString(Color color) noexcept {
     switch (color) {
         case Color::Black:
             return "black";
@@ -114,7 +131,7 @@ std::string SDD::ColorName(Color color) noexcept {
 SDD::~SDD() { doc_.save_file(output_path_.data()); }
 
 void SDD::DrawTitle(pugi::xml_node& node, const std::string& id) noexcept {
-    node.append_child("title").append_child(pugi::node_pcdata).set_value(id.data());
+    node.append_child("title").text().set(id.data());
 }
 
 }  // namespace truck::sdd
