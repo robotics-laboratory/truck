@@ -17,10 +17,10 @@
   <depend>std_msgs</depend>
   <depend>rclcpp</depend>
   <depend>truck_msgs</depend>
-  <depend>rosbag2_cpp</depend>
-  <depend>rosbag2_storage</depend>
-  <depend>libpointmatcher</depend>
-  <depend>visualization_msgs</depend>
+<!--  <depend>rosbag2_cpp</depend>-->
+<!--  <depend>rosbag2_storage</depend>-->
+<!--  <depend>libpointmatcher</depend>-->
+<!--  <depend>visualization_msgs</depend>-->
   <depend>g2o</depend>
  
   <export>

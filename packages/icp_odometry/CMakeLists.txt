@@ -11,9 +11,9 @@ find_package(libpointmatcher REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rosbag2_cpp REQUIRED)
-find_package(rosbag2_storage REQUIRED)
-find_package(visualization_msgs REQUIRED)
+#find_package(rosbag2_cpp REQUIRED)
+#find_package(rosbag2_storage REQUIRED)
+#find_package(visualization_msgs REQUIRED)
 
 find_package(g2o REQUIRED) # G2O FIND PACKAGE
 
