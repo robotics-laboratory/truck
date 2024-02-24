@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<svg version="1.1" width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+	<g transform="translate(0,512) scale(1,-1)">
+		<circle cx="128.000000" cy="128.000000" r="5.120000" id="1" fill="aqua">
+			<title>1</title>
+		</circle>
+		<rect x="250.880000" y="250.880000" width="10.240000" height="10.240000" id="2" fill="lime">
+			<title>2</title>
+		</rect>
+	</g>
+</svg>
