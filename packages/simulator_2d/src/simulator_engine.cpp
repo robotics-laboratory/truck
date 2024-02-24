@@ -148,16 +148,22 @@ geom::Vec2 getLidarOrigin(const geom::Pose& odom_base_pose, const geom::Vec2& fr
     return geom::Vec2(x, y);
 }
 
-geom::Angle getOrientedAngle(const geom::Vec2& origin, 
-    const geom::Vec2& dir, const geom::Vec2& point) {
+geom::Angle getOrientedAngle(const geom::Vec2& origin_to_point, 
+    const geom::Vec2& dir) {
 
-    const auto origin_to_point = point - origin;
     auto origin_to_point_angle = geom::angleBetween(dir, origin_to_point);
     return origin_to_point_angle._0_2PI();
 }
 
 double ceil_with_precision(double number, double precision) {
     return std::ceil(number / precision) * precision;
+}
+
+geom::AngleVec2 getRayDir(const geom::AngleVec2& zero_dir, 
+    const geom::Angle increment, const int index) {
+    
+    const auto mult_increment = geom::AngleVec2(index * increment);
+    return zero_dir + mult_increment;
 }
 
 float getIntersectionDistance(const geom::Ray& ray, 
@@ -176,29 +182,34 @@ float getIntersectionDistance(const geom::Ray& ray,
 
 std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_pose) const {
     std::vector<float> ranges(cache_.lidar_rays_number, std::numeric_limits<float>::max());
-
+    
     const auto origin = getLidarOrigin(odom_base_pose, cache_.base_to_lidar);
     const auto dir = (odom_base_pose.dir + cache_.lidar_angle_min);
     const auto dir_vector = dir.vec();
     const auto increment_rad = cache_.lidar_angle_increment.radians();
 
     for (const auto& segment : obstacles_) {
-        auto begin_oriented_angle 
-            = getOrientedAngle(origin, dir_vector, segment.begin);
-        auto end_oriented_angle 
-            = getOrientedAngle(origin, dir_vector, segment.end);
+        const auto origin_begin = segment.begin - origin;
+        const auto origin_end = segment.end - origin;
 
-        const auto sign = softSign(end_oriented_angle.radians() 
-            - begin_oriented_angle.radians(), params_.precision);
+        auto begin_oriented_angle = getOrientedAngle(origin_begin, dir_vector);
+        auto end_oriented_angle = getOrientedAngle(origin_end, dir_vector);
 
-        if (sign == 0) {
-            continue;
+        const int sign = geom::angleBetween(origin_begin, origin_end).radians() > 0
+            ? 1 : -1;
+        int begin_index, end_index;
+
+        if (sign > 0) {
+            begin_index = ceil_with_precision(
+                begin_oriented_angle.radians() / increment_rad, 
+                params_.precision);
+            end_index = end_oriented_angle.radians() / increment_rad;
+        } else {
+            begin_index = begin_oriented_angle.radians() / increment_rad;
+            end_index = ceil_with_precision(
+                end_oriented_angle.radians() / increment_rad, 
+                params_.precision);
         }
-
-        int begin_index = ceil_with_precision(
-            begin_oriented_angle.radians() / increment_rad, 
-            params_.precision);
-        int end_index = end_oriented_angle.radians() / increment_rad;
 
         if (begin_index >= cache_.lidar_rays_number
             && end_index >= cache_.lidar_rays_number) {
@@ -208,15 +219,21 @@ std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_p
         begin_index = std::min(begin_index, cache_.lidar_rays_number - 1);
         end_index = std::min(end_index, cache_.lidar_rays_number - 1);
 
-        const auto multIncrement = geom::AngleVec2(
-            begin_index * cache_.lidar_angle_increment);
-        geom::Ray current_ray(origin, dir + multIncrement);
-
+        geom::Ray current_ray(origin, 
+            getRayDir(dir, cache_.lidar_angle_increment, begin_index));
+        const auto increment = geom::AngleVec2(sign * cache_.lidar_angle_increment);
         int index = begin_index - sign;
-        auto increment = geom::AngleVec2(sign * cache_.lidar_angle_increment);
+        
         do {
             index = mod(index + sign, cache_.lidar_rays_number);
             const auto distance = getIntersectionDistance(current_ray, segment, params_.precision);
+            /*
+            if (index == 0) {
+                RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
+                    "distance = " + std::to_string(distance));
+            }
+            */
+            
             ranges[index] = std::min(ranges[index], distance);
             current_ray.dir += increment;
         } while (index != end_index);
