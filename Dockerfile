@@ -519,6 +519,18 @@ RUN wget -qO - https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.t
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
+### INSTALL PUGIXML
+
+ARG PUGIXML_VERSION="1.14"
+
+RUN wget -qO - https://github.com/zeux/pugixml/releases/download/v${PUGIXML_VERSION}/pugixml-${PUGIXML_VERSION}.tar.gz | tar -xz \
+    && cd pugixml-${PUGIXML_VERSION} && mkdir -p build && cd build \
+    && cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DPUGIXML_BUILD_TESTS=OFF \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
 ### INSTALL DEV PKGS
 
 COPY requirements.txt /tmp/requirements.txt
