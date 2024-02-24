@@ -62,14 +62,26 @@ struct Wheel {
     double width;
 };
 
+struct Lidar {
+    Lidar(const YAML::Node& node);
+
+    geom::Vec2 from_base;
+    geom::Angle angle_min;
+    geom::Angle angle_max;
+    geom::Angle angle_increment;
+    float range_min;
+    float range_max;
+};
+
 struct Params {
     Params(const YAML::Node& node);
     Params(const std::string& config_path);
 
     Shape shape;
     WheelBase wheel_base;
-    VehicleLimits limits;
     Wheel wheel;
+    Lidar lidar;
+    VehicleLimits limits;
     double gear_ratio;
     ServoAngles servo_home_angles;
 };

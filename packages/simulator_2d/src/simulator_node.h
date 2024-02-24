@@ -9,6 +9,7 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <rosgraph_msgs/msg/clock.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -31,6 +32,7 @@ class SimulatorNode : public rclcpp::Node {
     void publishTransformMessage(const TruckState& truck_state);
     void publishTelemetryMessage(const TruckState& truck_state);
     void publishSimulationStateMessage(const TruckState& truck_state);
+    void publishLaserScanMessage(const TruckState& truck_state);
     void publishSimulationState();
 
     void makeSimulationTick();
@@ -41,6 +43,14 @@ class SimulatorNode : public rclcpp::Node {
 
     struct Parameters {
         double update_period;
+        struct LidarConfig {
+            geom::Vec2 from_base;
+            float angle_min;
+            float angle_max;
+            float angle_increment;
+            float range_min;
+            float range_max;
+        } lidar_config;
     } params_;
 
     struct Slots {
@@ -53,6 +63,7 @@ class SimulatorNode : public rclcpp::Node {
         rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
         rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         rclcpp::Publisher<truck_msgs::msg::SimulationState>::SharedPtr state = nullptr;
+        rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan = nullptr;
     } signals_;
 };
 

@@ -10,7 +10,9 @@ find_package(geom REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(map REQUIRED)
 
 if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 20)
@@ -26,7 +28,7 @@ ament_target_dependencies(
     simulator_engine
     model
     geom
-    nlohmann_json)
+    map)
 
 target_include_directories(
     simulator_engine PUBLIC
@@ -68,7 +70,9 @@ ament_target_dependencies(
     geom
     tf2_geometry_msgs
     tf2_msgs
-    rosgraph_msgs)
+    rosgraph_msgs
+    sensor_msgs
+    nlohmann_json)
 
 target_link_libraries(${PROJECT_NAME}_node simulator_engine)
 
