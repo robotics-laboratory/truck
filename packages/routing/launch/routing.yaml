@@ -13,14 +13,10 @@ launch:
         - name: "route"
           param:
             - { name: "max_ego_dist", value: 2.0 }
-            - { name: "postfix_len", value: 0.7 }
-
-            - name: "spline"
-              param:
-                - { name: "degree", value: 2 }
-                - { name: "step", value: 0.3 }
+            - { name: "postfix_len", value: 2.0 }
+            - { name: "spline_step", value: 0.2 }
         
-        - name: "nav_mesh"
+        - name: "mesh"
           param:
             - { name: "dist", value: 2.8 }
             - { name: "offset", value: 1.2 }

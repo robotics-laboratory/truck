@@ -12,7 +12,6 @@ find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(Boost REQUIRED)
-find_package(Eigen3 REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node
@@ -30,7 +29,6 @@ ament_target_dependencies(
     geometry_msgs
     visualization_msgs
     Boost
-    Eigen3
 )
 
 install(
