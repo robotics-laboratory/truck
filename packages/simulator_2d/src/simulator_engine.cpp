@@ -246,13 +246,15 @@ TruckState SimulatorEngine::getTruckState() const {
     const double steering = rear_ax_state_[StateIndex::kSteering];
 
     const auto pose = getOdomBasePose();
-    const double rear_curvature = model_->middleSteeringToRearCurvature(steering);
+    const auto rear_curvature = model_->middleSteeringToRearCurvature(steering);
     const auto current_steering = getCurrentSteering(rear_curvature);
     const auto target_steering = getTargetSteering();
     const auto twist = rearToOdomBaseTwist(rear_curvature);
     const auto linear_velocity = rearToOdomBaseLinearVelocity(pose.dir, twist.velocity);
     const auto angular_velocity = rearToBaseAngularVelocity(twist.velocity, rear_curvature);
     auto lidar_ranges = getLidarRanges(pose);
+    const auto current_rps = model_->linearVelocityToMotorRPS(twist.velocity);
+    const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
     
     return TruckState()
         .time(time_)
@@ -262,7 +264,10 @@ TruckState SimulatorEngine::getTruckState() const {
         .baseTwist(twist)
         .odomBaseLinearVelocity(linear_velocity)
         .baseAngularVelocity(angular_velocity)
-        .lidarRanges(std::move(lidar_ranges));
+        .lidarRanges(std::move(lidar_ranges))
+        .rearAxleVelocity(rear_ax_state_[StateIndex::kLinearVelocity])
+        .currentMotorRps(current_rps)
+        .targetMotorRps(target_rps);
 }
 
 namespace {

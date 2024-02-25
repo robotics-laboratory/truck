@@ -1,5 +1,6 @@
 #include "simulator_node.h"
 
+#include "common/math.h"
 #include "geom/msg.h"
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -47,6 +48,9 @@ void SimulatorNode::initializeTopicHandlers() {
     signals_.odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
         "/ekf/odometry/filtered", rclcpp::QoS(1).reliability(qos));
 
+    signals_.hardware_odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
+        "/hardware/odom", rclcpp::QoS(1).reliability(qos));
+
     signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
         "/ekf/odometry/transform", rclcpp::QoS(1).reliability(qos));
 
@@ -67,8 +71,6 @@ void SimulatorNode::initializeCache(const std::unique_ptr<model::Model>& model) 
     cache_.lidar_config.angle_increment = static_cast<float>(model->lidar().angle_increment.radians());
     cache_.lidar_config.range_min = model->lidar().range_min;
     cache_.lidar_config.range_max = model->lidar().range_max;
-
-    cache_.wheel_circumference = (2 * M_PI * model->wheel().radius);
 }
 
 void SimulatorNode::initializeEngine(const std::unique_ptr<model::Model>& model) {
@@ -102,8 +104,6 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     } else {
         engine_->setBaseControl(control->velocity, control->curvature);
     }
-
-    cache_.target_velocity = control->velocity;
 }
 
 void SimulatorNode::publishTime(const TruckState& truck_state) {
@@ -132,6 +132,20 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     odom_msg.twist.twist.angular.z = angular_velocity;
 
     signals_.odometry->publish(odom_msg);
+}
+
+void SimulatorNode::publishHardwareOdometryMessage(const TruckState& truck_state) {
+    nav_msgs::msg::Odometry odom_msg;
+    odom_msg.header.frame_id = "base";
+    odom_msg.child_frame_id = "base";
+    odom_msg.header.stamp = truck_state.time();
+
+    // Set the twist.
+    odom_msg.twist.twist.linear.x = truck_state.rearAxleVelocity();
+    constexpr double error = 0.001;
+    odom_msg.twist.covariance[0] = truck::squared(error);
+
+    signals_.hardware_odometry->publish(odom_msg);
 }
 
 void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
@@ -176,8 +190,8 @@ void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
     telemetry_msg.target_left_steering = target_steering.left.radians();
     telemetry_msg.target_right_steering = target_steering.right.radians();
 
-    telemetry_msg.current_rps = truck_state.baseTwist().velocity / cache_.wheel_circumference;
-    telemetry_msg.target_rps = cache_.target_velocity / cache_.wheel_circumference;
+    telemetry_msg.current_rps = truck_state.currentMotorRps();
+    telemetry_msg.target_rps = truck_state.targetMotorRps();
 
     signals_.telemetry->publish(telemetry_msg);
 }
