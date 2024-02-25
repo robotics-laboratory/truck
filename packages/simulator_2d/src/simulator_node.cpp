@@ -222,6 +222,7 @@ void SimulatorNode::publishSimulationState() {
     const auto truck_state = engine_->getTruckState();
     publishTime(truck_state);
     publishOdometryMessage(truck_state);
+    publishHardwareOdometryMessage(truck_state);
     publishTransformMessage(truck_state);
     publishTelemetryMessage(truck_state);
     publishSimulationStateMessage(truck_state);
