@@ -33,8 +33,6 @@ launch:
         - { name: "map_config", value: "$(var map_config)" }
         # the state of the truck model at the beginning of the simulation
         - { name: "initial_ego_state_config", value: "$(var initial_ego_state_config)" }
-        # lidar configuration
-        - { name: "lidar_config", value: "$(var lidar_config)" }
         # timers period (seconds)
         - { name: "update_period", value: "$(var update_period)" }
         # integration step per second
