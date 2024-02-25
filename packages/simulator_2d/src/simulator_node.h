@@ -22,8 +22,10 @@ class SimulatorNode : public rclcpp::Node {
     SimulatorNode();
 
   private:
+    void initializeParameters();
     void initializeTopicHandlers();
-    void initializeEngine();
+    void initializeCache(const std::unique_ptr<model::Model>& model);
+    void initializeEngine(const std::unique_ptr<model::Model>& model);
 
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
 
@@ -43,6 +45,9 @@ class SimulatorNode : public rclcpp::Node {
 
     struct Parameters {
         double update_period;
+    } params_;
+
+    struct Cache {
         struct LidarConfig {
             geom::Vec2 from_base;
             float angle_min;
@@ -51,7 +56,9 @@ class SimulatorNode : public rclcpp::Node {
             float range_min;
             float range_max;
         } lidar_config;
-    } params_;
+        double wheel_circumference;
+        double target_velocity;
+    } cache_;
 
     struct Slots {
         rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
