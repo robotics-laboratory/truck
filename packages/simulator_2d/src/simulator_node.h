@@ -25,7 +25,7 @@ class SimulatorNode : public rclcpp::Node {
     void initializeParameters();
     void initializeTopicHandlers();
     void initializeCache(const std::unique_ptr<model::Model>& model);
-    void initializeEngine(const std::unique_ptr<model::Model>& model);
+    void initializeEngine();
 
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
 

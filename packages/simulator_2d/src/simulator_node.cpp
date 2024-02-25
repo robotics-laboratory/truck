@@ -17,12 +17,7 @@ using namespace std::placeholders;
 SimulatorNode::SimulatorNode() : Node("simulator") {
     initializeParameters();
     initializeTopicHandlers();
-
-    auto model = std::make_unique<model::Model>(
-        model::load(get_logger(), declare_parameter("model_config", "")));
-
-    initializeCache(model);
-    initializeEngine(model);
+    initializeEngine();
 
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
@@ -73,7 +68,11 @@ void SimulatorNode::initializeCache(const std::unique_ptr<model::Model>& model) 
     cache_.lidar_config.range_max = model->lidar().range_max;
 }
 
-void SimulatorNode::initializeEngine(const std::unique_ptr<model::Model>& model) {
+void SimulatorNode::initializeEngine() {
+    auto model = std::make_unique<model::Model>(
+        model::load(get_logger(), declare_parameter("model_config", "")));
+    initializeCache(model);
+
     const auto initial_ego_state_path = declare_parameter("initial_ego_state_config", "");
     const auto initial_ego_state = nlohmann::json::parse(std::ifstream(initial_ego_state_path));
 
