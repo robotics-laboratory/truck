@@ -14,12 +14,22 @@ namespace truck::simulator {
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
+    initializeParameters();
     initializeTopicHandlers();
-    initializeEngine();
+
+    auto model = std::make_unique<model::Model>(
+        model::load(get_logger(), declare_parameter("model_config", "")));
+
+    initializeCache(model);
+    initializeEngine(model);
 
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
         std::bind(&SimulatorNode::makeSimulationTick, this));    
+}
+
+void SimulatorNode::initializeParameters() {
+    params_.update_period = declare_parameter("update_period", 0.01);
 }
 
 void SimulatorNode::initializeTopicHandlers() {
@@ -50,18 +60,18 @@ void SimulatorNode::initializeTopicHandlers() {
         "/lidar/scan", rclcpp::QoS(1).reliability(qos));
 }
 
-void SimulatorNode::initializeEngine() {
-    auto model = std::make_unique<model::Model>(
-        model::load(get_logger(), declare_parameter("model_config", "")));
+void SimulatorNode::initializeCache(const std::unique_ptr<model::Model>& model) {
+    cache_.lidar_config.from_base = model->lidar().from_base;
+    cache_.lidar_config.angle_min = static_cast<float>(model->lidar().angle_min.radians());
+    cache_.lidar_config.angle_max = static_cast<float>(model->lidar().angle_max.radians());
+    cache_.lidar_config.angle_increment = static_cast<float>(model->lidar().angle_increment.radians());
+    cache_.lidar_config.range_min = model->lidar().range_min;
+    cache_.lidar_config.range_max = model->lidar().range_max;
 
-    params_.update_period = declare_parameter("update_period", 0.01);
-    params_.lidar_config.from_base = model->lidar().from_base;
-    params_.lidar_config.angle_min = static_cast<float>(model->lidar().angle_min.radians());
-    params_.lidar_config.angle_max = static_cast<float>(model->lidar().angle_max.radians());
-    params_.lidar_config.angle_increment = static_cast<float>(model->lidar().angle_increment.radians());
-    params_.lidar_config.range_min = model->lidar().range_min;
-    params_.lidar_config.range_max = model->lidar().range_max;
+    cache_.wheel_circumference = (2 * M_PI * model->wheel().radius);
+}
 
+void SimulatorNode::initializeEngine(const std::unique_ptr<model::Model>& model) {
     const auto initial_ego_state_path = declare_parameter("initial_ego_state_config", "");
     const auto initial_ego_state = nlohmann::json::parse(std::ifstream(initial_ego_state_path));
 
@@ -92,6 +102,8 @@ void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr
     } else {
         engine_->setBaseControl(control->velocity, control->curvature);
     }
+
+    cache_.target_velocity = control->velocity;
 }
 
 void SimulatorNode::publishTime(const TruckState& truck_state) {
@@ -139,9 +151,9 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
     odom_to_lidar_transform_msg.header.stamp = truck_state.time();
 
     odom_to_lidar_transform_msg.transform.translation.x 
-        = pose.pos.x + params_.lidar_config.from_base.x;
+        = pose.pos.x + cache_.lidar_config.from_base.x;
     odom_to_lidar_transform_msg.transform.translation.y 
-        = pose.pos.y + params_.lidar_config.from_base.y;
+        = pose.pos.y + cache_.lidar_config.from_base.y;
     odom_to_lidar_transform_msg.transform.rotation 
         = odom_to_base_transform_msg.transform.rotation;
 
@@ -155,12 +167,18 @@ void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
     truck_msgs::msg::HardwareTelemetry telemetry_msg;
     telemetry_msg.header.frame_id = "base";
     telemetry_msg.header.stamp = truck_state.time();
+
     const auto current_steering = truck_state.currentSteering();
     telemetry_msg.current_left_steering = current_steering.left.radians();
     telemetry_msg.current_right_steering = current_steering.right.radians();
+
     const auto target_steering = truck_state.targetSteering();
     telemetry_msg.target_left_steering = target_steering.left.radians();
     telemetry_msg.target_right_steering = target_steering.right.radians();
+
+    telemetry_msg.current_rps = truck_state.baseTwist().velocity / cache_.wheel_circumference;
+    telemetry_msg.target_rps = cache_.target_velocity / cache_.wheel_circumference;
+
     signals_.telemetry->publish(telemetry_msg);
 }
 
@@ -177,11 +195,11 @@ void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
     sensor_msgs::msg::LaserScan scan_msg;
     scan_msg.header.frame_id = "lidar_link";
     scan_msg.header.stamp = truck_state.time();
-    scan_msg.angle_min = params_.lidar_config.angle_min;
-    scan_msg.angle_max = params_.lidar_config.angle_max;
-    scan_msg.angle_increment = params_.lidar_config.angle_increment;
-    scan_msg.range_min = params_.lidar_config.range_min;
-    scan_msg.range_max = params_.lidar_config.range_max;
+    scan_msg.angle_min = cache_.lidar_config.angle_min;
+    scan_msg.angle_max = cache_.lidar_config.angle_max;
+    scan_msg.angle_increment = cache_.lidar_config.angle_increment;
+    scan_msg.range_min = cache_.lidar_config.range_min;
+    scan_msg.range_max = cache_.lidar_config.range_max;
     scan_msg.scan_time = params_.update_period;
     scan_msg.ranges = truck_state.lidarRanges();
     signals_.scan->publish(scan_msg);
