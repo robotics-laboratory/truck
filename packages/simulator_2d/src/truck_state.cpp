@@ -89,17 +89,17 @@ TruckState& TruckState::lidarRanges(std::vector<float> lidar_ranges) {
     return *this;
 }
 
-TruckState& rearAxleVelocity(double rear_axle_velocity) {
+TruckState& TruckState::rearAxleVelocity(double rear_axle_velocity) {
     cache_.rear_axle_velocity = rear_axle_velocity;
     return *this;
 }
 
-TruckState& currentMotorRps(double current_rps) {
+TruckState& TruckState::currentMotorRps(double current_rps) {
     cache_.current_motor_rps = current_rps;
     return *this;
 }
 
-TruckState& targetMotorRps(double target_rps) {
+TruckState& TruckState::targetMotorRps(double target_rps) {
     cache_.target_motor_rps = target_rps;
     return *this;
 }
