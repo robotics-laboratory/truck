@@ -10,18 +10,6 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <exec_depend>ros2launch</exec_depend>
-
-  <depend>common</depend>
-  <depend>geom</depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>rclcpp</depend>
-  <depend>truck_msgs</depend>
-<!--  <depend>rosbag2_cpp</depend>-->
-<!--  <depend>rosbag2_storage</depend>-->
-<!--  <depend>libpointmatcher</depend>-->
-<!--  <depend>visualization_msgs</depend>-->
-  <depend>g2o</depend>
  
   <export>
     <build_type>ament_cmake</build_type>

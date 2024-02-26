@@ -8,9 +8,9 @@
 #include "g2o/core/sparse_optimizer.h"
 #include "g2o/solvers/eigen/linear_solver_eigen.h"
 
+using namespace Eigen;
 using namespace std;
 using namespace g2o;
-
 
 int main() {
     typedef BlockSolver <BlockSolverTraits<-1, -1>> SlamBlockSolver;
@@ -23,8 +23,7 @@ int main() {
     OptimizationAlgorithmGaussNewton *solver =
             new OptimizationAlgorithmGaussNewton(
                     std::make_unique<SlamBlockSolver>(std::move(linearSolver)));
-
-    (void) solver;
+    optimizer.setAlgorithm(solver);
 
     return 0;
 }
