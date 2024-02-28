@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pugixml.hpp>
 
 #include <algorithm>
