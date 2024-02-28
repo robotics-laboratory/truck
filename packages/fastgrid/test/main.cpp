@@ -276,6 +276,33 @@ TEST(ManhattanDistance, case_4) {
     EXPECT_EQ(result.grid[4][4], unreachable);
 }
 
+TEST(ManhattanDistance, case_5) {
+    const float unreachable = std::numeric_limits<float>::max();
+
+    const Size size = {.width = 2, .height = 3};
+    const double resolution = 1.0;
+    const Pose origin = {{0, 0}, AngleVec2::fromVector(1, 0)};
+
+    auto holder = makeGrid<float>(size, resolution, origin);
+    auto& grid = *holder;
+
+    grid[0][0] = 0;
+    grid[0][1] = 1;
+    grid[1][0] = 1;
+    grid[1][1] = sqrt(2);
+    grid[2][0] = 2;
+    grid[2][1] = sqrt(5);
+
+    const F32GridHolder result = manhattanDistance(grid, {{0.5, 1.5}, {1.5, 2.5}}, 0.5);
+
+    EXPECT_EQ(result.grid[0][0], unreachable);
+    EXPECT_EQ(result.grid[0][1], 2);
+    EXPECT_EQ(result.grid[1][0], 0);
+    EXPECT_EQ(result.grid[1][1], 1);
+    EXPECT_EQ(result.grid[2][0], 1);
+    EXPECT_EQ(result.grid[2][1], 0);
+}
+
 TEST(DistanceTranformApprox, case_1) {
     const Size size{.width = 10, .height = 10};
     const float resolution = 1.0;

@@ -12,6 +12,8 @@ class ArrayAsQueue {
 
     ArrayAsQueue(T* arr) : head_(arr), tail_(arr) {}
 
+    ArrayAsQueue(T* arr, size_t size) : head_(arr), tail_(arr + size) {}
+
     void push(const T& value) noexcept {
         *tail_ = value;
         ++tail_;

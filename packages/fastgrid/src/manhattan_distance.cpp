@@ -8,32 +8,36 @@
 
 #include <limits>
 #include <memory>
-#include <vector>
 
 namespace truck::fastgrid {
 
 void manhattanDistance(
-    const F32Grid& distance_transform, const geom::Vec2& source, float eps, int* queue_buf,
+    const F32Grid& distance_transform, float eps, int* queue_buf, size_t total_sources,
     F32Grid& manhattan_distance) {
     const int resolution = distance_transform.resolution;
     const auto [width, height] = distance_transform.size;
     const float unreachable = std::numeric_limits<float>::max();
-    const auto origin_index = *VERIFY(distance_transform.tryGetPlainIndex(source));
 
     std::fill(
         manhattan_distance.data, manhattan_distance.data + manhattan_distance.size(), unreachable);
 
-    if (distance_transform.data[origin_index] <= eps) {
-        return;
+    for (size_t i = 0; i < total_sources; ++i) {
+        const int cur_index = *(queue_buf + i);
+        if (distance_transform.data[cur_index] <= eps) {
+            continue;
+        }
+        manhattan_distance.data[cur_index] = 0;
     }
 
-    manhattan_distance.data[origin_index] = 0;
-
-    ArrayAsQueue<int> queue(queue_buf);
-    queue.push(origin_index);
+    ArrayAsQueue<int> queue(queue_buf, total_sources);
 
     while (!queue.empty()) {
         const int cur_index = queue.pop();
+
+        if (manhattan_distance.data[cur_index] == unreachable) {
+            continue;
+        }
+
         const float next_weight = manhattan_distance.data[cur_index] + resolution;
         const auto [x, y] = distance_transform.toIndex(cur_index);
 
@@ -75,17 +79,46 @@ void manhattanDistance(
 }
 
 void manhattanDistance(
-    const F32Grid& distance_transform, const geom::Vec2& source, float eps,
+    const F32Grid& distance_transform, const std::vector<geom::Vec2>& sources, float eps,
+    int* queue_buf, F32Grid& manhattan_distance) {
+    ArrayAsQueue<int> queue(queue_buf);
+    for (const auto& source : sources) {
+        const auto origin_index = *VERIFY(distance_transform.tryGetPlainIndex(source));
+        queue.push(origin_index);
+    }
+    manhattanDistance(distance_transform, eps, queue_buf, queue.size(), manhattan_distance);
+}
+
+void manhattanDistance(
+    const F32Grid& distance_transform, const std::vector<geom::Vec2>& sources, float eps,
     F32Grid& manhattan_distance) {
     std::vector<int> queue_buf(distance_transform.size());
-    manhattanDistance(distance_transform, source, eps, queue_buf.data(), manhattan_distance);
+    manhattanDistance(distance_transform, sources, eps, queue_buf.data(), manhattan_distance);
+}
+
+F32GridHolder manhattanDistance(
+    const F32Grid& distance_transform, const std::vector<geom::Vec2>& sources, float eps) {
+    F32GridHolder result = makeGridLike<float>(distance_transform);
+    manhattanDistance(distance_transform, sources, eps, *result);
+    return result;
+}
+
+void manhattanDistance(
+    const F32Grid& distance_transform, const geom::Vec2& source, float eps, int* queue_buf,
+    F32Grid& manhattan_distance) {
+    manhattanDistance(
+        distance_transform, std::vector<geom::Vec2>{source}, eps, queue_buf, manhattan_distance);
+}
+
+void manhattanDistance(
+    const F32Grid& distance_transform, const geom::Vec2& source, float eps,
+    F32Grid& manhattan_distance) {
+    manhattanDistance(distance_transform, std::vector<geom::Vec2>{source}, eps, manhattan_distance);
 }
 
 F32GridHolder manhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps) {
-    F32GridHolder result = makeGridLike<float>(distance_transform);
-    manhattanDistance(distance_transform, source, eps, *result);
-    return result;
+    return manhattanDistance(distance_transform, std::vector<geom::Vec2>{source}, eps);
 }
 
 }  // namespace truck::fastgrid
