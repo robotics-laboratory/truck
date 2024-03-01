@@ -1,26 +1,29 @@
 #pragma once
 
 #include "model/model.h"
-
+#include "nav_msgs/msg/odometry.hpp"
 #include "truck_msgs/msg/control.hpp"
 #include "truck_msgs/msg/control_mode.hpp"
 #include "truck_msgs/msg/hardware_status.hpp"
 #include "truck_msgs/msg/hardware_telemetry.hpp"
-#include "nav_msgs/msg/odometry.hpp"
 
-#include <rclcpp/rclcpp.hpp>
+#include <cstring>
 #include <functional>
-#include <utility>
 #include <linux/can.h>
 #include <linux/can/raw.h>
-#include <sys/eventfd.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <net/if.h>
 #include <memory>
+#include <net/if.h>
+#include <rclcpp/rclcpp.hpp>
+#include <stack>
 #include <string>
-#include <cstring>
+#include <sys/eventfd.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <unordered_map>
+#include <unistd.h>
+#include <utility>
+
 
 namespace truck::hardware_node {
 
@@ -30,6 +33,8 @@ class HardwareNode : public rclcpp::Node {
 
   private:
     uint8_t prevMode_ = truck_msgs::msg::ControlMode::OFF;
+
+    std::unordered_map<uint32_t, std::pair<can_frame, struct timeval>> framesCache;
 
     std::unique_ptr<model::Model> model_ = nullptr;
 
@@ -49,9 +54,9 @@ class HardwareNode : public rclcpp::Node {
 
     void commandCallback(const truck_msgs::msg::Control& msg);
 
-    void sendFrame(uint32_t cmdId, uint8_t can_dlc, const void* data);
+    void readFromSocket();
 
-    can_frame readFrame();
+    void sendFrame(uint32_t cmdId, uint8_t can_dlc, const void* data);
 
     void enableMotor();
 
@@ -90,6 +95,7 @@ class HardwareNode : public rclcpp::Node {
     struct Timers {
         rclcpp::TimerBase::SharedPtr statusTimer = nullptr;
         rclcpp::TimerBase::SharedPtr telemetryTimer = nullptr;
+        rclcpp::TimerBase::SharedPtr socketRead = nullptr;
     } timers_{};
 };
 }  // namespace truck::hardware_node

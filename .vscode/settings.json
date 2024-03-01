@@ -90,5 +90,6 @@
         "shared_mutex": "cpp",
         "pointers": "cpp"
     },
-    "cmake.sourceDirectory": "${workspaceFolder}/packages/truck_gazebo"
+    "cmake.sourceDirectory": "${workspaceFolder}/packages/truck_gazebo",
+    "C_Cpp.errorSquiggles": "disabled"
 }
