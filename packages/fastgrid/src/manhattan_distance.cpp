@@ -91,17 +91,46 @@ void manhattanDistance(
 }
 
 void manhattanDistance(
-    const F32Grid& distance_transform, const geom::Vec2& source, float eps,
+    const F32Grid& distance_transform, const std::vector<geom::Vec2>& sources, float eps,
+    int* queue_buf, F32Grid& manhattan_distance) {
+    ArrayAsQueue<int> queue(queue_buf);
+    for (const auto& source : sources) {
+        const auto origin_index = *VERIFY(distance_transform.tryGetPlainIndex(source));
+        queue.push(origin_index);
+    }
+    manhattanDistance(distance_transform, eps, queue_buf, queue.size(), manhattan_distance);
+}
+
+void manhattanDistance(
+    const F32Grid& distance_transform, const std::vector<geom::Vec2>& sources, float eps,
     F32Grid& manhattan_distance) {
     std::vector<int> queue_buf(distance_transform.size());
-    manhattanDistance(distance_transform, source, eps, queue_buf.data(), manhattan_distance);
+    manhattanDistance(distance_transform, sources, eps, queue_buf.data(), manhattan_distance);
+}
+
+F32GridHolder manhattanDistance(
+    const F32Grid& distance_transform, const std::vector<geom::Vec2>& sources, float eps) {
+    F32GridHolder result = makeGridLike<float>(distance_transform);
+    manhattanDistance(distance_transform, sources, eps, *result);
+    return result;
+}
+
+void manhattanDistance(
+    const F32Grid& distance_transform, const geom::Vec2& source, float eps, int* queue_buf,
+    F32Grid& manhattan_distance) {
+    manhattanDistance(
+        distance_transform, std::vector<geom::Vec2>{source}, eps, queue_buf, manhattan_distance);
+}
+
+void manhattanDistance(
+    const F32Grid& distance_transform, const geom::Vec2& source, float eps,
+    F32Grid& manhattan_distance) {
+    manhattanDistance(distance_transform, std::vector<geom::Vec2>{source}, eps, manhattan_distance);
 }
 
 F32GridHolder manhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps) {
-    F32GridHolder result = makeGridLike<float>(distance_transform);
-    manhattanDistance(distance_transform, source, eps, *result);
-    return result;
+    return manhattanDistance(distance_transform, std::vector<geom::Vec2>{source}, eps);
 }
 
 }  // namespace truck::fastgrid

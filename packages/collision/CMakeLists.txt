@@ -4,7 +4,9 @@ project(collision)
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
+find_package(fastgrid REQUIRED)
 find_package(geom REQUIRED)
+find_package(map REQUIRED)
 find_package(model REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -12,13 +14,15 @@ find_package(OpenCV REQUIRED)
 add_library(
     ${PROJECT_NAME} SHARED
     src/collision_checker.cpp
-    src/map.cpp
+    src/collision_map.cpp
 )
 
 ament_target_dependencies(
     collision
     common
+    fastgrid
     geom
+    map
     model
     nav_msgs
     OpenCV
@@ -33,7 +37,9 @@ ament_export_targets(collision HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(
     common
+    fastgrid
     geom
+    map
     model
     nav_msgs
     OpenCV
@@ -48,5 +54,12 @@ install(
 )
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+
+if(BUILD_TESTING)
+    find_package(ament_cmake_clang_format REQUIRED)
+    ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+
+    add_subdirectory("test")
+endif()
 
 ament_package()

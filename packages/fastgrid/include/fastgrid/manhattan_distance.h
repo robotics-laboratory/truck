@@ -7,6 +7,8 @@
 
 #include "geom/vector.h"
 
+#include <vector>
+
 namespace truck::fastgrid {
 
 void manhattanDistance(
