@@ -14,19 +14,23 @@ class ArrayAsBinaryIndexedTree {
   public:
     ArrayAsBinaryIndexedTree() = delete;
 
-    ArrayAsBinaryIndexedTree(T* data, size_t size) : data_(data), size_(size) {
+    ArrayAsBinaryIndexedTree(T* data, size_t size) : data_(data), size_(size) {}
+
+    ArrayAsBinaryIndexedTree& Build() noexcept {
         for (size_t k = 1; k <= size_; ++k) {
             size_t parent_k = k + (k & -k);
             if (parent_k <= size_) {
                 *(data_ + (parent_k - 1)) += *(data_ + (k - 1));
             }
         }
+        return *this;
     }
 
-    void Add(size_t i, const T& val) noexcept {
+    ArrayAsBinaryIndexedTree& Add(size_t i, const T& val) noexcept {
         for (size_t k = i + 1; k <= size_; k += k & -k) {
             *(data_ + (k - 1)) += val;
         }
+        return *this;
     }
 
     T Sum(size_t r) const noexcept {

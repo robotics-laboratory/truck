@@ -81,7 +81,7 @@ TEST(ArrayAsBinaryIndexedTree, Build) {
     std::vector<int> arr(42);
     std::iota(arr.begin(), arr.end(), 0);
 
-    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size());
+    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size()).Build();
     for (size_t i = 0; i <= arr.size(); ++i) {
         EXPECT_EQ(bit.Sum(i), i * (i - 1) / 2);
     }
@@ -89,7 +89,7 @@ TEST(ArrayAsBinaryIndexedTree, Build) {
 
 TEST(ArrayAsBinaryIndexedTree, Add) {
     std::vector<int> arr(42);
-    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size());
+    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size()).Build();
 
     for (size_t i = 0; i < arr.size(); ++i) {
         bit.Add(i, i);
@@ -104,7 +104,7 @@ TEST(ArrayAsBinaryIndexedTree, Sum) {
     std::vector<int> arr(42);
     std::iota(arr.begin(), arr.end(), 0);
 
-    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size());
+    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size()).Build();
 
     for (size_t i = 0; i < arr.size(); ++i) {
         for (size_t j = i; j <= arr.size(); ++j) {
@@ -117,7 +117,7 @@ TEST(ArrayAsBinaryIndexedTree, LowerBound) {
     std::vector<int> arr(42);
     std::iota(arr.begin(), arr.end(), 1);
 
-    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size());
+    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size()).Build();
 
     for (size_t i = 1; i <= arr.size(); ++i) {
         EXPECT_EQ(bit.LowerBound(static_cast<int>(i * (i + 1)) / 2 - 1), i - 1);
