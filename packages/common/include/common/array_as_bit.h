@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/math.h"
+
 #include <cstddef>
 #include <type_traits>
 
@@ -45,7 +47,7 @@ class ArrayAsBinaryIndexedTree {
 
     size_t LowerBound(T sum) const noexcept {
         size_t k = 0;
-        for (size_t b = std::__lg(size_) + 1; b > 0; --b) {
+        for (size_t b = fls(size_) + 1; b > 0; --b) {
             size_t next_k = k + (1 << (b - 1));
             if (next_k <= size_ && *(data_ + (next_k - 1)) < sum) {
                 k = next_k;
