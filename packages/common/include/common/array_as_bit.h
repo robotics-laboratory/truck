@@ -51,6 +51,12 @@ class ArrayAsBinaryIndexedTree {
         return k;
     }
 
+    const T* Data() const noexcept { return data_; }
+
+    T* Data() noexcept { return data_; }
+
+    size_t Size() const noexcept { return size_; }
+
   private:
     T* data_ = nullptr;
     size_t size_ = 0;
