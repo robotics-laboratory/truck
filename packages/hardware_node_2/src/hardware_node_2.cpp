@@ -133,7 +133,7 @@ void HardwareNode::initializeTimers() {
         std::bind(&HardwareNode::pushStatus, this));
 
     timers_.socketRead =
-        this->create_wall_timer(50ms, std::bind(&HardwareNode::readFromSocket, this));
+        Node::create_wall_timer(50ms, std::bind(&HardwareNode::readFromSocket, this));
 }
 
 void HardwareNode::readFromSocket() {
@@ -173,6 +173,7 @@ void HardwareNode::readFromSocket() {
             framesCache[cmdId] = std::make_pair(frame, tv);
             continue;
         }
+        RCLCPP_WARN(this->get_logger(), "Failed to read from socket");
         break;
     }
 }
