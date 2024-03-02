@@ -16,6 +16,8 @@ class TruckState {
     model::Twist baseTwist() const;
     geom::Vec2 odomBaseLinearVelocity() const;
     double baseAngularVelocity() const;
+    double cameraAngularVelocity() const;
+    geom::Vec2 cameraLinearAcceleration() const;
     const std::vector<float>& lidarRanges() const;
     double rearAxleVelocity() const;
     double currentMotorRps() const;
@@ -28,6 +30,8 @@ class TruckState {
     TruckState& baseTwist(const model::Twist& twist);
     TruckState& odomBaseLinearVelocity(const geom::Vec2& linear_velocity);
     TruckState& baseAngularVelocity(double angular_velocity);
+    TruckState& cameraAngularVelocity(double camera_angular_velocity);
+    TruckState& cameraLinearAcceleration(const geom::Vec2 camera_acceleration);
     TruckState& lidarRanges(std::vector<float> lidar_ranges);
     TruckState& rearAxleVelocity(double rear_axle_velocity);
     TruckState& currentMotorRps(double current_rps);
@@ -42,6 +46,8 @@ class TruckState {
         model::Twist base_odom_twist;
         geom::Vec2 base_odom_linear_velocity;
         double base_odom_angular_velocity;
+        double camera_angular_velocity;
+        geom::Vec2 camera_acceleration;
         std::vector<float> lidar_ranges;
         double rear_axle_velocity;
         double current_motor_rps;

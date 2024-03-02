@@ -33,6 +33,14 @@ double TruckState::baseAngularVelocity() const {
     return cache_.base_odom_angular_velocity;
 }
 
+double TruckState::cameraAngularVelocity() const {
+    return cache_.camera_angular_velocity;
+}
+
+geom::Vec2 TruckState::cameraLinearAcceleration() const {
+    return cache_.camera_acceleration;
+}
+
 const std::vector<float>& TruckState::lidarRanges() const {
     return cache_.lidar_ranges;
 }
@@ -81,6 +89,16 @@ TruckState& TruckState::odomBaseLinearVelocity(const geom::Vec2& linear_velocity
 
 TruckState& TruckState::baseAngularVelocity(double angular_velocity) {
     cache_.base_odom_angular_velocity = angular_velocity;
+    return *this;
+}
+
+TruckState& TruckState::cameraAngularVelocity(double camera_angular_velocity) {
+    cache_.camera_angular_velocity = camera_angular_velocity;
+    return *this;
+}
+
+TruckState& TruckState::cameraLinearAcceleration(gconst eom::Vec2 camera_acceleration) {
+    cache_.camera_acceleration = camera_acceleration;
     return *this;
 }
 

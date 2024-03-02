@@ -57,6 +57,9 @@ void SimulatorNode::initializeTopicHandlers() {
 
     signals_.scan = Node::create_publisher<sensor_msgs::msg::LaserScan>(
         "/lidar/scan", rclcpp::QoS(1).reliability(qos));
+
+    signals_.imu = Node::create_publisher<sensor_msgs::msg::Imu>(
+        "/camera/imu", rclcpp::QoS(1).reliability(qos));
 }
 
 void SimulatorNode::initializeCache(const std::unique_ptr<model::Model>& model) {
@@ -216,6 +219,27 @@ void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
     scan_msg.scan_time = params_.update_period;
     scan_msg.ranges = truck_state.lidarRanges();
     signals_.scan->publish(scan_msg);
+}
+
+void SimulatorNode::publishImuMessage(const TruckState& truck_state) {
+    sensor_msgs::msg::Imu imu_msg;
+    imu_msg.header.frame_id = "camera_link";
+    imu_msg.header.stamp = truck_state.time();
+    
+    // Set the sensor orientation.
+    const auto pose = truck_state.odomBasePose();
+    imu_msg.orientation = truck::geom::msg::toQuaternion(pose.dir);
+
+    // Set the gyroscope.
+    const double angular_velocity = truck_state.cameraAngularVelocity();
+    imu_msg.angular_velocity.z = angular_velocity;
+
+    // Set the accelerometer.
+    const auto acceleration = truck_state.cameraLinearAcceleration();
+    imu_msg.linear_acceleration.x = acceleration.x;
+    imu_msg.linear_acceleration.y = acceleration.y;
+
+    signals_.imu->publish(imu_msg);
 }
 
 void SimulatorNode::publishSimulationState() {

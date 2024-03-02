@@ -50,6 +50,7 @@ class Model {
     const WheelBase& wheelBase() const;
     const Wheel& wheel() const;
     const Lidar& lidar() const;
+    const Camera& camera() const;
 
     Twist baseToRearTwist(Twist twist) const;
     Twist rearToBaseTwist(Twist twist) const;

@@ -10,6 +10,7 @@
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <rosgraph_msgs/msg/clock.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -36,6 +37,7 @@ class SimulatorNode : public rclcpp::Node {
     void publishTelemetryMessage(const TruckState& truck_state);
     void publishSimulationStateMessage(const TruckState& truck_state);
     void publishLaserScanMessage(const TruckState& truck_state);
+    void publishImuMessage(const TruckState& truck_state);
     void publishSimulationState();
 
     void makeSimulationTick();
@@ -71,6 +73,7 @@ class SimulatorNode : public rclcpp::Node {
         rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         rclcpp::Publisher<truck_msgs::msg::SimulationState>::SharedPtr state = nullptr;
         rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan = nullptr;
+        rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu = nullptr;
     } signals_;
 };
 

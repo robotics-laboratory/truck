@@ -111,6 +111,10 @@ Lidar::Lidar(const YAML::Node& node)
     BOOST_VERIFY(range_max > range_min);
 }
 
+Camera::Camera(const YAML::Node& node)
+    : from_base(toVector(node["from_base"])) {
+}
+
 Params::Params(const YAML::Node& node)
     : shape(node["shape"])
     , wheel_base(node["wheel_base"])

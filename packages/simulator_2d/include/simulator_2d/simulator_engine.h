@@ -53,6 +53,7 @@ class SimulatorEngine {
         truck::geom::AngleVec2 dir,double base_velocity) const;
     double rearToBaseAngularVelocity(
         double base_velocity, double rear_curvature) const;
+    geom::Vec2 getCameraAcceleration() const;
     std::vector<float> getLidarRanges(const geom::Pose& odom_base_pose) const;
 
     double getCurrentAcceleration() const;

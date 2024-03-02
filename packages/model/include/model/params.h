@@ -73,6 +73,12 @@ struct Lidar {
     float range_max;
 };
 
+struct Camera {
+    Camera(const YAML::Node& node);
+
+    geom::Vec2 from_base;
+};
+
 struct Params {
     Params(const YAML::Node& node);
     Params(const std::string& config_path);

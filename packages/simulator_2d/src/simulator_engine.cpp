@@ -245,6 +245,8 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto twist = rearToOdomBaseTwist(rear_curvature);
     const auto linear_velocity = rearToOdomBaseLinearVelocity(pose.dir, twist.velocity);
     const auto angular_velocity = rearToBaseAngularVelocity(twist.velocity, rear_curvature);
+    const auto camera_angular_velocity = 0.0;
+    const auto camera_acceleration = getCameraAcceleration();
     auto lidar_ranges = getLidarRanges(pose);
     const auto current_rps = model_->linearVelocityToMotorRPS(twist.velocity);
     const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
@@ -257,6 +259,8 @@ TruckState SimulatorEngine::getTruckState() const {
         .baseTwist(twist)
         .odomBaseLinearVelocity(linear_velocity)
         .baseAngularVelocity(angular_velocity)
+        .cameraAngularVelocity(camera_angular_velocity)
+        .cameraLinearAcceleration(camera_acceleration)
         .lidarRanges(std::move(lidar_ranges))
         .rearAxleVelocity(rear_ax_state_[StateIndex::kLinearVelocity])
         .currentMotorRps(current_rps)
