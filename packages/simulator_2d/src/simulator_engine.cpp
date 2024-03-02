@@ -227,13 +227,6 @@ std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_p
         do {
             index = mod(index + sign, cache_.lidar_rays_number);
             const auto distance = getIntersectionDistance(current_ray, segment, params_.precision);
-            /*
-            if (index == 0) {
-                RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
-                    "distance = " + std::to_string(distance));
-            }
-            */
-            
             ranges[index] = std::min(ranges[index], distance);
             current_ray.dir += increment;
         } while (index != end_index);
