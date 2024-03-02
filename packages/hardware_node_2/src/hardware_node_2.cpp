@@ -341,10 +341,12 @@ void HardwareNode::pushStatus() {
                 (unsigned long long)currTime.tv_usec);    
 
     // cached[cmId].time * 2 <= cur_time ?
-    currTime.tv_sec *= 2;   // ? 
-    currTime.tv_usec *= 2;  // ?
+
+    auto tmp = motorFrame.second;
+    tmp.tv_sec *= 2; // ?
+    tmp.tv_usec *= 2; // ?
     if (motorFlag) {
-        if (cmp(motorFrame.second, currTime)) {
+        if (cmp(tmp, currTime)) {
             memcpy(&motorError, motorFrame.first.data, sizeof(motorError));
             auto msg = "Motor Error Detected: " + std::to_string(motorError);
             RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
@@ -354,8 +356,11 @@ void HardwareNode::pushStatus() {
         }
     }
 
+    tmp = encoderFrame.second;
+    tmp.tv_sec *= 2;
+    tmp.tv_usec *= 2;
     if (encoderFlag) {
-        if (cmp(encoderFrame.second, currTime)) {
+        if (cmp(tmp, currTime)) {
             memcpy(&encoderError, encoderFrame.first.data, sizeof(encoderError));
             auto msg = "Encoder Error Detected: " + std::to_string(encoderError);
             RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
