@@ -89,7 +89,7 @@ void HardwareNode::initializeParams() {
         std::chrono::milliseconds(this->declare_parameter<long int>("odrive_timeout", 250));
     RCLCPP_INFO(this->get_logger(), "odrive timeout: %d", params_.odriveTimeout);
     params_.statusReportRate = std::chrono::duration<double>(
-        this->declare_parameter("status_report_rate", 20.0));  // 1.0 -> 20.0
+        this->declare_parameter("status_report_rate", 20.0));
     RCLCPP_INFO(this->get_logger(), "status report rate: %.2f", params_.statusReportRate.count());
     params_.telemetryReportRate =
         std::chrono::duration<double>(this->declare_parameter("telemetry_report_rate", 20.0));
@@ -173,7 +173,6 @@ void HardwareNode::readFromSocket() {
             framesCache[cmdId] = std::make_pair(frame, tv);
             continue;
         }
-        RCLCPP_WARN(this->get_logger(), "Failed to read from socket");
         break;
     }
 }
@@ -335,8 +334,14 @@ void HardwareNode::pushStatus() {
 
     struct timeval currTime;
     ioctl(can_.socket, SIOCGSTAMP, &currTime);
+    RCLCPP_INFO(
+                this->get_logger(),
+                "PushStatus time: (%010llu.%06llu)",
+                (unsigned long long)currTime.tv_sec,
+                (unsigned long long)currTime.tv_usec);    
 
-    currTime.tv_sec *= 2;   // ?
+    // cached[cmId].time * 2 <= cur_time ?
+    currTime.tv_sec *= 2;   // ? 
     currTime.tv_usec *= 2;  // ?
     if (motorFlag) {
         if (cmp(motorFrame.second, currTime)) {
