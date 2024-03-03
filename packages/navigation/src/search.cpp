@@ -13,20 +13,31 @@ geom::Polyline toPolyline(const graph::Graph& graph, const Path& path) {
 }
 
 Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::NodeId to_id) {
-    auto extractPath = [](graph::NodeId cur_id,
-                          const std::vector<std::optional<graph::NodeId>>& prev,
-                          const std::vector<double>& dist) {
-        Path path;
+    const size_t nodes_count = graph.nodes.size();
 
-        if (!prev[cur_id].has_value()) {
+    VERIFY(from_id < nodes_count);
+    VERIFY(to_id < nodes_count);
+
+    const double max_dist = std::numeric_limits<double>::max();
+
+    auto dist = std::vector<double>(nodes_count, max_dist);
+    auto prev = std::vector<graph::NodeId>(nodes_count, nodes_count);
+
+    std::set<std::pair<double, graph::NodeId>> queue;
+    
+    auto extractPath = [&]() {
+        Path path;
+        graph::NodeId cur_id = to_id;
+
+        if (prev[cur_id] == nodes_count) {
             return path;
         }
 
         path.length = dist[cur_id];
 
-        while (prev[cur_id].has_value()) {
+        while (prev[cur_id] != nodes_count) {
             path.trace.emplace_back(cur_id);
-            cur_id = prev[cur_id].value();
+            cur_id = prev[cur_id];
         }
 
         path.trace.emplace_back(cur_id);
@@ -35,17 +46,8 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
         return path;
     };
 
-    const size_t nodes_count = graph.nodes.size();
-    const double max_dist = std::numeric_limits<double>::max();
-
-    VERIFY(from_id < nodes_count && to_id < nodes_count);
-
-    auto dist = std::vector<double>(nodes_count, max_dist);
-    auto prev = std::vector<std::optional<graph::NodeId>>(nodes_count, std::nullopt);
-    std::set<std::pair<double, graph::NodeId>> queue;
-
     dist[from_id] = 0.0;
-    queue.insert(std::make_pair(dist[from_id], from_id));
+    queue.emplace(std::make_pair(dist[from_id], from_id));
 
     while (!queue.empty()) {
         const auto [cur_dist, cur_id] = *queue.begin();
@@ -68,12 +70,12 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
                 dist[neighbor_id] = alt_dist;
                 prev[neighbor_id] = cur_id;
 
-                queue.insert(std::make_pair(dist[neighbor_id], neighbor_id));
+                queue.emplace(std::make_pair(dist[neighbor_id], neighbor_id));
             }
         }
     }
 
-    return extractPath(to_id, prev, dist);
+    return extractPath();
 }
 
 }  // namespace truck::navigation::search

@@ -138,22 +138,22 @@ Viewer::Viewer(const ViewerParams& params, const geom::ComplexPolygon& polygon)
     frame_ = cv::Mat(bbox_.size(), CV_8UC3, toCVScalar(params.color_rgb.background));
 }
 
-void Viewer::setPolygon(const geom::ComplexPolygon& polygon) {
+void Viewer::addPolygon(const geom::ComplexPolygon& polygon) {
     drawPolygon(params_, bbox_origin_, frame_, polygon);
 }
 
-void Viewer::setMeshBuild(const navigation::mesh::MeshBuild& mesh_build) {
+void Viewer::addMeshBuild(const navigation::mesh::MeshBuild& mesh_build) {
     drawMesh(params_, bbox_origin_, frame_, mesh_build.mesh);
     drawLevelLines(params_, bbox_origin_, frame_, mesh_build.level_lines);
     drawSkeleton(params_, bbox_origin_, frame_, mesh_build.skeleton);
 }
 
-void Viewer::setGraph(const navigation::graph::Graph& graph) {
+void Viewer::addGraph(const navigation::graph::Graph& graph) {
     drawEdges(params_, bbox_origin_, frame_, graph);
     drawNodes(params_, bbox_origin_, frame_, graph);
 }
 
-void Viewer::setPath(const geom::Polyline& path) {
+void Viewer::addPath(const geom::Polyline& path) {
     drawPath(params_, bbox_origin_, frame_, path);
 }
 

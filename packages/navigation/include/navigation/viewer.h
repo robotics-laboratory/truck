@@ -57,10 +57,10 @@ class Viewer {
   public:
     Viewer(const ViewerParams& params, const geom::ComplexPolygon& polygon);
 
-    void setPolygon(const geom::ComplexPolygon& polygon);
-    void setMeshBuild(const mesh::MeshBuild& mesh_build);
-    void setGraph(const graph::Graph& graph);
-    void setPath(const geom::Polyline& path);
+    void addPolygon(const geom::ComplexPolygon& polygon);
+    void addMeshBuild(const mesh::MeshBuild& mesh_build);
+    void addGraph(const graph::Graph& graph);
+    void addPath(const geom::Polyline& path);
 
     void draw();
 

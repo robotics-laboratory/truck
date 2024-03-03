@@ -16,6 +16,7 @@ namespace bg = boost::geometry;
 using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
 using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
 using RTreeIndexedPoints = std::vector<RTreeIndexedPoint>;
+using RTreeBox = bg::model::box<RTreePoint>;
 using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
 
 using EdgesMap = std::map<NodeId, std::map<NodeId, EdgeId>>;
@@ -57,7 +58,19 @@ RTreeIndexedPoints getNodeNeighborsSearchRadius(
     const geom::Vec2& point, const RTree& rtree, double search_radius) {
     RTreeIndexedPoints rtree_indexed_points;
 
+    RTreeBox rtree_box(
+        RTreePoint(
+            point.x - search_radius,
+            point.y - search_radius
+        ),
+        RTreePoint(
+            point.x + search_radius,
+            point.y + search_radius
+        )
+    );
+
     rtree.query(
+        bg::index::intersects(rtree_box) &&
         bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
             geom::Vec2 neighbor_point = toVec2(rtree_indexed_point.first);
             return (point - neighbor_point).lenSq() < squared(search_radius);

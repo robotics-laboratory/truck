@@ -27,7 +27,7 @@ TEST(Navigation, map) {
     const auto& polygon = polygons[0];
 
     viewer::Viewer viewer = viewer::Viewer(viewer_params, polygon);
-    viewer.setPolygon(polygon);
+    viewer.addPolygon(polygon);
     viewer.draw();
 }
 
@@ -51,8 +51,8 @@ TEST(Navigation, map_mesh) {
     const auto& polygon = polygons[0];
 
     viewer::Viewer viewer = viewer::Viewer(viewer_params, polygon);
-    viewer.setPolygon(polygon);
-    viewer.setMeshBuild(mesh_build);
+    viewer.addPolygon(polygon);
+    viewer.addMeshBuild(mesh_build);
     viewer.draw();
 }
 
@@ -83,9 +83,9 @@ TEST(Navigation, map_graph) {
     const auto& polygon = polygons[0];
 
     viewer::Viewer viewer = viewer::Viewer(viewer_params, polygon);
-    viewer.setPolygon(polygon);
-    viewer.setPath(path);
-    viewer.setGraph(graph);
+    viewer.addPolygon(polygon);
+    viewer.addPath(path);
+    viewer.addGraph(graph);
     viewer.draw();
 }
 
