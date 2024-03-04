@@ -3,6 +3,10 @@
 #include "common/format.h"
 #include "common/exception.h"
 #include "common/lock.h"
+#include "common/array_as_bit.h"
+
+#include <numeric>
+#include <vector>
 
 using namespace truck;
 
@@ -71,6 +75,55 @@ TEST(lock, test) {
     auto object = lockable.lock();
 
     ASSERT_EQ(*object, 42);
+}
+
+TEST(ArrayAsBinaryIndexedTree, Build) {
+    std::vector<int> arr(42);
+    std::iota(arr.begin(), arr.end(), 0);
+
+    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size()).Build();
+    for (size_t i = 0; i <= arr.size(); ++i) {
+        EXPECT_EQ(bit.Sum(i), i * (i - 1) / 2);
+    }
+}
+
+TEST(ArrayAsBinaryIndexedTree, Add) {
+    std::vector<int> arr(42);
+    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size()).Build();
+
+    for (size_t i = 0; i < arr.size(); ++i) {
+        bit.Add(i, i);
+    }
+
+    for (size_t i = 0; i <= arr.size(); ++i) {
+        EXPECT_EQ(bit.Sum(i), i * (i - 1) / 2);
+    }
+}
+
+TEST(ArrayAsBinaryIndexedTree, Sum) {
+    std::vector<int> arr(42);
+    std::iota(arr.begin(), arr.end(), 0);
+
+    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size()).Build();
+
+    for (size_t i = 0; i < arr.size(); ++i) {
+        for (size_t j = i; j <= arr.size(); ++j) {
+            EXPECT_EQ(bit.Sum(i, j), j * (j - 1) / 2 - i * (i - 1) / 2);
+        }
+    }
+}
+
+TEST(ArrayAsBinaryIndexedTree, LowerBound) {
+    std::vector<int> arr(42);
+    std::iota(arr.begin(), arr.end(), 1);
+
+    auto bit = ArrayAsBinaryIndexedTree(arr.data(), arr.size()).Build();
+
+    for (size_t i = 1; i <= arr.size(); ++i) {
+        EXPECT_EQ(bit.LowerBound(static_cast<int>(i * (i + 1)) / 2 - 1), i - 1);
+        EXPECT_EQ(bit.LowerBound(static_cast<int>(i * (i + 1)) / 2), i - 1);
+        EXPECT_EQ(bit.LowerBound(static_cast<int>(i * (i + 1)) / 2 + 1), i);
+    }
 }
 
 int main(int argc, char *argv[]) {
