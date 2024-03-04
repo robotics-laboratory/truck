@@ -1,0 +1,12 @@
+launch:
+- node:
+    pkg: "icp_odometry"
+    exec: "icp_odometry_node"
+    name: "icp_odometry_node"
+    output: "screen"
+#    args: "-d --udebug"
+#    launch-prefix: "xterm -e gdb -ex run --args"
+    param:
+    - {name: "bag_path", value: "$(find-pkg-share icp_odometry)/bags/atrium_final_3_0.db3"}
+- include:
+    file: "$(find-pkg-share foxglove_bridge)/launch/foxglove_bridge_launch.xml"
