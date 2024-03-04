@@ -65,14 +65,14 @@ void HardwareNode::initializeParams() {
 
     params_.interface = this->declare_parameter("interface", "vxcan1");
 
-    params_.odriveTimeout =
-        std::chrono::milliseconds(this->declare_parameter<long int>("odrive_timeout", 250));
-
     params_.statusReportRate = this->declare_parameter("status_report_rate", 20.0);
 
     params_.telemetryReportRate = this->declare_parameter("telemetry_report_rate", 20.0);
 
     params_.readReportRate = this->declare_parameter("read_report_rate", 20.0);
+
+    params_.odriveTimeout =
+        std::chrono::milliseconds(this->declare_parameter<long int>("odrive_timeout", 250));
 
     RCLCPP_INFO(this->get_logger(), "curvature: %f", model_->baseMaxAbsCurvature());
     RCLCPP_INFO(this->get_logger(), "node_id: %d", params_.nodeId);
@@ -132,7 +132,6 @@ void HardwareNode::readFromSocket() {
 
     iov.iov_base = &frame;
     iov.iov_len = sizeof(frame);
-
     msg.msg_name = nullptr;
     msg.msg_namelen = 0;
     msg.msg_iov = &iov;
@@ -146,31 +145,32 @@ void HardwareNode::readFromSocket() {
         if (nbytes < 0) {
             break;
         }
-
         std::chrono::system_clock::time_point rcv_time;
+        bool flag = false;
         for (auto cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
             if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMP) {
                 struct timeval tv = *(struct timeval*)CMSG_DATA(cmsg);
                 rcv_time = std::chrono::system_clock::from_time_t(tv.tv_sec) +
                            std::chrono::microseconds(tv.tv_usec);
+                flag = true;
                 break;
             }
         }
-
+        if (!flag) {
+            RCLCPP_WARN(this->get_logger(), "No timestamp header");
+            rclcpp::shutdown();
+        }
         uint32_t cmd = frame.can_id & 0x1f;
-        CmdId cmdId = static_cast<CmdId>(cmd);
-
+        auto cmdId = static_cast<CmdId>(cmd);
         auto rcv_time_t = std::chrono::system_clock::to_time_t(rcv_time);
         auto rcv_time_us =
             std::chrono::duration_cast<std::chrono::microseconds>(rcv_time.time_since_epoch()) %
             1000000;
-
         canFramesCache[cmdId] = std::make_pair(frame, rcv_time);
 
         std::stringstream ss;
         ss << std::put_time(std::localtime(&rcv_time_t), "%F %T") << "." << std::setw(6)
            << std::setfill('0') << rcv_time_us.count();
-
         RCLCPP_INFO(this->get_logger(), "Read cmd_id: %d. Time: %s", cmdId, ss.str().c_str());
     }
 }
@@ -231,10 +231,8 @@ void HardwareNode::commandCallback(const Control& msg) {
 void HardwareNode::enableMotor() {
     double rpm = 0.0;
     sendFrame(CmdId::kSetInputVel, sizeof(rpm), &rpm);
-
     uint8_t state = AxisState::AXIS_STATE_CLOSED_LOOP_CONTROL;
     sendFrame(CmdId::kSetAxisState, sizeof(state), &state);
-
     RCLCPP_INFO(this->get_logger(), "Motor enabled");
 }
 
@@ -262,9 +260,7 @@ void HardwareNode::pushTelemetry() {
     memcpy(&rps, encoderFrame.first.data + 4, sizeof(rps));
 
     telemetry.battery_voltage = voltage;
-
     telemetry.battery_current = current;
-
     telemetry.current_rps = rps;
 
     RCLCPP_INFO(
@@ -347,7 +343,6 @@ void HardwareNode::pushStatus() {
     }
 
     bool armed = (axisState != AxisState::AXIS_STATE_IDLE);
-
     status.header.stamp = now();
     status.armed = armed;
     signals_.status->publish(status);
