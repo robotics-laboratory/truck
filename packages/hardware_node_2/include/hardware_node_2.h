@@ -24,17 +24,37 @@
 #include <unistd.h>
 #include <utility>
 
+using namespace truck_msgs::msg;
 
 namespace truck::hardware_node {
+
+enum CmdId : uint32_t {
+    kHeartbeat = 0x001,             // ControllerStatus  - publisher
+    kGetMotorError = 0x003,         // SystemStatus      - publisher
+    kGetEncoderError = 0x004,       // SystemStatus      - publisher
+    kGetSensorlessError = 0x005,    // SystemStatus      - publisher
+    kGetControllerError = 0x1d,     // SystemStatus      - publisher
+    kSetAxisState = 0x007,          // SetAxisState      - service
+    kGetEncoderEstimates = 0x009,   // ControllerStatus  - publisher
+    kSetControllerMode = 0x00b,     // ControlMessage    - subscriber
+    kSetInputPos,                   // ControlMessage    - subscriber
+    kSetInputVel,                   // ControlMessage    - subscriber
+    kSetInputTorque,                // ControlMessage    - subscriber
+    kGetIq = 0x014,                 // ControllerStatus  - publisher
+    kGetTemp,                       // SystemStatus      - publisher
+    kGetBusVoltageCurrent = 0x017,  // SystemStatus      - publisher
+    kGetTorques = 0x01c,            // ControllerStatus  - publisher
+};
 
 class HardwareNode : public rclcpp::Node {
   public:
     HardwareNode();
 
   private:
-    uint8_t prevMode_ = truck_msgs::msg::ControlMode::OFF;
+    uint8_t curMode = ControlMode::OFF;
 
-    std::unordered_map<uint32_t, std::pair<can_frame, struct timeval>> framesCache;
+    std::unordered_map<CmdId, std::pair<can_frame, std::chrono::system_clock::time_point>>
+        canFramesCache;
 
     std::unique_ptr<model::Model> model_ = nullptr;
 
@@ -50,9 +70,9 @@ class HardwareNode : public rclcpp::Node {
 
     void initializeSocketCan();
 
-    void modeCallback(const truck_msgs::msg::ControlMode& msg);
+    void modeCallback(const ControlMode& msg);
 
-    void commandCallback(const truck_msgs::msg::Control& msg);
+    void commandCallback(const Control& msg);
 
     void readFromSocket();
 
@@ -68,6 +88,7 @@ class HardwareNode : public rclcpp::Node {
 
     struct SocketCan {
         int socket;
+        const char* device = "vxcan1";
         struct ifreq ifr;
         struct sockaddr_can addr;
     } can_{};
@@ -77,18 +98,19 @@ class HardwareNode : public rclcpp::Node {
         std::string odriveAxis;
         std::string interface;
         std::chrono::milliseconds odriveTimeout;
-        std::chrono::duration<double> statusReportRate;
-        std::chrono::duration<double> telemetryReportRate;
+        double statusReportRate;
+        double telemetryReportRate;
+        double readReportRate;
     } params_{};
 
     struct Slots {
-        rclcpp::Subscription<truck_msgs::msg::ControlMode>::SharedPtr mode = nullptr;
-        rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr command = nullptr;
+        rclcpp::Subscription<ControlMode>::SharedPtr mode = nullptr;
+        rclcpp::Subscription<Control>::SharedPtr command = nullptr;
     } slots_{};
 
     struct Signals {
-        rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
-        rclcpp::Publisher<truck_msgs::msg::HardwareStatus>::SharedPtr status = nullptr;
+        rclcpp::Publisher<HardwareTelemetry>::SharedPtr telemetry = nullptr;
+        rclcpp::Publisher<HardwareStatus>::SharedPtr status = nullptr;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
     } signals_{};
 

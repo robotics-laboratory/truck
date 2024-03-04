@@ -17,8 +17,8 @@ find_package(model REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
-add_executable(hardware_node_2 src/main.cpp src/hardware_node_2.cpp)
-ament_target_dependencies(hardware_node_2 rclcpp std_msgs model truck_msgs nav_msgs tf2_geometry_msgs)
+add_executable(${PROJECT_NAME} src/main.cpp src/hardware_node_2.cpp)
+ament_target_dependencies(${PROJECT_NAME} rclcpp std_msgs model truck_msgs nav_msgs tf2_geometry_msgs)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -26,10 +26,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     )
 
   
-target_link_libraries(hardware_node_2 "${cpp_typesupport_target}")
+target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
     
 install(TARGETS
-  hardware_node_2
+  ${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME})
 
 install(

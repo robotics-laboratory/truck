@@ -13,8 +13,10 @@ launch:
     
     - {name: "interface", value: "vxcan1"}
     
-    - {name: "odriveTimeout", value: 250}
+    - {name: "odrive_timeout", value: 250}
 
-    - {name: "statusReportRate", value: 20.0}
+    - {name: "status_report_rate", value: 20.0}
 
-    - {name: "telemetryReportRate", value: 20.0}
+    - {name: "telemetry_report_rate", value: 20.0}
+
+    - {name: "read_report_rate", value: 20.0}
