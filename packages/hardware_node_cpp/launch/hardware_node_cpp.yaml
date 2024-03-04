@@ -7,9 +7,9 @@ launch:
     param:
     - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
     
-    - {name: "nodeId", value: 39}
+    - {name: "node_id", value: 39}
    
-    - {name: "odriveAxis", value: "axis1"}
+    - {name: "odrive_axis", value: "axis1"}
     
     - {name: "interface", value: "vxcan1"}
     
