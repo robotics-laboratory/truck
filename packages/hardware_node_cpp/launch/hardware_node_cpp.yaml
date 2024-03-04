@@ -1,8 +1,8 @@
 launch:
 - node:
-    pkg: "hardware_node_2"
-    exec: "hardware_node_2"
-    name: "hardware_node_2"
+    pkg: "hardware_node_cpp"
+    exec: "hardware_node_cpp"
+    name: "hardware_node_cpp"
     output: "log"
     param:
     - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}

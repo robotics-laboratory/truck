@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(hardware_node_2)
+project(hardware_node_cpp)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
@@ -17,7 +17,7 @@ find_package(model REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
-add_executable(${PROJECT_NAME} src/main.cpp src/hardware_node_2.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/hardware_node.cpp)
 ament_target_dependencies(${PROJECT_NAME} rclcpp std_msgs model truck_msgs nav_msgs tf2_geometry_msgs)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
