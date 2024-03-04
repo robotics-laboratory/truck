@@ -67,8 +67,7 @@ Int round(Float value) {
 template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
 inline constexpr size_t fls(T value) {
     size_t i = 0;
-    while ((value >> i) > 0) {
-        ++i;
+    for (; (value >> i) > 0; ++i) {
     }
     return i;
 }
