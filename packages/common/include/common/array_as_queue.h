@@ -12,8 +12,6 @@ class ArrayAsQueue {
 
     ArrayAsQueue(T* arr) : head_(arr), tail_(arr) {}
 
-    ArrayAsQueue(T* arr, size_t size) : head_(arr), tail_(arr + size) {}
-
     void push(const T& value) noexcept {
         *tail_ = value;
         ++tail_;
@@ -33,6 +31,8 @@ class ArrayAsQueue {
     size_t size() const noexcept { return tail_ - head_; }
 
     bool empty() const noexcept { return head_ == tail_; }
+
+    T* data() noexcept { return head_; }
 
   private:
     T* head_;
