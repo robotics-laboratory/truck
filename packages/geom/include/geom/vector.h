@@ -45,7 +45,7 @@ struct Vec2 {
 
     constexpr double lenSq() const noexcept { return x * x + y * y; }
 
-    constexpr double len() const noexcept { return std::sqrt(lenSq()); }
+    constexpr double len() const noexcept { return std::hypot(x, y); }
 
     constexpr Angle angle() const noexcept { return Angle::fromVector(x, y); }
 

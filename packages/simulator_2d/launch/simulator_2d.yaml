@@ -8,6 +8,9 @@ launch:
   - arg: 
       name: "initial_ego_state_config"
       default: "$(find-pkg-share simulator_2d)/config/initial_ego_state.json"
+  - arg: 
+      name: "lidar_config"
+      default: "$(find-pkg-share simulator_2d)/config/lidar.json"
   - arg:
       name: "update_period"
       default: "1e-2"
@@ -16,7 +19,7 @@ launch:
       default: "1e-3"
   - arg:
       name: "calculations_precision"
-      default: "1e-6"
+      default: "1e-4"
   - node:
       pkg: "simulator_2d"
       exec: "simulator_2d_node"
@@ -30,6 +33,8 @@ launch:
         - { name: "map_config", value: "$(var map_config)" }
         # the state of the truck model at the beginning of the simulation
         - { name: "initial_ego_state_config", value: "$(var initial_ego_state_config)" }
+        # lidar configuration
+        - { name: "lidar_config", value: "$(var lidar_config)" }
         # timers period (seconds)
         - { name: "update_period", value: "$(var update_period)" }
         # integration step per second

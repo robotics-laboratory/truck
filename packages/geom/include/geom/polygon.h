@@ -29,10 +29,9 @@ struct Polygon : public std::vector<Vec2> {
     Segment segment(size_t i) const noexcept;
 
     std::vector<Triangle> triangles() const noexcept;
-
     bool isConvex() const noexcept;
-
     Orientation orientation() const noexcept;
+    Segments segments() const noexcept;
 };
 
 using Polygons = std::vector<Polygon>;

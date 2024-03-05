@@ -64,4 +64,12 @@ Int round(Float value) {
     return static_cast<Int>(std::round(value));
 }
 
+template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+inline constexpr size_t fls(T value) {
+    size_t i = 0;
+    for (; (value >> i) > 0; ++i) {
+    }
+    return i;
+}
+
 }  // namespace truck

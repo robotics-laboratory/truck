@@ -33,6 +33,10 @@ double TruckState::baseAngularVelocity() const {
     return cache_.base_odom_angular_velocity;
 }
 
+const std::vector<float>& TruckState::lidarRanges() const {
+    return cache_.lidar_ranges;
+}
+
 TruckState& TruckState::time(const rclcpp::Time& time) {
     cache_.time = time;
     return *this;
@@ -65,6 +69,11 @@ TruckState& TruckState::odomBaseLinearVelocity(const geom::Vec2& linear_velocity
 
 TruckState& TruckState::baseAngularVelocity(double angular_velocity) {
     cache_.base_odom_angular_velocity = angular_velocity;
+    return *this;
+}
+
+TruckState& TruckState::lidarRanges(std::vector<float> lidar_ranges) {
+    cache_.lidar_ranges = std::move(lidar_ranges);
     return *this;
 }
 

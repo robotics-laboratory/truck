@@ -14,9 +14,6 @@ namespace truck::simulator {
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
-    params_ = Parameters{
-        .update_period = declare_parameter("update_period", 0.01)};
-
     initializeTopicHandlers();
     initializeEngine();
 
@@ -48,11 +45,22 @@ void SimulatorNode::initializeTopicHandlers() {
 
     signals_.state = Node::create_publisher<truck_msgs::msg::SimulationState>(
         "/simulator/state", rclcpp::QoS(1).reliability(qos));
+
+    signals_.scan = Node::create_publisher<sensor_msgs::msg::LaserScan>(
+        "/lidar/scan", rclcpp::QoS(1).reliability(qos));
 }
 
 void SimulatorNode::initializeEngine() {
     auto model = std::make_unique<model::Model>(
         model::load(get_logger(), declare_parameter("model_config", "")));
+
+    params_.update_period = declare_parameter("update_period", 0.01);
+    params_.lidar_config.from_base = model->lidar().from_base;
+    params_.lidar_config.angle_min = static_cast<float>(model->lidar().angle_min.radians());
+    params_.lidar_config.angle_max = static_cast<float>(model->lidar().angle_max.radians());
+    params_.lidar_config.angle_increment = static_cast<float>(model->lidar().angle_increment.radians());
+    params_.lidar_config.range_min = model->lidar().range_min;
+    params_.lidar_config.range_max = model->lidar().range_max;
 
     const auto initial_ego_state_path = declare_parameter("initial_ego_state_config", "");
     const auto initial_ego_state = nlohmann::json::parse(std::ifstream(initial_ego_state_path));
@@ -68,9 +76,11 @@ void SimulatorNode::initializeEngine() {
     pose.pos = geom::Vec2{x, y} + model->wheelBase().base_to_rear * pose.dir;
 
     engine_ = std::make_unique<SimulatorEngine>(
-        std::move(model), declare_parameter("integration_step", 0.001), 
+        std::move(model),
+        declare_parameter("integration_step", 0.001), 
         declare_parameter("calculations_precision", 1e-8));
     engine_->resetBase(pose, steering, velocity);
+    engine_->resetMap(declare_parameter("map_config", ""));
 
     // The zero state of the simulation.
     publishSimulationState();
@@ -118,14 +128,26 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
     odom_to_base_transform_msg.child_frame_id = "base";
     odom_to_base_transform_msg.header.stamp = truck_state.time();
 
-    // Set the transformation.
     const auto pose = truck_state.odomBasePose();
     odom_to_base_transform_msg.transform.translation.x = pose.pos.x;
     odom_to_base_transform_msg.transform.translation.y = pose.pos.y;
     odom_to_base_transform_msg.transform.rotation = truck::geom::msg::toQuaternion(pose.dir);
 
+    geometry_msgs::msg::TransformStamped odom_to_lidar_transform_msg;
+    odom_to_lidar_transform_msg.header.frame_id = "odom_ekf";
+    odom_to_lidar_transform_msg.child_frame_id = "lidar_link";
+    odom_to_lidar_transform_msg.header.stamp = truck_state.time();
+
+    odom_to_lidar_transform_msg.transform.translation.x 
+        = pose.pos.x + params_.lidar_config.from_base.x;
+    odom_to_lidar_transform_msg.transform.translation.y 
+        = pose.pos.y + params_.lidar_config.from_base.y;
+    odom_to_lidar_transform_msg.transform.rotation 
+        = odom_to_base_transform_msg.transform.rotation;
+
     tf2_msgs::msg::TFMessage tf_msg;
     tf_msg.transforms.push_back(odom_to_base_transform_msg);
+    tf_msg.transforms.push_back(odom_to_lidar_transform_msg);
     signals_.tf_publisher->publish(tf_msg);
 }
 
@@ -151,6 +173,20 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
     signals_.state->publish(state_msg);
 }
 
+void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
+    sensor_msgs::msg::LaserScan scan_msg;
+    scan_msg.header.frame_id = "lidar_link";
+    scan_msg.header.stamp = truck_state.time();
+    scan_msg.angle_min = params_.lidar_config.angle_min;
+    scan_msg.angle_max = params_.lidar_config.angle_max;
+    scan_msg.angle_increment = params_.lidar_config.angle_increment;
+    scan_msg.range_min = params_.lidar_config.range_min;
+    scan_msg.range_max = params_.lidar_config.range_max;
+    scan_msg.scan_time = params_.update_period;
+    scan_msg.ranges = truck_state.lidarRanges();
+    signals_.scan->publish(scan_msg);
+}
+
 void SimulatorNode::publishSimulationState() {
     const auto truck_state = engine_->getTruckState();
     publishTime(truck_state);
@@ -158,6 +194,7 @@ void SimulatorNode::publishSimulationState() {
     publishTransformMessage(truck_state);
     publishTelemetryMessage(truck_state);
     publishSimulationStateMessage(truck_state);
+    publishLaserScanMessage(truck_state);
 }
 
 void SimulatorNode::makeSimulationTick() {

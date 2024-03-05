@@ -15,6 +15,12 @@ Limits<double> toLimits(const YAML::Node& node) {
     return {node["min"].as<double>(), node["max"].as<double>()};
 }
 
+geom::Vec2 toVector(const YAML::Node& node) {
+    const auto x = node["x"].as<double>();
+    const auto y = node["y"].as<double>();
+    return geom::Vec2(x, y);
+}
+
 }  // namespace
 
 using namespace geom::literals;
@@ -91,11 +97,26 @@ Wheel::Wheel(const YAML::Node& node)
     BOOST_VERIFY(width > 0);
 }
 
+Lidar::Lidar(const YAML::Node& node)
+    : from_base(toVector(node["from_base"]))
+    , angle_min(geom::Angle::fromDegrees(node["angle_min"].as<double>()))
+    , angle_max(geom::Angle::fromDegrees(node["angle_max"].as<double>()))
+    , angle_increment(geom::Angle::fromDegrees(node["angle_increment"].as<double>()))
+    , range_min(node["range_min"].as<float>())
+    , range_max(node["range_max"].as<float>()) {
+    BOOST_VERIFY(angle_min.radians() >= 0);
+    BOOST_VERIFY(angle_max > angle_min);
+    BOOST_VERIFY(angle_increment.radians() > 0);
+    BOOST_VERIFY(range_min >= 0);
+    BOOST_VERIFY(range_max > range_min);
+}
+
 Params::Params(const YAML::Node& node)
     : shape(node["shape"])
     , wheel_base(node["wheel_base"])
-    , limits(node["limits"])
     , wheel(node["wheel"])
+    , lidar(node["lidar"])
+    , limits(node["limits"])
     , gear_ratio(node["gear_ratio"].as<double>())
     , servo_home_angles(node["servo_home_angles"]) {
     BOOST_VERIFY(gear_ratio > 0);
