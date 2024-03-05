@@ -20,6 +20,7 @@ add_library(
     src/circle.cpp
     src/complex_polygon.cpp
     src/distance.cpp
+    src/intersection.cpp
     src/line.cpp
     src/msg.cpp
     src/polygon.cpp

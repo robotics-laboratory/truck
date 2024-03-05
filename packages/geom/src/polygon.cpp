@@ -4,6 +4,7 @@
 #include "common/math.h"
 
 #include "geom/line.h"
+#include "geom/intersection.h"
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
