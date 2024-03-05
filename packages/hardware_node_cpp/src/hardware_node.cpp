@@ -242,13 +242,13 @@ void HardwareNode::disableMotor() {
     RCLCPP_INFO(this->get_logger(), "Motor disabled");
 }
 
-bool check(const std::chrono::system_clock::time_point& msgTime, const double reportRate) {
-    std::chrono::milliseconds delay =
-        std::chrono::milliseconds(static_cast<int>(1000.0 / reportRate));
-    std::chrono::system_clock::time_point curTime = std::chrono::system_clock::now();
-    auto curTimeMs = std::chrono::time_point_cast<std::chrono::milliseconds>(curTime);
-    auto msgTimeMs = std::chrono::time_point_cast<std::chrono::milliseconds>(msgTime);
-    return (curTimeMs >= msgTimeMs - 2 * delay);
+bool check(const std::chrono::system_clock::time_point& msgTime,
+                    const double reportRate) {
+        std::chrono::milliseconds delay = std::chrono::milliseconds(static_cast<int>(1000.0 / reportRate));
+        std::chrono::system_clock::time_point curTime = std::chrono::system_clock::now();
+        auto curTimeMs = std::chrono::time_point_cast<std::chrono::milliseconds>(curTime);
+        auto msgTimeMs = std::chrono::time_point_cast<std::chrono::milliseconds>(msgTime);
+        return (curTimeMs >= msgTimeMs - 2 * delay);
 };
 
 void HardwareNode::pushTelemetry() {
@@ -259,14 +259,13 @@ void HardwareNode::pushTelemetry() {
     telemetry.header = header;
 
     auto voltageFrame = canFramesCache[CmdId::kGetBusVoltageCurrent];
-    auto encoderFrame = canFramesCache[CmdId::kGetEncoderEstimates];
+    auto encoderFrame = canFramesCache[CmdId::kGetEncoderEstimates]; 
 
-    if (!check(voltageFrame.second, params_.telemetryReportRate) ||
-        !check(encoderFrame.second, params_.telemetryReportRate)) {
+    if (!check(voltageFrame.second, params_.telemetryReportRate) || !check(encoderFrame.second, params_.telemetryReportRate)) {
         RCLCPP_INFO(this->get_logger(), "OLD FRAME");
         rclcpp::shutdown();
     }
-
+    
     float voltage = 0.0, current = 0.0, rps = 0.0;
     std::memcpy(&voltage, voltageFrame.first.data, sizeof(voltage));
     std::memcpy(&current, voltageFrame.first.data + 4, sizeof(current));
