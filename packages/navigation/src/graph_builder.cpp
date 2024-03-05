@@ -7,7 +7,7 @@
 
 #include <boost/geometry.hpp>
 
-#include <map>
+#include <unordered_map>
 
 namespace truck::navigation::graph {
 
@@ -19,7 +19,7 @@ using RTreeIndexedPoints = std::vector<RTreeIndexedPoint>;
 using RTreeBox = bg::model::box<RTreePoint>;
 using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
 
-using EdgesMap = std::map<NodeId, std::map<NodeId, EdgeId>>;
+using EdgesMap = std::unordered_map<NodeId, std::unordered_map<NodeId, EdgeId>>;
 
 namespace {
 
