@@ -157,7 +157,7 @@ void HardwareNode::readFromSocket() {
             }
         }
         if (!flag) {
-            RCLCPP_WARN(this->get_logger(), "No timestamp header");
+            RCLCPP_DEBUG(this->get_logger(), "No timestamp header");
             rclcpp::shutdown();
         }
         uint32_t cmd = frame.can_id & 0x1f;
@@ -181,7 +181,6 @@ void HardwareNode::modeCallback(const ControlMode& msg) {
     if (curMode == ControlMode::OFF && msg.mode != ControlMode::OFF) {
         RCLCPP_INFO(this->get_logger(), "Mode change: OFF -> ANY - enabling motor");
         enableMotor();
-        return;
     }
     if (curMode != ControlMode::OFF && msg.mode == ControlMode::OFF) {
         RCLCPP_INFO(this->get_logger(), "Mode change: ANY -> OFF - disabling motor");
@@ -198,10 +197,11 @@ void HardwareNode::sendFrame(uint32_t cmd_id, uint8_t can_dlc, const void* data 
     frame.can_id = id;
     frame.can_dlc = can_dlc;
     if (data != nullptr) {
-        memcpy(frame.data, data, can_dlc);
+        std::memcpy(frame.data, data, can_dlc);
     }
     ssize_t nbytes = write(can_.socket, &frame, sizeof(frame));
     if (nbytes < 0 || nbytes != sizeof(frame)) {
+        RCLCPP_DEBUG(this->get_logger(), "Unnable to read from socket");
         rclcpp::shutdown();
     }
 }
@@ -217,7 +217,6 @@ void HardwareNode::initializeOdrive() {
 void HardwareNode::commandCallback(const Control& msg) {
     if (curMode == ControlMode::OFF) {
         disableMotor();
-        return;
     }
     auto rpm = model_->linearVelocityToMotorRPS(msg.velocity);
     sendFrame(CmdId::kSetInputVel, sizeof(rpm), &rpm);
@@ -229,6 +228,7 @@ void HardwareNode::commandCallback(const Control& msg) {
 }
 
 void HardwareNode::enableMotor() {
+    sendFrame(CmdId::kClearErrors, 0);
     double rpm = 0.0;
     sendFrame(CmdId::kSetInputVel, sizeof(rpm), &rpm);
     uint8_t state = AxisState::AXIS_STATE_CLOSED_LOOP_CONTROL;
@@ -242,33 +242,40 @@ void HardwareNode::disableMotor() {
     RCLCPP_INFO(this->get_logger(), "Motor disabled");
 }
 
+bool check(const std::chrono::system_clock::time_point& msgTime, const double reportRate) {
+    std::chrono::milliseconds delay =
+        std::chrono::milliseconds(static_cast<int>(1000.0 / reportRate));
+    std::chrono::system_clock::time_point curTime = std::chrono::system_clock::now();
+    auto curTimeMs = std::chrono::time_point_cast<std::chrono::milliseconds>(curTime);
+    auto msgTimeMs = std::chrono::time_point_cast<std::chrono::milliseconds>(msgTime);
+    return (curTimeMs >= msgTimeMs - 2 * delay);
+};
+
 void HardwareNode::pushTelemetry() {
     auto header = std_msgs::msg::Header();
     header.stamp = now();
     header.frame_id = "base";
-
     auto telemetry = truck_msgs::msg::HardwareTelemetry();
     telemetry.header = header;
+
     auto voltageFrame = canFramesCache[CmdId::kGetBusVoltageCurrent];
+    auto encoderFrame = canFramesCache[CmdId::kGetEncoderEstimates];
+
+    if (!check(voltageFrame.second, params_.telemetryReportRate) ||
+        !check(encoderFrame.second, params_.telemetryReportRate)) {
+        RCLCPP_INFO(this->get_logger(), "OLD FRAME");
+        rclcpp::shutdown();
+    }
 
     float voltage = 0.0, current = 0.0, rps = 0.0;
-
-    memcpy(&voltage, voltageFrame.first.data, sizeof(voltage));
-    memcpy(&current, voltageFrame.first.data + 4, sizeof(current));
-
-    auto encoderFrame = canFramesCache[CmdId::kGetEncoderEstimates];
-    memcpy(&rps, encoderFrame.first.data + 4, sizeof(rps));
+    std::memcpy(&voltage, voltageFrame.first.data, sizeof(voltage));
+    std::memcpy(&current, voltageFrame.first.data + 4, sizeof(current));
+    std::memcpy(&rps, encoderFrame.first.data + 4, sizeof(rps));
 
     telemetry.battery_voltage = voltage;
     telemetry.battery_current = current;
     telemetry.current_rps = rps;
 
-    RCLCPP_INFO(
-        this->get_logger(),
-        "Publishing telemetry = {.current_rps = %f, .voltage_battery = %f, .voltage_current = %f}",
-        telemetry.current_rps,
-        telemetry.battery_voltage,
-        telemetry.battery_current);
     signals_.telemetry->publish(telemetry);
 
     auto odometry = nav_msgs::msg::Odometry();
@@ -281,6 +288,8 @@ void HardwareNode::pushTelemetry() {
     covariance_matrix[0] = 0.0001;
     odometry.twist.covariance = covariance_matrix;
 
+    signals_.odometry->publish(odometry);
+
     RCLCPP_INFO(
         this->get_logger(),
         "odometry.twist.linear = {.x = %f, .y = %f, .z = %f}",
@@ -288,7 +297,12 @@ void HardwareNode::pushTelemetry() {
         odometry.twist.twist.linear.y,
         odometry.twist.twist.linear.z);
 
-    signals_.odometry->publish(odometry);
+    RCLCPP_INFO(
+        this->get_logger(),
+        "Publishing telemetry = {.current_rps = %f, .voltage_battery = %f, .voltage_current = %f}",
+        telemetry.current_rps,
+        telemetry.battery_voltage,
+        telemetry.battery_current);
 }
 
 void HardwareNode::pushStatus() {
@@ -302,10 +316,10 @@ void HardwareNode::pushStatus() {
     uint32_t axisState = 0, axisError = 0, encoderError = 0;
     uint8_t motorFlag = 0, encoderFlag = 0;
 
-    memcpy(&axisError, heartbeatFrame.first.data, sizeof(axisError));
-    memcpy(&axisState, heartbeatFrame.first.data + 4, sizeof(axisState));
-    memcpy(&motorFlag, heartbeatFrame.first.data + 5, sizeof(motorFlag));
-    memcpy(&encoderFlag, heartbeatFrame.first.data + 6, sizeof(encoderFlag));
+    std::memcpy(&axisError, heartbeatFrame.first.data, sizeof(axisError));
+    std::memcpy(&axisState, heartbeatFrame.first.data + 4, sizeof(axisState));
+    std::memcpy(&motorFlag, heartbeatFrame.first.data + 5, sizeof(motorFlag));
+    std::memcpy(&encoderFlag, heartbeatFrame.first.data + 6, sizeof(encoderFlag));
 
     if (axisError) {
         auto msg = "Axis Error Detected: " + std::to_string(axisError);
@@ -313,17 +327,9 @@ void HardwareNode::pushStatus() {
         status.errors.push_back(msg);
     }
 
-    auto check = [](const std::chrono::system_clock::time_point& msg,
-                    std::chrono::milliseconds& reportRate) -> bool {
-        auto curTime = std::chrono::system_clock::now();
-        return (msg >= curTime - 2 * reportRate);
-    };
-
-    auto delay = std::chrono::milliseconds(static_cast<int>(1000.0 / params_.statusReportRate));
-
     if (motorFlag) {
-        if (check(motorFrame.second, delay)) {
-            memcpy(&motorError, motorFrame.first.data, sizeof(motorError));
+        if (check(motorFrame.second, params_.statusReportRate)) {
+            std::memcpy(&motorError, motorFrame.first.data, sizeof(motorError));
             auto msg = "Motor Error Detected: " + std::to_string(motorError);
             RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
             status.errors.push_back(msg);
@@ -332,8 +338,8 @@ void HardwareNode::pushStatus() {
         }
     }
     if (encoderFlag) {
-        if (check(encoderFrame.second, delay)) {
-            memcpy(&encoderError, encoderFrame.first.data, sizeof(encoderError));
+        if (check(encoderFrame.second, params_.statusReportRate)) {
+            std::memcpy(&encoderError, encoderFrame.first.data, sizeof(encoderError));
             auto msg = "Encoder Error Detected: " + std::to_string(encoderError);
             RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
             status.errors.push_back(msg);
