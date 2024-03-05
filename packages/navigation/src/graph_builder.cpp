@@ -59,14 +59,8 @@ RTreeIndexedPoints getNodeNeighborsSearchRadius(
     RTreeIndexedPoints rtree_indexed_points;
 
     RTreeBox rtree_box(
-        RTreePoint(
-            point.x - search_radius,
-            point.y - search_radius
-        ),
-        RTreePoint(
-            point.x + search_radius,
-            point.y + search_radius
-        )
+        RTreePoint(point.x - search_radius, point.y - search_radius),
+        RTreePoint(point.x + search_radius, point.y + search_radius)
     );
 
     rtree.query(
@@ -130,17 +124,24 @@ std::vector<NodeId> getNodeNeighbors(
     return neighbor_nodes_ids;
 }
 
-std::optional<EdgeId> isEdgeExist(EdgesMap& nodes_to_edges, NodeId from, NodeId to) {
-    if (nodes_to_edges.find(from) != nodes_to_edges.end() &&
-        nodes_to_edges[from].find(to) != nodes_to_edges[from].end()) {
-        return nodes_to_edges[from][to];
+std::optional<EdgeId> tryGetEdge(EdgesMap& nodes_to_edges, NodeId from, NodeId to) {
+    const auto from_node_it = nodes_to_edges.find(from);
+
+    if (from_node_it == nodes_to_edges.end()) {
+        return std::nullopt;
     }
 
-    return std::nullopt;
+    const auto to_node_it = from_node_it->second.find(to);
+
+    if (to_node_it == from_node_it->second.end()) {
+        return std::nullopt;
+    }
+
+    return to_node_it->second;
 }
 
 void updateEdgesInfo(Graph& graph, EdgesMap& nodes_to_edges, NodeId from, NodeId to) {
-    std::optional<EdgeId> edge_id = isEdgeExist(nodes_to_edges, from, to);
+    std::optional<EdgeId> edge_id = tryGetEdge(nodes_to_edges, from, to);
 
     if (!edge_id.has_value()) {
         // edge doesn't exist, need to create one
@@ -150,12 +151,12 @@ void updateEdgesInfo(Graph& graph, EdgesMap& nodes_to_edges, NodeId from, NodeId
             .weight = geom::distance(graph.nodes[from].point, graph.nodes[to].point)};
 
         edge_id = graph.edges.size();
-        nodes_to_edges[from][to] = edge_id.value();
+        nodes_to_edges[from][to] = *edge_id;
 
         graph.edges.emplace_back(edge);
     }
 
-    graph.nodes[from].edges.emplace_back(edge_id.value());
+    graph.nodes[from].edges.emplace_back(*edge_id);
 }
 
 }  // namespace

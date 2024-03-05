@@ -27,16 +27,6 @@ using CGAL_Face_handle = CGAL_CDT::Face_handle;
 using CGAL_Point = CGAL_CDT::Point;
 using CGAL_Polygon = CGAL::Polygon_2<CGAL_K>;
 
-size_t Polygon::segmentNumber() const noexcept {
-    return this->size() - 1;
-}
-
-Segment Polygon::segment(size_t i) const noexcept {
-    VERIFY(i < segmentNumber());
-    auto it = this->begin();
-    return Segment(*(it + i), *(it + i + 1));
-}
-
 std::vector<Triangle> Polygon::triangles() const noexcept {
     CGAL_CDT cgal_cdt;
     std::vector<Triangle> triangles;

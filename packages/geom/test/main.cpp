@@ -227,6 +227,13 @@ TEST(Segment, intersect) {
     }
 
     {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(1, 0));
+        auto seg2 = Segment(Vec2(0, 1), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), false);
+    }
+
+    {
         auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
         auto seg2 = Segment(Vec2(0, 1), Vec2(1, 1));
 
@@ -235,7 +242,14 @@ TEST(Segment, intersect) {
 
     {
         auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
-        auto seg2 = Segment(Vec2(0, 1.001), Vec2(1, 1));
+        auto seg2 = Segment(Vec2(-1, 1), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), true);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(-1, 2), Vec2(1, 1));
 
         ASSERT_EQ(intersect(seg1, seg2), false);
     }
@@ -243,6 +257,13 @@ TEST(Segment, intersect) {
     {
         auto seg1 = Segment(Vec2(1, 0), Vec2(1, 2));
         auto seg2 = Segment(Vec2(0, 1), Vec2(2, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), true);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(0, 0), Vec2(0, 1));
 
         ASSERT_EQ(intersect(seg1, seg2), true);
     }
@@ -517,10 +538,17 @@ TEST(Polygon, intersect) {
     }
 
     {
-        auto poly = Polygon{Vec2(0, 0), Vec2(0, 3), Vec2(2, 3), Vec2(0, 2)};
+        auto poly = Polygon{Vec2(0, 0), Vec2(0, 3), Vec2(2, 3), Vec2(2, 0)};
         auto seg = Segment(Vec2(1, 1), Vec2(1, 2));
 
         ASSERT_EQ(intersect(poly, seg), false);
+    }
+
+    {
+        auto poly = Polygon{Vec2(0, 0), Vec2(0, 3), Vec2(2, 3), Vec2(2, 0)};
+        auto seg = Segment(Vec2(1, 1), Vec2(1, 4));
+
+        ASSERT_EQ(intersect(poly, seg), true);
     }
 }
 

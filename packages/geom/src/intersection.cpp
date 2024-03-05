@@ -78,8 +78,8 @@ bool intersect(const geom::Segment& seg1, const geom::Segment& seg2, const doubl
 }
 
 bool intersect(const geom::Polygon& polygon, const Segment& seg, const double eps) noexcept {
-    for (size_t i = 0; i < polygon.segmentNumber(); i++) {
-        if (geom::intersect(polygon.segment(i), seg, eps)) {
+    for (const geom::Segment& poly_seg : polygon.segments()) {
+        if (geom::intersect(poly_seg, seg, eps)) {
             return true;
         }
     }
