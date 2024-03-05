@@ -550,6 +550,28 @@ TEST(BilinearInterpolation, case_6) {
     EXPECT_NEAR(bilinear({-0.402492, 1.20748}), 1.195, eps);
 }
 
+TEST(BilinearInterpolation, case_7) {
+    const double eps = 1e-5;
+
+    const Size size{.width = 2, .height = 2};
+    const double resolution = 1;
+    const Pose origin({0, 0}, AngleVec2::fromVector(1, 0));
+    auto holder = makeGrid<float>(size, resolution, origin);
+    auto& grid = *holder;
+
+    grid[0][0] = -1.0;
+    grid[0][1] = +1.0;
+    grid[1][0] = +1.0;
+    grid[1][1] = -1.0;
+
+    Bilinear<float> bilinear(grid);
+
+    EXPECT_NEAR(bilinear.Get({-0.5, -0.5}, 100500), 100500, eps);
+    EXPECT_NEAR(bilinear.Get({-0.5, 0.5}, 100500), 100500, eps);
+    EXPECT_NEAR(bilinear.Get({0.5, -0.5}, 100500), 100500, eps);
+    EXPECT_NEAR(bilinear.Get({2.5, 2.5}, 100500), 100500, eps);
+}
+
 TEST(Draw, regular_polygon_drawing) {
     constexpr double eps = 1e-7;
 

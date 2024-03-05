@@ -60,6 +60,15 @@ struct Bilinear {
         return GetRelative(rel_point);
     }
 
+    double Get(const geom::Vec2& point, const T& default_value) const noexcept {
+        const auto [x, y] = domain.origin.tf(point);
+        if ((x < 0) || (y < 0) || (domain.size.width * domain.resolution <= x) ||
+            (domain.size.height * domain.resolution <= y)) {
+            return default_value;
+        }
+        return GetRelative({.x = x, .y = y});
+    }
+
     double operator()(const geom::Vec2& point) const noexcept { return Get(point); }
 
     Grid<T> grid;

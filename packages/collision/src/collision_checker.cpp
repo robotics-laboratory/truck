@@ -18,16 +18,8 @@ double StaticCollisionChecker::distance(const geom::Vec2& point) const noexcept 
     VERIFY(initialized());
 
     auto interpolation = fastgrid::Bilinear<float>(state_.collision_map->GetDistanceMap());
-    const auto [x, y] = interpolation.domain.Transform(point);
 
-    // check borders
-    if ((x < 0) || (y < 0) ||
-        (interpolation.domain.size.height * interpolation.domain.resolution <= y) ||
-        (interpolation.domain.size.width * interpolation.domain.resolution <= x)) {
-        return kMaxDistance;
-    }
-
-    return interpolation.Get(point);
+    return interpolation.Get(point, kMaxDistance);
 }
 
 double StaticCollisionChecker::distance(const geom::Pose& ego_pose) const noexcept {
