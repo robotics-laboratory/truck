@@ -17,6 +17,14 @@ struct Polyline final : public std::vector<Vec2> {
     UniformStepper<Polyline> ubegin(double step_length) const noexcept;
 
     UniformStepper<Polyline> uend() const noexcept;
+
+    double len() const noexcept;
 };
+
+Polyline toSpline(const Polyline& polyline, double step, size_t degree) noexcept;
+
+Polyline toLinearSpline(const Polyline& polyline, double step) noexcept;
+
+Polyline toQuadraticSpline(const Polyline& polyline, double step) noexcept;
 
 }  // namespace truck::geom

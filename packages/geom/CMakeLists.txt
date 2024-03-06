@@ -10,6 +10,7 @@ find_package(nav_msgs REQUIRED)
 find_package(tf2)
 find_package(CGAL REQUIRED)
 find_package(Boost REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 add_library(
     ${PROJECT_NAME} SHARED
@@ -32,7 +33,7 @@ add_library(
     src/vector.cpp
 )
 
-ament_target_dependencies(${PROJECT_NAME} common geometry_msgs nav_msgs tf2 CGAL Boost)
+ament_target_dependencies(${PROJECT_NAME} common geometry_msgs nav_msgs tf2 CGAL Boost Eigen3)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -40,7 +41,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
-ament_export_dependencies(common geometry_msgs nav_msgs tf2 CGAL Boost)
+ament_export_dependencies(common geometry_msgs nav_msgs tf2 CGAL Boost Eigen3)
 
 install(
     TARGETS ${PROJECT_NAME}
