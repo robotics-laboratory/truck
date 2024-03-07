@@ -1,13 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(hardware_node_cpp)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
-
-if(CMAKE_COMPILER_IS_GNUCXX)
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+set(CMAKE_CXX_STANDARD 20)
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -22,18 +17,18 @@ ament_target_dependencies(${PROJECT_NAME} rclcpp std_msgs model truck_msgs nav_m
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    # "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-    )
+)
 
-  
 target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
-    
+
 install(TARGETS
-  ${PROJECT_NAME}
-  DESTINATION lib/${PROJECT_NAME})
+    ${PROJECT_NAME}
+    DESTINATION lib/${PROJECT_NAME}
+)
 
 install(
     DIRECTORY launch
-    DESTINATION share/${PROJECT_NAME})
+    DESTINATION share/${PROJECT_NAME}
+)
 
 ament_package()
