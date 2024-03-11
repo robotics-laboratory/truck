@@ -15,10 +15,6 @@ namespace truck::geom {
  */
 
 struct Pose {
-    constexpr Pose() = default;
-
-    constexpr Pose(Vec2 pos, AngleVec2 dir) : pos(pos), dir(dir) {}
-
     constexpr operator Vec2() const { return pos; }
 
     Vec2 pos{};

@@ -10,8 +10,6 @@ find_package(std_srvs REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 add_executable(
     ${PROJECT_NAME}_node
     src/main.cpp

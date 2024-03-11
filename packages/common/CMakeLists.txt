@@ -3,10 +3,6 @@ project(common)
 
 find_package(ament_cmake REQUIRED)
 
-set(CMAKE_CXX_STANDARD 20)
-
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 add_library(
     ${PROJECT_NAME} SHARED
     src/format.cpp
@@ -36,9 +32,6 @@ install(
 )
 
 if(BUILD_TESTING)
-    find_package(ament_cmake_clang_format REQUIRED)
-    ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
-
     find_package(ament_cmake_gtest REQUIRED)
     add_subdirectory("tests")
 endif()

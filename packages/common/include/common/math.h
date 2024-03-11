@@ -40,7 +40,7 @@ struct Limits {
 
     bool isMet(const T& x) const { return min <= x && x <= max; }
 
-    bool isStrictlyMet(const T& x) const { return min < x && x < max; }
+        bool isStrictlyMet(const T& x) const { return min < x && x < max; }
 
     T clamp(const T& t) const { return truck::clamp(t, min, max); }
 

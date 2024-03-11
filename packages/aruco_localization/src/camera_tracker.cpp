@@ -6,7 +6,6 @@
 
 namespace rosaruco {
 
-const static double kDefaultEdgeError = 1e9;
 const static std::string kLoggerName = "CameraTracker";
 
 CameraTracker::CameraTracker(int markers_count_) : graph_(markers_count_) {

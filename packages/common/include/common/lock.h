@@ -40,9 +40,9 @@ class Lockable {
       private:
         friend class Lockable;
 
-        Lock(Storage::Ptr storage) : storage_(std::move(storage)) { storage_->mutex.lock(); }
+        Lock(typename Storage::Ptr storage) : storage_(std::move(storage)) { storage_->mutex.lock(); }
 
-        Storage::Ptr storage_ = nullptr;
+        typename Storage::Ptr storage_ = nullptr;
     };
 
   public:

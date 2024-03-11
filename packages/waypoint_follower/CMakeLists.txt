@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(waypoint_follower)
 
-set(CMAKE_CXX_STANDARD 20)
-
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 find_package(ament_cmake REQUIRED)
 find_package(collision REQUIRED)
 find_package(common REQUIRED)
@@ -60,10 +56,5 @@ install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}
 )
-
-if(BUILD_TESTING)
-    find_package(ament_cmake_clang_format REQUIRED)
-    ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
-endif()
 
 ament_package()

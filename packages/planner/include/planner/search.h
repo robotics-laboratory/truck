@@ -24,8 +24,8 @@ struct Node {
 };
 
 struct GridParams {
-    int width;
-    int height;
+    size_t width;
+    size_t height;
     double resolution;
     double finish_area_radius;
     double min_obstacle_distance;

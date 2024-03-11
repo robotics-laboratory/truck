@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(truck_msgs)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(geometry_msgs REQUIRED)

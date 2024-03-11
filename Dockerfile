@@ -40,8 +40,20 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"]
 
-ENV CLANG_VERSION=12
 ENV GCC_VERSION=9
+
+ENV CC="gcc-9"
+ENV CXX="g++-9"
+ENV CFLAGS="${FLAGS}"
+ENV CXXFLAGS="${FLAGS}"
+
+# print build info
+RUN echo "Build info:" \
+    && echo "  TARGETARCH=${TARGETARCH}" \
+    && echo "  CC=${CC}" \
+    && echo "  CXX=${CXX}" \
+    && echo "  CFLAGS=${CFLAGS}" \
+    && echo "  CXXFLAGS=${CXXFLAGS}"
 
 ### INSTALL COMMON PKGS
 
@@ -52,8 +64,6 @@ RUN apt-get update -q && \
         ca-certificates \
         gcc-${GCC_VERSION} \
         g++-${GCC_VERSION} \
-        clang-format-${CLANG_VERSION} \
-        clang-tidy-${CLANG_VERSION} \
         cmake\
         curl \
         git \
@@ -90,11 +100,6 @@ RUN apt-get update -q && \
         libgstreamer-plugins-good1.0-dev \
         libgstreamer-plugins-bad1.0-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
-
-ENV CC="gcc-9"
-ENV CXX="g++-9"
-ENV CFLAGS="${FLAGS}"
-ENV CXXFLAGS="${FLAGS}"
 
 ### PREPARE FOR OPENCV
 
@@ -146,7 +151,7 @@ RUN apt-get update -yq \
         udev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV LIBRS_VERSION=2.54.1
+ENV LIBRS_VERSION=2.54.2
 
 FROM --platform=linux/arm64 truck-common AS truck-cuda-arm64
 
@@ -384,7 +389,6 @@ RUN mkdir -p ${ROS_ROOT} \
     --rosdistro ${ROS_DISTRO} \
     --exclude librealsense2 libpointmatcher libnabo \
     --deps \
-        ament_cmake_clang_format \
         compressed_depth_image_transport \
         compressed_image_transport \
         cv_bridge \
@@ -399,7 +403,6 @@ RUN mkdir -p ${ROS_ROOT} \
         gazebo_ros \
         geometry2 \
         joy \
-        launch_xml \
         launch_yaml \
         laser_geometry \
         pcl_conversions \
@@ -407,7 +410,6 @@ RUN mkdir -p ${ROS_ROOT} \
         rmw_cyclonedds_cpp \
         robot_localization \
         ros_base \
-        rosbridge_suite \
         sensor_msgs \
         sensor_msgs_py \
         std_msgs \
@@ -422,8 +424,6 @@ RUN apt-get update -q \
     && rosdep install -qy --ignore-src  \
         --rosdistro ${ROS_DISTRO} \
         --from-paths ${ROS_TMP} \
-        --skip-keys clang-format-${CLANG_VERSION} \
-        --skip-keys clang-tidy-${CLANG_VERSION} \
         --skip-keys fastcdr \
         --skip-keys rti-connext-dds-6.0.1 \
         --skip-keys urdfdom_headers \
@@ -519,23 +519,74 @@ RUN wget -qO - https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.t
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
+### INSTALL G2O
+
+ARG G2O_HASH="b1ba729aa569267e179fa2e237db0b3ad5169e2e"
+
+RUN git clone https://github.com/RainerKuemmerle/g2o.git \
+    && cd g2o && git checkout ${G2O_HASH} \
+    && mkdir -p build && cd build \
+    && cmake .. \
+        -DBUILD_WITH_MARCH_NATIVE=OFF \
+        -DG2O_BUILD_APPS=OFF \
+        -DG2O_BUILD_EXAMPLES=OFF \
+        -DG2O_USE_OPENGL=OFF \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
+### INSTALL GTSAM
+
+ARG GTSAM_VERSION="4.1.1"
+
+RUN wget -qO - https://github.com/borglab/gtsam/archive/refs/tags/${GTSAM_VERSION}.tar.gz | tar -xz \
+    && cd gtsam-${GTSAM_VERSION} && mkdir -p build && cd build \
+    && cmake .. \
+        -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF \
+        -DGTSAM_WITH_TBB=OFF \
+        -DGTSAM_USE_SYSTEM_EIGEN=ON \
+        -DGTSAM_BUILD_TESTS=OFF \
+        -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
 ### INSTALL DEV PKGS
 
 COPY requirements.txt /tmp/requirements.txt
 
+RUN python3 -m pip install --no-cache-dir --ignore-installed -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
+
+ENV CLANG_VERSION=16
+ENV CXX="clang++-${CLANG_VERSION}"
+ENV CC="clang-${CLANG_VERSION}"
+ENV CFLAGS="${FLAGS} -std=c17"
+ENV CXXFLAGS="${FLAGS} -stdlib=libstdc++ -std=c++2b"
+
+# print build info
+RUN echo "Build info:" \
+    && echo "  TARGETARCH=${TARGETARCH}" \
+    && echo "  CC=${CC}" \
+    && echo "  CXX=${CXX}" \
+    && echo "  CFLAGS=${CFLAGS}" \
+    && echo "  CXXFLAGS=${CXXFLAGS}"
+
+RUN wget https://apt.llvm.org/llvm.sh \
+    && chmod +x llvm.sh \
+    && sudo ./llvm.sh ${CLANG_VERSION}
+
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
+        clang-${CLANG_VERSION} \
+        clang-format-${CLANG_VERSION} \
+        clang-tidy-${CLANG_VERSION} \
         htop \
-        lldb-${CLANG_VERSION} \
+        libpugixml-dev \
+        libfmt-dev \
         less \
+        lldb-${CLANG_VERSION} \
         tmux \
         vim \
-    && python3 -m pip install --no-cache-dir --ignore-installed -r /tmp/requirements.txt \
-    && rm /tmp/requirements.txt \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
-
-ENV CFLAGS="${FLAGS} -std=c17"
-ENV CXXFLAGS="${FLAGS} -std=c++2a"
 
 RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export CXX='${CXX}'\n" >> /root/.bashrc \
