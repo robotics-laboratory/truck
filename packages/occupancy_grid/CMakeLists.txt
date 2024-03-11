@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(occupancy_grid)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(cv_bridge REQUIRED)
@@ -15,10 +13,6 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 20)
-endif()
 
 add_executable(occupancy_grid_node
   src/main.cpp

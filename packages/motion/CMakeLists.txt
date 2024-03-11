@@ -7,10 +7,6 @@ find_package(geom REQUIRED)
 find_package(model REQUIRED)
 find_package(truck_msgs REQUIRED)
 
-set(CMAKE_CXX_STANDARD 20)
-
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 add_library(
   ${PROJECT_NAME} SHARED
   src/trajectory.cpp
@@ -44,10 +40,5 @@ install(
   DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
-
-if(BUILD_TESTING)
-    find_package(ament_cmake_clang_format REQUIRED)
-    ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
-endif()
 
 ament_package()

@@ -74,7 +74,7 @@ std::vector<Triangle> ComplexPolygon::triangles() const noexcept {
 
 Segments ComplexPolygon::segments() const noexcept {
     size_t size = outer.size();
-    for (const auto inner : inners) {
+    for (const auto& inner : inners) {
         size += inner.size();
     }
 
@@ -86,7 +86,7 @@ Segments ComplexPolygon::segments() const noexcept {
             current_segments.begin(), 
             current_segments.end());
 
-    for (const auto inner : inners) {
+    for (const auto& inner : inners) {
         current_segments = inner.segments();
         segments.insert(segments.end(), 
             current_segments.begin(), 

@@ -420,7 +420,7 @@ TEST(BilinearInterpolation, case_2) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -440,7 +440,7 @@ TEST(BilinearInterpolation, case_3) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -458,7 +458,7 @@ TEST(BilinearInterpolation, case_4) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -476,7 +476,7 @@ TEST(BilinearInterpolation, case_5) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -494,7 +494,7 @@ TEST(BilinearInterpolation, case_6) {
 
     constexpr Size size{.width = 3, .height = 3};
     constexpr double resolution = 0.5;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(1, 2));
+    const Pose origin({0, 0}, AngleVec2::fromVector(1, 2));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 

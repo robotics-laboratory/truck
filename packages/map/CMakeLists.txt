@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(map)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 find_package(ament_cmake REQUIRED)
 find_package(geom REQUIRED)
 find_package(common REQUIRED)

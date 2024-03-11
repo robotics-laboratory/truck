@@ -22,7 +22,7 @@ bool intersect(const geom::Segment& seg1, const geom::Segment& seg2, const doubl
     auto orientation = [&](const geom::Vec2& p, const geom::Vec2& q, const geom::Vec2& r) {
         double val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
-        if (abs(val) < eps) {
+        if (std::abs(val) < eps) {
             return Mode::Colinear;
         }
 
@@ -89,7 +89,7 @@ bool intersect(const geom::Polygon& polygon, const Segment& seg, const double ep
 
 std::optional<Vec2> intersect(const Line& l1, const Line& l2, const double eps) noexcept {
     double det = cross(Vec2(l1.a, l1.b), Vec2(l2.a, l2.b));
-    if (abs(det) < eps) {
+    if (std::abs(det) < eps) {
         return std::nullopt;
     }
     return Vec2(

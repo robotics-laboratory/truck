@@ -15,7 +15,7 @@ class Angle {
 
     static constexpr Angle fromDegrees(double deg) noexcept { return Angle{(M_PI / 180) * deg}; }
 
-    static constexpr Angle fromVector(double x, double y) noexcept {
+    static Angle fromVector(double x, double y) noexcept {
         return Angle{std::atan2(y, x)};
     }
 
@@ -23,13 +23,13 @@ class Angle {
 
     constexpr double degrees() const noexcept { return (180 / M_PI) * value_; }
 
-    friend constexpr double sin(Angle angle) noexcept { return std::sin(angle.value_); }
+    friend double sin(Angle angle) noexcept { return std::sin(angle.value_); }
 
-    friend constexpr double cos(Angle angle) noexcept { return std::cos(angle.value_); }
+    friend double cos(Angle angle) noexcept { return std::cos(angle.value_); }
 
-    friend constexpr double tan(Angle angle) noexcept { return std::tan(angle.value_); }
+    friend double tan(Angle angle) noexcept { return std::tan(angle.value_); }
 
-    friend constexpr Angle abs(Angle angle) noexcept { return Angle{std::abs(angle.value_)}; }
+    friend Angle abs(Angle angle) noexcept { return Angle{std::abs(angle.value_)}; }
 
     constexpr Angle operator-() const noexcept { return Angle{-value_}; }
 
@@ -55,16 +55,16 @@ class Angle {
 
     static constexpr Angle zero() noexcept { return Angle{0}; }
 
-    constexpr static double _0_2PI(double radians) noexcept {
+    static double _0_2PI(double radians) noexcept {
         return Angle(radians)._0_2PI().radians();
     }
 
-    constexpr Angle _0_2PI() const noexcept {
+    Angle _0_2PI() const noexcept {
         const double result = fmod(value_, 2 * M_PI);
         return (result < 0) ? Angle{result + 2 * M_PI} : Angle{result};
     }
 
-    constexpr Angle _mPI_PI() const noexcept {
+    Angle _mPI_PI() const noexcept {
         const double result = fmod(value_ + M_PI, 2 * M_PI);
         return (result <= 0) ? Angle{result + M_PI} : Angle{result - M_PI};
     }
@@ -83,13 +83,13 @@ constexpr Angle operator"" _deg(long double degrees) { return Angle::fromDegrees
 
 }  // namespace literals
 
-constexpr Angle asin(double x) noexcept { return Angle{std::asin(x)}; }
+inline Angle asin(double x) noexcept { return Angle{std::asin(x)}; }
 
-constexpr Angle acos(double x) noexcept { return Angle{std::acos(x)}; }
+inline Angle acos(double x) noexcept { return Angle{std::acos(x)}; }
 
-constexpr Angle atan(double x) noexcept { return Angle{std::atan(x)}; }
+inline Angle atan(double x) noexcept { return Angle{std::atan(x)}; }
 
-constexpr Angle atan(double x, double y) noexcept { return Angle{std::atan2(x, y)}; }
+inline Angle atan(double x, double y) noexcept { return Angle{std::atan2(x, y)}; }
 
 constexpr Angle operator+(Angle a, Angle b) noexcept { return Angle{a.radians() + b.radians()}; }
 
