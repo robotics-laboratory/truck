@@ -559,8 +559,9 @@ RUN python3 -m pip install --no-cache-dir --ignore-installed -r /tmp/requirement
 ENV CLANG_VERSION=16
 ENV CXX="clang++-${CLANG_VERSION}"
 ENV CC="clang-${CLANG_VERSION}"
+ENV FLAGS="${FLAGS}"
 ENV CFLAGS="${FLAGS} -std=c17"
-ENV CXXFLAGS="${FLAGS} -stdlib=libstdc++ -std=c++2b"
+ENV CXXFLAGS="${FLAGS}  -fsized-deallocation -stdlib=libstdc++ -std=c++2b"
 
 # print build info
 RUN echo "Build info:" \
