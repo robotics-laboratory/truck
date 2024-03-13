@@ -102,7 +102,7 @@ class HardwareNode(Node):
         self._axis = getattr(self._odrive, self._odrive_axis)
         self._axis.config.enable_watchdog = True
         self._axis.config.watchdog_timeout = self._odrive_timeout / 1000
-        accel_mps = self._model.base_acceleration_limits.max
+        accel_mps = self._model.max_acceleration
         accel_rps = self._model.linear_velocity_to_motor_rps(accel_mps)
         self._log.info(
             f"Max acceleration: {accel_mps:.1f} m/s^2 | {accel_rps:.1f} turns/s^2"
