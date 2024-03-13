@@ -1,5 +1,6 @@
 launch:
 - arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
+- arg: { name: "routing_mode", default: "true" }
 
 - include:
     file: $(find-pkg-share simulator_2d)/launch/simulator_pipeline.yaml
@@ -10,4 +11,9 @@ launch:
     file: $(find-pkg-share routing)/launch/routing.yaml
     arg:
       - { name: "map_config", value: "$(var map_config)" }
+
+- include:
+    file: $(find-pkg-share planner)/launch/planner.yaml
+    arg:
+      - { name: "routing_mode", value: "$(var routing_mode)" }
   
