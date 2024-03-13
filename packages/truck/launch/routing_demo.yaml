@@ -1,0 +1,13 @@
+launch:
+- arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
+
+- include:
+    file: $(find-pkg-share simulator_2d)/launch/simulator_pipeline.yaml
+    arg:
+      - { name: "map_config", value: "$(var map_config)" }
+
+- include:
+    file: $(find-pkg-share routing)/launch/routing.yaml
+    arg:
+      - { name: "map_config", value: "$(var map_config)" }
+  
