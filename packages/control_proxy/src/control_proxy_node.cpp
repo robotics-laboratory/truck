@@ -40,11 +40,11 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
     params_ = Params {
         std::chrono::milliseconds(this->declare_parameter<long int>("watchdog_period", 20)),
         std::chrono::milliseconds(this->declare_parameter<long int>("mode_period", 200)),
-        std::chrono::milliseconds(this->declare_parameter<long int>("input_timeout", 200)),
+        std::chrono::milliseconds(this->declare_parameter<long int>("remote_timeout", 200)),
         std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 150))
     };
 
-    RCLCPP_INFO(this->get_logger(), "input timeout: %li ms", params_.input_timeout.count());
+    RCLCPP_INFO(this->get_logger(), "remote timeout: %li ms", params_.remote_timeout.count());
     RCLCPP_INFO(this->get_logger(), "control timeout: %li ms", params_.control_timeout.count());
 
     service_.reset = this->create_service<std_srvs::srv::Empty>(
@@ -84,13 +84,13 @@ truck_msgs::msg::Control ControlProxyNode::makeControlCommand(
     result.header.stamp = command.header.stamp;
     result.header.frame_id = frame_id_;
 
-    double rel_curvature = clamp(command.rel_curvature, -1.0, 1.0);
-    double rel_velocity = clamp(command.rel_velocity, -1.0, 1.0);
-    result.curvature = rel_curvature * model_->baseMaxAbsCurvature();
+    double curvature_ratio = clamp(command.curvature_ratio, -1.0, 1.0);
+    double velocity_ratio = clamp(command.velocity_ratio, -1.0, 1.0);
+    result.curvature = curvature_ratio * model_->baseMaxAbsCurvature();
     result.velocity = (
-        rel_velocity >= 0
-        ? rel_velocity * model_->baseVelocityLimits().max
-        : -rel_velocity * model_->baseVelocityLimits().min
+        velocity_ratio >= 0
+        ? velocity_ratio * model_->baseVelocityLimits().max
+        : -velocity_ratio * model_->baseVelocityLimits().min
     );
     result.has_acceleration = false;
 
@@ -166,7 +166,7 @@ void ControlProxyNode::watchdog() {
         return;
     }
 
-    if (state_.mode != Mode::Off && timeout_failed(state_.prev_input, params_.input_timeout)) {
+    if (state_.mode != Mode::Off && timeout_failed(state_.prev_input, params_.remote_timeout)) {
         RCLCPP_ERROR(this->get_logger(), "lost input, stop!");
         reset();
         return;
