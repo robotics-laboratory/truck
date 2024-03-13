@@ -55,7 +55,7 @@ class ControlProxyNode : public rclcpp::Node {
         std::chrono::milliseconds watchdog_period{20};
         std::chrono::milliseconds mode_period{200};
         std::chrono::milliseconds control_timeout{200};
-        std::chrono::milliseconds input_timeout{200};
+        std::chrono::milliseconds remote_timeout{200};
     } params_{};
 
     struct Services {
