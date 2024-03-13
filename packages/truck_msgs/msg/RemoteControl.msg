@@ -5,6 +5,7 @@ uint8 REMOTE = 1
 uint8 AUTO = 2
 
 uint8 mode
-float64 rel_curvature
-float64 rel_velocity
+# values in range [-1, 1]
+float64 curvature_ratio
+float64 velocity_ratio
 
