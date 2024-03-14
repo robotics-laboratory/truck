@@ -10,7 +10,6 @@ find_package(navigation REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(Boost REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node
@@ -26,7 +25,6 @@ ament_target_dependencies(
     truck_msgs
     nav_msgs
     geometry_msgs
-    Boost
 )
 
 install(

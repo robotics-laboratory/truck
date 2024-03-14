@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geom/rtree.h"
 #include "map/map.h"
 #include "navigation/search.h"
 #include "navigation/mesh_builder.h"
@@ -12,16 +13,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <boost/geometry.hpp>
-
 namespace truck::routing {
-
-namespace bg = boost::geometry;
-
-using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
-using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
-using RTreeIndexedPoints = std::vector<RTreeIndexedPoint>;
-using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
 
 struct Route {
     Route();
@@ -30,7 +22,7 @@ struct Route {
     double distance(const geom::Vec2& point) const;
     size_t postfixIndex(const geom::Vec2& point, double postfix) const;
 
-    RTree rtree;
+    geom::RTree rtree;
     geom::Polyline polyline;
 };
 
@@ -40,7 +32,7 @@ struct Cache {
 
     geom::Polyline findPath(const geom::Vec2& from, const geom::Vec2& to) const;
 
-    RTree rtree;
+    geom::RTree rtree;
     navigation::graph::Graph graph;
 };
 
