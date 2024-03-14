@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>svg_debug_drawer</name>
+  <version>0.0.0</version>
+  <description>svg_debug_drawer</description>
+  <maintainer email="thenromanov@gmail.com">Nikita Romanov</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>common</depend>
+  <depend>geom</depend>
+  <depend>pugixml</depend>
+  <depend>fmt</depend>
+
+  <test_depend>ament_cmake_lint_cmake</test_depend>
+  <test_depend>ament_cmake_clang_format</test_depend>
+</package>
