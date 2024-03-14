@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<svg version="1.1" width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-	<g transform="translate(0,512) scale(1,-1)">
-		<polygon points="0,0 0,100 200,250 180,11.1" fill="yellow" id="1">
-			<title>1</title>
-		</polygon>
-	</g>
-</svg>

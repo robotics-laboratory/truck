@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<svg version="1.1" width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+	<g transform="translate(0,512) scale(1,-1)">
+		<defs>
+			<marker id="pos-marker-10.0-000-000-255" orient="auto" markerWidth="10.0" markerHeight="10.0" markerUnits="userSpaceOnUse" refX="5.0" refY="5.0">
+				<circle cx="5.0" cy="5.0" r="5.0" fill="rgb(0, 0, 255)" />
+			</marker>
+			<marker id="dir-marker-10.0-000-000-255" orient="auto" markerWidth="10.0" markerHeight="10.0" markerUnits="userSpaceOnUse" refX="0" refY="5.0">
+				<polygon points="0.0,0.0 0.0,10.0 10.0,5.0" fill="rgb(0, 0, 255)" />
+			</marker>
+			<marker id="pos-marker-10.0-000-128-000" orient="auto" markerWidth="10.0" markerHeight="10.0" markerUnits="userSpaceOnUse" refX="5.0" refY="5.0">
+				<circle cx="5.0" cy="5.0" r="5.0" fill="rgb(0, 128, 0)" />
+			</marker>
+			<marker id="dir-marker-10.0-000-128-000" orient="auto" markerWidth="10.0" markerHeight="10.0" markerUnits="userSpaceOnUse" refX="0" refY="5.0">
+				<polygon points="0.0,0.0 0.0,10.0 10.0,5.0" fill="rgb(0, 128, 0)" />
+			</marker>
+			<marker id="pos-marker-10.24-000-000-000" orient="auto" markerWidth="10.24" markerHeight="10.24" markerUnits="userSpaceOnUse" refX="5.12" refY="5.12">
+				<circle cx="5.12" cy="5.12" r="5.12" fill="rgb(0, 0, 0)" />
+			</marker>
+			<marker id="dir-marker-10.24-000-000-000" orient="auto" markerWidth="10.24" markerHeight="10.24" markerUnits="userSpaceOnUse" refX="0" refY="5.12">
+				<polygon points="0.0,0.0 0.0,10.24 10.24,5.12" fill="rgb(0, 0, 0)" />
+			</marker>
+			<marker id="pos-marker-10.0-255-000-000" orient="auto" markerWidth="10.0" markerHeight="10.0" markerUnits="userSpaceOnUse" refX="5.0" refY="5.0">
+				<circle cx="5.0" cy="5.0" r="5.0" fill="rgb(255, 0, 0)" />
+			</marker>
+			<marker id="dir-marker-10.0-255-000-000" orient="auto" markerWidth="10.0" markerHeight="10.0" markerUnits="userSpaceOnUse" refX="0" refY="5.0">
+				<polygon points="0.0,0.0 0.0,10.0 10.0,5.0" fill="rgb(255, 0, 0)" />
+			</marker>
+		</defs>
+		<line y2="128.0" x2="138.0" x1="128.0" y1="128.0" marker-start="url(#pos-marker-10.0-000-000-255)" marker-end="url(#dir-marker-10.0-000-000-255)" stroke="rgb(0, 0, 255)" stroke-width="5.0" id="1">
+			<title>1</title>
+		</line>
+		<line y2="263.0710678118655" x2="263.0710678118655" x1="256.0" y1="256.0" marker-start="url(#pos-marker-10.0-000-128-000)" marker-end="url(#dir-marker-10.0-000-128-000)" stroke="rgb(0, 128, 0)" stroke-width="5.0" id="2">
+			<title>2</title>
+		</line>
+		<line y2="391.2407734393502" x2="376.7592265606498" x1="384.0" y1="384.0" marker-start="url(#pos-marker-10.24-000-000-000)" marker-end="url(#dir-marker-10.24-000-000-000)" stroke="rgb(0, 0, 0)" stroke-width="5.12" id="">
+			<title></title>
+		</line>
+		<line y2="500.0" x2="490.0" x1="500.0" y1="500.0" marker-start="url(#pos-marker-10.0-255-000-000)" marker-end="url(#dir-marker-10.0-255-000-000)" stroke="rgb(255, 0, 0)" stroke-width="5.0" id="4">
+			<title>4</title>
+		</line>
+		<line y2="389.76" x2="400.0" x1="400.0" y1="400.0" marker-start="url(#pos-marker-10.24-000-000-000)" marker-end="url(#dir-marker-10.24-000-000-000)" stroke="rgb(0, 0, 0)" stroke-width="5.12" id="">
+			<title></title>
+		</line>
+	</g>
+</svg>

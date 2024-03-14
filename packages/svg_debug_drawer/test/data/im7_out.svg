@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<svg version="1.1" width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+	<g transform="translate(0,512) scale(1,-1)">
+		<path d="M 10.0,10.0 L 10.0,200.0 L 200.0,200.0 L 200.0,10.0 Z M 20.0,20.0 L 40.0,20.0 L 40.0,40.0 L 20.0,40.0 Z M 100.0,100.0 L 120.0,100.0 L 120.0,120.0 L 100.0,120.0 Z" stroke="rgb(255, 0, 255)" stroke-width="0.0" fill="rgb(255, 0, 255)" id="1">
+			<title>1</title>
+		</path>
+		<circle cx="30.0" cy="30.0" r="5.0" fill="rgb(255, 0, 0)" id="2">
+			<title>2</title>
+		</circle>
+		<path d="M 500.0,500.0 L 500.0,300.0 L 300.0,300.0 L 300.0,500.0 Z M 480.0,480.0 L 460.0,480.0 L 460.0,460.0 L 480.0,460.0 Z M 400.0,400.0 L 380.0,400.0 L 380.0,380.0 L 400.0,380.0 Z" stroke="rgb(0, 255, 0)" stroke-width="5.0" fill="none" id="3">
+			<title>3</title>
+		</path>
+		<circle cx="470.0" cy="470.0" r="5.0" fill="rgb(255, 0, 0)" id="4">
+			<title>4</title>
+		</circle>
+		<path d="M 200.0,500.0 L 200.0,300.0 L 10.0,300.0 L 10.0,500.0 Z M 100.0,400.0 L 150.0,400.0 L 150.0,450.0 L 100.0,450.0 Z" stroke="rgb(0, 0, 0)" stroke-width="0.0" fill="rgb(0, 0, 0)" id="">
+			<title></title>
+		</path>
+		<path d="M 300.0,10.0 L 300.0,200.0 L 500.0,200.0 L 500.0,10.0 Z M 480.0,40.0 L 460.0,40.0 L 460.0,20.0 L 480.0,20.0 Z M 400.0,120.0 L 380.0,120.0 L 380.0,100.0 L 400.0,100.0 Z" stroke="rgb(0, 0, 0)" stroke-width="0.0" fill="rgb(0, 0, 0)" id="">
+			<title></title>
+		</path>
+	</g>
+</svg>

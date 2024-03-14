@@ -7,15 +7,16 @@ find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(pugixml REQUIRED)
+find_package(fmt REQUIRED)
 
 add_library(
     ${PROJECT_NAME} SHARED
     src/sdd.cpp
 )
 
-ament_target_dependencies(${PROJECT_NAME} common geom pugixml)
+ament_target_dependencies(${PROJECT_NAME} common geom pugixml fmt)
 
-target_link_libraries(${PROJECT_NAME} pugixml)
+target_link_libraries(${PROJECT_NAME} pugixml fmt)
 
 target_include_directories(
     ${PROJECT_NAME} PUBLIC
@@ -24,7 +25,7 @@ target_include_directories(
 )
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(common geom pugixml)
+ament_export_dependencies(common geom pugixml fmt)
 
 install(
     TARGETS ${PROJECT_NAME}

@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
-#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -16,136 +15,110 @@
 
 namespace truck::sdd {
 
-enum class Color {
-    Black,
-    Silver,
-    Gray,
-    White,
-    Marron,
-    Red,
-    Purple,
-    Fuchsia,
-    Green,
-    Lime,
-    Olive,
-    Yellow,
-    Navy,
-    Blue,
-    Teal,
-    Aqua
+namespace color {
+
+struct RGB {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
 };
+
+constexpr auto black = RGB(0, 0, 0);
+constexpr auto silver = RGB(192, 192, 192);
+constexpr auto gray = RGB(128, 128, 128);
+constexpr auto white = RGB(255, 255, 255);
+constexpr auto maroon = RGB(128, 0, 0);
+constexpr auto red = RGB(255, 0, 0);
+constexpr auto purple = RGB(128, 0, 128);
+constexpr auto fuchsia = RGB(255, 0, 255);
+constexpr auto green = RGB(0, 128, 0);
+constexpr auto lime = RGB(0, 255, 0);
+constexpr auto olive = RGB(128, 128, 0);
+constexpr auto yellow = RGB(255, 255, 0);
+constexpr auto navy = RGB(0, 0, 128);
+constexpr auto blue = RGB(0, 0, 255);
+constexpr auto teal = RGB(0, 128, 128);
+constexpr auto aqua = RGB(0, 255, 255);
+
+}  // namespace color
 
 struct Size {
     size_t width = 512;
     size_t height = 512;
 };
 
-struct Description {
-    std::string id = "";
-    Color color = Color::Black;
+struct Marker {
+    enum class Shape : uint8_t { Circle, Square };
+
+    geom::Vec2 point;
+    Shape shape = Shape::Circle;
+    double scale = 1.0;
+    color::RGB color = color::black;
+    std::string label = "";
 };
 
-struct MarkerDescription final : public Description {
-    enum class Type { Circle, Square };
-    Type type = Type::Circle;
+struct Pose {
+    geom::Pose pose;
+    double scale = 1.0;
+    double length = 1.0;
+    color::RGB color = color::black;
+    std::string label = "";
+};
+
+struct Polyline {
+    geom::Polyline polyline;
+    double thickness = 1.0;
+    color::RGB color = color::black;
+    std::string label = "";
+};
+
+struct Polygon {
+    geom::Polygon polygon;
+    double border_thickness = 0.0;
+    bool fill = true;
+    color::RGB color = color::black;
+    std::string label = "";
+};
+
+struct ComplexPolygon {
+    geom::ComplexPolygon complex_polygon;
+    double border_thickness = 0.0;
+    bool fill = true;
+    color::RGB color = color::black;
+    std::string label = "";
 };
 
 class SDD {
   public:
     SDD() = delete;
 
-    SDD(std::string_view input_path, std::string_view output_path);
+    SDD(const std::string& input_path, const std::string& output_path);
 
-    SDD(std::string_view path);
+    SDD(const std::string& path);
 
-    SDD(const Size& size, std::string_view output_path);
+    SDD(const Size& size, const std::string& output_path);
 
-    void DrawMarker(
-        const geom::Vec2& point,
-        const MarkerDescription& description = MarkerDescription()) noexcept;
+    SDD& Add(const Marker& marker) noexcept;
 
-    void DrawPose(const geom::Pose& pose, const Description& description = Description()) noexcept;
+    SDD& Add(const geom::Vec2& point) noexcept;
 
-    void DrawPolyline(
-        const geom::Polyline& polyline, const Description& description = Description()) noexcept;
+    SDD& Add(const Pose& pose) noexcept;
 
-    void DrawPolygon(
-        const geom::Polygon& polygon, const Description& description = Description()) noexcept;
+    SDD& Add(const geom::Pose& pose) noexcept;
 
-    void DrawComplexPolygon(
-        const geom::ComplexPolygon& polygon,
-        const Description& description = Description()) noexcept;
+    SDD& Add(const Polyline& polyline) noexcept;
 
-    geom::Vec2 FindMarker(std::string_view id) const;
+    SDD& Add(const geom::Polyline& polyline) noexcept;
 
-    geom::Pose FindPose(std::string_view id) const;
+    SDD& Add(const Polygon& polygon) noexcept;
 
-    geom::Polyline FindPolyline(std::string_view id) const;
+    SDD& Add(const geom::Polygon& polygon) noexcept;
 
-    geom::Polygon FindPolygon(std::string_view id) const;
+    SDD& Add(const ComplexPolygon& polygon) noexcept;
 
-    geom::ComplexPolygon FindComplexPolygon(std::string_view id) const;
+    SDD& Add(const geom::ComplexPolygon& polygon) noexcept;
 
     Size GetSize() const noexcept;
-
-    template<typename T>
-    static std::enable_if_t<std::is_arithmetic_v<T>, std::string> ToString(const T& value) {
-        std::stringstream sstream;
-        sstream << value;
-        return sstream.str();
-    }
-
-    static std::string ToString(const Color& value);
-
-    template<typename T>
-    static std::enable_if_t<std::is_base_of_v<std::vector<geom::Vec2>, T>, std::string> ToString(
-        const T& value) {
-        std::stringstream sstream;
-        for (auto it = value.begin(); it != value.end(); ++it) {
-            sstream << it->x << ',' << it->y;
-            if (it + 1 != value.end()) {
-                sstream << ' ';
-            }
-        }
-        return sstream.str();
-    }
-
-    static std::string ToString(geom::ComplexPolygon value);
-
-    template<typename T>
-    static std::enable_if_t<std::is_base_of_v<std::vector<geom::Vec2>, T>, T> FromString(
-        std::string_view data) {
-        T object;
-        auto comma_it = std::find(data.begin(), data.end(), ',');
-        while (comma_it != data.end()) {
-            auto coord_x_rbegin = std::find_if(
-                std::make_reverse_iterator(comma_it + 1), data.rend(), [](const char ch) -> bool {
-                    return std::isdigit(ch);
-                });
-            auto coord_x_rend =
-                std::find_if(coord_x_rbegin, data.rend(), [](const char ch) -> bool {
-                    return std::isspace(ch);
-                });
-            auto coord_y_begin = std::find_if(comma_it, data.end(), [](const char ch) -> bool {
-                return std::isdigit(ch) || (ch == '-');
-            });
-            auto coord_y_end = std::find_if(
-                coord_y_begin, data.end(), [](const char ch) -> bool { return std::isspace(ch); });
-            geom::Vec2 point;
-            std::stringstream(
-                data.substr(coord_x_rend.base() - data.begin(), coord_x_rend - coord_x_rbegin)
-                    .data()) >>
-                point.x;
-            std::stringstream(
-                data.substr(coord_y_begin - data.begin(), coord_y_end - coord_y_begin).data()) >>
-                point.y;
-            object.push_back(point);
-            comma_it = std::find(comma_it + 1, data.end(), ',');
-        }
-        return object;
-    }
-
-    static geom::ComplexPolygon FromString(std::string_view data);
 
     ~SDD();
 
@@ -157,5 +130,10 @@ class SDD {
     pugi::xml_document doc_;
     pugi::xml_node root_;
 };
+
+template<typename T>
+SDD& operator<<(SDD& img, const T& obj) {
+    return img.Add(obj);
+}
 
 }  // namespace truck::sdd
