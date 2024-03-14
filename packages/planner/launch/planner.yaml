@@ -1,0 +1,21 @@
+launch:
+  - arg: { name: "routing_mode", default: "true" }
+  - node:
+      pkg: "planner"
+      exec: "planner_node"
+      name: "planner_node"
+      output: "log"
+      param:
+        - { name: "routing_mode", value: "$(var routing_mode)" }
+
+        - name: "routing_mesh"
+          param:
+            - { name: "width", value: 4.0 }
+            - { name: "dist", value: 0.4 }
+            - { name: "offset", value: 0.4 }
+            - { name: "border_radius", value: 3.0 }
+        
+        - name: "lattice_mesh"
+          param:
+            - { name: "dist", value: 0.4 }
+            - { name: "radius", value: 3.0 }
