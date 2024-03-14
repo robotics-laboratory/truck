@@ -1,83 +1,73 @@
 #pragma once
 
-#include "planner/search.h"
-
-#include "geom/msg.h"
-#include "model/model.h"
-#include "collision/collision_checker.h"
+#include "geom/polyline.h"
+#include "truck_msgs/msg/navigation_route.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
-#include <nav_msgs/msg/occupancy_grid.h>
-#include <tf2_msgs/msg/tf_message.hpp>
 #include <visualization_msgs/msg/marker.hpp>
-#include <geometry_msgs/msg/point_stamped.hpp>
 
 #include <rclcpp/rclcpp.hpp>
-#include <tf2_ros/qos.hpp>
-#include <tf2_ros/buffer.h>
 
-namespace truck::planner::visualization {
+#include <optional>
+
+namespace truck::planner::node {
+
+struct RoutingMeshParams {
+    double width;
+    double dist;
+    double offset;
+    double border_radius;
+};
+
+struct LatticeMeshParams {
+    double dist;
+    double radius;
+};
 
 class PlannerNode : public rclcpp::Node {
   public:
     PlannerNode();
 
   private:
-    void onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+    void initializeParams();
+    void initializeTopicHandlers();
+
     void onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg);
-    void onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg);
-    void onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
+    void onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg);
 
-    std_msgs::msg::ColorRGBA getNodeColor(size_t node_index) const;
+    void makePlannerTick();
 
-    void publishGrid() const;
-
-    std::optional<geom::Transform> getLatestTranform(
-        const std::string& source, const std::string& target);
-
-    void doPlanningLoop();
+    void publishMesh() const;
+    void publishTrajectory() const;
 
     struct Slots {
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
-        rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr clicked_point = nullptr;
-        rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_grid = nullptr;
-        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
-        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
-    } slot_;
+        rclcpp::Subscription<truck_msgs::msg::NavigationRoute>::SharedPtr route = nullptr;
+    } slots_;
 
-    struct Signal {
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr graph = nullptr;
-    } signal_;
+    struct Signals {
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr mesh = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr trajectory = nullptr;
+    } signals_;
 
     struct State {
-        std::shared_ptr<search::Grid> grid = nullptr;
-        std::shared_ptr<collision::Map> distance_transform = nullptr;
-
-        nav_msgs::msg::Odometry::SharedPtr odom = nullptr;
-        nav_msgs::msg::OccupancyGrid::SharedPtr occupancy_grid = nullptr;
-
-        std::optional<geom::Pose> ego_pose = std::nullopt;
-        std::optional<geom::Circle> finish_area = std::nullopt;
+        std::optional<geom::Pose> ego = std::nullopt;
+        std::optional<std::vector<geom::Vec2>> mesh = std::nullopt;
+        std::optional<geom::Polyline> route = std::nullopt;
+        std::optional<geom::Polyline> trajectory = std::nullopt;
     } state_;
 
-    struct Parameters {
-        search::GridParams grid;
+    struct Params {
+        enum class PlannerMode : uint8_t {
+            routingMesh = 0,
+            latticeMesh = 1
+        } mode;
 
-        struct NodeParams {
-            double z_lev;
-            double scale;
-            std_msgs::msg::ColorRGBA base_color;
-            std_msgs::msg::ColorRGBA ego_color;
-            std_msgs::msg::ColorRGBA finish_color;
-            std_msgs::msg::ColorRGBA finish_area_color;
-            std_msgs::msg::ColorRGBA collision_color;
-        } node;
+        RoutingMeshParams routing_mesh;
+        LatticeMeshParams lattice_mesh;
     } params_;
 
-    std::unique_ptr<model::Model> model_ = nullptr;
-    std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
-    std::shared_ptr<collision::StaticCollisionChecker> checker_ = nullptr;
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 };
 
-}  // namespace truck::planner::visualization
+}  // namespace truck::planner::node

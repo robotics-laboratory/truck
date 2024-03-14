@@ -1,217 +1,193 @@
 #include "planner/planner_node.h"
 
-namespace truck::planner::visualization {
+#include "common/math.h"
+#include "geom/rtree.h"
+#include "geom/msg.h"
+#include "geom/distance.h"
 
-using namespace std::chrono_literals;
-using namespace std::placeholders;
+namespace truck::planner::node {
 
 namespace {
 
-std_msgs::msg::ColorRGBA toColorRGBA(const std::vector<double>& vector) {
-    VERIFY(vector.size() == 4);
+geom::Polyline toPolyline(const truck_msgs::msg::NavigationRoute& msg) {
+    geom::Polyline polyline;
 
-    std_msgs::msg::ColorRGBA color;
-    color.a = vector[0];
-    color.r = vector[1];
-    color.g = vector[2];
-    color.b = vector[3];
-    return color;
+    for (const auto& point : msg.data) {
+        polyline.emplace_back(geom::toVec2(point));
+    }
+
+    return polyline;
 }
 
-} // namespace
+std::vector<geom::Vec2> buildRoutingMesh(
+    const RoutingMeshParams& params, const geom::Vec2& ego, const geom::Polyline& route) {
+    geom::RTree rtree_mesh_points;
+    size_t half_points_count = floor<size_t>(0.5 * params.width / params.dist);
+
+    auto addOrthogonalMeshFromPose = [&](const geom::Pose& pose) {
+        rtree_mesh_points.insert(geom::toRTreeIndexedPoint(pose.pos, rtree_mesh_points.size()));
+
+        for (size_t i = 1; i < half_points_count + 1; i++) {
+            geom::AngleVec2 PI_2 = geom::AngleVec2(geom::Angle(geom::PI_2));
+            geom::Vec2 left = pose.pos + (i * params.dist) * (pose.dir - PI_2);
+            geom::Vec2 right = pose.pos + (i * params.dist) * (pose.dir + PI_2);
+
+            rtree_mesh_points.insert(geom::toRTreeIndexedPoint(left, rtree_mesh_points.size()));
+            rtree_mesh_points.insert(geom::toRTreeIndexedPoint(right, rtree_mesh_points.size()));
+        }
+    };
+
+    auto route_uniform_it = route.ubegin(params.offset);
+    geom::Pose cur_pose = *route_uniform_it;
+
+    addOrthogonalMeshFromPose(cur_pose);
+
+    route_uniform_it++;
+    geom::Pose next_pose = *route_uniform_it;
+
+    const double threshold = 0.05;
+
+    while (params.offset - geom::distance(cur_pose.pos, next_pose.pos) < threshold) {
+        addOrthogonalMeshFromPose(next_pose);
+        cur_pose = next_pose;
+        route_uniform_it++;
+        next_pose = *route_uniform_it;
+    }
+
+    return geom::toVec2Array(
+        geom::RTreeSearchInsideBox(rtree_mesh_points, ego, params.border_radius));
+}
+
+std::vector<geom::Vec2> buildLatticeMesh(const LatticeMeshParams& params, const geom::Vec2& ego) {
+    std::vector<geom::Vec2> mesh_points;
+
+    auto snapPoint = [&](const geom::Vec2& point) {
+        return geom::Vec2(
+            round<double>(point.x / params.dist) * params.dist,
+            round<double>(point.y / params.dist) * params.dist);
+    };
+
+    geom::Vec2 lattice_origin = snapPoint(geom::Vec2(ego.x - params.radius, ego.y - params.radius));
+    size_t points_count = floor<size_t>(params.radius / params.dist) * 2 + 1;
+
+    for (size_t i = 0; i < points_count; i++) {
+        for (size_t j = 0; j < points_count; j++) {
+            geom::Vec2 mesh_point = lattice_origin + (geom::Vec2(i, j) * params.dist);
+            mesh_points.emplace_back(mesh_point);
+        }
+    }
+
+    return mesh_points;
+}
+
+}  // namespace
+
+using namespace std::placeholders;
+using namespace std::chrono_literals;
 
 PlannerNode::PlannerNode() : Node("planner") {
+    initializeParams();
+    initializeTopicHandlers();
+}
+
+void PlannerNode::initializeParams() {
+    bool routing_mode = this->declare_parameter<bool>("routing_mode");
+    params_.mode = (routing_mode == true) ? Params::PlannerMode::routingMesh
+                                          : Params::PlannerMode::latticeMesh;
+
+    params_.routing_mesh = {
+        .width = this->declare_parameter<double>("routing_mesh.width"),
+        .dist = this->declare_parameter<double>("routing_mesh.dist"),
+        .offset = this->declare_parameter<double>("routing_mesh.offset"),
+        .border_radius = this->declare_parameter<double>("routing_mesh.border_radius")};
+
+    params_.lattice_mesh = {
+        .dist = this->declare_parameter<double>("lattice_mesh.dist"),
+        .radius = this->declare_parameter<double>("lattice_mesh.radius")};
+
+    if (routing_mode == true) {
+        RCLCPP_INFO(this->get_logger(), "routing_mesh width: %.2f m", params_.routing_mesh.width);
+        RCLCPP_INFO(this->get_logger(), "routing_mesh dist: %.2f m", params_.routing_mesh.dist);
+        RCLCPP_INFO(this->get_logger(), "routing_mesh offset: %.2f m", params_.routing_mesh.offset);
+        RCLCPP_INFO(
+            this->get_logger(),
+            "routing_mesh border_radius: %.2f m",
+            params_.routing_mesh.border_radius);
+    } else {
+        RCLCPP_INFO(this->get_logger(), "lattice_mesh dist: %.2f m", params_.lattice_mesh.dist);
+        RCLCPP_INFO(this->get_logger(), "lattice_mesh radius: %.2f m", params_.lattice_mesh.radius);
+    }
+}
+
+void PlannerNode::initializeTopicHandlers() {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
 
-    slot_.odom = this->create_subscription<nav_msgs::msg::Odometry>(
+    slots_.odom = this->create_subscription<nav_msgs::msg::Odometry>(
         "/ekf/odometry/filtered",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&PlannerNode::onOdometry, this, _1));
 
-    slot_.clicked_point = this->create_subscription<geometry_msgs::msg::PointStamped>(
-        "/clicked_point",
+    slots_.route = Node::create_subscription<truck_msgs::msg::NavigationRoute>(
+        "/navigation/route",
         rclcpp::QoS(1).reliability(qos),
-        bind(&PlannerNode::onFinishPoint, this, _1));
+        std::bind(&PlannerNode::onRoute, this, _1));
 
-    slot_.occupancy_grid = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
-        "/grid", 1, std::bind(&PlannerNode::onGrid, this, _1));
+    signals_.mesh = this->create_publisher<visualization_msgs::msg::Marker>(
+        "/planner/mesh", rclcpp::QoS(1).reliability(qos));
 
-    using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
+    signals_.trajectory = this->create_publisher<visualization_msgs::msg::Marker>(
+        "/planner/trajectory", rclcpp::QoS(1).reliability(qos));
 
-    TfCallback tf_call = std::bind(&PlannerNode::onTf, this, _1, false);
-    TfCallback static_tf_callback = std::bind(&PlannerNode::onTf, this, _1, true);
-
-    slot_.tf = this->create_subscription<tf2_msgs::msg::TFMessage>(
-        "/tf", tf2_ros::DynamicListenerQoS(100), tf_call);
-
-    slot_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
-        "/tf_static", tf2_ros::StaticListenerQoS(100), static_tf_callback);
-
-    signal_.graph = this->create_publisher<visualization_msgs::msg::Marker>("/graph", 10);
-
-    search::GridParams grid_params = search::GridParams{
-        .width = this->declare_parameter<int>("grid/nodes/width", 40),
-        .height = this->declare_parameter<int>("grid/nodes/height", 40),
-        .resolution = this->declare_parameter<double>("grid/resolution"),
-        .finish_area_radius = this->declare_parameter<double>("grid/finish_area_radius"),
-        .min_obstacle_distance = this->declare_parameter<double>("grid/min_obstacle_distance"),
-    };
-
-    params_ = Parameters{
-        .grid = grid_params,
-
-        .node = Parameters::NodeParams{
-            .z_lev = this->declare_parameter<double>("node/z-lev"),
-            .scale = this->declare_parameter<double>("node/scale"),
-
-            .base_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/base/color_rgba")),
-
-            .ego_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/ego/color_rgba")),
-
-            .finish_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/finish/color_rgba")),
-
-            .finish_area_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/finish_area/color_rgba")),
-
-            .collision_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/collision/color_rgba")),
-        }};
-
-    model_ = std::make_unique<model::Model>(
-        model::load(this->get_logger(), this->declare_parameter("model_config", "")));
-
-    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
-    tf_buffer_->setUsingDedicatedThread(true);
-
-    checker_ = std::make_shared<collision::StaticCollisionChecker>(model_->shape());
-
-    timer_ = this->create_wall_timer(200ms, bind(&PlannerNode::doPlanningLoop, this));
-}
-
-void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
-    if (!state_.odom) {
-        return;
-    }
-
-    const auto source = msg->header.frame_id;
-    const auto target = state_.odom->header.frame_id;
-
-    const auto tf_opt = getLatestTranform(source, target);
-    if (!tf_opt) {
-        RCLCPP_WARN(
-            this->get_logger(),
-            "Ignore grid, there is no transform from '%s' -> '%s'!",
-            source.c_str(),
-            target.c_str());
-        return;
-    }
-
-    msg->header.frame_id = target;
-    msg->info.origin = geom::msg::toPose(tf_opt->apply(geom::toPose(msg->info.origin)));
-
-    state_.distance_transform = std::make_shared<collision::Map>(
-        collision::distanceTransform(collision::Map::fromOccupancyGrid(*msg)));
-
-    state_.occupancy_grid = msg;
-
-    // update collision checker
-    checker_->reset(*state_.distance_transform);
+    timer_ = this->create_wall_timer(250ms, std::bind(&PlannerNode::makePlannerTick, this));
 }
 
 void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
-    state_.odom = msg;
-    state_.ego_pose = geom::toPose(*msg);
+    state_.ego = geom::toPose(*msg);
 }
 
-void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
-    state_.finish_area =
-        geom::Circle{.center = geom::toVec2(*msg), .radius = params_.grid.finish_area_radius};
+void PlannerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg) {
+    state_.route = toPolyline(*msg);
 }
 
-void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
-    static const std::string authority = "";
-    for (const auto& transform : msg->transforms) {
-        tf_buffer_->setTransform(transform, authority, is_static);
-    }
-}
-
-std_msgs::msg::ColorRGBA PlannerNode::getNodeColor(size_t node_index) const {
-    const auto& node = state_.grid->getNodeByIndex(node_index);
-
-    std_msgs::msg::ColorRGBA node_color = params_.node.base_color;
-
-    if (node.finish_area) {
-        node_color = params_.node.finish_area_color;
-
-        if (node.finish) {
-            node_color = params_.node.finish_color;
-        }
-    }
-
-    if (node.collision) {
-        node_color = params_.node.collision_color;
-    }
-
-    if (node.ego) {
-        node_color = params_.node.ego_color;
-    }
-
-    return node_color;
-}
-
-void PlannerNode::publishGrid() const {
-    visualization_msgs::msg::Marker msg;
-    msg.header.stamp = now();
-    msg.header.frame_id = "odom_ekf";
-    msg.id = 0;
-    msg.type = visualization_msgs::msg::Marker::POINTS;
-    msg.action = visualization_msgs::msg::Marker::ADD;
-    msg.lifetime = rclcpp::Duration::from_seconds(0);
-
-    msg.scale.x = params_.node.scale;
-    msg.scale.y = params_.node.scale;
-    msg.scale.z = params_.node.scale;
-    msg.pose.position.z = params_.node.z_lev;
-
-    const std::vector<search::Node>& nodes = state_.grid->getNodes();
-
-    for (size_t i = 0; i < nodes.size(); i++) {
-        msg.points.push_back(geom::msg::toPoint(nodes[i].point));
-        msg.colors.push_back(getNodeColor(i));
-    }
-
-    signal_.graph->publish(msg);
-}
-
-std::optional<geom::Transform> PlannerNode::getLatestTranform(
-    const std::string& source, const std::string& target) {
-    try {
-        return geom::toTransform(tf_buffer_->lookupTransform(target, source, rclcpp::Time(0)));
-    } catch (const tf2::TransformException& ex) {
-        return std::nullopt;
-    }
-}
-
-void PlannerNode::doPlanningLoop() {
-    if (!checker_->initialized() || !state_.ego_pose.has_value() ||
-        !state_.finish_area.has_value()) {
+void PlannerNode::makePlannerTick() {
+    if (!state_.route.has_value() || !state_.ego.has_value()) {
         return;
     }
 
-    // initialize grid
-    state_.grid = std::make_shared<search::Grid>(
-        search::Grid(params_.grid, model_->shape())
-            .setEgoPose(state_.ego_pose.value())
-            .setFinishArea(state_.finish_area.value())
-            .setCollisionChecker(checker_)
-            .build());
+    if (params_.mode == Params::PlannerMode::routingMesh) {
+        state_.mesh = buildRoutingMesh(params_.routing_mesh, (*state_.ego).pos, *state_.route);
+    } else {
+        state_.mesh = buildLatticeMesh(params_.lattice_mesh, (*state_.ego).pos);
+    }
 
-    // visualize grid
-    publishGrid();
+    publishMesh();
 }
 
-}  // namespace truck::planner::visualization
+void PlannerNode::publishMesh() const {
+    if (!state_.mesh.has_value()) {
+        return;
+    }
+
+    visualization_msgs::msg::Marker msg;
+    msg.header.stamp = now();
+    msg.header.frame_id = "odom_ekf";
+    msg.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.color.a = 1.0;
+    msg.color.r = 1.0;
+    msg.scale.x = 0.1;
+    msg.scale.y = 0.1;
+    msg.scale.z = 0.1;
+    msg.pose.position.z = 0.01;
+
+    for (const auto& point : *state_.mesh) {
+        msg.points.emplace_back(geom::msg::toPoint(point));
+    }
+
+    signals_.mesh->publish(msg);
+}
+
+void PlannerNode::publishTrajectory() const {}
+
+}  // namespace truck::planner::node

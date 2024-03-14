@@ -6,32 +6,23 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geom REQUIRED)
-find_package(model REQUIRED)
-find_package(collision REQUIRED)
+find_package(truck_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(visualization_msgs REQUIRED)
-find_package(tf2 REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(Boost REQUIRED)
+find_package(common REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node
     src/main.cpp
     src/planner_node.cpp
-    src/search.cpp
 )
 
 ament_target_dependencies(
     ${PROJECT_NAME}_node
     rclcpp
     geom
-    model
-    collision
+    truck_msgs
     nav_msgs
-    visualization_msgs
-    tf2
-    tf2_ros
-    Boost
+    common
 )
 
 install(
