@@ -91,40 +91,6 @@ void manhattanDistance(
 }
 
 void manhattanDistance(
-    const F32Grid& distance_transform, const std::vector<geom::Vec2>& sources, float eps,
-    int* queue_buf, F32Grid& manhattan_distance) {
-    ArrayAsQueue<int> queue(queue_buf);
-    for (const auto& source : sources) {
-        const auto origin_index = *VERIFY(distance_transform.tryGetPlainIndex(source));
-        queue.push(origin_index);
-    }
-    manhattanDistance(distance_transform, eps, queue_buf, queue.size(), manhattan_distance);
-}
-
-void manhattanDistance(
-    const F32Grid& distance_transform, const std::vector<geom::Vec2>& sources, float eps,
-    F32Grid& manhattan_distance) {
-    std::vector<int> queue_buf(distance_transform.size());
-    manhattanDistance(distance_transform, sources, eps, queue_buf.data(), manhattan_distance);
-}
-
-F32GridHolder manhattanDistance(
-    const F32Grid& distance_transform, ArrayAsQueue<int>& queue, float eps) {
-    F32GridHolder result = makeGridLike<float>(distance_transform);
-    manhattanDistance(distance_transform, queue, eps, *result);
-    return result;
-}
-
-void manhattanDistance(
-    const F32Grid& distance_transform, const geom::Vec2& source, float eps, int* queue_buf,
-    F32Grid& manhattan_distance) {
-    ArrayAsQueue<int> queue(queue_buf);
-    const auto origin_index = *VERIFY(distance_transform.tryGetPlainIndex(source));
-    queue.push(origin_index);
-    manhattanDistance(distance_transform, queue, eps, manhattan_distance);
-}
-
-void manhattanDistance(
     const F32Grid& distance_transform, const geom::Vec2& source, float eps,
     F32Grid& manhattan_distance) {
     std::vector<int> queue_buf(distance_transform.size());
