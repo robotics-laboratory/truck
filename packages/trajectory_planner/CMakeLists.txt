@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.8)
 project(trajectory_planner)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)   
+add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-unused-parameter -Wno-inconsistent-missing-override)   
 
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
 
 add_library(
-    ${PROJECT_NAME} SHARED src/sampler.cpp
+    ${PROJECT_NAME} SHARED src/sampler.cpp src/planner.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME} common geom)
@@ -38,6 +38,8 @@ install(
 if(BUILD_TESTING)
     find_package(ament_cmake_clang_format REQUIRED)
     ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+
+    add_subdirectory("benchmark")
 endif()
 
 ament_package()

@@ -1,0 +1,10 @@
+2024-03-10T16:37:46+00:00
+Running build/trajectory_planner/benchmark/trajectory_planner_benchmarks
+Run on (8 X 48 MHz CPU s)
+Load Average: 3.13, 3.12, 2.98
+***WARNING*** Library was built as DEBUG. Timings may be affected.
+------------------------------------------------------------------------------------
+Benchmark                                          Time             CPU   Iterations
+------------------------------------------------------------------------------------
+RTreeFixture/RTree/iterations:5/real_time       1620 ms         1620 ms            5
+HNSWFixture/HNSW/iterations:5/real_time         1013 ms         1013 ms            5
