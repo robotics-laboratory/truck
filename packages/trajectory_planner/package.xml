@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>trajectory_planner</name>
+  <version>0.0.0</version>
+  <description>trajectory_planner</description>
+  <maintainer email="thenromanov@gmail.com">Nikita Romanov</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>common</depend>
+  <depend>geom</depend>
+  <depend>motion</depend>
+
+  <test_depend>ament_cmake_lint_cmake</test_depend>
+  <test_depend>ament_cmake_clang_format</test_depend>
+</package>
