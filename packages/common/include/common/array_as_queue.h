@@ -32,6 +32,8 @@ class ArrayAsQueue {
 
     bool empty() const noexcept { return head_ == tail_; }
 
+    T* data() noexcept { return head_; }
+
   private:
     T* head_;
     T* tail_;

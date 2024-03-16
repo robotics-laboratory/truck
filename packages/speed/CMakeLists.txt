@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(speed)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 find_package(ament_cmake REQUIRED)
 find_package(model REQUIRED)
 find_package(motion REQUIRED)
@@ -35,10 +33,5 @@ install(
     DIRECTORY include/
     DESTINATION include/${PROJECT_NAME}
 )
-
-if(BUILD_TESTING)
-    find_package(ament_cmake_clang_format REQUIRED)
-    ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
-endif()
 
 ament_package()

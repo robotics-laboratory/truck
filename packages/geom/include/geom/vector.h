@@ -3,7 +3,7 @@
 #include "geom/angle.h"
 
 #include <cmath>
-#include <math.h>
+#include <cmath>
 #include <ostream>
 
 namespace truck::geom {
@@ -21,7 +21,7 @@ struct Vec2 {
 
     constexpr Vec2(double x, double y) : x(x), y(y) {}
 
-    static constexpr Vec2 fromAngle(Angle a) noexcept { return {cos(a), sin(a)}; }
+    static Vec2 fromAngle(Angle a) noexcept { return {cos(a), sin(a)}; }
 
     Vec2& operator+=(const Vec2& other) noexcept {
         x += other.x;
@@ -43,13 +43,13 @@ struct Vec2 {
         return {x - other.x, y - other.y};
     }
 
-    constexpr double lenSq() const noexcept { return x * x + y * y; }
+    double lenSq() const noexcept { return x * x + y * y; }
 
-    constexpr double len() const noexcept { return std::hypot(x, y); }
+    double len() const noexcept { return std::hypot(x, y); }
 
-    constexpr Angle angle() const noexcept { return Angle::fromVector(x, y); }
+    Angle angle() const noexcept { return Angle::fromVector(x, y); }
 
-    constexpr Vec2 unit() const noexcept {
+    Vec2 unit() const noexcept {
         const double l = len();
         return Vec2{x / l, y / l};
     }
@@ -91,9 +91,9 @@ constexpr double dot(const Vec2& a, const Vec2& b) noexcept { return a.x * b.x +
 
 constexpr double cross(const Vec2& a, const Vec2& b) noexcept { return a.x * b.y - a.y * b.x; }
 
-constexpr double lenSq(const Vec2& v) noexcept { return v.lenSq(); }
+inline double lenSq(const Vec2& v) noexcept { return v.lenSq(); }
 
-constexpr double len(const Vec2& v) noexcept { return v.len(); }
+inline double len(const Vec2& v) noexcept { return v.len(); }
 
 bool equal(const Vec2& a, const Vec2& b, double eps = 0) noexcept;
 

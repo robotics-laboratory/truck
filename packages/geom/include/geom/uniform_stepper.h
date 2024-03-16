@@ -11,7 +11,7 @@ template<typename Container>
 class UniformStepper {
   public:
     using IteratorCategory = std::forward_iterator_tag;
-    using ContainerIterator = Container::const_iterator;
+    using ContainerIterator = typename Container::const_iterator;
 
     UniformStepper() = delete;
 

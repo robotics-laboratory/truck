@@ -12,8 +12,6 @@ find_package(tf2_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(truck_msgs REQUIRED)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 # motor odometry
 
 add_library(

@@ -6,6 +6,7 @@
 #include "fastgrid/distance_transform.h"
 #include "fastgrid/interpolation.h"
 #include "fastgrid/draw.h"
+#include "common/array_as_queue.h"
 #include "geom/common.h"
 #include "geom/pose.h"
 
@@ -14,6 +15,7 @@
 #include <memory>
 #include <vector>
 
+using namespace truck;
 using namespace truck::geom;
 using namespace truck::fastgrid;
 
@@ -276,6 +278,40 @@ TEST(ManhattanDistance, case_4) {
     EXPECT_EQ(result.grid[4][4], unreachable);
 }
 
+TEST(ManhattanDistance, case_5) {
+    const float unreachable = std::numeric_limits<float>::max();
+
+    const Size size = {.width = 2, .height = 3};
+    const double resolution = 1.0;
+    const Pose origin = {{0, 0}, AngleVec2::fromVector(1, 0)};
+
+    auto holder = makeGrid<float>(size, resolution, origin);
+    auto& grid = *holder;
+
+    grid[0][0] = 0;
+    grid[0][1] = 1;
+    grid[1][0] = 1;
+    grid[1][1] = sqrt(2);
+    grid[2][0] = 2;
+    grid[2][1] = sqrt(5);
+
+    const auto sources = std::vector<Vec2>{{0.5, 1.5}, {1.5, 2.5}};
+    std::vector<int> queue_buf(grid.size());
+    ArrayAsQueue<int> queue(queue_buf.data());
+    for (const auto& source : sources) {
+        const auto index = *VERIFY(grid.tryGetPlainIndex(source));
+        queue.push(index);
+    }
+    const F32GridHolder result = manhattanDistance(grid, queue, 0.5);
+
+    EXPECT_EQ(result.grid[0][0], unreachable);
+    EXPECT_EQ(result.grid[0][1], 2);
+    EXPECT_EQ(result.grid[1][0], 0);
+    EXPECT_EQ(result.grid[1][1], 1);
+    EXPECT_EQ(result.grid[2][0], 1);
+    EXPECT_EQ(result.grid[2][1], 0);
+}
+
 TEST(DistanceTranformApprox, case_1) {
     const Size size{.width = 10, .height = 10};
     const float resolution = 1.0;
@@ -420,7 +456,7 @@ TEST(BilinearInterpolation, case_2) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -440,7 +476,7 @@ TEST(BilinearInterpolation, case_3) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -458,7 +494,7 @@ TEST(BilinearInterpolation, case_4) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -476,7 +512,7 @@ TEST(BilinearInterpolation, case_5) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -494,7 +530,7 @@ TEST(BilinearInterpolation, case_6) {
 
     constexpr Size size{.width = 3, .height = 3};
     constexpr double resolution = 0.5;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(1, 2));
+    const Pose origin({0, 0}, AngleVec2::fromVector(1, 2));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 

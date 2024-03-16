@@ -23,8 +23,8 @@ Grid& Grid::build() {
     geom::Vec2 grid_origin_point =  \
         snapPoint(ego_pose_) - geom::Vec2(params_.width, params_.height) * (params_.resolution / 2);
 
-    for (int i = 0; i < params_.height; i++) {
-        for (int j = 0; j < params_.width; j++) {
+    for (size_t i = 0; i < params_.height; i++) {
+        for (size_t j = 0; j < params_.width; j++) {
             // initialize node
             Node node = Node{
                 .index = (i * params_.width) + j,

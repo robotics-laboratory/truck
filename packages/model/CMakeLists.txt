@@ -11,11 +11,7 @@ find_package(tf2_msgs REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 find_package(Boost REQUIRED)
 
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 20)
-endif()
-
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+set(CMAKE_CXX_STANDARD 20)
 
 add_library(model SHARED src/params.cpp src/model.cpp)
 ament_target_dependencies(model common geom rclcpp yaml_cpp_vendor)

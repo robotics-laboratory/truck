@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(fastgrid)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)   
-
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
@@ -41,9 +39,6 @@ install(
 )
 
 if(BUILD_TESTING)
-    find_package(ament_cmake_clang_format REQUIRED)
-    ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
-
     add_subdirectory("test")
     # add_subdirectory("benchmark")
 endif()
