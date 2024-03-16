@@ -1,10 +1,28 @@
-2024-03-10T16:37:46+00:00
-Running build/trajectory_planner/benchmark/trajectory_planner_benchmarks
-Run on (8 X 48 MHz CPU s)
-Load Average: 3.13, 3.12, 2.98
-***WARNING*** Library was built as DEBUG. Timings may be affected.
-------------------------------------------------------------------------------------
-Benchmark                                          Time             CPU   Iterations
-------------------------------------------------------------------------------------
-RTreeFixture/RTree/iterations:5/real_time       1620 ms         1620 ms            5
-HNSWFixture/HNSW/iterations:5/real_time         1013 ms         1013 ms            5
+{
+  "context": {
+    "date": "2024-03-16T12:09:48+00:00",
+    "host_name": "e19ece45a4b6",
+    "executable": "/truck/packages/build/trajectory_planner/benchmark/trajectory_planner_benchmarks",
+    "num_cpus": 8,
+    "mhz_per_cpu": 48,
+    "cpu_scaling_enabled": false,
+    "caches": [
+    ],
+    "load_avg": [3.17,3.48,2.7],
+    "library_build_type": "debug"
+  },
+  "benchmarks": [
+    {
+      "name": "RTreeFixture/RTree/iterations:3/real_time",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "RTreeFixture/RTree/iterations:3/real_time",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 3,
+      "real_time": 2.0028065563334774e+03,
+      "cpu_time": 2.0028029366666669e+03,
+      "time_unit": "ms"
+    }
