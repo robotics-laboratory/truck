@@ -8,55 +8,17 @@ namespace truck::routing {
 using namespace std::placeholders;
 using namespace std::chrono_literals;
 
-namespace {
-
-RTreePoint toRTreePoint(const geom::Vec2& point) { return RTreePoint(point.x, point.y); }
-
-RTreeIndexedPoint toRTreeIndexedPoint(const geom::Vec2& point, size_t index) {
-    return RTreeIndexedPoint(toRTreePoint(point), index);
-}
-
-RTree toRTree(const std::vector<geom::Vec2>& points) {
-    RTree rtree;
-
-    for (size_t i = 0; i < points.size(); i++) {
-        rtree.insert(toRTreeIndexedPoint(points[i], i));
-    }
-
-    return rtree;
-}
-
-RTree toRTree(const navigation::graph::Nodes& nodes) {
-    RTree rtree;
-
-    for (const auto& node : nodes) {
-        rtree.insert(toRTreeIndexedPoint(node.point, node.id));
-    }
-
-    return rtree;
-}
-
-size_t findNearestIndex(const RTree& rtree, const geom::Vec2& point) {
-    RTreeIndexedPoints rtree_indexed_points;
-
-    rtree.query(
-        bg::index::nearest(toRTreePoint(point), 1), std::back_inserter(rtree_indexed_points));
-
-    return rtree_indexed_points[0].second;
-}
-
-}  // namespace
-
 Route::Route() {}
 
-Route::Route(const geom::Polyline& polyline) : polyline(polyline), rtree(toRTree(polyline)) {}
+Route::Route(const geom::Polyline& polyline) : polyline(polyline), rtree(geom::toRTree(polyline)) {}
 
 double Route::distance(const geom::Vec2& point) const {
-    return geom::distance(point, polyline[findNearestIndex(rtree, point)]);
+    size_t index = geom::RTreeSearchKNN(rtree, point, 1)[0].second;
+    return geom::distance(point, polyline[index]);
 }
 
 size_t Route::postfixIndex(const geom::Vec2& point, double postfix) const {
-    size_t index = findNearestIndex(rtree, point);
+    size_t index = geom::RTreeSearchKNN(rtree, point, 1)[0].second;
     double cur_postfix = 0.0;
 
     while (cur_postfix < postfix && index > 0) {
@@ -69,11 +31,15 @@ size_t Route::postfixIndex(const geom::Vec2& point, double postfix) const {
 
 Cache::Cache() {}
 
-Cache::Cache(const navigation::graph::Graph& graph) : graph(graph), rtree(toRTree(graph.nodes)) {}
+Cache::Cache(const navigation::graph::Graph& graph) : graph(graph) {
+    for (const auto& node : graph.nodes) {
+        rtree.insert(geom::toRTreeIndexedPoint(node.point, node.id));
+    }
+}
 
 geom::Polyline Cache::findPath(const geom::Vec2& from, const geom::Vec2& to) const {
-    navigation::graph::NodeId from_id = findNearestIndex(rtree, from);
-    navigation::graph::NodeId to_id = findNearestIndex(rtree, to);
+    navigation::graph::NodeId from_id = geom::RTreeSearchKNN(rtree, from, 1)[0].second;
+    navigation::graph::NodeId to_id = geom::RTreeSearchKNN(rtree, to, 1)[0].second;
 
     return navigation::search::toPolyline(
         graph, navigation::search::findShortestPath(graph, from_id, to_id));
