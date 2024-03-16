@@ -8,21 +8,11 @@ find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(motion REQUIRED)
 
-include(FetchContent)
-FetchContent_Declare(
-  hnswlib  
-  GIT_REPOSITORY https://github.com/nmslib/hnswlib.git
-  GIT_TAG "origin/master"
-)
-FetchContent_MakeAvailable(hnswlib)
-
 add_library(
-    ${PROJECT_NAME} SHARED src/hnsw.cpp src/sampler.cpp src/rtree.cpp src/state.cpp src/planner.cpp
+    ${PROJECT_NAME} SHARED src/sampler.cpp src/rtree.cpp src/state.cpp src/planner.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME} common geom motion)
-
-target_link_libraries(${PROJECT_NAME} hnswlib)
 
 target_include_directories(
     ${PROJECT_NAME} PUBLIC
@@ -32,7 +22,7 @@ target_include_directories(
 )
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(common geom motion hnswlib)
+ament_export_dependencies(common geom motion)
 
 install(
     TARGETS ${PROJECT_NAME}
@@ -52,7 +42,6 @@ if(BUILD_TESTING)
     ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
 
     add_subdirectory("test")
-    # add_subdirectory("benchmark")
 endif()
 
 ament_package()

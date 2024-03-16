@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "trajectory_planner/hnsw.h"
 #include "trajectory_planner/state.h"
 #include "trajectory_planner/rtree.h"
 
@@ -47,7 +46,6 @@ States GenerateStates(const Constraints& constraints = {}) {
 
 }  // namespace
 
-/*
 TEST(RTree, Search) {
     const auto constraints = Constraints();
 
@@ -85,33 +83,6 @@ TEST(RTree, Search) {
             ASSERT_TRUE(std::find_if(result.begin(), result.end(), [&states, &i](const auto& p) {
                             return p.second == &states[i];
                         }) != result.end());
-        }
-    }
-}
-*/
-
-TEST(HNSW, Search) {
-    const auto constraints = Constraints();
-
-    auto states = GenerateStates(constraints);
-
-    SpatioTemporalHNSW hnsw(
-        constraints.velocity,
-        constraints.x.total_states * constraints.y.total_states * constraints.yaw.total_states);
-
-    for (size_t i = 0; i < states.size(); ++i) {
-        hnsw.Add(states[i], i);
-    }
-
-    {
-        std::vector<std::pair<double, size_t>> result;
-        for (size_t i = 0; i < states.size(); ++i) {
-            const double radius = 1;
-
-            result.clear();
-            hnsw.RangeSearch(states[i], radius, result);
-
-            ASSERT_GE(result.size(), 1);
         }
     }
 }
