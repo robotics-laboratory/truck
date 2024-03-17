@@ -258,7 +258,6 @@ TruckState SimulatorEngine::getTruckState() const {
         .odomBaseLinearVelocity(linear_velocity)
         .baseAngularVelocity(angular_velocity)
         .lidarRanges(std::move(lidar_ranges))
-        .rearAxleVelocity(rear_ax_state_[StateIndex::kLinearVelocity])
         .currentMotorRps(current_rps)
         .targetMotorRps(target_rps);
 }

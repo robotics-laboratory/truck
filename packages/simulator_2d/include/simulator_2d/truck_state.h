@@ -17,7 +17,6 @@ class TruckState {
     geom::Vec2 odomBaseLinearVelocity() const;
     double baseAngularVelocity() const;
     const std::vector<float>& lidarRanges() const;
-    double rearAxleVelocity() const;
     double currentMotorRps() const;
     double targetMotorRps() const;
 
@@ -29,7 +28,6 @@ class TruckState {
     TruckState& odomBaseLinearVelocity(const geom::Vec2& linear_velocity);
     TruckState& baseAngularVelocity(double angular_velocity);
     TruckState& lidarRanges(std::vector<float> lidar_ranges);
-    TruckState& rearAxleVelocity(double rear_axle_velocity);
     TruckState& currentMotorRps(double current_rps);
     TruckState& targetMotorRps(double target_rps);
 
@@ -43,7 +41,6 @@ class TruckState {
         geom::Vec2 base_odom_linear_velocity;
         double base_odom_angular_velocity;
         std::vector<float> lidar_ranges;
-        double rear_axle_velocity;
         double current_motor_rps;
         double target_motor_rps;
     } cache_;

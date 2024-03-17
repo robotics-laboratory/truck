@@ -131,19 +131,9 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     odom_msg.twist.twist.angular.z = angular_velocity;
 
     signals_.odometry->publish(odom_msg);
-}
 
-void SimulatorNode::publishHardwareOdometryMessage(const TruckState& truck_state) {
-    nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.frame_id = "base";
     odom_msg.child_frame_id = "base";
-    odom_msg.header.stamp = truck_state.time();
-
-    // Set the twist.
-    odom_msg.twist.twist.linear.x = truck_state.rearAxleVelocity();
-    constexpr double error = 0.001;
-    odom_msg.twist.covariance[0] = truck::squared(error);
-
     signals_.hardware_odometry->publish(odom_msg);
 }
 
@@ -222,7 +212,6 @@ void SimulatorNode::publishSimulationState() {
     const auto truck_state = engine_->getTruckState();
     publishTime(truck_state);
     publishOdometryMessage(truck_state);
-    publishHardwareOdometryMessage(truck_state);
     publishTransformMessage(truck_state);
     publishTelemetryMessage(truck_state);
     publishSimulationStateMessage(truck_state);
