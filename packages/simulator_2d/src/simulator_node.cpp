@@ -114,7 +114,7 @@ void SimulatorNode::publishTime(const TruckState& truck_state) {
 void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.frame_id = "odom_ekf";
-    odom_msg.child_frame_id = "odom_ekf";
+    odom_msg.child_frame_id = "base";
     odom_msg.header.stamp = truck_state.time();
 
     // Set the pose.
@@ -131,9 +131,6 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     odom_msg.twist.twist.angular.z = angular_velocity;
 
     signals_.odometry->publish(odom_msg);
-
-    odom_msg.header.frame_id = "base";
-    odom_msg.child_frame_id = "base";
     signals_.hardware_odometry->publish(odom_msg);
 }
 
