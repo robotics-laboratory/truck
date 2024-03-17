@@ -320,14 +320,14 @@ TEST(DistanceTranformApprox, case_1) {
     auto holder = makeGrid<uint8_t>(size, resolution, origin);
     auto& grid = *holder;
 
-    grid.SetTo(1);
+    grid.SetTo(0);
 
-    grid[1][4] = 0;
-    grid[2][7] = 0;
-    grid[3][7] = 0;
-    grid[4][1] = 0;
-    grid[5][5] = 0;
-    grid[6][7] = 0;
+    grid[1][4] = 1;
+    grid[2][7] = 1;
+    grid[3][7] = 1;
+    grid[4][1] = 1;
+    grid[5][5] = 1;
+    grid[6][7] = 1;
 
     std::vector<float> data3{
         4.2343,   3.2793,   2.3243,   1.36929,  0.955002, 1.36929,  2.3243,   1.91,    2.3243,
@@ -379,9 +379,9 @@ TEST(DistanceTranformApprox, case_2) {
     auto holder = makeGrid<uint8_t>(size, resolution, origin);
     auto& grid = *holder;
 
-    grid.SetTo(1);
-    grid[0][0] = 0;
-    grid[9][9] = 0;
+    grid.SetTo(0);
+    grid[0][0] = 1;
+    grid[9][9] = 1;
 
     std::vector<float> data3{
         0,       0.955002, 1.91,    2.86501, 3.82001, 4.77501, 5.73001, 6.68501, 7.64001,
