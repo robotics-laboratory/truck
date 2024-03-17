@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 project(speed)
 
 find_package(ament_cmake REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(model REQUIRED)
 find_package(motion REQUIRED)
 find_package(Boost REQUIRED)
