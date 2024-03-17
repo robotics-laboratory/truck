@@ -18,6 +18,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/IcpOdometryStat.msg
   msg/MemStat.msg
   msg/MetaData.msg
+  msg/NavigationMesh.msg
+  msg/NavigationRoute.msg
   msg/PerfStat.msg
   msg/Point.msg
   msg/PurePursuitStatus.msg

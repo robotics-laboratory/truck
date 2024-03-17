@@ -12,4 +12,5 @@
   <depend>geometry_msgs</depend>
   <depend>CGAL</depend>
   <depend>Boost</depend>
+  <depend>Eigen3</depend>
 </package>
