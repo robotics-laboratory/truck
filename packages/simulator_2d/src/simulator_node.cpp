@@ -60,7 +60,7 @@ void SimulatorNode::initializeTopicHandlers() {
 }
 
 void SimulatorNode::initializeCache(const std::unique_ptr<model::Model>& model) {
-    cache_.lidar_config.from_base = model->lidar().from_base;
+    cache_.lidar_config.tf = model->getLatestTranform("base", "lidar_link");
     cache_.lidar_config.angle_min = static_cast<float>(model->lidar().angle_min.radians());
     cache_.lidar_config.angle_max = static_cast<float>(model->lidar().angle_max.radians());
     cache_.lidar_config.angle_increment = static_cast<float>(model->lidar().angle_increment.radians());
@@ -150,12 +150,10 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
     odom_to_lidar_transform_msg.child_frame_id = "lidar_link";
     odom_to_lidar_transform_msg.header.stamp = truck_state.time();
 
-    odom_to_lidar_transform_msg.transform.translation.x 
-        = pose.pos.x + cache_.lidar_config.from_base.x;
-    odom_to_lidar_transform_msg.transform.translation.y 
-        = pose.pos.y + cache_.lidar_config.from_base.y;
-    odom_to_lidar_transform_msg.transform.rotation 
-        = odom_to_base_transform_msg.transform.rotation;
+    tf2::Transform odom_to_base;
+    tf2::fromMsg(odom_to_base_transform_msg.transform, odom_to_base);
+    const auto lidar_tf = odom_to_base * cache_.lidar_config.tf;
+    tf2::toMsg(lidar_tf, odom_to_lidar_transform_msg.transform);
 
     tf2_msgs::msg::TFMessage tf_msg;
     tf_msg.transforms.push_back(odom_to_base_transform_msg);

@@ -49,7 +49,7 @@ class SimulatorNode : public rclcpp::Node {
 
     struct Cache {
         struct LidarConfig {
-            geom::Vec2 from_base;
+            tf2::Transform tf;
             float angle_min;
             float angle_max;
             float angle_increment;

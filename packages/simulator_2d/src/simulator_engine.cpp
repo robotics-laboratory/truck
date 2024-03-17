@@ -24,7 +24,10 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
-    cache_.base_to_lidar = model_->lidar().from_base;
+    
+    const auto lidar_translation = model_->getLatestTranform("base", "lidar_link").getOrigin();
+    cache_.base_to_lidar.x = lidar_translation.x();
+    cache_.base_to_lidar.y = lidar_translation.y();
 
     const double angle_min_rad = model_->lidar().angle_min.radians();
     const double angle_max_rad = model_->lidar().angle_max.radians();

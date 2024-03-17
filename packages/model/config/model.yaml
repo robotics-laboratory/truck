@@ -14,12 +14,11 @@ wheel:
   width: 0.058            # m
 
 lidar:
-  from_base: { x: 0.0, y: 0.0 } # m
-  angle_min: 0.0                # deg
-  angle_max: 360.0              # deg
-  angle_increment: 0.1125       # deg
-  range_min: 0.0                # m
-  range_max: 25.0               # m
+  angle_min: 0.0          # deg
+  angle_max: 360.0        # deg
+  angle_increment: 0.1125 # deg
+  range_min: 0.0          # m
+  range_max: 25.0         # m
 
 limits:
   steering: { inner: 40.0, outer: 40.0 } # deg
@@ -32,3 +31,78 @@ limits:
 # Motor to differential ratio. See docs/gearbox.md for more info.
 gear_ratio: 0.08421
 servo_home_angles: {left: 89, right: 96}  # deg
+
+tf_static:
+  - frame_id: "base"
+    child_frame_id: "lidar_link"
+    translation: {x: 0.0, y: 0.0, z: 0.0}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  - frame_id: "base"
+    child_frame_id: "camera_link"
+    translation: {x: 0.25, y: 0.05, z: -0.04}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  - frame_id: "camera_link"
+    child_frame_id: "camera_gyro_frame"
+    translation: {x: -0.01602, y: -0.03022, z: 0.0074}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  - frame_id: "camera_gyro_frame"
+    child_frame_id: "camera_gyro_optical_frame"
+    translation: {x: 0.0, y: 0.0, z: 0.0}
+    rotation: {x: -0.5, y: 0.5, z: -0.5, w: 0.5}
+
+  - frame_id: "camera_gyro_optical_frame"
+    child_frame_id: "camera_imu_optical_frame"
+    translation: {x: 0.0, y: 0.0, z: 0.0}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  - frame_id: "camera_link"
+    child_frame_id: "camera_depth_frame"
+    translation: {x: 0.0, y: 0.0, z: 0.0}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  - frame_id: "camera_depth_frame"
+    child_frame_id: "camera_depth_optical_frame"
+    translation: {x: 0.0, y: 0.0, z: 0.0}
+    rotation: {x: -0.5, y: 0.5, z: -0.5, w: 0.5}
+
+  # specific frame names for simulator
+
+  - frame_id: "base"
+    child_frame_id: "rplidar_s2::lidar_link"
+    translation: {x: 0.0, y: 0.0, z: 0.0}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  - frame_id: "camera_gyro_optical_frame"
+    child_frame_id: "d455::camera_imu_optical_frame"
+    translation: {x: 0.0, y: 0.0, z: 0.0}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  # truck parts
+
+  - frame_id: "base"
+    child_frame_id: "body"
+    translation: {x: 0.0, y: 0.0, z: 0.0}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  - frame_id: "base"
+    child_frame_id: "front_left_wheel"
+    translation: {x: -0.2025, y: -0.11168, z: 0.01329}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  - frame_id: "base"
+    child_frame_id: "front_right_wheel"
+    translation: {x: 0.2025, y: -0.11168, z: 0.01329}
+    rotation: {x: 0.0, y: 0.0, z: 1.0, w: 0.0}
+
+  - frame_id: "base"
+    child_frame_id: "rear_left_wheel"
+    translation: {x: 0.2025, y: -0.11168, z: 0.01329}
+    rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+
+  - frame_id: "base"
+    child_frame_id: "rear_right_wheel"
+    translation: {x: -0.2025, y: -0.11168, z: 0.01329}
+    rotation: {x: 0.0, y: 0.0, z: 1.0, w: 0.0}
