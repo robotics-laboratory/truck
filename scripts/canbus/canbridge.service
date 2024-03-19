@@ -1,0 +1,12 @@
+[Unit]
+Description=Socketcan network bridge (cannelloni)
+After=network.target
+
+[Service]
+Type=simple
+Restart=no
+User=root
+ExecStart=/usr/bin/canbridge.sh
+
+[Install]
+WantedBy=multi-user.target
