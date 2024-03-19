@@ -21,4 +21,4 @@ launch:
     file: $(find-pkg-share perf)/launch/perf_stat.yaml
 
 - include:
-    file: $(find-pkg-share video_streaming)/launch/video_streaming.yaml
+   file: $(find-pkg-share video_streaming)/launch/video_streaming.yaml

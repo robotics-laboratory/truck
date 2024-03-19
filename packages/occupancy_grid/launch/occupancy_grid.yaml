@@ -10,10 +10,10 @@ launch:
     default: "true"
 - arg:
     name: "enable_camera_grid"
-    default: "false"
+    default: "true"
 - arg:
     name: "enable_camera_cloud"
-    default: "false"
+    default: "true"
 - node:
     pkg: "occupancy_grid"
     exec: "occupancy_grid_node"

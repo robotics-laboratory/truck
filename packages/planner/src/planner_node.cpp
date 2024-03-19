@@ -54,6 +54,8 @@ PlannerNode::PlannerNode() : Node("planner") {
 
     signal_.finish = this->create_publisher<visualization_msgs::msg::Marker>("/finish", 10);
 
+    signal_.status = this->create_publisher<std_msgs::msg::Bool>("/status", 10);
+
     search::GridParams grid_params {
         .width = this->declare_parameter<int>("grid.width"),
         .height = this->declare_parameter<int>("grid.height"),
@@ -161,8 +163,20 @@ void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
 }
 
 void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
+    const auto tf_opt = getLatestTranform("base", "odom_ekf");
+    if (!tf_opt) {
+        return;
+    }
+
+    geom::Vec2 point = geom::toVec2(*msg);
+
+    if (msg->header.frame_id == "base") {
+        // make transform from 'base' to 'odom_ekf'
+        point = tf_opt->apply(geom::toVec2(*msg));
+    }
+    
     state_.finish_area =
-        geom::Square{.center = geom::toVec2(*msg), .size = params_.searcher.finish_area_size};
+        geom::Square{.center = point, .size = params_.searcher.finish_area_size};
 
     searcher_.reset();
 }
@@ -259,7 +273,7 @@ void PlannerNode::publishFinish() const {
 
     marker.scale.x = params_.searcher.finish_area_size;
     marker.scale.y = params_.searcher.finish_area_size;
-    marker.scale.z = params_.node.z_lev * 2;
+    marker.scale.z = 0.05;
 
     marker.color = params_.node.finish_base_color;
 
@@ -267,15 +281,22 @@ void PlannerNode::publishFinish() const {
 
     marker.pose.position.x = position.x;
     marker.pose.position.y = position.y;
-    marker.pose.position.z = params_.node.z_lev;
+    marker.pose.position.z = -0.125;
 
     signal_.finish->publish(marker);
+}
+
+void PlannerNode::publishStatus() const {
+    std_msgs::msg::Bool flag;
+    flag.data = state_.status;
+    signal_.status->publish(flag);
 }
 
 void PlannerNode::publish() const {
     publishGrid();
     publishPath();
     publishFinish();
+    publishStatus();
 }
 
 void PlannerNode::reset() const {
@@ -317,7 +338,10 @@ void PlannerNode::doPlanningLoop() {
     searcher_.setCollisionChecker(checker_);
 
     if (!searcher_.findPath()) {
+        state_.status = false;
         RCLCPP_WARN(this->get_logger(), "Path not found!");
+    } else {
+        state_.status = true;
     }
 
     publish();

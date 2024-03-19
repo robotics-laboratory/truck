@@ -147,8 +147,9 @@ class HardwareNode(Node):
     def _push_status(self):
         armed = self._axis.current_state != odrive.enums.AXIS_STATE_IDLE
         errors = []
-        if self._odrive.error or self._axis.error:
+        if self._odrive.error or self._axis.error or self._axis.motor.error:
             errors = self._parse_odrive_errors()
+            self._log.info(f"ODrive errors: {errors}")
         status = HardwareStatus(armed=armed, errors=errors)
         status.header.stamp = self.get_clock().now().to_msg()
         self._status_pub.publish(status)

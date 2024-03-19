@@ -103,9 +103,11 @@ bool Grid::build() {
         }
     }
 
+    /*
     if (!finishPointInsideBorders(finish_area_.center)) {
         return false;
     }
+    */
 
     calculateNodesIndices();
     return true;
@@ -183,7 +185,7 @@ void PrimitiveCache::parseJSON() {
             poses.push_back(
                 geom::Pose(
                     geom::Vec2(x[i], y[i]),
-                    geom::Vec2(geom::Angle(theta[i]))
+                    geom::AngleVec2(geom::Angle(theta[i]))
                 )
             );
         }

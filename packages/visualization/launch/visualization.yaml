@@ -27,12 +27,12 @@ launch:
                 - { name: "width", value: 0.06 }
                 - { name: "rate", value: 5 }
 
-            - { name: "z_lev", value: 0.1 }
+            - { name: "z_lev", value: -0.05 }
             - { name: "height", value: 0.2 }
 
         - name: arc
           param:
-            - { name: "z_lev", value: 0.0 }
+            - { name: "z_lev", value: -0.075 }
             - { name: "width", value: 0.04 }
             - { name: "length", value: 1.0 }
 
@@ -43,5 +43,5 @@ launch:
 
         - name: "trajectory"
           param:
-            - { name: "z_lev", value: 0.1 }
+            - { name: "z_lev", value: -0.05 }
             - { name: "width", value: 0.1 }

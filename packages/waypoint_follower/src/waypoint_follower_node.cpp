@@ -61,6 +61,9 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
     service_.reset = this->create_service<std_srvs::srv::Empty>(
         "/reset_path", std::bind(&WaypointFollowerNode::onReset, this, _1, _2));
 
+    slot_.reset_path = this->create_subscription<std_msgs::msg::String>(
+        "/path_reset", 1, std::bind(&WaypointFollowerNode::onRemovePath, this, _1));
+
     slot_.odometry = this->create_subscription<nav_msgs::msg::Odometry>(
         "/ekf/odometry/filtered", 1, std::bind(&WaypointFollowerNode::onOdometry, this, _1));
 
@@ -105,6 +108,8 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
 
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_buffer_->setUsingDedicatedThread(true);
+
+    graph_planner = this->declare_parameter("graph_planner", false);
 }
 
 void WaypointFollowerNode::onReset(
@@ -138,19 +143,6 @@ bool isStanding(const nav_msgs::msg::Odometry& odom) {
     return vel.lenSq() < squared(0.01);
 }
 
-motion::Trajectory makeTrajectory(const geom::Poses& poses) {
-    motion::Trajectory trajectory;
-
-    for (const auto& pose : poses) {
-        motion::State state{pose};
-        trajectory.states.push_back(state);
-    }
-
-    trajectory.fillDistance();
-
-    return trajectory;
-}
-
 }  // namespace
 
 void WaypointFollowerNode::publishGridCostMap() {
@@ -182,8 +174,24 @@ void WaypointFollowerNode::publishTrajectory() {
 
     checker_->reset(*state_.distance_transform);
 
-    motion::Trajectory trajectory = makeTrajectory(state_.path_poses);
-    // motion::Trajectory trajectory = makeTrajectory(follower_->path());
+    motion::Trajectory trajectory;
+
+    if (graph_planner) {
+        for (const auto& pose : state_.path_poses) {
+            motion::State state{pose};
+            trajectory.states.push_back(state);
+        }
+
+        trajectory.fillDistance();
+    } else {
+        for (const auto& lp : follower_->path()) {
+            motion::State state{lp.pose};
+            trajectory.states.push_back(state);
+        }
+
+        trajectory.fillDistance();
+    }
+
     bool collision = false;
     for (auto& state : trajectory.states) {
         const double margin = checker_->distance(state.pose);
@@ -231,6 +239,13 @@ void WaypointFollowerNode::onOdometry(nav_msgs::msg::Odometry::SharedPtr odometr
     state_.odometry = odometry;
 }
 
+void WaypointFollowerNode::onRemovePath(std_msgs::msg::String::SharedPtr msg) {
+    std::string data = "Reset path!" + msg->data;
+    RCLCPP_INFO(this->get_logger(), data.c_str());
+    follower_->reset();
+    publishFullState();
+}
+
 std::optional<geom::Transform> WaypointFollowerNode::getLatestTranform(
     const std::string& source, const std::string& target) {
     try {
@@ -241,9 +256,11 @@ std::optional<geom::Transform> WaypointFollowerNode::getLatestTranform(
 }
 
 void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPtr msg) {
-    RCLCPP_INFO(this->get_logger(), "Waypoint (%f, %f) added!", msg->point.x, msg->point.y);
-
-    /*
+    if (graph_planner) {
+        RCLCPP_INFO(this->get_logger(), "Waypoint (%f, %f) added!", msg->point.x, msg->point.y);
+        return;
+    } 
+    
     if (!state_.odometry) {
         RCLCPP_WARN(this->get_logger(), "Has no odometry, ignore waypoint!");
         return;
@@ -276,7 +293,6 @@ void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPt
 
     follower_->update(ego);
     publishFullState();
-    */
 }
 
 void WaypointFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
@@ -316,13 +332,15 @@ void WaypointFollowerNode::onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is
 }
 
 void WaypointFollowerNode::onPath(visualization_msgs::msg::Marker::SharedPtr msg) {
+    if (!graph_planner) { return; }
+
     state_.path_poses.clear();
 
     for (const geometry_msgs::msg::Point& point : msg->points) {
         state_.path_poses.push_back(
             geom::Pose(
                 geom::Vec2(point.x, point.y),
-                geom::Vec2()
+                geom::AngleVec2()
             )
         );
     }

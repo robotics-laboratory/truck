@@ -20,8 +20,8 @@ services:
       - "${FOXGLOVE_PORT:-8765}:8765"
       - "${VIDEO_STREAMING_PORT:-8889}:8889"
       - "${GAZEBO_PORT:-11345}:11345"
-      - "${AUX_PORT_A:-9100}:9100"
-      - "${AUX_PORT_B:-9200}:9200"
+      - "${AUX_PORT_A:-9100}:${AUX_PORT_A:-9100}"
+      - "${AUX_PORT_B:-9200}:${AUX_PORT_B:-9200}/udp"
     volumes:
       - "${PWD}:/truck"
       - "/dev:/dev"

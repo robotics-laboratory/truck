@@ -18,8 +18,8 @@ launch:
 
         - name: "node"
           param:
-            - { name: "z_lev", value: 0.1 }
-            - { name: "scale", value: 0.1 }
+            - { name: "z_lev", value: -0.15 }
+            - { name: "scale", value: 0.075}
 
             - name: "color_rgba"
               param:
@@ -32,8 +32,8 @@ launch:
         - name: "searcher"
           param:
             - { name: "max_vertices_count", value: 10000 }
-            - { name: "finish_area_size", value: 0.3 }
-            - { name: "min_obstacle_distance", value: 0.4 }
+            - { name: "finish_area_size", value: 0.5 }
+            - { name: "min_obstacle_distance", value: 0.25 }
             - { name: "max_node_position_error", value: 0.05 }
 
         - name: "edge"

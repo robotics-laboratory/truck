@@ -6,6 +6,7 @@
 #include "model/model.h"
 #include "collision/collision_checker.h"
 
+#include <std_msgs/msg/bool.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/occupancy_grid.h>
 #include <tf2_msgs/msg/tf_message.hpp>
@@ -36,6 +37,7 @@ class PlannerNode : public rclcpp::Node {
     void publishGrid() const;
     void publishPath() const;
     void publishFinish() const;
+    void publishStatus() const;
 
     std::optional<geom::Transform> getLatestTranform(
         const std::string& source, const std::string& target);
@@ -54,6 +56,7 @@ class PlannerNode : public rclcpp::Node {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr graph = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr path = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr finish = nullptr;
+        rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr status = nullptr;
     } signal_;
 
     struct State {
@@ -66,6 +69,8 @@ class PlannerNode : public rclcpp::Node {
 
         std::optional<geom::Pose> ego_pose = std::nullopt;
         std::optional<geom::Square> finish_area = std::nullopt;
+
+        bool status = false;
     } state_;
 
     struct Parameters {

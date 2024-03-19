@@ -1,0 +1,29 @@
+launch:
+- arg: {name: "simulation", default: "$(env TRUCK_SIMULATION)"}
+- arg: {name: "control_name", default: "$(env TRUCK_CONTROL)"}
+- arg: {name: "qos", default: "0"}
+
+- include:
+    file: $(find-pkg-share truck)/launch/bridge.yaml
+
+- include:
+    file: $(find-pkg-share perf)/launch/perf_stat.yaml
+
+- include:
+   file: $(find-pkg-share video_streaming)/launch/video_streaming.yaml
+
+- include:
+   file: $(find-pkg-share truck)/launch/lidar.yaml
+
+- include:
+    file: $(find-pkg-share truck)/launch/camera.yaml
+
+- include:
+    file: $(find-pkg-share hardware_node)/launch/hardware_node.yaml
+
+- include:
+    file: $(find-pkg-share truck)/launch/control.yaml
+    arg:
+    - {name: "simulation", value: "$(var simulation)"}
+    - {name: "qos", value: "$(var qos)"}
+    - {name: "control_name", value: "$(var control_name)"}

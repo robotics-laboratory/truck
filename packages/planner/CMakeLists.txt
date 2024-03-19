@@ -8,6 +8,7 @@ find_package(rclcpp REQUIRED)
 find_package(geom REQUIRED)
 find_package(model REQUIRED)
 find_package(collision REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
@@ -28,6 +29,7 @@ ament_target_dependencies(
     geom
     model
     collision
+    std_msgs
     nav_msgs
     visualization_msgs
     tf2

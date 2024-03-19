@@ -15,6 +15,7 @@
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <std_srvs/srv/empty.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
+#include <std_msgs/msg/string.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 #include <tf2_ros/buffer.h>
@@ -37,6 +38,7 @@ class WaypointFollowerNode : public rclcpp::Node {
     void onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg);
     void onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
     void onPath(visualization_msgs::msg::Marker::SharedPtr msg);
+    void onRemovePath(std_msgs::msg::String::SharedPtr msg);
 
     void onReset(
         const std_srvs::srv::Empty::Request::SharedPtr, std_srvs::srv::Empty::Response::SharedPtr);
@@ -71,6 +73,7 @@ class WaypointFollowerNode : public rclcpp::Node {
         rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
         rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
         rclcpp::Subscription<visualization_msgs::msg::Marker>::SharedPtr path = nullptr;
+        rclcpp::Subscription<std_msgs::msg::String>::SharedPtr reset_path = nullptr;
     } slot_;
 
     struct Signals {
@@ -88,6 +91,7 @@ class WaypointFollowerNode : public rclcpp::Node {
         geom::Poses path_poses;
     } state_;
 
+    bool graph_planner = false;
     std::unique_ptr<model::Model> model_ = nullptr;
     std::unique_ptr<WaypointFollower> follower_ = nullptr;
     std::unique_ptr<collision::StaticCollisionChecker> checker_ = nullptr;

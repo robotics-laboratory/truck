@@ -1,0 +1,407 @@
+{
+  "configById": {
+    "Plot!3z83kkk": {
+      "paths": [
+        {
+          "value": "/control/command.velocity",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/hardware/odom.twist.twist.linear.x",
+          "enabled": true
+        }
+      ],
+      "minYValue": -1,
+      "maxYValue": 1,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "foxglovePanelTitle": "Velocity",
+      "followingViewWidth": 5
+    },
+    "Plot!1ysm1a3": {
+      "paths": [
+        {
+          "value": "/control/command.curvature",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#74fa62"
+        }
+      ],
+      "minYValue": -2,
+      "maxYValue": 2,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "foxglovePanelTitle": "Steering",
+      "followingViewWidth": 5
+    },
+    "Plot!aiclr3": {
+      "paths": [
+        {
+          "value": "/perf/stat.cpu[0].usage",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": ""
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/perf/stat.mem.usage",
+          "enabled": true,
+          "label": ""
+        }
+      ],
+      "minYValue": 0,
+      "maxYValue": 1,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "followingViewWidth": 5,
+      "foxglovePanelTitle": "CPU + Memory Usage",
+      "title": "Plot"
+    },
+    "RawMessages!1c6bwv2": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": ""
+    },
+    "RosOut!46lfoji": {
+      "searchTerms": [],
+      "minLogLevel": 1
+    },
+    "Lab custom extensions.IFrame Panel!6hs6yb": {
+      "url": "http://jetson-nx-2.local:8908/cam",
+      "enabled": true,
+      "foxglovePanelTitle": "Video Stream"
+    },
+    "Indicator!m1e1nn": {
+      "path": "/control/mode.mode",
+      "style": "background",
+      "fallbackColor": "#a0a0a0",
+      "fallbackLabel": "???",
+      "rules": [
+        {
+          "operator": "=",
+          "rawValue": "0",
+          "color": "#e34b4b",
+          "label": "OFF"
+        },
+        {
+          "operator": "=",
+          "rawValue": "1",
+          "color": "#1590e8",
+          "label": "REMOTE"
+        },
+        {
+          "operator": "=",
+          "rawValue": "2",
+          "color": "#22f040",
+          "label": "AUTO"
+        }
+      ],
+      "foxglovePanelTitle": "Control Mode"
+    },
+    "Indicator!455yo3w": {
+      "path": "/hardware/status.armed",
+      "style": "bulb",
+      "fallbackColor": "#9d9d9d",
+      "fallbackLabel": "DISARMED",
+      "rules": [
+        {
+          "operator": "=",
+          "rawValue": "true",
+          "color": "#e43636",
+          "label": "ARMED"
+        }
+      ],
+      "foxglovePanelTitle": "Hardware Status"
+    },
+    "Gauge!2tc5i9z": {
+      "path": "/hardware/telemetry.battery_voltage",
+      "minValue": 22.2,
+      "maxValue": 25.2,
+      "colorMap": "red-yellow-green",
+      "colorMode": "colormap",
+      "gradient": [
+        "#ff0000",
+        "#15ff00"
+      ],
+      "reverse": false,
+      "foxglovePanelTitle": "Battery"
+    },
+    "Tab!264lg37": {
+      "activeTabIdx": 0,
+      "tabs": [
+        {
+          "title": "Control",
+          "layout": {
+            "first": "Plot!3z83kkk",
+            "second": "Plot!1ysm1a3",
+            "direction": "column"
+          }
+        },
+        {
+          "title": "Performance",
+          "layout": "Plot!aiclr3"
+        },
+        {
+          "title": "Raw Messages",
+          "layout": "RawMessages!1c6bwv2"
+        },
+        {
+          "title": "Logs",
+          "layout": "RosOut!46lfoji"
+        }
+      ]
+    },
+    "3D!3cdqwne": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 7.999999999999489,
+        "phi": 50,
+        "thetaOffset": 90,
+        "targetOffset": [
+          0,
+          0,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 50,
+        "near": 0.5,
+        "far": 1000
+      },
+      "followMode": "follow-pose",
+      "scene": {
+        "enableStats": false,
+        "labelScaleFactor": 0.5,
+        "ignoreColladaUpAxis": false,
+        "transforms": {
+          "showLabel": true,
+          "labelSize": 0.15,
+          "axisScale": 1,
+          "editable": false,
+          "lineWidth": 0
+        },
+        "syncCamera": false
+      },
+      "transforms": {
+        "frame:odom": {
+          "visible": true
+        },
+        "frame:odom_ekf": {
+          "visible": true
+        },
+        "frame:base": {
+          "visible": true
+        },
+        "frame:camera_link": {
+          "visible": false
+        },
+        "frame:camera_gyro_farme": {
+          "visible": false
+        },
+        "frame:camera_gyro_optical_frame": {
+          "visible": false
+        },
+        "frame:camera_imu_optical_frame": {
+          "visible": false
+        },
+        "frame:d455::camera_imu_optical_frame": {
+          "visible": false
+        },
+        "frame:lidar_link": {
+          "visible": false
+        },
+        "frame:rplidar_s2::lidar_link": {
+          "visible": false
+        },
+        "frame:camera_depth_frame": {
+          "visible": false
+        },
+        "frame:camera_depth_optical_frame": {
+          "visible": false
+        },
+        "frame:camera_gyro_frame": {
+          "visible": false
+        }
+      },
+      "topics": {
+        "/visualization/ego": {
+          "visible": true,
+          "showOutlines": true
+        },
+        "/motion/path": {
+          "visible": true
+        },
+        "/visualization/arc": {
+          "visible": true
+        },
+        "/lidar/scan": {
+          "visible": true,
+          "colorField": "range",
+          "colorMode": "flat",
+          "colorMap": "turbo",
+          "pointSize": 3,
+          "pointShape": "circle",
+          "flatColor": "#00fa19",
+          "gradient": [
+            "#ff2a00",
+            "#3eff00"
+          ],
+          "maxValue": 5,
+          "minValue": 0
+        },
+        "/visualization/target": {
+          "visible": true
+        },
+        "/visualization/trajectory": {
+          "visible": true
+        },
+        "/visualization/waypoints": {
+          "visible": true
+        },
+        "/move_base_simple/goal": {
+          "visible": false
+        },
+        "/ekf/set_pose": {
+          "visible": false
+        },
+        "/grid": {
+          "visible": false,
+          "colorMode": "custom",
+          "alpha": 0.3,
+          "frameLocked": false,
+          "minColor": "#00000000",
+          "maxColor": "#fa0ade73"
+        },
+        "/grid/distance_transform": {
+          "visible": false,
+          "minColor": "#ffffff7a",
+          "maxColor": "#0000007d",
+          "frameLocked": false
+        },
+        "/initialpose": {
+          "visible": false
+        },
+        "/camera/pointcloud": {
+          "visible": false,
+          "colorField": "x",
+          "colorMode": "colormap",
+          "colorMap": "turbo"
+        },
+        "/visualization/ego/track": {
+          "visible": true
+        },
+        "/path": {
+          "visible": false
+        },
+        "/graph": {
+          "visible": true,
+          "showOutlines": true
+        },
+        "/finish": {
+          "visible": true,
+          "showOutlines": false,
+          "color": "#00ff0d36"
+        }
+      },
+      "layers": {
+        "876ca2b4-e650-4df7-836f-bc61061b85eb": {
+          "visible": true,
+          "frameLocked": true,
+          "label": "Grid",
+          "instanceId": "876ca2b4-e650-4df7-836f-bc61061b85eb",
+          "layerId": "foxglove.Grid",
+          "frameId": "odom_ekf",
+          "divisions": 200,
+          "lineWidth": 1,
+          "color": "#434343",
+          "position": [
+            0,
+            0,
+            -0.15
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "order": 1,
+          "size": 200
+        }
+      },
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "followTf": "base",
+      "imageMode": {}
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "linkedGlobalVariables": [],
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "first": {
+      "first": {
+        "first": "Lab custom extensions.IFrame Panel!6hs6yb",
+        "second": {
+          "first": "Indicator!m1e1nn",
+          "second": {
+            "first": "Indicator!455yo3w",
+            "second": "Gauge!2tc5i9z",
+            "direction": "column",
+            "splitPercentage": 50
+          },
+          "direction": "column",
+          "splitPercentage": 33.3
+        },
+        "direction": "row",
+        "splitPercentage": 75
+      },
+      "second": "Tab!264lg37",
+      "direction": "column",
+      "splitPercentage": 50
+    },
+    "second": "3D!3cdqwne",
+    "direction": "row",
+    "splitPercentage": 50
+  }
+}

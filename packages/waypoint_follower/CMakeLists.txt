@@ -15,6 +15,7 @@ find_package(motion REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(speed REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -42,6 +43,7 @@ ament_target_dependencies(
     tf2
     tf2_ros
     std_srvs
+    std_msgs
     visualization_msgs
 )
 
