@@ -34,6 +34,7 @@ class Planner {
         double track_width = 10;
         double longitude_ratio = 0.5;
         size_t longitude_discretization = 25;
+        double latitude_ratio = 0.5;
         size_t latitude_discretization = 25;
         size_t forward_yaw_discretization = 5;
         size_t backward_yaw_discretization = 5;

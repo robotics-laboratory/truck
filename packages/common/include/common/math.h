@@ -40,13 +40,30 @@ struct Limits {
 
     bool isMet(const T& x) const { return min <= x && x <= max; }
 
-        bool isStrictlyMet(const T& x) const { return min < x && x < max; }
+    bool isStrictlyMet(const T& x) const { return min < x && x < max; }
 
     T clamp(const T& t) const { return truck::clamp(t, min, max); }
 
     double ratio(const T& t) const { return (clamp(t) - min) / (max - min); }
 
     T min, max;
+};
+
+template<typename T>
+struct Discretization {
+    T operator[](size_t index) const {
+        VERIFY(index < total_states);
+        return limits.min + (limits.max - limits.min) / total_states * index;
+    }
+
+    size_t operator()(T value) const {
+        VERIFY(limits.min <= value && value < limits.max);
+        return static_cast<size_t>(
+            1.0 * (value - limits.min) / (limits.max - limits.min) * total_states);
+    }
+
+    Limits<T> limits;
+    size_t total_states;
 };
 
 template<class Int, class Float>

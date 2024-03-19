@@ -53,11 +53,40 @@ States GenerateStates(const Constraints& constraints) {
 
 TEST(Planner, StatePoses) {
     {
+        const auto map = Map::fromGeoJson("/truck/packages/map/data/map_1.geojson");
+
+        sdd::SDD img(
+            {.width = 50, .height = 50}, "/truck/packages/trajectory_planner/test/data/out_1.svg");
+        img.Add(
+            sdd::ComplexPolygon{.complex_polygon = map.polygons()[0], .color = sdd::color::white});
+
+        const auto ego_pose = Pose(Vec2(30, 25), AngleVec2::fromVector(Vec2(1, -1)));
+
+        const auto route =
+            Polyline{Vec2(10, 30), Vec2(20, 27), Vec2(25, 25), Vec2(33, 20), Vec2(38, 13)};
+        img.Add(sdd::Polyline{.polyline = route, .thickness = 0.25, .color = sdd::color::blue});
+
+        auto planner = Planner({.track_height = 20,
+                                .track_width = 10,
+                                .longitude_ratio = 0.3,
+                                .longitude_discretization = 10,
+                                .latitude_discretization = 10,
+                                .backward_yaw_discretization = 3})
+                           .Build(ego_pose, route);
+        for (const auto& state_pose : planner.GetStatePoses()) {
+            img.Add(sdd::Pose{
+                .pose = state_pose, .scale = 0.25, .length = 0.25, .color = sdd::color::fuchsia});
+        }
+
+        img.Add(
+            sdd::Pose{.pose = ego_pose, .scale = 0.25, .length = 0.25, .color = sdd::color::red});
+    }
+    {
         const auto map = Map::fromGeoJson("/truck/packages/map/data/map_2.geojson");
 
         sdd::SDD img(
             {.width = 100, .height = 100},
-            "/truck/packages/trajectory_planner/test/data/out_1.svg");
+            "/truck/packages/trajectory_planner/test/data/out_2.svg");
         img.Add(
             sdd::ComplexPolygon{.complex_polygon = map.polygons()[0], .color = sdd::color::white});
 
@@ -76,7 +105,7 @@ TEST(Planner, StatePoses) {
                            .Build(ego_pose, route);
         for (const auto& state_pose : planner.GetStatePoses()) {
             img.Add(sdd::Pose{
-                .pose = state_pose, .scale = 0.5, .length = 0.5, .color = sdd::color::fuchsia});
+                .pose = state_pose, .scale = 0.25, .length = 0.25, .color = sdd::color::fuchsia});
         }
 
         img.Add(sdd::Pose{.pose = ego_pose, .scale = 0.5, .length = 0.5, .color = sdd::color::red});

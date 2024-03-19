@@ -7,6 +7,8 @@
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/function_output_iterator.hpp>
 
+#include "common/math.h"
+
 #include "geom/pose.h"
 #include "geom/vector.h"
 

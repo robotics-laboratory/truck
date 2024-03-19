@@ -10,22 +10,6 @@
 
 namespace truck::trajectory_planner {
 
-template<typename T>
-struct Discretization {
-    T operator[](size_t index) const {
-        VERIFY(index < total_states);
-        return limits.min + (limits.max - limits.min) / total_states * index;
-    }
-
-    size_t operator()(T value) const {
-        VERIFY(limits.min <= value && value < limits.max);
-        return (value - limits.min) / (limits.max - limits.min) * total_states;
-    }
-
-    Limits<T> limits;
-    size_t total_states;
-};
-
 struct State {
     geom::Pose pose;
     double velocity;

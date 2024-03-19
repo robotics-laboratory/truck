@@ -29,6 +29,8 @@ Map Map::fromGeoJson(const std::string& path) {
                 simple_poly.push_back(geom::Vec2(point.first, point.second));
             }
 
+            simple_poly.pop_back();  // polygon does not require explicit closure
+
             if (polys_cnt == 0) {
                 outer = std::move(simple_poly);
             } else {
