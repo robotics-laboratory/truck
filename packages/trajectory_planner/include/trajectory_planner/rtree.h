@@ -21,11 +21,11 @@ namespace truck::trajectory_planner {
 
 class SpatioTemporalRTree {
   public:
-    using TreeBox = bg::model::box<geom::Vec2>;
-    using TreeValue = std::pair<geom::Vec2, const State*>;
-    using Tree = bg::index::rtree<TreeValue, bg::index::rstar<16>>;
+    using TreeBox = typename bg::model::box<geom::Vec2>;
+    using TreeValue = typename std::pair<geom::Vec2, const State*>;
+    using Tree = typename bg::index::rtree<TreeValue, bg::index::rstar<16>>;
 
-    using SearchResult = std::pair<double, const State*>;
+    using SearchResult = typename std::pair<double, const State*>;
 
     SpatioTemporalRTree(const Discretization<double>& velocity_discretization);
 

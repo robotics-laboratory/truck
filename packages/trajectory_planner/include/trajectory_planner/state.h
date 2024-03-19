@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/math.h"
+#include "common/exception.h"
 
 #include "geom/pose.h"
 

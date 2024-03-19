@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "trajectory_planner/planner.h"
 #include "trajectory_planner/state.h"
 #include "trajectory_planner/rtree.h"
 
@@ -8,14 +9,18 @@
 #include "geom/vector.h"
 #include "geom/pose.h"
 
+#include "map/map.h"
+
+#include "svg_debug_drawer/sdd.h"
+
 #include <iostream>
 
 using namespace truck;
 using namespace truck::geom;
 using namespace truck::trajectory_planner;
+using namespace truck::map;
 
 namespace {
-
 struct Constraints {
     Discretization<double> x = {.limits = Limits<double>(0, 100), .total_states = 25};
     Discretization<double> y = {.limits = Limits<double>(0, 100), .total_states = 25};
@@ -23,7 +28,7 @@ struct Constraints {
     Discretization<double> velocity = {.limits = Limits<double>(0, 0.8), .total_states = 7};
 };
 
-States GenerateStates(const Constraints& constraints = {}) {
+States GenerateStates(const Constraints& constraints) {
     States states;
     states.reserve(
         constraints.x.total_states * constraints.y.total_states * constraints.yaw.total_states *
@@ -45,6 +50,38 @@ States GenerateStates(const Constraints& constraints = {}) {
 }
 
 }  // namespace
+
+TEST(Planner, StatePoses) {
+    {
+        const auto map = Map::fromGeoJson("/truck/packages/map/data/map_2.geojson");
+
+        sdd::SDD img(
+            {.width = 100, .height = 100},
+            "/truck/packages/trajectory_planner/test/data/out_1.svg");
+        img.Add(
+            sdd::ComplexPolygon{.complex_polygon = map.polygons()[0], .color = sdd::color::white});
+
+        const auto ego_pose = Pose(Vec2(30, 20), AngleVec2::fromVector(Vec2(1, -1)));
+
+        const auto route =
+            Polyline{Vec2(10, 40), Vec2(20, 30), Vec2(25, 20), Vec2(35, 15), Vec2(50, 10)};
+        img.Add(sdd::Polyline{.polyline = route, .thickness = 0.5, .color = sdd::color::blue});
+
+        auto planner = Planner({.track_height = 20,
+                                .track_width = 10,
+                                .longitude_ratio = 0.3,
+                                .longitude_discretization = 10,
+                                .latitude_discretization = 10,
+                                .backward_yaw_discretization = 3})
+                           .Build(ego_pose, route);
+        for (const auto& state_pose : planner.GetStatePoses()) {
+            img.Add(sdd::Pose{
+                .pose = state_pose, .scale = 0.5, .length = 0.5, .color = sdd::color::fuchsia});
+        }
+
+        img.Add(sdd::Pose{.pose = ego_pose, .scale = 0.5, .length = 0.5, .color = sdd::color::red});
+    }
+}
 
 TEST(RTree, Search) {
     const auto constraints = Constraints();
