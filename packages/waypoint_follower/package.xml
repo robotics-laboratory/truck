@@ -19,7 +19,6 @@
   <depend>speed</depend>
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
-  <depend>tf2_geometry_msgs</depend>
   <depend>truck_interfaces</depend>
   
   <test_depend>ament_lint_auto</test_depend>
