@@ -4,11 +4,16 @@
 #include "geom/angle.h"
 #include "model/params.h"
 
+#include <tf2_ros/buffer.h>
+#include <tf2_msgs/msg/tf_message.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
 
 #include <memory>
 #include <utility>
+#include <string>
 
 namespace truck::model {
 
@@ -61,12 +66,18 @@ class Model {
     double linearVelocityToMotorRPS(double velocity) const;
     double motorRPStoLinearVelocity(double rps) const;
 
+    tf2_msgs::msg::TFMessage getTfStaticMsg() const;
+    tf2::Transform getLatestTranform(const std::string& source, 
+      const std::string& target) const;
+
   private:
     struct Cache {
         double width_half;
         double max_abs_curvature;
         Limits<double> middle_steering_limits;
         Limits<double> base_curvature_limits;
+        tf2_msgs::msg::TFMessage tf_static_msg;
+        std::shared_ptr<tf2_ros::Buffer> tf_static_buffer;
     } cache_;
 
     Params params_;

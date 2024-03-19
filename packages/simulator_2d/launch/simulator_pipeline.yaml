@@ -33,4 +33,3 @@ launch:
       - { name: "model_config", value: "$(var model_config)" }
       - { name: "map_config", value: "$(var map_config)" }
       - { name: "initial_ego_state_config", value: "$(var initial_ego_state_config)" }
-      - { name: "lidar_config", value: "$(var lidar_config)" }

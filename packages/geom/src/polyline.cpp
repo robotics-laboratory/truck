@@ -3,8 +3,8 @@
 #include "geom/distance.h"
 #include "common/exception.h"
 
-#include "Eigen/Dense"
-#include "unsupported/Eigen/Splines"
+#include <Eigen/Dense>
+#include <unsupported/Eigen/Splines>
 
 namespace truck::geom {
 
@@ -59,7 +59,7 @@ Polyline toSpline(const Polyline& polyline, double step, size_t degree) noexcept
     Eigen::Spline<double, 2> spline = Eigen::SplineFitting<Eigen::Spline<double, 2>>::Interpolate(
         toEigenMatrixXd(polyline), degree);
 
-    size_t spline_points = ceil<size_t>(polyline.len() / step);
+    size_t spline_points = std::ceil<size_t>(polyline.len() / step);
     spline_points = (spline_points < 2) ? 2 : spline_points;
 
     Polyline polyline_smoothed;

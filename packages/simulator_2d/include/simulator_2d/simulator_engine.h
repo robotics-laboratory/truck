@@ -7,7 +7,7 @@
 #include "geom/segment.h"
 #include "geom/vector.h"
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 #include <optional>
 #include <string>

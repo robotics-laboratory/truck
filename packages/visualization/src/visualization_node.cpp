@@ -27,6 +27,8 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
     initializePtrFields();
     initializeParams();
     initializeTopicHandlers();
+    initializeCacheBodyBaseTf();
+    initializeCacheWheelBaseTfs();
 }
 
 void VisualizationNode::initializePtrFields() {
@@ -117,16 +119,6 @@ void VisualizationNode::initializeTopicHandlers() {
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleNavigationRoute, this, _1));
 
-    using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
-    TfCallback tf_call = std::bind(&VisualizationNode::handleTf, this, _1, false);
-    TfCallback static_tf_callback = std::bind(&VisualizationNode::handleTf, this, _1, true);
-
-    slot_.tf = this->create_subscription<tf2_msgs::msg::TFMessage>(
-        "/tf", tf2_ros::DynamicListenerQoS(100), tf_call);
-
-    slot_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
-        "/tf_static", tf2_ros::StaticListenerQoS(100), static_tf_callback);
-
     signal_.ego = Node::create_publisher<visualization_msgs::msg::MarkerArray>(
         "/visualization/ego", rclcpp::QoS(1).reliability(qos));
 
@@ -160,43 +152,14 @@ void VisualizationNode::initializeTopicHandlers() {
     timer_ = Node::create_wall_timer(1s, std::bind(&VisualizationNode::publishMap, this));
 }
 
-namespace {
-
-tf2::Transform getLatestTranform(std::unique_ptr<tf2_ros::Buffer> &tf_buffer,
-    const std::string& source, const std::string& target) {
-    try {
-        const auto tf = tf_buffer->lookupTransform(target, source, rclcpp::Time(0)).transform;
-        tf2::Transform transform;
-        tf2::fromMsg(tf, transform);
-        return transform;
-    } catch (const tf2::TransformException& ex) {
-        return tf2::Transform::getIdentity();
-    }
+void VisualizationNode::initializeCacheBodyBaseTf() {
+    cache_.body_base_tf = model_->getLatestTranform("base", "body");
 }
 
-} // namespace
-
-void VisualizationNode::initializeCacheBodyBaseTf(std::unique_ptr<tf2_ros::Buffer> &tf_buffer) {
-    cache_.body_base_tf = getLatestTranform(tf_buffer, "base", "body");
-}
-
-void VisualizationNode::initializeCacheWheelBaseTfs(std::unique_ptr<tf2_ros::Buffer> &tf_buffer) {
+void VisualizationNode::initializeCacheWheelBaseTfs() {
     for (auto wheel : kAllWheels) {
-        cache_.wheel_base_tfs[wheel] 
-            = getLatestTranform(tf_buffer, "base", kWheelFrames[wheel]);
+        cache_.wheel_base_tfs[wheel] = model_->getLatestTranform("base", kWheelFrames[wheel]);
     }
-}
-
-void VisualizationNode::handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
-    auto tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
-    tf_buffer->setUsingDedicatedThread(true);
-
-    for (const auto& transform : msg->transforms) {
-        tf_buffer->setTransform(transform, "", is_static);
-    }
-
-    initializeCacheBodyBaseTf(tf_buffer);
-    initializeCacheWheelBaseTfs(tf_buffer);
 }
 
 void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg) {

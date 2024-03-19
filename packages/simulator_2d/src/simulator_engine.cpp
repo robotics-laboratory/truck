@@ -24,7 +24,10 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
-    cache_.base_to_lidar = model_->lidar().from_base;
+    
+    const auto lidar_translation = model_->getLatestTranform("base", "lidar_link").getOrigin();
+    cache_.base_to_lidar.x = lidar_translation.x();
+    cache_.base_to_lidar.y = lidar_translation.y();
 
     const double angle_min_rad = model_->lidar().angle_min.radians();
     const double angle_max_rad = model_->lidar().angle_max.radians();
@@ -227,13 +230,6 @@ std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_p
         do {
             index = mod(index + sign, cache_.lidar_rays_number);
             const auto distance = getIntersectionDistance(current_ray, segment, params_.precision);
-            /*
-            if (index == 0) {
-                RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
-                    "distance = " + std::to_string(distance));
-            }
-            */
-            
             ranges[index] = std::min(ranges[index], distance);
             current_ray.dir += increment;
         } while (index != end_index);
@@ -246,13 +242,15 @@ TruckState SimulatorEngine::getTruckState() const {
     const double steering = rear_ax_state_[StateIndex::kSteering];
 
     const auto pose = getOdomBasePose();
-    const double rear_curvature = model_->middleSteeringToRearCurvature(steering);
+    const auto rear_curvature = model_->middleSteeringToRearCurvature(steering);
     const auto current_steering = getCurrentSteering(rear_curvature);
     const auto target_steering = getTargetSteering();
     const auto twist = rearToOdomBaseTwist(rear_curvature);
     const auto linear_velocity = rearToOdomBaseLinearVelocity(pose.dir, twist.velocity);
     const auto angular_velocity = rearToBaseAngularVelocity(twist.velocity, rear_curvature);
     auto lidar_ranges = getLidarRanges(pose);
+    const auto current_rps = model_->linearVelocityToMotorRPS(twist.velocity);
+    const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
     
     return TruckState()
         .time(time_)
@@ -262,7 +260,9 @@ TruckState SimulatorEngine::getTruckState() const {
         .baseTwist(twist)
         .odomBaseLinearVelocity(linear_velocity)
         .baseAngularVelocity(angular_velocity)
-        .lidarRanges(std::move(lidar_ranges));
+        .lidarRanges(std::move(lidar_ranges))
+        .currentMotorRps(current_rps)
+        .targetMotorRps(target_rps);
 }
 
 namespace {

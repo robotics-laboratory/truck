@@ -22,7 +22,9 @@ class SimulatorNode : public rclcpp::Node {
     SimulatorNode();
 
   private:
+    void initializeParameters();
     void initializeTopicHandlers();
+    void initializeCache(const std::unique_ptr<model::Model>& model);
     void initializeEngine();
 
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
@@ -43,15 +45,18 @@ class SimulatorNode : public rclcpp::Node {
 
     struct Parameters {
         double update_period;
+    } params_;
+
+    struct Cache {
         struct LidarConfig {
-            geom::Vec2 from_base;
+            tf2::Transform tf;
             float angle_min;
             float angle_max;
             float angle_increment;
             float range_min;
             float range_max;
         } lidar_config;
-    } params_;
+    } cache_;
 
     struct Slots {
         rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
@@ -60,6 +65,7 @@ class SimulatorNode : public rclcpp::Node {
     struct Signals {
         rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr time = nullptr;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
+        rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr hardware_odometry = nullptr;
         rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
         rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         rclcpp::Publisher<truck_msgs::msg::SimulationState>::SharedPtr state = nullptr;

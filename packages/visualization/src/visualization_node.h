@@ -13,7 +13,6 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
-#include <tf2_ros/buffer.h>
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2/LinearMath/Transform.h>
@@ -34,10 +33,9 @@ class VisualizationNode : public rclcpp::Node {
     void initializePtrFields();
     void initializeParams();
     void initializeTopicHandlers();
-    void initializeCacheBodyBaseTf(std::unique_ptr<tf2_ros::Buffer> &tf_buffer);
-    void initializeCacheWheelBaseTfs(std::unique_ptr<tf2_ros::Buffer> &tf_buffer);
+    void initializeCacheBodyBaseTf();
+    void initializeCacheWheelBaseTfs();
 
-    void handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
     void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr trajectory);
     void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
     void handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg);
@@ -140,8 +138,6 @@ class VisualizationNode : public rclcpp::Node {
         rclcpp::Subscription<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         // foxglove has twitching if publish ego pose in base frame, use odom for smoother result!
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
-        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
-        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
         rclcpp::Subscription<truck_msgs::msg::NavigationMesh>::SharedPtr navigation_mesh = nullptr;
         rclcpp::Subscription<truck_msgs::msg::NavigationRoute>::SharedPtr navigation_route = nullptr;
     } slot_;
