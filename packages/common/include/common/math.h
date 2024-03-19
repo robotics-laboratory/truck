@@ -51,15 +51,16 @@ struct Limits {
 
 template<typename T>
 struct Discretization {
+    T Step() const noexcept { return (limits.max - limits.min) / total_states; }
+
     T operator[](size_t index) const {
         VERIFY(index < total_states);
-        return limits.min + (limits.max - limits.min) / total_states * index;
+        return limits.min + Step() * index;
     }
 
-    size_t operator()(T value) const {
+    size_t operator()(const T& value) const {
         VERIFY(limits.min <= value && value < limits.max);
-        return static_cast<size_t>(
-            1.0 * (value - limits.min) / (limits.max - limits.min) * total_states);
+        return static_cast<size_t>(limits.ratio(value) * total_states);
     }
 
     Limits<T> limits;

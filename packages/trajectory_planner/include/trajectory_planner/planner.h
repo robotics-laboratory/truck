@@ -2,6 +2,8 @@
 
 #include "trajectory_planner/state.h"
 
+#include "common/math.h"
+
 #include "geom/pose.h"
 #include "geom/polyline.h"
 
@@ -30,15 +32,13 @@ struct SearchTree {
 class Planner {
   public:
     struct Params {
-        double track_height = 10;
-        double track_width = 10;
-        double longitude_ratio = 0.5;
-        size_t longitude_discretization = 25;
-        double latitude_ratio = 0.5;
-        size_t latitude_discretization = 25;
-        size_t forward_yaw_discretization = 5;
-        size_t backward_yaw_discretization = 5;
-        size_t velocity_discretization = 10;
+        Discretization<double> longitude = {.limits = Limits<double>(-10, 11), .total_states = 10};
+        Discretization<double> latitude = {.limits = Limits<double>(-5, 6), .total_states = 10};
+        Discretization<double> forward_yaw = {
+            .limits = Limits<double>(-M_PI_2, M_PI_2), .total_states = 5};
+        Discretization<double> backward_yaw = {
+            .limits = Limits<double>(M_PI_2, 3 * M_PI_2), .total_states = 3};
+        Discretization<double> velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10};
     };
 
     Planner(const Params& params);

@@ -63,7 +63,9 @@ class UniformStepper {
     Pose operator*() const noexcept { return GetPose(); }
 
     UniformStepper& operator+=(double step_length) noexcept {
-        VERIFY(0 < step_length);
+        if (step_length < 0) {
+            return this->operator-=(-step_length);
+        }
         while (milestone_ + 1 != container_->end()) {
             double dist_to_next_milestone =
                 geom::distance(*milestone_, *(milestone_ + 1)) - dist_from_milestone_;
@@ -79,7 +81,9 @@ class UniformStepper {
     }
 
     UniformStepper& operator-=(double step_length) noexcept {
-        VERIFY(0 < step_length);
+        if (step_length < 0) {
+            return this->operator+=(-step_length);
+        }
         if (dist_from_milestone_ >= step_length) {
             dist_from_milestone_ -= step_length;
             return *this;

@@ -70,13 +70,14 @@ TEST(Planner, StatePoses) {
             Polyline{Vec2(10, 30), Vec2(20, 27), Vec2(25, 25), Vec2(33, 20), Vec2(38, 13)};
         img.Add(sdd::Polyline{.polyline = route, .thickness = 0.25, .color = sdd::color::blue});
 
-        auto planner = Planner({.track_height = 20,
-                                .track_width = 10,
-                                .longitude_ratio = 0.3,
-                                .longitude_discretization = 10,
-                                .latitude_discretization = 10,
-                                .backward_yaw_discretization = 3})
-                           .Build(ego_pose, route);
+        auto planner =
+            Planner(
+                {.longitude = {.limits = Limits<double>(-5, 16), .total_states = 10},
+                 .latitude = {.limits = Limits<double>(-5, 6), .total_states = 10},
+                 .forward_yaw = {.limits = Limits<double>(-M_PI_2, M_PI_2), .total_states = 5},
+                 .backward_yaw = {.limits = Limits<double>(M_PI_2, 3 * M_PI_2), .total_states = 3},
+                 .velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10}})
+                .Build(ego_pose, route);
         for (const auto& state_pose : planner.GetStatePoses()) {
             img.Add(sdd::Pose{
                 .pose = state_pose, .scale = 0.25, .length = 0.25, .color = sdd::color::fuchsia});
@@ -101,13 +102,14 @@ TEST(Planner, StatePoses) {
             Polyline{Vec2(10, 40), Vec2(20, 30), Vec2(25, 20), Vec2(35, 15), Vec2(50, 10)};
         img.Add(sdd::Polyline{.polyline = route, .thickness = 0.5, .color = sdd::color::blue});
 
-        auto planner = Planner({.track_height = 20,
-                                .track_width = 10,
-                                .longitude_ratio = 0.3,
-                                .longitude_discretization = 10,
-                                .latitude_discretization = 10,
-                                .backward_yaw_discretization = 3})
-                           .Build(ego_pose, route);
+        auto planner =
+            Planner(
+                {.longitude = {.limits = Limits<double>(-5, 16), .total_states = 10},
+                 .latitude = {.limits = Limits<double>(-5, 6), .total_states = 10},
+                 .forward_yaw = {.limits = Limits<double>(-M_PI_2, M_PI_2), .total_states = 5},
+                 .backward_yaw = {.limits = Limits<double>(M_PI_2, 3 * M_PI_2), .total_states = 3},
+                 .velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10}})
+                .Build(ego_pose, route);
         for (const auto& state_pose : planner.GetStatePoses()) {
             img.Add(sdd::Pose{
                 .pose = state_pose, .scale = 0.25, .length = 0.25, .color = sdd::color::fuchsia});
