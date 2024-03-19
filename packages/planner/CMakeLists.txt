@@ -1,16 +1,20 @@
 cmake_minimum_required(VERSION 3.8)
 project(planner)
 
+add_compile_options(-Wall -Wextra -Wpedantic)
+
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geom REQUIRED)
 find_package(model REQUIRED)
 find_package(collision REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(Boost REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node
@@ -25,11 +29,13 @@ ament_target_dependencies(
     geom
     model
     collision
+    std_msgs
     nav_msgs
     visualization_msgs
     tf2
     tf2_ros
     Boost
+    nlohmann_json
 )
 
 install(
@@ -48,5 +54,10 @@ install(DIRECTORY
     launch
     DESTINATION share/${PROJECT_NAME}
 )
+
+if(BUILD_TESTING)
+    find_package(ament_cmake_clang_format REQUIRED)
+    ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+endif()
 
 ament_package()

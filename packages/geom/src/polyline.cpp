@@ -1,6 +1,7 @@
 #include "geom/polyline.h"
 
 #include "geom/distance.h"
+#include "common/math.h"
 #include "common/exception.h"
 
 #include "Eigen/Dense"
