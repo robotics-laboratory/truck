@@ -13,6 +13,8 @@
 
 #include "svg_debug_drawer/sdd.h"
 
+#include <fmt/format.h>
+
 #include <iostream>
 
 using namespace truck;
@@ -56,7 +58,9 @@ TEST(Planner, StatePoses) {
         const auto map = Map::fromGeoJson("/truck/packages/map/data/map_1.geojson");
 
         sdd::SDD img(
-            {.width = 50, .height = 50}, "/truck/packages/trajectory_planner/test/data/out_1.svg");
+            {.width = 50, .height = 50},
+            fmt::format(
+                "/truck/packages/trajectory_planner/test/data/{}_1.svg", this->test_info_->name()));
         img.Add(
             sdd::ComplexPolygon{.complex_polygon = map.polygons()[0], .color = sdd::color::white});
 
@@ -86,7 +90,8 @@ TEST(Planner, StatePoses) {
 
         sdd::SDD img(
             {.width = 100, .height = 100},
-            "/truck/packages/trajectory_planner/test/data/out_2.svg");
+            fmt::format(
+                "/truck/packages/trajectory_planner/test/data/{}_2.svg", this->test_info_->name()));
         img.Add(
             sdd::ComplexPolygon{.complex_polygon = map.polygons()[0], .color = sdd::color::white});
 

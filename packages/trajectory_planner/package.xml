@@ -13,6 +13,7 @@
   <depend>motion</depend>
   <depend>map</depend>
   <depend>svg_debug_drawer</depend>
+  <depend>fmt</depend>
 
   <test_depend>ament_cmake_lint_cmake</test_depend>
   <test_depend>ament_cmake_clang_format</test_depend>
