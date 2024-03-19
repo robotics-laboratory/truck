@@ -15,6 +15,8 @@ find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(truck_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 add_executable(
     ${PROJECT_NAME}_node
@@ -38,6 +40,7 @@ ament_target_dependencies(
     tf2_ros
     std_srvs
     visualization_msgs
+    std_msgs
 )
 
 install(

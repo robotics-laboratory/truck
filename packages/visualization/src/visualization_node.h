@@ -148,16 +148,13 @@ class VisualizationNode : public rclcpp::Node {
 
     struct Signals {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr trajectory = nullptr;
-        rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr ego = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ego_track = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr waypoints = nullptr;
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr map = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr navigation_mesh = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr navigation_route = nullptr;
     } signal_;
-
-    rclcpp::TimerBase::SharedPtr timer_ = nullptr;
 };
 
 }  // namespace truck::visualization

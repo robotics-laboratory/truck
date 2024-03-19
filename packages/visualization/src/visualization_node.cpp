@@ -127,7 +127,7 @@ void VisualizationNode::initializeTopicHandlers() {
     slot_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
         "/tf_static", tf2_ros::StaticListenerQoS(100), static_tf_callback);
 
-    signal_.ego = Node::create_publisher<visualization_msgs::msg::MarkerArray>(
+    signal_.ego = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/ego", rclcpp::QoS(1).reliability(qos));
 
     signal_.ego_track = Node::create_publisher<visualization_msgs::msg::Marker>(
@@ -144,10 +144,6 @@ void VisualizationNode::initializeTopicHandlers() {
     signal_.trajectory = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/trajectory",
         rclcpp::QoS(1).reliability(qos));
-
-    signal_.map = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/visualization/map",
-        rclcpp::QoS(1).reliability(qos));
     
     signal_.navigation_mesh = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/navigation/mesh",
@@ -156,8 +152,6 @@ void VisualizationNode::initializeTopicHandlers() {
     signal_.navigation_route = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/navigation/route",
         rclcpp::QoS(1).reliability(qos));
-
-    timer_ = Node::create_wall_timer(1s, std::bind(&VisualizationNode::publishMap, this));
 }
 
 namespace {
@@ -306,46 +300,25 @@ visualization_msgs::msg::Marker makeMeshMarker(int id, const std_msgs::msg::Head
 } // namespace
 
 void VisualizationNode::publishEgo() const {
-    if (!state_.odom || !state_.mode || !state_.telemetry) {
+    if (!state_.odom) {
         return;
     }
 
-    tf2::Transform base_to_odom;
-    tf2::fromMsg(state_.odom->pose.pose, base_to_odom);
+    visualization_msgs::msg::Marker msg;
+    msg.header = state_.odom->header;
+    msg.type = visualization_msgs::msg::Marker::CUBE;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.frame_locked = true;
+    // always keep last ego marker
 
-    auto color = modeToColor(state_.mode);
-    auto body_msg = makeMeshMarker(0, state_.odom->header, params_.mesh_body, color);
+    msg.scale.x = model_->shape().length;
+    msg.scale.y = model_->shape().width;
+    msg.scale.z = params_.ego_height;
+    msg.pose = state_.odom->pose.pose;
+    msg.pose.position.z = params_.ego_z_lev;
+    msg.color = modeToColor(state_.mode);
 
-    const auto body_tf = base_to_odom * cache_.body_base_tf;
-    tf2::toMsg(body_tf, body_msg.pose);
-    
-    visualization_msgs::msg::MarkerArray msg_array;
-    msg_array.markers.push_back(body_msg);
-
-    for (auto wheel : kAllWheels) {
-        const double z_angle = [&]() {
-            switch (wheel) {
-                case WheelIndex::kFrontLeft:
-                    return state_.telemetry->current_left_steering;
-                case WheelIndex::kFrontRight:
-                    return state_.telemetry->current_right_steering;
-                default:
-                    return 0.0;
-            }
-        }();
-
-        auto rotation = tf2::Quaternion::getIdentity();
-        rotation.setRPY(0, 0, z_angle);
-        const auto wheel_tf = base_to_odom 
-            * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
-
-        auto wheel_msg = makeMeshMarker(wheel + 1, state_.odom->header, params_.mesh_wheel, color);
-        tf2::toMsg(wheel_tf, wheel_msg.pose);
-
-        msg_array.markers.push_back(wheel_msg);
-    }
-    
-    signal_.ego->publish(msg_array);
+    signal_.ego->publish(msg);
 }
 
 void VisualizationNode::publishEgoTrack() const {
@@ -486,28 +459,6 @@ void VisualizationNode::publishWaypoints() const {
 void VisualizationNode::handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg) {
     state_.waypoints = std::move(msg);
     publishWaypoints();
-}
-
-void VisualizationNode::publishMap() const {
-    visualization_msgs::msg::Marker msg;
-    msg.header.stamp = now();
-    msg.header.frame_id = "odom_ekf";
-    msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
-    msg.action = visualization_msgs::msg::Marker::ADD;
-    msg.color = color::gray(0.6);
-    msg.pose.position.z = params_.map_z_lev;
-
-    const auto& polygons = map_->polygons();
-    VERIFY(polygons.size() == 1);
-    const auto& polygon = polygons[0];
-
-    for (const geom::Triangle& triangle : polygon.triangles()) {
-        msg.points.push_back(geom::msg::toPoint(triangle.p1));
-        msg.points.push_back(geom::msg::toPoint(triangle.p2));
-        msg.points.push_back(geom::msg::toPoint(triangle.p3));
-    }
-
-    signal_.map->publish(msg);
 }
 
 void VisualizationNode::handleNavigationMesh(truck_msgs::msg::NavigationMesh::ConstSharedPtr msg) {

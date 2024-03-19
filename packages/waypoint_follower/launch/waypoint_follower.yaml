@@ -5,12 +5,16 @@ launch:
 - arg:
     name: "simulation"
     default: "false"
+- arg:
+    name: "graph_planner"
+    default: "true"
 - node:
     pkg: "waypoint_follower"
     exec: "waypoint_follower_node"
     name: "waypoint_follower_node"
     output: "log"
     param:
+    - {name: "graph_planner", value: "$(var graph_planner)"}
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "model_config", value: "$(var model_config)"}
     - {name: "period", value: 0.1}
