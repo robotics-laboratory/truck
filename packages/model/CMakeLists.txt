@@ -36,6 +36,9 @@ ament_export_dependencies(
   common 
   geom 
   rclcpp
+  tf2_ros
+  tf2_msgs
+  tf2_geometry_msgs
   yaml_cpp_vendor)
 
 install(
