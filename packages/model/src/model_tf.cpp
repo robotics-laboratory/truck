@@ -12,9 +12,11 @@ class ModelTfNode : public rclcpp::Node {
         const auto model_path = this->declare_parameter<std::string>("model_path", "model.yaml");
         const auto static_qos = rclcpp::QoS(1).transient_local();
 
+        model_ = std::make_unique<model::Model>(model::load(this->get_logger(), model_path));
+
         static_tf_signal_ = Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf_static", static_qos);
 
-        auto static_tf = Model::loadTf(model_path);
+        auto static_tf = model_->getTfStaticMsg();
 
         RCLCPP_INFO(
             this->get_logger(),
@@ -31,6 +33,8 @@ class ModelTfNode : public rclcpp::Node {
     }
 
   private:
+
+    std::unique_ptr<model::Model> model_ = nullptr;
 
     // output
     rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr static_tf_signal_ = nullptr;

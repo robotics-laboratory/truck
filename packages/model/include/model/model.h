@@ -66,9 +66,9 @@ class Model {
     double linearVelocityToMotorRPS(double velocity) const;
     double motorRPStoLinearVelocity(double rps) const;
 
+    tf2_msgs::msg::TFMessage getTfStaticMsg() const;
     tf2::Transform getLatestTranform(const std::string& source, 
       const std::string& target) const;
-    static tf2_msgs::msg::TFMessage loadTf(const std::string& path);
 
   private:
     struct Cache {
@@ -76,6 +76,7 @@ class Model {
         double max_abs_curvature;
         Limits<double> middle_steering_limits;
         Limits<double> base_curvature_limits;
+        tf2_msgs::msg::TFMessage tf_static_msg;
         std::shared_ptr<tf2_ros::Buffer> tf_static_buffer;
     } cache_;
 

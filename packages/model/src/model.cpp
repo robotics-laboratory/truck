@@ -19,6 +19,46 @@ double rearToBaseCurvature(double rear_curvature, double base_to_rear) {
     return rear_curvature / ratio;
 }
 
+geometry_msgs::msg::Vector3 toVector3(const YAML::Node& v) {
+    geometry_msgs::msg::Vector3 msg;
+
+    msg.x = v['x'].as<double>();
+    msg.y = v['y'].as<double>();
+    msg.z = v['z'].as<double>();
+
+    return msg;
+}
+
+geometry_msgs::msg::Quaternion toQuaternion(const YAML::Node& q) {
+    geometry_msgs::msg::Quaternion msg;
+
+    msg.x = q['x'].as<double>();
+    msg.y = q['y'].as<double>();
+    msg.z = q['z'].as<double>();
+    msg.w = q['w'].as<double>();
+
+    return msg;
+}
+
+tf2_msgs::msg::TFMessage loadTf(const std::string& path) {
+    tf2_msgs::msg::TFMessage result;
+
+    const auto node = YAML::LoadFile(path)["tf_static"];
+    for (const auto& tf : node) {
+        geometry_msgs::msg::TransformStamped msg;
+
+        msg.header.frame_id = tf["frame_id"].as<std::string>();
+        msg.child_frame_id = tf["child_frame_id"].as<std::string>();
+
+        msg.transform.translation = toVector3(tf["translation"]);
+        msg.transform.rotation = toQuaternion(tf["rotation"]);
+
+        result.transforms.push_back(msg);
+    }
+
+    return result;
+}
+
 } // namespace
 
 Model::Model(const std::string& config_path) : params_(config_path) {
@@ -44,8 +84,8 @@ Model::Model(const std::string& config_path) : params_(config_path) {
 
         const auto clock = std::make_shared<rclcpp::Clock>();
         cache_.tf_static_buffer = std::make_shared<tf2_ros::Buffer>(clock);
-        const auto tf_msg = loadTf(config_path);
-        for (const auto& transform : tf_msg.transforms) {
+        cache_.tf_static_msg = loadTf(config_path);
+        for (const auto& transform : cache_.tf_static_msg.transforms) {
             cache_.tf_static_buffer->setTransform(transform, "", true);
         }
     }
@@ -139,6 +179,8 @@ const Wheel& Model::wheel() const { return params_.wheel; }
 
 const Lidar& Model::lidar() const { return params_.lidar; }
 
+tf2_msgs::msg::TFMessage Model::getTfStaticMsg() const { return cache_.tf_static_msg; }
+
 tf2::Transform Model::getLatestTranform(const std::string& source, 
     const std::string& target) const {
     try {
@@ -150,50 +192,6 @@ tf2::Transform Model::getLatestTranform(const std::string& source,
     } catch (const tf2::TransformException& ex) {
         return tf2::Transform::getIdentity();
     }
-}
-
-namespace {
-
-    geometry_msgs::msg::Vector3 toVector3(const YAML::Node& v) {
-        geometry_msgs::msg::Vector3 msg;
-
-        msg.x = v['x'].as<double>();
-        msg.y = v['y'].as<double>();
-        msg.z = v['z'].as<double>();
-
-        return msg;
-    }
-
-    geometry_msgs::msg::Quaternion toQuaternion(const YAML::Node& q) {
-        geometry_msgs::msg::Quaternion msg;
-
-        msg.x = q['x'].as<double>();
-        msg.y = q['y'].as<double>();
-        msg.z = q['z'].as<double>();
-        msg.w = q['w'].as<double>();
-
-        return msg;
-    }
-
-} // namespace
-
-tf2_msgs::msg::TFMessage Model::loadTf(const std::string& path) {
-    tf2_msgs::msg::TFMessage result;
-
-    const auto node = YAML::LoadFile(path)["tf_static"];
-    for (const auto& tf : node) {
-        geometry_msgs::msg::TransformStamped msg;
-
-        msg.header.frame_id = tf["frame_id"].as<std::string>();
-        msg.child_frame_id = tf["child_frame_id"].as<std::string>();
-
-        msg.transform.translation = toVector3(tf["translation"]);
-        msg.transform.rotation = toQuaternion(tf["rotation"]);
-
-        result.transforms.push_back(msg);
-    }
-
-    return result;
 }
 
 }  // namespace truck::model
