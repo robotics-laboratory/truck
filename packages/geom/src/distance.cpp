@@ -26,6 +26,8 @@ double distanceSq(const Vec2& p, const Segment& s) noexcept {
     }
 }
 
+double distance(const Vec2& p, const Segment& s) noexcept { return std::sqrt(distanceSq(p, s)); }
+
 double denormalizedDistance(const Line& l, const Vec2& p) noexcept {
     return (dot(l.normal(), p) + l.c);
 }
