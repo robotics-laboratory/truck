@@ -1,7 +1,10 @@
 #pragma once
 
+#include "geom/distance.h"
 #include "geom/pose.h"
 #include "geom/vector.h"
+
+#include "common/exception.h"
 
 #include <iterator>
 
@@ -40,6 +43,18 @@ class UniformStepper {
         , dist_from_milestone_(0.0)
         , milestone_(milestone) {}
 
+    UniformStepper(
+        const Container* container, double step_len, double dist_from_milestone,
+        ContainerIterator milestone) noexcept
+        : container_(container)
+        , step_length_(step_len)
+        , dist_from_milestone_(dist_from_milestone)
+        , milestone_(milestone) {
+        VERIFY(
+            0 <= dist_from_milestone_ && milestone_ != container_->end() &&
+            dist_from_milestone < geom::distance(*milestone_, *(milestone_ + 1)));
+    }
+
     UniformStepper& SetStepLength(double step_length) noexcept {
         step_length_ = step_length;
         return *this;
@@ -47,21 +62,48 @@ class UniformStepper {
 
     Pose operator*() const noexcept { return GetPose(); }
 
-    UniformStepper& operator++() noexcept {
-        double step_left = step_length_;
+    UniformStepper& operator+=(double step_length) noexcept {
+        if (step_length < 0) {
+            return this->operator-=(-step_length);
+        }
         while (milestone_ + 1 != container_->end()) {
             double dist_to_next_milestone =
-                (*(milestone_ + 1) - *milestone_).len() - dist_from_milestone_;
-            if (dist_to_next_milestone > step_left) {
-                dist_from_milestone_ += step_left;
+                geom::distance(*milestone_, *(milestone_ + 1)) - dist_from_milestone_;
+            if (dist_to_next_milestone > step_length) {
+                dist_from_milestone_ += step_length;
                 break;
             }
-            step_left -= dist_to_next_milestone;
+            step_length -= dist_to_next_milestone;
             ++milestone_;
             dist_from_milestone_ = 0.0;
         }
         return *this;
     }
+
+    UniformStepper& operator-=(double step_length) noexcept {
+        if (step_length < 0) {
+            return this->operator+=(-step_length);
+        }
+        if (dist_from_milestone_ >= step_length) {
+            dist_from_milestone_ -= step_length;
+            return *this;
+        }
+        step_length -= dist_from_milestone_;
+        dist_from_milestone_ = 0.0;
+        while (milestone_ != container_->begin()) {
+            --milestone_;
+            dist_from_milestone_ = geom::distance(*milestone_, *(milestone_ + 1));
+            if (dist_from_milestone_ >= step_length) {
+                dist_from_milestone_ -= step_length;
+                break;
+            }
+            step_length -= dist_from_milestone_;
+            dist_from_milestone_ = 0.0;
+        }
+        return *this;
+    }
+
+    UniformStepper& operator++() noexcept { return this->operator+=(step_length_); }
 
     UniformStepper operator++(int) noexcept {
         UniformStepper it = *this;
