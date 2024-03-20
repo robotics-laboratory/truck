@@ -1,0 +1,16 @@
+launch:
+- node:
+    pkg: "hardware_node_cpp"
+    exec: "hardware_node_cpp"
+    name: "hardware_node_cpp"
+    output: "log"
+    param:
+    - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
+    - {name: "steering_config", value: "$(find-pkg-share hardware_node)/resource/steering.csv"}
+    - {name: "node_id", value: 39}
+    - {name: "odrive_axis", value: "axis1"}
+    - {name: "interface", value: "vxcan1"}
+    - {name: "odrive_timeout", value: 250}
+    - {name: "status_report_rate", value: 20.0}
+    - {name: "telemetry_report_rate", value: 20.0}
+    - {name: "read_report_rate", value: 20.0}
