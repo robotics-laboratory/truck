@@ -444,6 +444,37 @@ TEST(UniformStepper, stepping) {
     }
 }
 
+TEST(UniformStepper, arbitary_stepping) {
+    constexpr double eps = 1e-7;
+    {
+        const Polyline polyline = {Vec2(0, 0), Vec2(0, 1), Vec2(3, 1), Vec2(3, 2)};
+        auto it = polyline.ubegin();
+        it += 1.0;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(0, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(1, 0)), eps);
+        it += 1.0;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(1, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(1, 0)), eps);
+        it += 3.0;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(3, 2), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+        ASSERT_TRUE(it == polyline.uend());
+    }
+    {
+        const Polyline polyline = {Vec2(0, 0), Vec2(0, 1), Vec2(3, 1), Vec2(3, 2)};
+        auto it = polyline.uend();
+        it -= 1.0;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(3, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+        it -= 1.0;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(2, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(1, 0)), eps);
+        it -= 3.0;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(0, 0), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+    }
+}
+
 TEST(Polygon, isComplex) {
     {
         const Polygon poly{Vec2(0, 0), Vec2(1, 0), Vec2(1, 1)};
@@ -556,7 +587,7 @@ TEST(Ray, segment_intersections) {
     using namespace truck::geom;
 
     constexpr double precision = 1e-4;
-    
+
     {
         Vec2 ray_origin(4, 0), segment_begin(2, 2), segment_end(6, 2), correct_intersection(4, 2);
         AngleVec2 ray_dir(Angle::fromDegrees(90));
