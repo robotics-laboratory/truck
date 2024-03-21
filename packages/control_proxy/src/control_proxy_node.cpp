@@ -40,8 +40,8 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
     params_ = Params {
         std::chrono::milliseconds(this->declare_parameter<long int>("watchdog_period", 20)),
         std::chrono::milliseconds(this->declare_parameter<long int>("mode_period", 200)),
-        std::chrono::milliseconds(this->declare_parameter<long int>("remote_timeout", 200)),
-        std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 150))
+        std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 150)),
+        std::chrono::milliseconds(this->declare_parameter<long int>("remote_timeout", 400))
     };
 
     RCLCPP_INFO(this->get_logger(), "remote timeout: %li ms", params_.remote_timeout.count());
@@ -158,6 +158,7 @@ void ControlProxyNode::watchdog() {
             return true;
         }
         auto duration_ns = (now() - msg->header.stamp).nanoseconds();
+        RCLCPP_INFO(this->get_logger(), "control latency: %f", duration_ns / 1e9);
         return std::chrono::nanoseconds(duration_ns) > timeout;
     };
 

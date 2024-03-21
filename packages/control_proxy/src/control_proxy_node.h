@@ -52,11 +52,11 @@ class ControlProxyNode : public rclcpp::Node {
     std::unique_ptr<model::Model> model_ = nullptr;
 
     struct Params {
-        std::chrono::milliseconds watchdog_period{20};
-        std::chrono::milliseconds mode_period{200};
-        std::chrono::milliseconds control_timeout{200};
-        std::chrono::milliseconds remote_timeout{200};
-    } params_{};
+        std::chrono::milliseconds watchdog_period;
+        std::chrono::milliseconds mode_period;
+        std::chrono::milliseconds control_timeout;
+        std::chrono::milliseconds remote_timeout;
+    } params_;
 
     struct Services {
         rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset = nullptr;
