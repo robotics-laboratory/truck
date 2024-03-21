@@ -1,5 +1,4 @@
 launch:
-- arg: {name: "control_name", default: "$(env TRUCK_CONTROL)"}
 
 - include:
    file: $(find-pkg-share truck)/launch/lidar.yaml
@@ -15,7 +14,6 @@ launch:
     arg:
     - {name: "simulation", value: "false"}
     - {name: "qos", value: "0"}
-    - {name: "control_name", value: "$(var control_name)"}
 
 - include:
     file: $(find-pkg-share perf)/launch/perf_stat.yaml

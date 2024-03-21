@@ -10,10 +10,10 @@ launch:
     default: "true"
 - arg:
     name: "enable_camera_grid"
-    default: "false"
+    default: "true"
 - arg:
     name: "enable_camera_cloud"
-    default: "false"
+    default: "true"
 - node:
     pkg: "occupancy_grid"
     exec: "occupancy_grid_node"
@@ -30,5 +30,3 @@ launch:
     - {name: "camera_view_distance", value: 2.0}
     - {name: "camera_view_hmax", value: 0.15}
     - {name: "camera_view_hmin", value: -0.165}
-
-    
