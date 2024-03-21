@@ -429,10 +429,11 @@ void Searcher::resetVertices() {
 }
 
 void Searcher::Stopwatch::start() {
-    t1 = std::chrono::high_resolution_clock::now();
+    // t1 = std::chrono::high_resolution_clock::now();
 }
 
 void Searcher::Stopwatch::end() {
+    /*
     t2 = std::chrono::high_resolution_clock::now();
     auto time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
@@ -440,6 +441,7 @@ void Searcher::Stopwatch::end() {
         rclcpp::get_logger(""),
         "Path search time: " + std::to_string(time) + "ms";
     );
+    */
 }
 
 bool Searcher::findPath() {

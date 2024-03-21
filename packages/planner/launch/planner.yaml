@@ -33,7 +33,7 @@ launch:
           param:
             - { name: "max_vertices_count", value: 10000 }
             - { name: "finish_area_size", value: 0.5 }
-            - { name: "min_obstacle_distance", value: 0.25 }
+            - { name: "min_obstacle_distance", value: 0.15 }
             - { name: "max_node_position_error", value: 0.05 }
 
         - name: "edge"

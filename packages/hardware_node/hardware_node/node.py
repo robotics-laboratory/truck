@@ -173,12 +173,13 @@ class HardwareNode(Node):
             last_child = curr_root[name] = {}
         errors = [f"system.{x}" for x in root["system"]]
         axis_group = root[self._odrive_axis]
-        errors += [f"axis.{x}" for x in axis_group["axis"]]
-        errors += [f"motor.{x}" for x in axis_group["motor"]]
-        errors += [f"drv.{x}" for x in axis_group["DRV fault"]]
-        errors += [f"estimator.{x}" for x in axis_group["sensorless_estimator"]]
-        errors += [f"encoder.{x}" for x in axis_group["encoder"]]
-        errors += [f"controller.{x}" for x in axis_group["controller"]]
+        errors.append(str(axis_group))
+        #errors += [f"axis.{x}" for x in axis_group["axis"]]
+        #errors += [f"motor.{x}" for x in axis_group["motor"]]
+        #errors += [f"drv.{x}" for x in axis_group["DRV fault"]]
+        #errors += [f"estimator.{x}" for x in axis_group["sensorless_estimator"]]
+        #errors += [f"encoder.{x}" for x in axis_group["encoder"]]
+        #errors += [f"controller.{x}" for x in axis_group["controller"]]
         return errors
 
     def _push_telemetry(self):
