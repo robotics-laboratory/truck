@@ -84,6 +84,7 @@ Model::Model(const std::string& config_path) : params_(config_path) {
 
         const auto clock = std::make_shared<rclcpp::Clock>();
         cache_.tf_static_buffer = std::make_shared<tf2_ros::Buffer>(clock);
+        cache_.tf_static_buffer->setUsingDedicatedThread(true);
         cache_.tf_static_msg = loadTf(config_path);
         for (const auto& transform : cache_.tf_static_msg.transforms) {
             cache_.tf_static_buffer->setTransform(transform, "", true);
