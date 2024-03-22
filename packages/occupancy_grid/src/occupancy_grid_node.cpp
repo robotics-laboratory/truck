@@ -201,25 +201,35 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
 
     image_geometry::PinholeCameraModel model;
     model.fromCameraInfo(state_.camera_info);
-
     auto depth_map = cv_bridge::toCvShare(image, image->encoding);
-    auto odom_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
 
+    auto odom_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
     odom_cloud->header.frame_id = to_id;
     odom_cloud->header.stamp = image->header.stamp;
-
     odom_cloud->is_dense = false;
     odom_cloud->is_bigendian = false;
-
     sensor_msgs::PointCloud2Modifier pcd_modifier(*odom_cloud);
     pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
     pcd_modifier.resize(image->height * image->width);
-    
     sensor_msgs::PointCloud2Iterator<float> x(*odom_cloud, "x");
     sensor_msgs::PointCloud2Iterator<float> y(*odom_cloud, "y");
     sensor_msgs::PointCloud2Iterator<float> z(*odom_cloud, "z");
 
+    auto viz_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
+    viz_cloud->header.frame_id = to_id;
+    viz_cloud->header.stamp = image->header.stamp;
+    viz_cloud->is_dense = false;
+    viz_cloud->is_bigendian = false;
+    sensor_msgs::PointCloud2Modifier viz_pcd_modifier(*viz_cloud);
+    viz_pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
+    viz_pcd_modifier.resize(image->height * image->width);
+    sensor_msgs::PointCloud2Iterator<float> vx(*viz_cloud, "x");
+    sensor_msgs::PointCloud2Iterator<float> vy(*viz_cloud, "y");
+    sensor_msgs::PointCloud2Iterator<float> vz(*viz_cloud, "z");
+
     size_t point_n = 0;
+    size_t viz_point_n = 0;
+    int reducer = 4;
     for (int v = 0; v < depth_map->image.rows; ++v) {
         for (int u = 0; u < depth_map->image.cols; ++u) {
             const auto depth = depth_map->image.at<uint16_t>(v, u);
@@ -249,17 +259,34 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
             ++x;
             ++y;
             ++z;
+
+            if (v % reducer == 0 && u % reducer == 0) {
+                *vx = odom_vec.x();
+                *vy = odom_vec.y();
+                *vz = odom_vec.z();
+                ++vx;
+                ++vy;
+                ++vz;
+                ++viz_point_n;
+            }
         }
     }
+
     pcd_modifier.resize(point_n);
     odom_cloud->height = 1;
     odom_cloud->width = point_n;
     state_.odom_camera_points = std::move(odom_cloud);
     publishOccupancyGrid();
 
+    viz_pcd_modifier.resize(viz_point_n);
+    viz_cloud->height = 1;
+    viz_cloud->width = viz_point_n;
+
     if (params_.enable_camera_cloud) {
-        signal_.camera_cloud->publish(*state_.odom_camera_points);
+        signal_.camera_cloud->publish(*viz_cloud);
     }
+
+
 }
 
 namespace {
