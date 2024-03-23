@@ -9,12 +9,10 @@ find_package(geom REQUIRED)
 find_package(map REQUIRED)
 find_package(model REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(OpenCV REQUIRED)
 
 add_library(
     ${PROJECT_NAME} SHARED
     src/collision_checker.cpp
-    src/collision_map.cpp
 )
 
 ament_target_dependencies(

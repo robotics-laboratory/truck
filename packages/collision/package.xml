@@ -14,7 +14,6 @@
   <depend>map</depend>
   <depend>model</depend>
   <depend>nav_msgs</depend>
-  <depend>OpenCV</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

@@ -8,8 +8,8 @@
 
 namespace truck::fastgrid {
 
-void Draw(const geom::Polygon& poly, U8Grid& grid);
+void Draw(const geom::Polygon& poly, U8Grid& grid, int color = 0);
 
-void Draw(const geom::ComplexPolygon& complex_poly, U8Grid& grid);
+void Draw(const geom::ComplexPolygon& complex_poly, U8Grid& grid, int color = 0);
 
 }  // namespace truck::fastgrid

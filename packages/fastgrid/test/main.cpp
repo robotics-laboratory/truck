@@ -585,7 +585,7 @@ TEST(Draw, regular_polygon_drawing) {
         grid.SetTo(1);
 
         Polygon poly{Vec2(1, 0), Vec2(3, 0), Vec2(3, 2 - eps), Vec2(1, 2 - eps)};
-        Draw(poly, grid);
+        Draw(poly, grid, 0);
 
         EXPECT_EQ(grid[0][0], 1);
         EXPECT_EQ(grid[0][1], 0);
@@ -599,27 +599,27 @@ TEST(Draw, regular_polygon_drawing) {
     }
 
     {
-        grid.SetTo(1);
+        grid.SetTo(0);
 
         Polygon poly{Vec2(1.3, 0.3), Vec2(2.7, 1.7), Vec2(2.9, 2.7), Vec2(1.2, 2.3)};
-        Draw(poly, grid);
+        Draw(poly, grid, 1);
 
-        EXPECT_EQ(grid[0][0], 1);
-        EXPECT_EQ(grid[0][1], 0);
-        EXPECT_EQ(grid[0][2], 1);
-        EXPECT_EQ(grid[1][0], 1);
-        EXPECT_EQ(grid[1][1], 0);
-        EXPECT_EQ(grid[1][2], 0);
-        EXPECT_EQ(grid[2][0], 1);
-        EXPECT_EQ(grid[2][1], 0);
-        EXPECT_EQ(grid[2][2], 0);
+        EXPECT_EQ(grid[0][0], 0);
+        EXPECT_EQ(grid[0][1], 1);
+        EXPECT_EQ(grid[0][2], 0);
+        EXPECT_EQ(grid[1][0], 0);
+        EXPECT_EQ(grid[1][1], 1);
+        EXPECT_EQ(grid[1][2], 1);
+        EXPECT_EQ(grid[2][0], 0);
+        EXPECT_EQ(grid[2][1], 1);
+        EXPECT_EQ(grid[2][2], 1);
     }
 
     {
         grid.SetTo(1);
 
         Polygon poly{Vec2(-0.1, -0.9), Vec2(3.9, 0.1), Vec2(3.1, 2.8), Vec2(0.2, 3.2)};
-        Draw(poly, grid);
+        Draw(poly, grid, 0);
 
         EXPECT_EQ(grid[0][0], 0);
         EXPECT_EQ(grid[0][1], 0);
@@ -643,8 +643,8 @@ TEST(Draw, transformed_polygon_drawing) {
     {
         grid.SetTo(1);
 
-        Polygon poly{Vec2(-2.5, 2.5), Vec2(-0.5, 0.5), Vec2(-2.5, 0.5)};
-        Draw(poly, grid);
+        Polygon poly{Vec2(-2.5, 2.5), Vec2(-0.25, 0.25), Vec2(-2.5, 0.25)};
+        Draw(poly, grid, 0);
 
         EXPECT_EQ(grid[0][0], 0);
         EXPECT_EQ(grid[0][1], 1);
@@ -668,7 +668,7 @@ TEST(Draw, complex_polygon_with_hole_drawing) {
     auto& grid = *holder;
 
     {
-        grid.SetTo(1);
+        grid.SetTo(0);
 
         ComplexPolygon poly;
         poly.outer = {Vec2(0, 0), Vec2(0, 3), Vec2(3, 3), Vec2(3, 0)};
@@ -678,17 +678,17 @@ TEST(Draw, complex_polygon_with_hole_drawing) {
              Vec2(2 + eps, 2 + eps),
              Vec2(2 + eps, 1 - eps)}};
 
-        Draw(poly, grid);
+        Draw(poly, grid, 1);
 
-        EXPECT_EQ(grid[0][0], 0);
-        EXPECT_EQ(grid[0][1], 0);
-        EXPECT_EQ(grid[0][2], 0);
-        EXPECT_EQ(grid[1][0], 0);
-        EXPECT_EQ(grid[1][1], 1);
-        EXPECT_EQ(grid[1][2], 0);
-        EXPECT_EQ(grid[2][0], 0);
-        EXPECT_EQ(grid[2][1], 0);
-        EXPECT_EQ(grid[2][2], 0);
+        EXPECT_EQ(grid[0][0], 1);
+        EXPECT_EQ(grid[0][1], 1);
+        EXPECT_EQ(grid[0][2], 1);
+        EXPECT_EQ(grid[1][0], 1);
+        EXPECT_EQ(grid[1][1], 0);
+        EXPECT_EQ(grid[1][2], 1);
+        EXPECT_EQ(grid[2][0], 1);
+        EXPECT_EQ(grid[2][1], 1);
+        EXPECT_EQ(grid[2][2], 1);
     }
 }
 
@@ -716,7 +716,7 @@ TEST(Draw, complex_polygon_with_multiple_holes_drawing) {
              Vec2(4 + eps, 4 + eps),
              Vec2(4 + eps, 3 - eps)}};
 
-        Draw(poly, grid);
+        Draw(poly, grid, 0);
 
         EXPECT_EQ(grid[0][0], 0);
         EXPECT_EQ(grid[0][1], 0);

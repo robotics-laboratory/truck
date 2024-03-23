@@ -16,7 +16,8 @@ __always_inline std::vector<cv::Point> PolyToInput(const geom::Polygon& poly, co
     input.reserve(poly.size());
     for (const auto& vertex : poly) {
         const auto point = grid.transform(vertex);
-        input.push_back(cv::Point(floor<int>(point.x), floor<int>(point.y)));
+        input.push_back(cv::Point(
+            floor<int>(point.x / grid.resolution), floor<int>(point.y / grid.resolution)));
     }
 
     return input;
@@ -31,7 +32,8 @@ __always_inline std::vector<std::vector<cv::Point>> ComplexPolyToInput(
         std::vector<cv::Point> points;
         for (const auto& vertex : complex_poly.outer) {
             const auto point = grid.transform(vertex);
-            points.push_back(cv::Point(floor<int>(point.x), floor<int>(point.y)));
+            points.push_back(cv::Point(
+                floor<int>(point.x / grid.resolution), floor<int>(point.y / grid.resolution)));
         }
         input.push_back(std::move(points));
     }
@@ -40,7 +42,8 @@ __always_inline std::vector<std::vector<cv::Point>> ComplexPolyToInput(
         std::vector<cv::Point> points;
         for (const auto& vertex : inner) {
             const auto point = grid.transform(vertex);
-            points.push_back(cv::Point(floor<int>(point.x), floor<int>(point.y)));
+            points.push_back(cv::Point(
+                floor<int>(point.x / grid.resolution), floor<int>(point.y / grid.resolution)));
         }
         input.push_back(std::move(points));
     }
@@ -48,25 +51,25 @@ __always_inline std::vector<std::vector<cv::Point>> ComplexPolyToInput(
     return input;
 }
 
-__always_inline void FillPoly(cv::InputArrayOfArrays input, U8Grid& grid) {
+__always_inline void FillPoly(cv::InputArrayOfArrays input, U8Grid& grid, int color) {
     cv::Mat mat = cv::Mat(grid.size.width, grid.size.height, CV_8U, grid.data);
-    cv::fillPoly(mat, input, 0, cv::LINE_8);
+    cv::fillPoly(mat, input, color, cv::LINE_8);
 }
 
-__always_inline void Draw(const geom::Polygon& poly, U8Grid& grid) {
-    FillPoly(PolyToInput(poly, grid), grid);
+__always_inline void Draw(const geom::Polygon& poly, U8Grid& grid, int color) {
+    FillPoly(PolyToInput(poly, grid), grid, color);
 }
 
-__always_inline void Draw(const geom::ComplexPolygon& complex_poly, U8Grid& grid) {
-    FillPoly(ComplexPolyToInput(complex_poly, grid), grid);
+__always_inline void Draw(const geom::ComplexPolygon& complex_poly, U8Grid& grid, int color) {
+    FillPoly(ComplexPolyToInput(complex_poly, grid), grid, color);
 }
 
 }  // namespace impl
 
-void Draw(const geom::Polygon& poly, U8Grid& grid) { impl::Draw(poly, grid); }
+void Draw(const geom::Polygon& poly, U8Grid& grid, int color) { impl::Draw(poly, grid, color); }
 
-void Draw(const geom::ComplexPolygon& complex_poly, U8Grid& grid) {
-    impl::Draw(complex_poly, grid);
+void Draw(const geom::ComplexPolygon& complex_poly, U8Grid& grid, int color) {
+    impl::Draw(complex_poly, grid, color);
 }
 
 }  // namespace truck::fastgrid

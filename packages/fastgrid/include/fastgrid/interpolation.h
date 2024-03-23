@@ -66,7 +66,7 @@ struct Bilinear {
             (domain.size.height * domain.resolution <= y)) {
             return default_value;
         }
-        return GetRelative({.x = x, .y = y});
+        return GetRelative(geom::Vec2(x, y));
     }
 
     double operator()(const geom::Vec2& point) const noexcept { return Get(point); }
