@@ -98,7 +98,7 @@ ALWAYS_INLINE void distanceTransformApprox(
     VERIFY(out.size == input.size);
 
     const auto scale = static_cast<float>(input.resolution) / step.hv;
-    const auto default_value = step.dg * input.size.max() / 6;
+    const auto default_value = step.dg * input.size.max();
 
     // fill top and bottom rows
     for (int i = 0; i < border; ++i) {

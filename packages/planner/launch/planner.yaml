@@ -23,3 +23,6 @@ launch:
     - {name: "node/finish/color_rgba", value: [1.0, 1.0, 1.0, 0.0] }
     - {name: "node/finish_area/color_rgba", value: [0.3, 1.0, 1.0, 0.0] }
     - {name: "node/collision/color_rgba", value: [0.8, 1.0, 0.0, 0.0] }
+    - {name: "collision_checker/radius", value: 6.0 }
+    - {name: "collision_checker/resolution", value: 0.1 }
+

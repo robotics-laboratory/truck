@@ -18,7 +18,7 @@ std_msgs::msg::ColorRGBA toColorRGBA(const std::vector<double>& vector) {
     return color;
 }
 
-} // namespace
+}  // namespace
 
 PlannerNode::PlannerNode() : Node("planner") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
@@ -60,19 +60,18 @@ PlannerNode::PlannerNode() : Node("planner") {
 
     params_ = Parameters{
         .grid = grid_params,
-
         .node = Parameters::NodeParams{
             .z_lev = this->declare_parameter<double>("node/z-lev"),
             .scale = this->declare_parameter<double>("node/scale"),
 
-            .base_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/base/color_rgba")),
+            .base_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node/base/color_rgba")),
 
-            .ego_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/ego/color_rgba")),
+            .ego_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node/ego/color_rgba")),
 
-            .finish_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/finish/color_rgba")),
+            .finish_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node/finish/color_rgba")),
 
             .finish_area_color = toColorRGBA(
                 this->declare_parameter<std::vector<double>>("node/finish_area/color_rgba")),
@@ -87,7 +86,11 @@ PlannerNode::PlannerNode() : Node("planner") {
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_buffer_->setUsingDedicatedThread(true);
 
-    checker_ = std::make_shared<collision::StaticCollisionChecker>(model_->shape());
+    collision_checker_ = std::make_shared<collision::StaticCollisionChecker>(
+        collision::StaticCollisionChecker::Params{
+            .radius = this->declare_parameter<double>("collision_checker/radius", 6.0),
+            .resolution = this->declare_parameter<double>("collision_checker/resolution", 0.1)},
+        model_->shape());
 
     timer_ = this->create_wall_timer(200ms, bind(&PlannerNode::doPlanningLoop, this));
 }
@@ -113,13 +116,10 @@ void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     msg->header.frame_id = target;
     msg->info.origin = geom::msg::toPose(tf_opt->apply(geom::toPose(msg->info.origin)));
 
-    state_.distance_transform = std::make_shared<collision::Map>(
-        collision::distanceTransform(collision::Map::fromOccupancyGrid(*msg)));
-
     state_.occupancy_grid = msg;
 
     // update collision checker
-    checker_->reset(*state_.distance_transform);
+    collision_checker_->SetEgoPose(geom::toPose(*state_.odom)).SetOccupancyGrid(msg);
 }
 
 void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
@@ -197,18 +197,17 @@ std::optional<geom::Transform> PlannerNode::getLatestTranform(
 }
 
 void PlannerNode::doPlanningLoop() {
-    if (!checker_->initialized() || !state_.ego_pose.has_value() ||
+    if (!collision_checker_->Initialized() || !state_.ego_pose.has_value() ||
         !state_.finish_area.has_value()) {
         return;
     }
 
     // initialize grid
-    state_.grid = std::make_shared<search::Grid>(
-        search::Grid(params_.grid, model_->shape())
-            .setEgoPose(state_.ego_pose.value())
-            .setFinishArea(state_.finish_area.value())
-            .setCollisionChecker(checker_)
-            .build());
+    state_.grid = std::make_shared<search::Grid>(search::Grid(params_.grid, model_->shape())
+                                                     .setEgoPose(state_.ego_pose.value())
+                                                     .setFinishArea(state_.finish_area.value())
+                                                     .setCollisionChecker(collision_checker_)
+                                                     .build());
 
     // visualize grid
     publishGrid();

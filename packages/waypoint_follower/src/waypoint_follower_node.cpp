@@ -51,8 +51,10 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
         this->get_logger(), "distance_to_obstacle: %.2fm", speed_params_.distance_to_obstacle);
 
     RCLCPP_INFO(
-        this->get_logger(), "acceleration: [%.2f, %.2f]",
-        speed_params_.acceleration.min, speed_params_.acceleration.max);
+        this->get_logger(),
+        "acceleration: [%.2f, %.2f]",
+        speed_params_.acceleration.min,
+        speed_params_.acceleration.max);
 
     // TODO: change service name
     service_.reset = this->create_service<std_srvs::srv::Empty>(
@@ -95,7 +97,11 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
 
-    checker_ = std::make_unique<collision::StaticCollisionChecker>(model_->shape());
+    collision_checker_ = std::make_unique<collision::StaticCollisionChecker>(
+        collision::StaticCollisionChecker::Params{
+            .radius = this->declare_parameter<double>("collision_checker/radius", 6.0),
+            .resolution = this->declare_parameter<double>("collision_checker/resolution", 0.1)},
+        model_->shape());
 
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_buffer_->setUsingDedicatedThread(true);
@@ -148,7 +154,7 @@ motion::Trajectory makeTrajectory(const std::deque<LinkedPose>& path) {
 }  // namespace
 
 void WaypointFollowerNode::publishGridCostMap() {
-    if (!state_.distance_transform) {
+    if (!collision_checker_->Initialized()) {
         return;
     }
 
@@ -157,12 +163,12 @@ void WaypointFollowerNode::publishGridCostMap() {
     }
 
     constexpr double kMaxDistance = 10.0;
-    const auto msg = state_.distance_transform->makeCostMap(state_.grid->header, kMaxDistance);
+    const auto msg = collision_checker_->MakeCostMap(state_.grid->header, kMaxDistance);
     signal_.distance_transform->publish(msg);
 }
 
 void WaypointFollowerNode::publishTrajectory() {
-    if (!state_.odometry || !state_.distance_transform) {
+    if (!state_.odometry) {
         return;
     }
 
@@ -174,12 +180,10 @@ void WaypointFollowerNode::publishTrajectory() {
         follower_->reset();
     }
 
-    checker_->reset(*state_.distance_transform);
-
     motion::Trajectory trajectory = makeTrajectory(follower_->path());
     bool collision = false;
     for (auto& state : trajectory.states) {
-        const double margin = checker_->distance(state.pose);
+        const double margin = collision_checker_->Distance(state.pose);
         collision |= margin < params_.safety_margin;
 
         state.collision = collision;
@@ -291,8 +295,7 @@ void WaypointFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     msg->info.origin = geom::msg::toPose(tf_opt->apply(geom::toPose(msg->info.origin)));
 
     // distance transfor - cpu intensive operation
-    state_.distance_transform = std::make_shared<collision::Map>(
-        collision::distanceTransform(collision::Map::fromOccupancyGrid(*msg)));
+    collision_checker_->SetEgoPose(geom::toPose(*state_.odometry)).SetOccupancyGrid(msg);
 
     state_.grid = msg;
 }
