@@ -220,6 +220,42 @@ TEST(SDD, DrawComplexPolygon) {
     }
 }
 
+TEST(SDD, Bezier) {
+    {
+        const std::string output_path = "/truck/packages/svg_debug_drawer/test/data/im8_out.svg";
+
+        auto img = sdd::SDD(sdd::Size{.width = 512, .height = 512}, output_path);
+        img.Add({.points = {geom::Vec2(10, 80), geom::Vec2(95, 10), geom::Vec2(180, 80)},
+                 .thickness = 2.5,
+                 .color = sdd::color::red,
+                 .label = "1"})
+            .Add(
+                {.points =
+                     {geom::Vec2(10, 10),
+                      geom::Vec2(20, 20),
+                      geom::Vec2(40, 20),
+                      geom::Vec2(50, 10)},
+                 .thickness = 2.5,
+                 .color = sdd::color::purple,
+                 .label = "2"})
+            .Add(geom::Vec2(10, 180), geom::Vec2(52.5, 110), geom::Vec2(95, 180))
+            .Add(
+                geom::Vec2(130, 110),
+                geom::Vec2(120, 140),
+                geom::Vec2(180, 140),
+                geom::Vec2(170, 110));
+
+        img << sdd::Bezier{
+            .points = {geom::Vec2(10, 280), geom::Vec2(50, 350), geom::Vec2(90, 280)},
+            .thickness = 2.5,
+            .color = sdd::color::blue,
+            .label = "3"} << sdd::Bezier{.points = {geom::Vec2(130, 260), geom::Vec2(120, 280), geom::Vec2(180, 280), geom::Vec2(170, 260)},
+            .thickness = 2.5,
+            .color = sdd::color::olive,
+            .label = "4"};
+    }
+}
+
 int main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

@@ -256,6 +256,49 @@ SDD& SDD::Add(const geom::ComplexPolygon& polygon) noexcept {
     return Add(ComplexPolygon{.complex_polygon = polygon});
 }
 
+SDD& SDD::Add(const Bezier& bezier) noexcept {
+    VERIFY(bezier.points.size() == 3 || bezier.points.size() == 4);
+
+    auto node = root_.append_child("path");
+    switch (bezier.points.size()) {
+        case 3:
+            node.append_attribute("d").set_value(fmt::format(
+                                                     "M {} Q {} {}",
+                                                     ToString(bezier.points[0]),
+                                                     ToString(bezier.points[1]),
+                                                     ToString(bezier.points[2]))
+                                                     .data());
+            break;
+        case 4:
+            node.append_attribute("d").set_value(fmt::format(
+                                                     "M {} C {} {} {}",
+                                                     ToString(bezier.points[0]),
+                                                     ToString(bezier.points[1]),
+                                                     ToString(bezier.points[2]),
+                                                     ToString(bezier.points[3]))
+                                                     .data());
+        default:
+            break;
+    }
+    node.append_attribute("stroke").set_value(ToString(bezier.color).data());
+    node.append_attribute("stroke-width").set_value(ToString(bezier.thickness).data());
+    node.append_attribute("fill").set_value("transparent");
+    node.append_attribute("id").set_value(bezier.label.data());
+    node.append_child("title").text().set(bezier.label.data());
+
+    return *this;
+}
+
+SDD& SDD::Add(const geom::Vec2& p0, const geom::Vec2& p1, const geom::Vec2& p2) noexcept {
+    return Add(Bezier{.points = {p0, p1, p2}, .thickness = ScaleUnit()});
+}
+
+SDD& SDD::Add(
+    const geom::Vec2& p0, const geom::Vec2& p1, const geom::Vec2& p2,
+    const geom::Vec2& p3) noexcept {
+    return Add(Bezier{.points = {p0, p1, p2, p3}, .thickness = ScaleUnit()});
+}
+
 Size SDD::GetSize() const noexcept {
     auto svg = root_.parent();
     return {
