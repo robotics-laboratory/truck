@@ -1,15 +1,18 @@
 #include <gtest/gtest.h>
 
 #include "trajectory_planner/planner.h"
-#include "trajectory_planner/state.h"
 #include "trajectory_planner/rtree.h"
+#include "trajectory_planner/state.h"
 
 #include "common/math.h"
 
+#include "geom/test/equal_assert.h"
 #include "geom/vector.h"
 #include "geom/pose.h"
 
 #include "map/map.h"
+
+#include "model/model.h"
 
 #include "svg_debug_drawer/sdd.h"
 
@@ -21,14 +24,20 @@ using namespace truck;
 using namespace truck::geom;
 using namespace truck::trajectory_planner;
 using namespace truck::map;
+using namespace truck::model;
+
+using namespace std;
 
 namespace {
+
+/*
 struct Constraints {
     Discretization<double> x = {.limits = Limits<double>(0, 100), .total_states = 25};
     Discretization<double> y = {.limits = Limits<double>(0, 100), .total_states = 25};
     Discretization<double> yaw = {.limits = Limits<double>(0, 2 * M_PI), .total_states = 7};
     Discretization<double> velocity = {.limits = Limits<double>(0, 0.8), .total_states = 7};
 };
+
 
 States GenerateStates(const Constraints& constraints) {
     States states;
@@ -50,14 +59,15 @@ States GenerateStates(const Constraints& constraints) {
     }
     return states;
 }
+*/
 
 }  // namespace
 
 TEST(StateSpace, StatePoses) {
     const auto DrawPoses = [](sdd::SDD& img, const StateSpace& state_space) {
         for (const auto& state : state_space.GetStates()) {
-            double scale = std::max(img.GetSize().width, img.GetSize().height) * 0.0025;
-            double length = std::max(img.GetSize().width, img.GetSize().height) * 0.0025;
+            double scale = max(img.GetSize().width, img.GetSize().height) * 0.0025;
+            double length = max(img.GetSize().width, img.GetSize().height) * 0.0025;
             auto color = sdd::color::fuchsia;
             if (&state == &state_space.GetStartState()) {
                 scale *= 2;
@@ -147,6 +157,79 @@ TEST(StateSpace, StatePoses) {
     }
 }
 
+TEST(Planner, HeuriscticCost) {
+    constexpr double eps = 1e-4;
+
+    auto state_space = StateSpace({});
+    auto planner = Planner({}, Model("/truck/packages/model/config/model.yaml")).Build(state_space);
+    EXPECT_DOUBLE_EQ(
+        *planner.HeuristicCost(
+            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0}),
+        0.0);
+    EXPECT_FALSE(planner.HeuristicCost(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.8}));
+    EXPECT_FALSE(planner.HeuristicCost(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.0}));
+    ASSERT_GEOM_EQUAL(
+        *planner.HeuristicCost(
+            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.5},
+            {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.5}),
+        3.2015621187,
+        eps);
+    ASSERT_GEOM_EQUAL(
+        *planner.HeuristicCost(
+            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+            {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.8}),
+        4.0019526483,
+        eps);
+    EXPECT_FALSE(planner.HeuristicCost(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 1000}));
+    EXPECT_FALSE(planner.HeuristicCost(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.pose = Pose(Vec2(0, 1), AngleVec2::fromVector(Vec2(-1, 0))), .velocity = 0.5}));
+}
+
+TEST(StateSpace, Cost) {
+    constexpr double eps = 1e-4;
+
+    auto state_space = StateSpace({});
+    auto planner = Planner({}, Model("/truck/packages/model/config/model.yaml")).Build(state_space);
+    EXPECT_DOUBLE_EQ(
+        *planner.Cost(
+            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0}),
+        0.0);
+    EXPECT_FALSE(planner.Cost(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.8}));
+    EXPECT_FALSE(planner.Cost(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.0}));
+    ASSERT_GEOM_EQUAL(
+        *planner.Cost(
+            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.5},
+            {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.5}),
+        3.2854678967,
+        eps);
+    ASSERT_GEOM_EQUAL(
+        *planner.Cost(
+            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+            {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.8}),
+        4.1068348709,
+        eps);
+    EXPECT_FALSE(planner.Cost(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 1000}));
+    EXPECT_FALSE(planner.Cost(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.pose = Pose(Vec2(0, 1), AngleVec2::fromVector(Vec2(-1, 0))), .velocity = 0.5}));
+}
+
+/*
 TEST(RTree, Search) {
     const auto constraints = Constraints();
 
@@ -187,6 +270,7 @@ TEST(RTree, Search) {
         }
     }
 }
+*/
 
 int main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);

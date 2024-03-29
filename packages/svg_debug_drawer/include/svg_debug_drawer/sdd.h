@@ -88,6 +88,13 @@ struct ComplexPolygon {
     std::string label = "";
 };
 
+struct Bezier {
+    std::vector<geom::Vec2> points;
+    double thickness = 1.0;
+    color::RGB color = color::black;
+    std::string label = "";
+};
+
 class SDD {
   public:
     SDD() = delete;
@@ -117,6 +124,14 @@ class SDD {
     SDD& Add(const ComplexPolygon& polygon) noexcept;
 
     SDD& Add(const geom::ComplexPolygon& polygon) noexcept;
+
+    SDD& Add(const Bezier& beizer) noexcept;
+
+    SDD& Add(const geom::Vec2& p0, const geom::Vec2& p1, const geom::Vec2& p2) noexcept;
+
+    SDD& Add(
+        const geom::Vec2& p0, const geom::Vec2& p1, const geom::Vec2& p2,
+        const geom::Vec2& p3) noexcept;
 
     Size GetSize() const noexcept;
 

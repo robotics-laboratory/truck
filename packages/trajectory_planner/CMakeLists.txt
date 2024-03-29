@@ -6,13 +6,14 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-unused-parameter -Wno-
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
-find_package(motion REQUIRED)
+find_package(model REQUIRED)
+find_package(collision REQUIRED)
 
 add_library(
-    ${PROJECT_NAME} SHARED src/sampler.cpp src/rtree.cpp src/state.cpp src/planner.cpp
+    ${PROJECT_NAME} SHARED src/sampler.cpp src/state.cpp src/planner.cpp
 )
 
-ament_target_dependencies(${PROJECT_NAME} common geom motion)
+ament_target_dependencies(${PROJECT_NAME} common geom model collision)
 
 target_include_directories(
     ${PROJECT_NAME} PUBLIC
@@ -22,7 +23,7 @@ target_include_directories(
 )
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(common geom motion)
+ament_export_dependencies(common geom model collision)
 
 install(
     TARGETS ${PROJECT_NAME}

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common/math.h"
-#include "common/exception.h"
 
 #include "geom/angle.h"
 #include "geom/pose.h"
@@ -60,6 +59,8 @@ class StateSpace {
 
     const States& GetStates() const noexcept;
 
+    void Clear() noexcept;
+
     ~StateSpace() = default;
 
   private:
@@ -68,14 +69,5 @@ class StateSpace {
     States states_;
     std::unordered_set<const State*> finish_states_;
 };
-
-geom::Poses FindMotion(
-    const geom::Pose& from, const geom::Pose& to, size_t max_step, double eps = 1e-7);
-
-double MotionLength(const geom::Poses& motion, double inf = 1e18);
-
-double MotionTime(
-    double motion_length, double form_velocity, double to_velocity, double eps = 1e-7,
-    double inf = 1e18);
 
 }  // namespace truck::trajectory_planner

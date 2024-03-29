@@ -14,7 +14,7 @@ namespace truck {
 template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
 class ArrayAsBinaryIndexedTree {
   public:
-    ArrayAsBinaryIndexedTree() = delete;
+    ArrayAsBinaryIndexedTree() = default;
 
     ArrayAsBinaryIndexedTree(T* data, size_t size) : data_(data), size_(size) {}
 

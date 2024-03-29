@@ -2,11 +2,14 @@
 
 namespace truck::trajectory_planner {
 
-Sampler::Sampler(double* probabilities, size_t size)
+Sampler::Sampler() : random_device_(), generator_(random_device_()), distribution_(0.0, 1.0) {}
+
+Sampler::Sampler(std::vector<double> data)
     : random_device_()
     , generator_(random_device_())
     , distribution_(0.0, 1.0)
-    , bit_(probabilities, size) {
+    , data_(std::move(data))
+    , bit_(data_.data(), data_.size()) {
     bit_.Build();
 }
 

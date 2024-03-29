@@ -8,7 +8,9 @@ namespace truck::trajectory_planner {
 
 class Sampler {
   public:
-    Sampler(double* probabilities, size_t size);
+    Sampler();
+
+    Sampler(std::vector<double> data);
 
     size_t Sample() noexcept;
 
@@ -19,6 +21,7 @@ class Sampler {
     std::mt19937 generator_;
     std::uniform_real_distribution<> distribution_;
 
+    std::vector<double> data_;
     ArrayAsBinaryIndexedTree<double> bit_;
 };
 
