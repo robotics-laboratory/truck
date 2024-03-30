@@ -160,7 +160,7 @@ std::optional<double> Planner::Cost(const State& from, const State& to) const no
 }
 
 std::optional<double> Planner::HeuristicCostFromStart(const State& state) const noexcept {
-    VERIFY(search_tree_.start_node);
+    VERIFY(search_tree_.nodes.size() > search_tree_.start_node);
 
     const auto* start_state = search_tree_.nodes[search_tree_.start_node].state;
     const auto cost = AdmissibleMotionTime(
@@ -239,20 +239,22 @@ bool Planner::IsKinodynamicFeasible(
 
 double Planner::AdmissibleMotionTime(
     double motion_length, double from_velocity, double to_velocity) const noexcept {
-    const double a_min = model_.baseMaxDeceleration();
+    const double a_min = -model_.baseMaxDeceleration();
     const double a_max = model_.baseMaxAcceleration();
 
     const double mid_velocity = std::min(
         std::sqrt(
-            2 * motion_length * a_min * a_max + from_velocity * from_velocity * a_min -
-            to_velocity * to_velocity * a_max),
+            (2 * motion_length * a_min * a_max + from_velocity * from_velocity * a_min -
+             to_velocity * to_velocity * a_max) /
+            (a_min - a_max)),
         model_.baseVelocityLimits().max);
 
     const double acceleration_time = (mid_velocity - from_velocity) / a_max;
     const double decelaration_time = (to_velocity - mid_velocity) / a_min;
     const double constant_speed_time =
-        (motion_length - acceleration_time * (from_velocity + mid_velocity) * 0.5 -
-         decelaration_time * (mid_velocity + to_velocity) * 0.5) /
+        (motion_length - from_velocity * acceleration_time -
+         a_max * acceleration_time * acceleration_time * 0.5 - mid_velocity * decelaration_time -
+         a_min * decelaration_time * decelaration_time * 0.5) /
         mid_velocity;
 
     return acceleration_time + constant_speed_time + decelaration_time;
