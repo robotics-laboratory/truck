@@ -160,7 +160,15 @@ TEST(StateSpace, StatePoses) {
 TEST(Planner, HeuriscticCost) {
     constexpr double eps = 1e-4;
 
-    auto state_space = StateSpace({});
+    auto state_space = StateSpace({}).Build(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.base_state =
+             {.pose = geom::Pose(Vec2(1, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.5},
+         .x_range = Limits<double>(-1, 1),
+         .y_range = Limits<double>(-1, 1),
+         .yaw_range = Limits<Angle>(-PI_4, PI_4),
+         .velocity_range = Limits<double>(-0.2, 0.2)},
+        Polyline{Vec2(0, 0), Vec2(1, 0)});
     auto planner = Planner({}, Model("/truck/packages/model/config/model.yaml")).Build(state_space);
     EXPECT_DOUBLE_EQ(
         *planner.HeuristicCost(
@@ -196,7 +204,15 @@ TEST(Planner, HeuriscticCost) {
 TEST(Planner, Cost) {
     constexpr double eps = 1e-4;
 
-    auto state_space = StateSpace({});
+    auto state_space = StateSpace({}).Build(
+        {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
+        {.base_state =
+             {.pose = geom::Pose(Vec2(1, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.5},
+         .x_range = Limits<double>(-1, 1),
+         .y_range = Limits<double>(-1, 1),
+         .yaw_range = Limits<Angle>(-PI_4, PI_4),
+         .velocity_range = Limits<double>(-0.2, 0.2)},
+        Polyline{Vec2(0, 0), Vec2(1, 0)});
     auto planner = Planner({}, Model("/truck/packages/model/config/model.yaml")).Build(state_space);
     EXPECT_DOUBLE_EQ(
         *planner.Cost(

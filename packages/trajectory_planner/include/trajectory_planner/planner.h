@@ -1,6 +1,5 @@
 #pragma once
 
-#include "trajectory_planner/sampler.h"
 #include "trajectory_planner/state.h"
 
 #include "common/array_as_bit.h"
@@ -24,9 +23,6 @@ struct Node {
     const State* state;
     std::vector<EdgeId> edges;
 
-    double heuristic_cost_from_start;
-    double heuristic_cost_to_finish;
-
     bool is_finish = false;
 };
 
@@ -41,6 +37,8 @@ struct Edge {
 using Edges = std::vector<Edge>;
 
 struct SearchTree {
+    static const NodeId InvalidNodeId = std::numeric_limits<NodeId>::max();
+
     NodeId AddNode(Node node) noexcept;
 
     EdgeId AddEdge(Edge edge) noexcept;
@@ -48,10 +46,27 @@ struct SearchTree {
     void Clear() noexcept;
 
     Nodes nodes;
-    std::vector<double> node_probabilities;
     Edges edges;
     NodeId start_node;
     std::vector<NodeId> finish_nodes;
+};
+
+class Sampler {
+  public:
+    Sampler();
+
+    Sampler(std::vector<double> data);
+
+    NodeId Sample() noexcept;
+
+    void Remove(NodeId node_id) noexcept;
+
+  private:
+    std::mt19937 generator_;
+    std::uniform_real_distribution<> distribution_;
+
+    std::vector<double> data_;
+    ArrayAsBinaryIndexedTree<double> bit_;
 };
 
 class Planner {
@@ -97,6 +112,7 @@ class Planner {
     std::shared_ptr<const collision::StaticCollisionChecker> collision_checker_ = nullptr;
 
     SearchTree search_tree_;
+    Sampler sampler_;
 };
 
 }  // namespace truck::trajectory_planner

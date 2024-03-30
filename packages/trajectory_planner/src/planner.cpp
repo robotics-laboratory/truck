@@ -6,6 +6,7 @@
 #include "geom/bezier.h"
 #include "geom/distance.h"
 
+#include <algorithm>
 #include <limits>
 
 namespace {
@@ -96,10 +97,27 @@ EdgeId SearchTree::AddEdge(Edge edge) noexcept {
 
 void SearchTree::Clear() noexcept {
     nodes.clear();
-    node_probabilities.clear();
     edges.clear();
-    start_node = 0;
+    start_node = InvalidNodeId;
     finish_nodes.clear();
+}
+
+Sampler::Sampler() : generator_(), distribution_(0.0, 1.0) {}
+
+Sampler::Sampler(std::vector<double> data)
+    : generator_()
+    , distribution_(0.0, 1.0)
+    , data_(std::move(data))
+    , bit_(data_.data(), data_.size()) {
+    bit_.Build();
+}
+
+NodeId Sampler::Sample() noexcept {
+    return bit_.LowerBound(distribution_(generator_) * bit_.Sum(bit_.Size()));
+}
+
+void Sampler::Remove(NodeId node_id) noexcept {
+    bit_.Add(node_id, -bit_.Sum(node_id, node_id + 1));
 }
 
 Planner::Planner(const Params& params, const model::Model& model)
@@ -129,6 +147,35 @@ Planner& Planner::Build(const StateSpace& state_space) noexcept {
             search_tree_.finish_nodes.push_back(node_id);
         }
     }
+
+    std::vector<double> node_probabilities(search_tree_.nodes.size(), 0.0);
+    const double heuristics_sum = std::accumulate(
+        search_tree_.nodes.begin(),
+        search_tree_.nodes.end(),
+        0.0,
+        [&](double sum, const auto& node) {
+            const auto heuristic_cost_from_start = HeuristicCostFromStart(*node.state);
+            const auto heuristic_cost_to_finish = HeuristicCostToFinish(*node.state);
+            if (!heuristic_cost_from_start || !heuristic_cost_to_finish) {
+                return sum;
+            }
+            return sum + 1 / (*heuristic_cost_from_start + *heuristic_cost_to_finish);
+        });
+
+    for (NodeId node_id = 0; node_id < search_tree_.nodes.size(); ++node_id) {
+        const auto heuristic_cost_from_start =
+            HeuristicCostFromStart(*search_tree_.nodes[node_id].state);
+        const auto heuristic_cost_to_finish =
+            HeuristicCostToFinish(*search_tree_.nodes[node_id].state);
+        if (node_id == search_tree_.start_node || !heuristic_cost_from_start ||
+            !heuristic_cost_to_finish) {
+            node_probabilities[node_id] = 0.0;
+            continue;
+        }
+        node_probabilities[node_id] =
+            1 / (*heuristic_cost_from_start + *heuristic_cost_to_finish) / heuristics_sum;
+    }
+    sampler_ = Sampler(std::move(node_probabilities));
 
     return *this;
 }
@@ -160,7 +207,7 @@ std::optional<double> Planner::Cost(const State& from, const State& to) const no
 }
 
 std::optional<double> Planner::HeuristicCostFromStart(const State& state) const noexcept {
-    VERIFY(search_tree_.nodes.size() > search_tree_.start_node);
+    VERIFY(search_tree_.start_node != SearchTree::InvalidNodeId);
 
     const auto* start_state = search_tree_.nodes[search_tree_.start_node].state;
     const auto cost = AdmissibleMotionTime(

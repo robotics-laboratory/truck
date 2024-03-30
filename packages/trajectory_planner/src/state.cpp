@@ -1,5 +1,7 @@
 #include "trajectory_planner/state.h"
 
+#include "common/exception.h"
+
 #include "geom/distance.h"
 
 namespace truck::trajectory_planner {
@@ -107,7 +109,10 @@ StateSpace& StateSpace::Build(
 
 const StateSpace::Params& StateSpace::GetParams() const noexcept { return params_; }
 
-const State& StateSpace::GetStartState() const noexcept { return states_.front(); }
+const State& StateSpace::GetStartState() const noexcept {
+    VERIFY(!states_.empty());
+    return states_.front();
+}
 
 const std::unordered_set<const State*>& StateSpace::GetFinishStates() const noexcept {
     return finish_states_;
