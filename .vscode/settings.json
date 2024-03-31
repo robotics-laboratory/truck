@@ -87,7 +87,8 @@
         "variant": "cpp",
         "hash_map": "cpp",
         "hash_set": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "pointers": "cpp"
     },
     "cmake.sourceDirectory": "${workspaceFolder}/packages/truck_gazebo"
 }

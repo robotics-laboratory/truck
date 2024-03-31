@@ -1,17 +1,18 @@
 #pragma once
 
 #include "model/model.h"
-#include "map/map_builder.h"
+#include "map/map.h"
 #include "truck_msgs/msg/control.hpp"
 #include "truck_msgs/msg/control_mode.hpp"
 #include "truck_msgs/msg/trajectory.hpp"
 #include "truck_msgs/msg/waypoints.hpp"
 #include "truck_msgs/msg/hardware_telemetry.hpp"
+#include "truck_msgs/msg/navigation_mesh.hpp"
+#include "truck_msgs/msg/navigation_route.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
-#include <tf2_ros/buffer.h>
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2/LinearMath/Transform.h>
@@ -32,16 +33,17 @@ class VisualizationNode : public rclcpp::Node {
     void initializePtrFields();
     void initializeParams();
     void initializeTopicHandlers();
-    void initializeCacheBodyBaseTf(std::unique_ptr<tf2_ros::Buffer> &tf_buffer);
-    void initializeCacheWheelBaseTfs(std::unique_ptr<tf2_ros::Buffer> &tf_buffer);
+    void initializeCacheBodyBaseTf();
+    void initializeCacheWheelBaseTfs();
 
-    void handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
     void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr trajectory);
     void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
     void handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg);
     void handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg);
     void handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg);
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
+    void handleNavigationMesh(truck_msgs::msg::NavigationMesh::ConstSharedPtr msg);
+    void handleNavigationRoute(truck_msgs::msg::NavigationRoute::ConstSharedPtr msg);
 
     void publishTrajectory() const;
     void publishEgo() const;
@@ -49,6 +51,8 @@ class VisualizationNode : public rclcpp::Node {
     void publishArc() const;
     void publishWaypoints() const;
     void publishMap() const;
+    void publishNavigationMesh() const;
+    void publishNavigationRoute() const;
 
     std_msgs::msg::ColorRGBA velocityToColor(double speed, double alpha=1.0) const;
 
@@ -77,6 +81,12 @@ class VisualizationNode : public rclcpp::Node {
         std::string mesh_wheel = "";
       
         double map_z_lev = 0.0;
+
+        double navigation_mesh_z_lev = 0.0;
+        double navigation_mesh_radius = 0.0;
+
+        double navigation_route_z_lev = 0.0;
+        double navigation_route_width = 0.0;
     } params_{};
 
     enum WheelIndex { 
@@ -116,6 +126,8 @@ class VisualizationNode : public rclcpp::Node {
         truck_msgs::msg::Trajectory::ConstSharedPtr trajectory = nullptr;
         truck_msgs::msg::HardwareTelemetry::ConstSharedPtr telemetry = nullptr;
         truck_msgs::msg::Waypoints::ConstSharedPtr waypoints = nullptr;
+        truck_msgs::msg::NavigationMesh::ConstSharedPtr navigation_mesh = nullptr;
+        truck_msgs::msg::NavigationRoute::ConstSharedPtr navigation_route = nullptr;
     } state_;
 
     struct Slots {
@@ -126,8 +138,8 @@ class VisualizationNode : public rclcpp::Node {
         rclcpp::Subscription<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         // foxglove has twitching if publish ego pose in base frame, use odom for smoother result!
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
-        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
-        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::NavigationMesh>::SharedPtr navigation_mesh = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::NavigationRoute>::SharedPtr navigation_route = nullptr;
     } slot_;
 
     struct Signals {
@@ -137,6 +149,8 @@ class VisualizationNode : public rclcpp::Node {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arc = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr waypoints = nullptr;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr map = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr navigation_mesh = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr navigation_route = nullptr;
     } signal_;
 
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;

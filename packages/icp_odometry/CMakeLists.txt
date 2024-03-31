@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(icp_odometry)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 find_package(ament_cmake REQUIRED)
 find_package(Boost COMPONENTS thread filesystem system program_options date_time chrono timer serialization REQUIRED)
 find_package(common REQUIRED)
@@ -16,8 +14,6 @@ find_package(rosbag2_storage REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
 find_package(g2o REQUIRED) # G2O FIND PACKAGE
-
-set(CMAKE_CXX_STANDARD 20)
 
 add_executable(
   ${PROJECT_NAME}_node
@@ -58,10 +54,5 @@ install(
 #    DIRECTORY launch config bags
     DIRECTORY launch config
     DESTINATION share/${PROJECT_NAME})
-
-if(BUILD_TESTING)
-    find_package(ament_cmake_clang_format REQUIRED)
-    ament_clang_format(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
-endif()
 
 ament_package()

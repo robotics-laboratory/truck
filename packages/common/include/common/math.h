@@ -27,6 +27,11 @@ T clamp(const T& val, const T& abs_limit) {
     return clamp(val, -abs_limit, abs_limit);
 }
 
+template<typename T>
+inline constexpr int sign(const T& x) {
+    return (T(0) < x) - (x < T(0));
+}
+
 template<class T>
 struct Limits {
     Limits() = default;
@@ -35,7 +40,7 @@ struct Limits {
 
     bool isMet(const T& x) const { return min <= x && x <= max; }
 
-    bool isStrictlyMet(const T& x) const { return min < x && x < max; }
+        bool isStrictlyMet(const T& x) const { return min < x && x < max; }
 
     T clamp(const T& t) const { return truck::clamp(t, min, max); }
 
@@ -43,7 +48,6 @@ struct Limits {
 
     T min, max;
 };
-
 
 template<class Int, class Float>
 Int ceil(Float value) {
@@ -58,6 +62,14 @@ Int floor(Float value) {
 template<class Int, class Float>
 Int round(Float value) {
     return static_cast<Int>(std::round(value));
+}
+
+template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+inline constexpr size_t fls(T value) {
+    size_t i = 0;
+    for (; (value >> i) > 0; ++i) {
+    }
+    return i;
 }
 
 }  // namespace truck

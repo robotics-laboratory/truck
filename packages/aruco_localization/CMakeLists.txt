@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(aruco_localization)
 
-set(CMAKE_CXX_STANDARD 17)
-
-add_compile_options(-Wall -Wextra -Wpedantic)
-
-
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(cv_bridge REQUIRED)

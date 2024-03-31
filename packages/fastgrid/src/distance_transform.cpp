@@ -127,7 +127,7 @@ ALWAYS_INLINE void distanceTransformApprox(
         const auto* end = it + input.size.width;
 
         for (; it != end; ++it, ++buf_it) {
-            if (*it == 0) {
+            if (*it != 0) {
                 *buf_it = 0;
                 continue;
             }

@@ -10,7 +10,7 @@
 Publishes static transformation of models (listed in yaml file). This is the simplest analogue of `static_transform_publisher` and `joint_state_publisher`, but for our own purpouses (use sdf model format).
 
 ## Parameters
-- `tf_path` — path to yaml file with transforms.
+- `model_path` — path to yaml file with model config (including transform).
 - `period` — period of transforms publishing (milliseconds).
 
 ## Yaml format

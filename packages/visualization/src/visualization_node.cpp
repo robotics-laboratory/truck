@@ -27,6 +27,8 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
     initializePtrFields();
     initializeParams();
     initializeTopicHandlers();
+    initializeCacheBodyBaseTf();
+    initializeCacheWheelBaseTfs();
 }
 
 void VisualizationNode::initializePtrFields() {
@@ -63,7 +65,13 @@ void VisualizationNode::initializeParams() {
         .mesh_body = this->declare_parameter("mesh.body", ""),
         .mesh_wheel = this->declare_parameter("mesh.wheel", ""),
       
-        .map_z_lev = this->declare_parameter("map.z_lev", 0.0)
+        .map_z_lev = this->declare_parameter("map.z_lev", 0.0),
+
+        .navigation_mesh_z_lev = this->declare_parameter("navigation_mesh.z_lev", 0.0),
+        .navigation_mesh_radius = this->declare_parameter("navigation_mesh.radius", 0.0),
+
+        .navigation_route_z_lev = this->declare_parameter("navigation_route.z_lev", 0.0),
+        .navigation_route_width = this->declare_parameter("navigation_route.width", 0.0),
     };
 }
 
@@ -100,16 +108,16 @@ void VisualizationNode::initializeTopicHandlers() {
         "/motion/trajectory",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleTrajectory, this, _1));
-
-    using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
-    TfCallback tf_call = std::bind(&VisualizationNode::handleTf, this, _1, false);
-    TfCallback static_tf_callback = std::bind(&VisualizationNode::handleTf, this, _1, true);
-
-    slot_.tf = this->create_subscription<tf2_msgs::msg::TFMessage>(
-        "/tf", tf2_ros::DynamicListenerQoS(100), tf_call);
-
-    slot_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
-        "/tf_static", tf2_ros::StaticListenerQoS(100), static_tf_callback);
+    
+    slot_.navigation_mesh = Node::create_subscription<truck_msgs::msg::NavigationMesh>(
+        "/navigation/mesh",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleNavigationMesh, this, _1));
+    
+    slot_.navigation_route = Node::create_subscription<truck_msgs::msg::NavigationRoute>(
+        "/navigation/route",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&VisualizationNode::handleNavigationRoute, this, _1));
 
     signal_.ego = Node::create_publisher<visualization_msgs::msg::MarkerArray>(
         "/visualization/ego", rclcpp::QoS(1).reliability(qos));
@@ -132,47 +140,26 @@ void VisualizationNode::initializeTopicHandlers() {
     signal_.map = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/map",
         rclcpp::QoS(1).reliability(qos));
+    
+    signal_.navigation_mesh = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/visualization/navigation/mesh",
+        rclcpp::QoS(1).reliability(qos));
+    
+    signal_.navigation_route = Node::create_publisher<visualization_msgs::msg::Marker>(
+        "/visualization/navigation/route",
+        rclcpp::QoS(1).reliability(qos));
 
     timer_ = Node::create_wall_timer(1s, std::bind(&VisualizationNode::publishMap, this));
 }
 
-namespace {
-
-tf2::Transform getLatestTranform(std::unique_ptr<tf2_ros::Buffer> &tf_buffer,
-    const std::string& source, const std::string& target) {
-    try {
-        const auto tf = tf_buffer->lookupTransform(target, source, rclcpp::Time(0)).transform;
-        tf2::Transform transform;
-        tf2::fromMsg(tf, transform);
-        return transform;
-    } catch (const tf2::TransformException& ex) {
-        return tf2::Transform::getIdentity();
-    }
+void VisualizationNode::initializeCacheBodyBaseTf() {
+    cache_.body_base_tf = model_->getLatestTranform("base", "body");
 }
 
-} // namespace
-
-void VisualizationNode::initializeCacheBodyBaseTf(std::unique_ptr<tf2_ros::Buffer> &tf_buffer) {
-    cache_.body_base_tf = getLatestTranform(tf_buffer, "base", "body");
-}
-
-void VisualizationNode::initializeCacheWheelBaseTfs(std::unique_ptr<tf2_ros::Buffer> &tf_buffer) {
+void VisualizationNode::initializeCacheWheelBaseTfs() {
     for (auto wheel : kAllWheels) {
-        cache_.wheel_base_tfs[wheel] 
-            = getLatestTranform(tf_buffer, "base", kWheelFrames[wheel]);
+        cache_.wheel_base_tfs[wheel] = model_->getLatestTranform("base", kWheelFrames[wheel]);
     }
-}
-
-void VisualizationNode::handleTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
-    auto tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
-    tf_buffer->setUsingDedicatedThread(true);
-
-    for (const auto& transform : msg->transforms) {
-        tf_buffer->setTransform(transform, "", is_static);
-    }
-
-    initializeCacheBodyBaseTf(tf_buffer);
-    initializeCacheWheelBaseTfs(tf_buffer);
 }
 
 void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg) {
@@ -484,6 +471,65 @@ void VisualizationNode::publishMap() const {
     }
 
     signal_.map->publish(msg);
+}
+
+void VisualizationNode::handleNavigationMesh(truck_msgs::msg::NavigationMesh::ConstSharedPtr msg) {
+    state_.navigation_mesh = std::move(msg);
+    publishNavigationMesh();
+}
+
+void VisualizationNode::publishNavigationMesh() const {
+    if (!state_.navigation_mesh) {
+        return;
+    }
+
+    const double size = 2 * params_.navigation_mesh_radius;
+
+    visualization_msgs::msg::Marker msg;
+    msg.header.stamp = now();
+    msg.header.frame_id = "odom_ekf";
+    msg.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.color = color::white(0.8);
+    msg.scale.x = size;
+    msg.scale.y = size;
+    msg.scale.z = size;
+    msg.pose.position.z = params_.navigation_mesh_z_lev;
+
+    for (const auto& point : state_.navigation_mesh->data) {
+        msg.points.emplace_back(point);
+    }
+
+    signal_.navigation_mesh->publish(msg);
+}
+
+void VisualizationNode::handleNavigationRoute(truck_msgs::msg::NavigationRoute::ConstSharedPtr msg) {
+    state_.navigation_route = std::move(msg);
+    publishNavigationRoute();
+}
+
+void VisualizationNode::publishNavigationRoute() const {
+    if (!state_.navigation_route) {
+        return;
+    }
+
+    const size_t postfix_index = state_.navigation_route->postfix_index;
+    const size_t points_count = state_.navigation_route->data.size();
+
+    visualization_msgs::msg::Marker msg;
+    msg.header.stamp = now();
+    msg.header.frame_id = "odom_ekf";
+    msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.color = color::blue(0.5);
+    msg.scale.x = params_.navigation_route_width;
+    msg.pose.position.z = params_.navigation_route_z_lev;  
+
+    for (size_t i = postfix_index; i < points_count; i++) {
+        msg.points.emplace_back(state_.navigation_route->data[i]);
+    }
+
+    signal_.navigation_route->publish(msg);
 }
 
 }  // namespace truck::visualization

@@ -3,6 +3,8 @@
 #include "geom/common.h"
 #include "geom/vector.h"
 
+#include <optional>
+
 namespace truck::geom {
 
 // ax + by + c = 0

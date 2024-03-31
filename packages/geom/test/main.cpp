@@ -6,7 +6,13 @@
 #include "geom/arc.h"
 #include "geom/distance.h"
 #include "geom/common.h"
+#include "geom/intersection.h"
 #include "geom/line.h"
+#include "geom/polygon.h"
+#include "geom/polyline.h"
+#include "geom/intersection.h"
+#include "geom/segment.h"
+#include "geom/uniform_stepper.h"
 #include "geom/vector.h"
 
 #include <sstream>
@@ -194,6 +200,75 @@ TEST(Line, make) {
     ASSERT_GEOM_EQUAL(l, l3);
 }
 
+TEST(Line, intersect) {
+    constexpr double eps = 1e-7;
+
+    {
+        auto l1 = Line::fromTwoPoints(Vec2(0, 0), Vec2(1, 1));
+        auto l2 = Line::fromTwoPoints(Vec2(0, 1), Vec2(1, 0));
+
+        ASSERT_GEOM_EQUAL(*intersect(l1, l2), Vec2(0.5, 0.5), eps);
+    }
+
+    {
+        auto l1 = Line::fromTwoPoints(Vec2(0, 0), Vec2(0, 1));
+        auto l2 = Line::fromTwoPoints(Vec2(1, 0), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(l1, l2), std::nullopt);
+    }
+}
+
+TEST(Segment, intersect) {
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(1, 0), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), false);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(1, 0));
+        auto seg2 = Segment(Vec2(0, 1), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), false);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(0, 1), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), true);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(-1, 1), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), true);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(-1, 2), Vec2(1, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), false);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(1, 0), Vec2(1, 2));
+        auto seg2 = Segment(Vec2(0, 1), Vec2(2, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), true);
+    }
+
+    {
+        auto seg1 = Segment(Vec2(0, 0), Vec2(0, 1));
+        auto seg2 = Segment(Vec2(0, 0), Vec2(0, 1));
+
+        ASSERT_EQ(intersect(seg1, seg2), true);
+    }
+}
+
 TEST(Distance, point_point) {
     const Vec2 a = {1, 1};
     const Vec2 b = {0, 2};
@@ -314,6 +389,218 @@ TEST(Arc, try_build_arc) {
         ASSERT_GEOM_EQUAL(arc.radius, 1.0, eps);
         ASSERT_GEOM_EQUAL(arc.begin, {-1, 0}, eps);
         ASSERT_GEOM_EQUAL(arc.delta, -3 * PI_2, eps);
+    }
+}
+
+TEST(UniformStepper, stepping) {
+    constexpr double eps = 1e-7;
+    {
+        const Polyline polyline = {Vec2(0, 0), Vec2(0, 1), Vec2(3, 1), Vec2(3, 2)};
+        auto it = polyline.ubegin();
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(0, 0), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(0, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(1, 0)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(1, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(1, 0)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(2, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(1, 0)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(3, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(3, 2), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+        ASSERT_TRUE(it == polyline.uend());
+        ++it;
+        ASSERT_TRUE(it == polyline.uend());
+    }
+    {
+        const Polyline polyline = {Vec2(0, 0), Vec2(1, 1)};
+        auto it = polyline.ubegin(0.5);
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(0, 0), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(1, 1)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(sqrt(0.125), sqrt(0.125)), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(1, 1)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(2 * sqrt(0.125), 2 * sqrt(0.125)), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(1, 1)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(1, 1));
+        ASSERT_TRUE(it == polyline.uend());
+    }
+    {
+        const Polygon polygon = {Vec2(0, 0), Vec2(1, 0), Vec2(1, 1)};
+        auto it = UniformStepper(&polygon, polygon.begin() + 1);
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(1, 0), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+        ++it;
+        ASSERT_GEOM_EQUAL((*it).pos, Vec2(1, 1), eps);
+        ASSERT_GEOM_EQUAL((*it).dir, AngleVec2::fromVector(Vec2(0, 1)), eps);
+    }
+}
+
+TEST(Polygon, isComplex) {
+    {
+        const Polygon poly{Vec2(0, 0), Vec2(1, 0), Vec2(1, 1)};
+        ASSERT_TRUE(poly.isConvex());
+    }
+    {
+        const Polygon poly{Vec2(0, 0), Vec2(4, 0), Vec2(4, 3), Vec2(2, 2), Vec2(0, 3)};
+        ASSERT_FALSE(poly.isConvex());
+    }
+}
+
+TEST(Polygon, orientation) {
+    {
+        const Polygon poly{Vec2(0, 0), Vec2(1, 0), Vec2(1, 1), Vec2(0, 1)};
+        ASSERT_EQ(poly.orientation(), Orientation::COUNTERCLOCKWISE);
+    }
+    {
+        const Polygon poly{Vec2(2, 2), Vec2(0, 3), Vec2(0, 0), Vec2(1, -1), Vec2(4, 0), Vec2(4, 2)};
+        ASSERT_EQ(poly.orientation(), Orientation::COUNTERCLOCKWISE);
+    }
+    {
+        const Polygon poly{Vec2(0, 0), Vec2(0, 1), Vec2(1, 1), Vec2(1, 0)};
+        ASSERT_EQ(poly.orientation(), Orientation::CLOCKWISE);
+    }
+    {
+        const Polygon poly{Vec2(2, 2), Vec2(4, 2), Vec2(4, 0), Vec2(1, -1), Vec2(0, 0), Vec2(0, 3)};
+        ASSERT_EQ(poly.orientation(), Orientation::CLOCKWISE);
+    }
+}
+
+TEST(Polygon, clip) {
+    constexpr double eps = 1e-7;
+    {
+        const Polygon clip_polygon{Vec2(0, 0), Vec2(3, 0), Vec2(3, 3), Vec2(0, 3)};
+        const Polygon subject_polygon{
+            Vec2(-0.5, 0.5), Vec2(1.5, -1.5), Vec2(2, 0.5), Vec2(2.5, 1.5), Vec2(0.5, 4.5)};
+
+        const Polygon expected_polygon{
+            Vec2(0.125, 3),
+            Vec2(0, 2.5),
+            Vec2(0, 0),
+            Vec2(1.875, 0),
+            Vec2(2, 0.5),
+            Vec2(2.5, 1.5),
+            Vec2(1.5, 3)};
+        const auto clipped_polygon = clip(clip_polygon, subject_polygon);
+
+        EXPECT_EQ(expected_polygon.size(), clipped_polygon.size());
+        for (auto it_1 = expected_polygon.begin(), it_2 = clipped_polygon.begin();
+             it_1 != expected_polygon.end();
+             ++it_1, ++it_2) {
+            ASSERT_GEOM_EQUAL(*it_1, *it_2, eps);
+        }
+    }
+    {
+        const Polygon clip_polygon{Vec2(0, 0), Vec2(0, 3), Vec2(3, 3), Vec2(3, 0)};
+        const Polygon subject_polygon{
+            Vec2(-0.5, 0.5), Vec2(1.5, -1.5), Vec2(2, 0.5), Vec2(2.5, 1.5), Vec2(0.5, 4.5)};
+
+        const Polygon expected_polygon{
+            Vec2(0.125, 3),
+            Vec2(0, 2.5),
+            Vec2(0, 0),
+            Vec2(1.875, 0),
+            Vec2(2, 0.5),
+            Vec2(2.5, 1.5),
+            Vec2(1.5, 3)};
+        const auto clipped_polygon = clip(clip_polygon, subject_polygon);
+
+        EXPECT_EQ(expected_polygon.size(), clipped_polygon.size());
+        for (auto it_1 = expected_polygon.begin(), it_2 = clipped_polygon.begin();
+             it_1 != expected_polygon.end();
+             ++it_1, ++it_2) {
+            ASSERT_GEOM_EQUAL(*it_1, *it_2, eps);
+        }
+    }
+}
+
+TEST(Polygon, intersect) {
+    {
+        auto poly = Polygon{Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)};
+        auto seg = Segment(Vec2(0, 0), Vec2(0, 1));
+
+        ASSERT_EQ(intersect(poly, seg), true);
+    }
+
+    {
+        auto poly = Polygon{Vec2(0.001, 0), Vec2(0.001, 1), Vec2(1, 0)};
+        auto seg = Segment(Vec2(0, 0), Vec2(0, 1));
+
+        ASSERT_EQ(intersect(poly, seg), false);
+    }
+
+    {
+        auto poly = Polygon{Vec2(0, 0), Vec2(0, 3), Vec2(2, 3), Vec2(2, 0)};
+        auto seg = Segment(Vec2(1, 1), Vec2(1, 2));
+
+        ASSERT_EQ(intersect(poly, seg), false);
+    }
+
+    {
+        auto poly = Polygon{Vec2(0, 0), Vec2(0, 3), Vec2(2, 3), Vec2(2, 0)};
+        auto seg = Segment(Vec2(1, 1), Vec2(1, 4));
+
+        ASSERT_EQ(intersect(poly, seg), true);
+    }
+}
+
+TEST(Ray, segment_intersections) {
+    using namespace truck::geom;
+
+    constexpr double precision = 1e-4;
+    
+    {
+        Vec2 ray_origin(4, 0), segment_begin(2, 2), segment_end(6, 2), correct_intersection(4, 2);
+        AngleVec2 ray_dir(Angle::fromDegrees(90));
+
+        Ray ray(ray_origin, ray_dir);
+        Segment segment(segment_begin, segment_end);
+        const auto intersection = intersect(ray, segment, precision);
+
+        ASSERT_TRUE(intersection);
+        ASSERT_GEOM_EQUAL(*intersection, correct_intersection, precision);
+    }
+
+    {
+        Vec2 ray_origin(3, 0), segment_begin(2, 2), segment_end(6, 2), correct_intersection(5, 2);
+        AngleVec2 ray_dir(Angle::fromDegrees(45));
+
+        Ray ray(ray_origin, ray_dir);
+        Segment segment(segment_begin, segment_end);
+        const auto intersection = intersect(ray, segment, precision);
+
+        ASSERT_TRUE(intersection);
+        ASSERT_GEOM_EQUAL(*intersection, correct_intersection, precision);
+    }
+
+    {
+        Vec2 ray_origin(3, 0), segment_begin(2, 2), segment_end(6, 2);
+        AngleVec2 ray_dir(Angle::fromDegrees(135));
+
+        Ray ray(ray_origin, ray_dir);
+        Segment segment(segment_begin, segment_end);
+        const auto intersection = intersect(ray, segment, precision);
+
+        ASSERT_FALSE(intersection);
+    }
+
+    {
+        Vec2 ray_origin(4, 3), segment_begin(2, 2), segment_end(6, 2);
+        AngleVec2 ray_dir(Angle::fromDegrees(90));
+
+        Ray ray(ray_origin, ray_dir);
+        Segment segment(segment_begin, segment_end);
+        const auto intersection = intersect(ray, segment, precision);
+
+        ASSERT_FALSE(intersection);
     }
 }
 

@@ -1,5 +1,7 @@
 #include "geom/line.h"
 
+#include "common/math.h"
+
 namespace truck::geom {
 
 bool equal(const Line& a, const Line& b, double eps) noexcept {

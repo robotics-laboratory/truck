@@ -5,6 +5,8 @@
 #include "fastgrid/manhattan_distance.h"
 #include "fastgrid/distance_transform.h"
 #include "fastgrid/interpolation.h"
+#include "fastgrid/draw.h"
+#include "common/array_as_queue.h"
 #include "geom/common.h"
 #include "geom/pose.h"
 
@@ -13,6 +15,7 @@
 #include <memory>
 #include <vector>
 
+using namespace truck;
 using namespace truck::geom;
 using namespace truck::fastgrid;
 
@@ -275,6 +278,40 @@ TEST(ManhattanDistance, case_4) {
     EXPECT_EQ(result.grid[4][4], unreachable);
 }
 
+TEST(ManhattanDistance, case_5) {
+    const float unreachable = std::numeric_limits<float>::max();
+
+    const Size size = {.width = 2, .height = 3};
+    const double resolution = 1.0;
+    const Pose origin = {{0, 0}, AngleVec2::fromVector(1, 0)};
+
+    auto holder = makeGrid<float>(size, resolution, origin);
+    auto& grid = *holder;
+
+    grid[0][0] = 0;
+    grid[0][1] = 1;
+    grid[1][0] = 1;
+    grid[1][1] = sqrt(2);
+    grid[2][0] = 2;
+    grid[2][1] = sqrt(5);
+
+    const auto sources = std::vector<Vec2>{{0.5, 1.5}, {1.5, 2.5}};
+    std::vector<int> queue_buf(grid.size());
+    ArrayAsQueue<int> queue(queue_buf.data());
+    for (const auto& source : sources) {
+        const auto index = *VERIFY(grid.tryGetPlainIndex(source));
+        queue.push(index);
+    }
+    const F32GridHolder result = manhattanDistance(grid, queue, 0.5);
+
+    EXPECT_EQ(result.grid[0][0], unreachable);
+    EXPECT_EQ(result.grid[0][1], 2);
+    EXPECT_EQ(result.grid[1][0], 0);
+    EXPECT_EQ(result.grid[1][1], 1);
+    EXPECT_EQ(result.grid[2][0], 1);
+    EXPECT_EQ(result.grid[2][1], 0);
+}
+
 TEST(DistanceTranformApprox, case_1) {
     const Size size{.width = 10, .height = 10};
     const float resolution = 1.0;
@@ -283,14 +320,14 @@ TEST(DistanceTranformApprox, case_1) {
     auto holder = makeGrid<uint8_t>(size, resolution, origin);
     auto& grid = *holder;
 
-    grid.SetTo(1);
+    grid.SetTo(0);
 
-    grid[1][4] = 0;
-    grid[2][7] = 0;
-    grid[3][7] = 0;
-    grid[4][1] = 0;
-    grid[5][5] = 0;
-    grid[6][7] = 0;
+    grid[1][4] = 1;
+    grid[2][7] = 1;
+    grid[3][7] = 1;
+    grid[4][1] = 1;
+    grid[5][5] = 1;
+    grid[6][7] = 1;
 
     std::vector<float> data3{
         4.2343,   3.2793,   2.3243,   1.36929,  0.955002, 1.36929,  2.3243,   1.91,    2.3243,
@@ -342,9 +379,9 @@ TEST(DistanceTranformApprox, case_2) {
     auto holder = makeGrid<uint8_t>(size, resolution, origin);
     auto& grid = *holder;
 
-    grid.SetTo(1);
-    grid[0][0] = 0;
-    grid[9][9] = 0;
+    grid.SetTo(0);
+    grid[0][0] = 1;
+    grid[9][9] = 1;
 
     std::vector<float> data3{
         0,       0.955002, 1.91,    2.86501, 3.82001, 4.77501, 5.73001, 6.68501, 7.64001,
@@ -419,7 +456,7 @@ TEST(BilinearInterpolation, case_2) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -439,7 +476,7 @@ TEST(BilinearInterpolation, case_3) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -457,7 +494,7 @@ TEST(BilinearInterpolation, case_4) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -475,7 +512,7 @@ TEST(BilinearInterpolation, case_5) {
 
     constexpr Size size{.width = 2, .height = 2};
     constexpr double resolution = 1;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
+    const Pose origin({0, 0}, AngleVec2::fromVector(3, 4));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -493,7 +530,7 @@ TEST(BilinearInterpolation, case_6) {
 
     constexpr Size size{.width = 3, .height = 3};
     constexpr double resolution = 0.5;
-    constexpr Pose origin({0, 0}, AngleVec2::fromVector(1, 2));
+    const Pose origin({0, 0}, AngleVec2::fromVector(1, 2));
     auto holder = makeGrid<float>(size, resolution, origin);
     auto& grid = *holder;
 
@@ -511,4 +548,178 @@ TEST(BilinearInterpolation, case_6) {
     EXPECT_NEAR(bilinear({-0.268328, 0.581378}), 0.4, eps);
     EXPECT_NEAR(bilinear({-0.0447214, 1.02859}), 0.8625, eps);
     EXPECT_NEAR(bilinear({-0.402492, 1.20748}), 1.195, eps);
+}
+
+TEST(Draw, regular_polygon_drawing) {
+    constexpr double eps = 1e-7;
+
+    Size size{.width = 3, .height = 3};
+    double resolution = 1.0;
+    Pose origin({0, 0}, AngleVec2::fromVector(1, 0));
+    auto holder = makeGrid<uint8_t>(size, resolution, origin);
+    auto& grid = *holder;
+
+    {
+        grid.SetTo(1);
+
+        Polygon poly{Vec2(1, 0), Vec2(3, 0), Vec2(3, 2 - eps), Vec2(1, 2 - eps)};
+        Draw(poly, grid);
+
+        EXPECT_EQ(grid[0][0], 1);
+        EXPECT_EQ(grid[0][1], 0);
+        EXPECT_EQ(grid[0][2], 0);
+        EXPECT_EQ(grid[1][0], 1);
+        EXPECT_EQ(grid[1][1], 0);
+        EXPECT_EQ(grid[1][2], 0);
+        EXPECT_EQ(grid[2][0], 1);
+        EXPECT_EQ(grid[2][1], 1);
+        EXPECT_EQ(grid[2][2], 1);
+    }
+
+    {
+        grid.SetTo(1);
+
+        Polygon poly{Vec2(1.3, 0.3), Vec2(2.7, 1.7), Vec2(2.9, 2.7), Vec2(1.2, 2.3)};
+        Draw(poly, grid);
+
+        EXPECT_EQ(grid[0][0], 1);
+        EXPECT_EQ(grid[0][1], 0);
+        EXPECT_EQ(grid[0][2], 1);
+        EXPECT_EQ(grid[1][0], 1);
+        EXPECT_EQ(grid[1][1], 0);
+        EXPECT_EQ(grid[1][2], 0);
+        EXPECT_EQ(grid[2][0], 1);
+        EXPECT_EQ(grid[2][1], 0);
+        EXPECT_EQ(grid[2][2], 0);
+    }
+
+    {
+        grid.SetTo(1);
+
+        Polygon poly{Vec2(-0.1, -0.9), Vec2(3.9, 0.1), Vec2(3.1, 2.8), Vec2(0.2, 3.2)};
+        Draw(poly, grid);
+
+        EXPECT_EQ(grid[0][0], 0);
+        EXPECT_EQ(grid[0][1], 0);
+        EXPECT_EQ(grid[0][2], 0);
+        EXPECT_EQ(grid[1][0], 0);
+        EXPECT_EQ(grid[1][1], 0);
+        EXPECT_EQ(grid[1][2], 0);
+        EXPECT_EQ(grid[2][0], 0);
+        EXPECT_EQ(grid[2][1], 0);
+        EXPECT_EQ(grid[2][2], 0);
+    }
+}
+
+TEST(Draw, transformed_polygon_drawing) {
+    Size size{.width = 3, .height = 3};
+    double resolution = 0.5;
+    Pose origin({0, 0}, AngleVec2::fromVector(0, 1));
+    auto holder = makeGrid<uint8_t>(size, resolution, origin);
+    auto& grid = *holder;
+
+    {
+        grid.SetTo(1);
+
+        Polygon poly{Vec2(-2.5, 2.5), Vec2(-0.5, 0.5), Vec2(-2.5, 0.5)};
+        Draw(poly, grid);
+
+        EXPECT_EQ(grid[0][0], 0);
+        EXPECT_EQ(grid[0][1], 1);
+        EXPECT_EQ(grid[0][2], 1);
+        EXPECT_EQ(grid[1][0], 0);
+        EXPECT_EQ(grid[1][1], 0);
+        EXPECT_EQ(grid[1][2], 1);
+        EXPECT_EQ(grid[2][0], 0);
+        EXPECT_EQ(grid[2][1], 0);
+        EXPECT_EQ(grid[2][2], 0);
+    }
+}
+
+TEST(Draw, complex_polygon_with_hole_drawing) {
+    constexpr double eps = 1e-7;
+
+    Size size{.width = 3, .height = 3};
+    double resolution = 1.0;
+    Pose origin({0, 0}, AngleVec2::fromVector(1, 0));
+    auto holder = makeGrid<uint8_t>(size, resolution, origin);
+    auto& grid = *holder;
+
+    {
+        grid.SetTo(1);
+
+        ComplexPolygon poly;
+        poly.outer = {Vec2(0, 0), Vec2(0, 3), Vec2(3, 3), Vec2(3, 0)};
+        poly.inners = {
+            {Vec2(1 - eps, 1 - eps),
+             Vec2(1 - eps, 2 + eps),
+             Vec2(2 + eps, 2 + eps),
+             Vec2(2 + eps, 1 - eps)}};
+
+        Draw(poly, grid);
+
+        EXPECT_EQ(grid[0][0], 0);
+        EXPECT_EQ(grid[0][1], 0);
+        EXPECT_EQ(grid[0][2], 0);
+        EXPECT_EQ(grid[1][0], 0);
+        EXPECT_EQ(grid[1][1], 1);
+        EXPECT_EQ(grid[1][2], 0);
+        EXPECT_EQ(grid[2][0], 0);
+        EXPECT_EQ(grid[2][1], 0);
+        EXPECT_EQ(grid[2][2], 0);
+    }
+}
+
+TEST(Draw, complex_polygon_with_multiple_holes_drawing) {
+    constexpr double eps = 1e-7;
+
+    Size size{.width = 5, .height = 5};
+    double resolution = 1.0;
+    Pose origin({0, 0}, AngleVec2::fromVector(1, 0));
+    auto holder = makeGrid<uint8_t>(size, resolution, origin);
+    auto& grid = *holder;
+
+    {
+        grid.SetTo(1);
+
+        ComplexPolygon poly;
+        poly.outer = {Vec2(0, 0), Vec2(0, 5), Vec2(5, 5), Vec2(5, 0)};
+        poly.inners = {
+            {Vec2(1 - eps, 1 - eps),
+             Vec2(1 - eps, 2 + eps),
+             Vec2(2 + eps, 2 + eps),
+             Vec2(2 + eps, 1 - eps)},
+            {Vec2(3 - eps, 3 - eps),
+             Vec2(3 - eps, 4 + eps),
+             Vec2(4 + eps, 4 + eps),
+             Vec2(4 + eps, 3 - eps)}};
+
+        Draw(poly, grid);
+
+        EXPECT_EQ(grid[0][0], 0);
+        EXPECT_EQ(grid[0][1], 0);
+        EXPECT_EQ(grid[0][2], 0);
+        EXPECT_EQ(grid[0][3], 0);
+        EXPECT_EQ(grid[0][4], 0);
+        EXPECT_EQ(grid[1][0], 0);
+        EXPECT_EQ(grid[1][1], 1);
+        EXPECT_EQ(grid[1][2], 0);
+        EXPECT_EQ(grid[1][3], 0);
+        EXPECT_EQ(grid[1][4], 0);
+        EXPECT_EQ(grid[2][0], 0);
+        EXPECT_EQ(grid[2][1], 0);
+        EXPECT_EQ(grid[2][2], 0);
+        EXPECT_EQ(grid[2][3], 0);
+        EXPECT_EQ(grid[2][4], 0);
+        EXPECT_EQ(grid[3][0], 0);
+        EXPECT_EQ(grid[3][1], 0);
+        EXPECT_EQ(grid[3][2], 0);
+        EXPECT_EQ(grid[3][3], 1);
+        EXPECT_EQ(grid[3][4], 0);
+        EXPECT_EQ(grid[4][0], 0);
+        EXPECT_EQ(grid[4][1], 0);
+        EXPECT_EQ(grid[4][2], 0);
+        EXPECT_EQ(grid[4][3], 0);
+        EXPECT_EQ(grid[4][4], 0);
+    }
 }

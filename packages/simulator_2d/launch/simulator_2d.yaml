@@ -1,16 +1,41 @@
 launch:
-- node:
-    pkg: "simulator_2d"
-    exec: "simulator_2d_node"
-    name: "simulator_2d_node"
-    output: "log"
-    param:
-    - {name: "qos", value: 0}
-    # path to truck mode config
-    - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
-    # timers period (seconds)
-    - {name: "update_period", value: 0.01}
-    # integration step per second
-    - {name: "integration_step", value: 0.001}
-    # precision of calculations
-    - {name: "calculations_precision", value: 0.00000001}
+  - arg:
+      name: "model_config"
+      default: "$(find-pkg-share model)/config/model.yaml"
+  - arg:
+      name: "map_config"
+      default: "$(find-pkg-share map)/data/map_6.geojson"
+  - arg: 
+      name: "initial_ego_state_config"
+      default: "$(find-pkg-share simulator_2d)/config/initial_ego_state.json"
+  - arg: 
+      name: "lidar_config"
+      default: "$(find-pkg-share simulator_2d)/config/lidar.json"
+  - arg:
+      name: "update_period"
+      default: "1e-2"
+  - arg:
+      name: "integration_step"
+      default: "1e-3"
+  - arg:
+      name: "calculations_precision"
+      default: "1e-4"
+  - node:
+      pkg: "simulator_2d"
+      exec: "simulator_2d_node"
+      name: "simulator_2d_node"
+      output: "log"
+      param:
+        - { name: "qos", value: 0 }
+        # path to truck model config
+        - { name: "model_config", value: "$(var model_config)" }
+        # path to map config
+        - { name: "map_config", value: "$(var map_config)" }
+        # the state of the truck model at the beginning of the simulation
+        - { name: "initial_ego_state_config", value: "$(var initial_ego_state_config)" }
+        # timers period (seconds)
+        - { name: "update_period", value: "$(var update_period)" }
+        # integration step per second
+        - { name: "integration_step", value: "$(var integration_step)" }
+        # precision of calculations
+        - { name: "calculations_precision", value: "$(var calculations_precision)" }

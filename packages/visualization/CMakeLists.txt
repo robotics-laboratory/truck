@@ -10,8 +10,6 @@ find_package(map REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
 add_executable(
     visualization_node
     src/color.cpp

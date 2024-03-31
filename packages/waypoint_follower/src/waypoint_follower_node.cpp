@@ -18,8 +18,6 @@ namespace truck::waypoint_follower {
 
 using namespace std::placeholders;
 
-constexpr size_t kThrotlleTime = 5000;
-
 namespace {
 
 Limits<double> velocityLimits(const model::Model& model, double velocity, double time) {

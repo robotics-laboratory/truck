@@ -18,23 +18,23 @@ class AngleVec2 {
   public:
     constexpr AngleVec2() = default;
 
-    constexpr AngleVec2(Angle a) : vec_(Vec2::fromAngle(a)), angle_(a) {}
+    AngleVec2(Angle a) : vec_(Vec2::fromAngle(a)), angle_(a) {}
 
     constexpr operator Angle() const noexcept { return angle(); }
 
     constexpr operator Vec2() const noexcept { return vec(); }
 
-    constexpr static AngleVec2 fromVectorUnsafe(Vec2 v) noexcept {
+    static AngleVec2 fromVectorUnsafe(Vec2 v) noexcept {
         return {v, Angle::fromVector(v.x, v.y)};
     }
 
-    constexpr static AngleVec2 fromVectorUnsafe(double x, double y) noexcept {
+    static AngleVec2 fromVectorUnsafe(double x, double y) noexcept {
         return fromVectorUnsafe({x, y});
     }
 
-    constexpr static AngleVec2 fromVector(Vec2 v) noexcept { return fromVectorUnsafe(v / v.len()); }
+    static AngleVec2 fromVector(Vec2 v) noexcept { return fromVectorUnsafe(v / v.len()); }
 
-    constexpr static AngleVec2 fromVector(double x, double y) noexcept {
+    static AngleVec2 fromVector(double x, double y) noexcept {
         return fromVector({x, y});
     }
 

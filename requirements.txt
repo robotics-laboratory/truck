@@ -8,4 +8,6 @@ odrive==0.6.1.post0
 pybind11==2.10.0
 pyomo==6.1.2
 pyserial==3.5
- 
+dvc[s3]==3.31.2
+pre-commit==3.5.0
+
