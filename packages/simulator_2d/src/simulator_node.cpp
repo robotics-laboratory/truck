@@ -47,7 +47,7 @@ void SimulatorNode::initializeTopicHandlers() {
         "/hardware/odom", rclcpp::QoS(1).reliability(qos));
 
     signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
-        "/ekf/odometry/transform", rclcpp::QoS(1).reliability(qos));
+        "/tf", rclcpp::QoS(1).reliability(qos));
 
     signals_.telemetry = Node::create_publisher<truck_msgs::msg::HardwareTelemetry>(
         "/hardware/telemetry", rclcpp::QoS(1).reliability(qos));
@@ -145,19 +145,8 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
     odom_to_base_transform_msg.transform.translation.y = pose.pos.y;
     odom_to_base_transform_msg.transform.rotation = truck::geom::msg::toQuaternion(pose.dir);
 
-    geometry_msgs::msg::TransformStamped odom_to_lidar_transform_msg;
-    odom_to_lidar_transform_msg.header.frame_id = "odom_ekf";
-    odom_to_lidar_transform_msg.child_frame_id = "lidar_link";
-    odom_to_lidar_transform_msg.header.stamp = truck_state.time();
-
-    tf2::Transform odom_to_base;
-    tf2::fromMsg(odom_to_base_transform_msg.transform, odom_to_base);
-    const auto lidar_tf = odom_to_base * cache_.lidar_config.tf;
-    tf2::toMsg(lidar_tf, odom_to_lidar_transform_msg.transform);
-
     tf2_msgs::msg::TFMessage tf_msg;
     tf_msg.transforms.push_back(odom_to_base_transform_msg);
-    tf_msg.transforms.push_back(odom_to_lidar_transform_msg);
     signals_.tf_publisher->publish(tf_msg);
 }
 
