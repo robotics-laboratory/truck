@@ -12,6 +12,8 @@ struct Polyline final : public std::vector<Vec2> {
 
     using vector<Vec2>::operator=;
 
+    Polyline(const Poses& poses);
+
     UniformStepper<Polyline> ubegin() const noexcept;
 
     UniformStepper<Polyline> ubegin(double step_length) const noexcept;
