@@ -11,9 +11,7 @@
 #include <netinet/tcp.h>
 
 using namespace std::placeholders;
-
 using namespace std::chrono_literals;
-
 using namespace truck_msgs::msg;
 
 namespace truck::hardware_node {
@@ -34,20 +32,20 @@ void HardwareNode::initializeSocketCan() {
     can_.addr.can_family = AF_CAN;
     can_.addr.can_ifindex = can_.ifr.ifr_ifindex;
     if (bind(can_.socket, reinterpret_cast<struct sockaddr*>(&can_.addr), sizeof(can_.addr)) < 0) {
-        RCLCPP_WARN(this->get_logger(), "Unnable to connect can socket");
+        RCLCPP_WARN(this->get_logger(), "Unnable connect to CAN-socket");
         rclcpp::shutdown();
     }
     int flags = fcntl(can_.socket, F_GETFL, 0);
     fcntl(can_.socket, F_SETFL, flags | O_NONBLOCK);
     int enable = 1;
     setsockopt(can_.socket, SOL_SOCKET, SO_TIMESTAMP, &enable, sizeof(enable));
+    sleep(1);
+    readFromSocket();
 }
 
 void HardwareNode::initializeParams() {
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
-
-    // steering_ = std::make_unique<model::Steering>(model::load(this->get_logger(), this->declare_parameter("steering_config", "")));
 
     params_.odriveCanId = this->declare_parameter("node_id", 39);
     params_.odriveAxis = this->declare_parameter("odrive_axis", "axis1");
@@ -153,11 +151,8 @@ void HardwareNode::readFromSocket() {
         }
         uint32_t cmd = frame.can_id & 0x1f;
         auto cmdId = static_cast<CmdId>(cmd);
-        auto rcv_time_ms =
-            std::chrono::duration_cast<std::chrono::milliseconds>(rcv_time.time_since_epoch())
-                .count();
         canFramesCache[cmdId] = std::make_pair(frame, rcv_time);
-        RCLCPP_INFO(this->get_logger(), "cmd_id: %d. time: %ld", cmdId, rcv_time_ms);
+        
     }
 }
 
@@ -179,12 +174,16 @@ void HardwareNode::modeCallback(const ControlMode& msg) {
 }
 
 void HardwareNode::sendFrame(uint32_t cmd_id, uint8_t can_dlc, const void* data = nullptr) {
-    auto id = (params_.odriveCanId << 5) | cmd_id;
+    canid_t id = (params_.odriveCanId << 5) | cmd_id;
     struct can_frame frame;
     frame.can_id = id;
     frame.can_dlc = can_dlc;
     if (data != nullptr) {
         std::memcpy(frame.data, data, can_dlc);
+    }
+    RCLCPP_INFO(this->get_logger(), "COMMAND: %u", cmd_id);
+    for (int i = 0; i < can_dlc; ++i) {
+            RCLCPP_INFO(this->get_logger(), "%02X ", frame.data[i]);
     }
     ssize_t nbytes = write(can_.socket, &frame, sizeof(frame));
     if (nbytes < 0 || nbytes != sizeof(frame)) {
@@ -193,11 +192,19 @@ void HardwareNode::sendFrame(uint32_t cmd_id, uint8_t can_dlc, const void* data 
     }
 }
 
+#pragma pack(push,1)
+struct InputVel {
+    float input_vel;
+    float torq;
+};
+#pragma pack(pop)
+
 void HardwareNode::initializeOdrive() {
-    auto accelMps = model_->baseMaxAcceleration();
-    auto accelRps = model_->linearVelocityToMotorRPS(accelMps);
+    auto accelMps = static_cast<float>(model_->baseMaxAcceleration());
+    auto accelRps = static_cast<float>(model_->linearVelocityToMotorRPS(accelMps));
     RCLCPP_INFO(this->get_logger(), "Acceleration: %.1f m/s^2, %.1f turns/s^2", accelMps, accelRps);
-    sendFrame(CmdId::SET_INPUT_VEL, sizeof(accelRps), &accelRps);
+    // InputVel ss = {accelRps, 0.0};
+    // sendFrame(CmdId::SET_INPUT_VEL, sizeof(InputVel), &ss);
     disableMotor();
 }
 
@@ -205,26 +212,28 @@ void HardwareNode::commandCallback(const Control& msg) {
     if (curMode == ControlMode::OFF) {
         return;
     }
-    auto rpm = model_->linearVelocityToMotorRPS(msg.velocity);
-    sendFrame(CmdId::SET_INPUT_VEL, sizeof(rpm), &rpm);
+    auto rpm = static_cast<float>(model_->linearVelocityToMotorRPS(msg.velocity));
+    InputVel ss{rpm, 0.0};
+    sendFrame(CmdId::SET_INPUT_VEL, sizeof(InputVel), &ss);
     truck::model::Twist twist = truck::model::Twist{msg.curvature, msg.velocity};
     twist = model_->baseToRearTwist(twist);
     [[maybe_unused]] auto steering = model_->rearTwistToSteering(twist);
-    RCLCPP_INFO(this->get_logger(), "Center curv: %.2f", msg.curvature);
-    RCLCPP_INFO(this->get_logger(), "Rear curv: %.2f", twist.curvature);
+    RCLCPP_DEBUG(this->get_logger(), "Center curv: %.2f", msg.curvature);
+    RCLCPP_DEBUG(this->get_logger(), "Rear curv: %.2f", twist.curvature);
+
 }
 
 void HardwareNode::enableMotor() {
     sendFrame(CmdId::CLEAR_ERRORS, 0);
     double rpm = 0.0;
     sendFrame(CmdId::SET_INPUT_VEL, sizeof(rpm), &rpm);
-    uint8_t state = AxisState::AXIS_STATE_CLOSED_LOOP_CONTROL;
+    auto state = AxisState::AXIS_STATE_CLOSED_LOOP_CONTROL;
     sendFrame(CmdId::SET_AXIS_STATE, sizeof(state), &state);
     RCLCPP_INFO(this->get_logger(), "Motor enabled");
 }
 
 void HardwareNode::disableMotor() {
-    uint8_t state = AxisState::AXIS_STATE_IDLE;
+    auto state = AxisState::AXIS_STATE_IDLE;
     sendFrame(CmdId::SET_AXIS_STATE, sizeof(state), &state);
     RCLCPP_INFO(this->get_logger(), "Motor disabled");
 }
@@ -243,15 +252,12 @@ std::optional<can_frame> HardwareNode::checkCanFrame(
     if (it != canFramesCache.end()) {
         const auto& [frame, timestamp] = it->second;
         if (checkTime(timestamp, reportRate)) {
-            RCLCPP_INFO(this->get_logger(), "INSIDE %d", command);
             return frame;
         }
     }
-    RCLCPP_INFO(this->get_logger(), "OUTSIDE %d", command);
     return {};
 }
 
-static int i = 0;
 
 void HardwareNode::pushTelemetry() {
     auto header = std_msgs::msg::Header();
@@ -264,7 +270,8 @@ void HardwareNode::pushTelemetry() {
     auto voltageFrame = checkCanFrame(CmdId::GET_BUS_VOLTAGE_CURRENT, telem);
     auto encoderFrame = checkCanFrame(CmdId::GET_ENCODER_ESTIMATES, telem);
     
-    if ((!voltageFrame || !encoderFrame) && i++ != 0) {
+    if (!voltageFrame || !encoderFrame) {
+        RCLCPP_WARN(this->get_logger(), "ERROR. GOT OLD FRAME WITH TELEMETRY");
         rclcpp::shutdown();
     }
     float voltage = 0.0, current = 0.0, rps = 0.0;
@@ -288,6 +295,7 @@ void HardwareNode::pushTelemetry() {
     odometry.twist.covariance = covariance_matrix;
     signals_.odometry->publish(odometry);
 
+    
     RCLCPP_INFO(
         this->get_logger(),
         "odometry.twist.linear = {.x = %f, .y = %f, .z = %f}",
@@ -303,24 +311,23 @@ void HardwareNode::pushTelemetry() {
         telemetry.battery_current);
 }
 
+static int prevMotorFlag = 0;
+static int prevEncoderFlag = 0;
+
 void HardwareNode::pushStatus() {
-    /*
     auto status = truck_msgs::msg::HardwareStatus();
-    [[maybe_unused]] uint64_t motorError = 0;
-    [[maybe_unused]] uint32_t axisState = 0, axisError = 0, encoderError = 0;
-    [[maybe_unused]] uint8_t motorFlag = 0, encoderFlag = 0;
+    uint64_t motorError = 0;
+    uint32_t axisState = 0, axisError = 0, encoderError = 0;
+    uint8_t motorFlag = 0, encoderFlag = 0;
 
     auto heartbeatFrame = checkCanFrame(CmdId::HEARTBEAT, params_.statusReportRate);
-    [[maybe_unused]] auto motorFrame = checkCanFrame(CmdId::GET_MOTOR_ERROR,
-    params_.statusReportRate);
-    [[maybe_unused]] auto encoderFrame = checkCanFrame(CmdId::GET_ENCODER_ERROR,
-    params_.statusReportRate);
+    auto motorFrame = checkCanFrame(CmdId::GET_MOTOR_ERROR, params_.statusReportRate);
+    auto encoderFrame = checkCanFrame(CmdId::GET_ENCODER_ERROR, params_.statusReportRate);
 
-    if (!heartbeatFrame) {
-        RCLCPP_DEBUG(this->get_logger(), "NO HEARTBEAT");
+    if (!heartbeatFrame || !motorFrame || !encoderFrame) {
+        RCLCPP_WARN(this->get_logger(), "ERROR. GOT OLD FRAME WITH STATUS");
         rclcpp::shutdown();
     }
-
 
     std::memcpy(&axisError, heartbeatFrame->data, sizeof(axisError));
     std::memcpy(&axisState, heartbeatFrame->data + 4, sizeof(axisState));
@@ -332,33 +339,37 @@ void HardwareNode::pushStatus() {
         RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
         status.errors.push_back(msg);
     }
+    
+    if (prevMotorFlag) {
+        std::memcpy(&motorError, motorFrame->data, sizeof(motorError));
+        auto msg = "Motor Error Detected: " + std::to_string(motorError);
+        RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
+        status.errors.push_back(msg);
+    }
+
+    if (prevEncoderFlag) {
+        std::memcpy(&encoderError, encoderFrame->data, sizeof(encoderError));
+        auto msg = "Encoder Error Detected: " + std::to_string(encoderError);
+        RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
+        status.errors.push_back(msg);   
+    }
 
     if (motorFlag) {
-        if (check(motorFrame.second, params_.statusReportRate)) {
-            std::memcpy(&motorError, motorFrame.first.data, sizeof(motorError));
-            auto msg = "Motor Error Detected: " + std::to_string(motorError);
-            RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
-            status.errors.push_back(msg);
-        } else {
-            sendFrame(CmdId::GET_MOTOR_ERROR, 0);
-        }
-    }
-    if (encoderFlag) {
-        if (check(encoderFrame.second, params_.statusReportRate)) {
-            std::memcpy(&encoderError, encoderFrame.first.data, sizeof(encoderError));
-            auto msg = "Encoder Error Detected: " + std::to_string(encoderError);
-            RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
-            status.errors.push_back(msg);
-        } else {
-            sendFrame(CmdId::GET_ENCODER_ERROR, 0);
-        }
+        sendFrame(CmdId::GET_MOTOR_ERROR, 0);
+        prevMotorFlag = 1;
     }
 
+    if (encoderFlag) {
+        sendFrame(CmdId::GET_ENCODER_ERROR, 0);
+        prevEncoderFlag = 1;
+    } 
+    
+    prevMotorFlag = 0;
+    prevEncoderFlag = 0;
 
     bool armed = (axisState != AxisState::AXIS_STATE_IDLE);
     status.header.stamp = now();
     status.armed = armed;
     signals_.status->publish(status);
-    */
 }
 }  // namespace truck::hardware_node
