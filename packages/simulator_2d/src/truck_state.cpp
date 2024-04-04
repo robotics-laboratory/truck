@@ -45,6 +45,14 @@ double TruckState::targetMotorRps() const {
     return cache_.target_motor_rps;
 }
 
+geom::Vec3 TruckState::gyroAngularVelocity() const {
+    return cache_.gyro_angular_velocity;
+}
+
+geom::Vec3 TruckState::accelLinearAcceleration() const {
+    return cache_.accel_linear_acceleration;
+}
+
 TruckState& TruckState::time(const rclcpp::Time& time) {
     cache_.time = time;
     return *this;
@@ -92,6 +100,16 @@ TruckState& TruckState::currentMotorRps(double current_rps) {
 
 TruckState& TruckState::targetMotorRps(double target_rps) {
     cache_.target_motor_rps = target_rps;
+    return *this;
+}
+
+TruckState& TruckState::gyroAngularVelocity(geom::Vec3 angular_velocity) {
+    cache_.gyro_angular_velocity = angular_velocity;
+    return *this;
+}
+
+TruckState& TruckState::accelLinearAcceleration(geom::Vec3 linear_acceleration) {
+    cache_.accel_linear_acceleration = linear_acceleration;
     return *this;
 }
 
