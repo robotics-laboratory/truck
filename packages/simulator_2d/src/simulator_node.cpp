@@ -201,8 +201,7 @@ void SimulatorNode::publishImuMessage(const TruckState& truck_state) {
     imu_msg.header.stamp = truck_state.time();
 
     // Set the sensor orientation.
-    const auto pose = truck_state.odomBasePose();
-    imu_msg.orientation = truck::geom::msg::toQuaternion(pose.dir);
+    imu_msg.orientation.covariance[0] = -1;
 
     // Set the gyroscope.
     const auto angular_velocity = truck_state.gyroAngularVelocity();
