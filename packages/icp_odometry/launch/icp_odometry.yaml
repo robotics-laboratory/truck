@@ -9,7 +9,7 @@ launch:
     pkg: "icp_odometry"
     exec: "icp_odometry_node"
     name: "icp_odometry_node"
-    output: "log"
+    output: "screen"
     param:
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "qos", value: "$(var qos)"}
