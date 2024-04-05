@@ -5,6 +5,10 @@
 #include "geom/swap.h"
 #include "geom/intersection.h"
 
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Vector3.h>
+#include <tf2/LinearMath/Transform.h>
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -12,19 +16,33 @@
 
 namespace truck::simulator {
 
+// m/s^2
+const double FREE_FALL_ACCELERATION = 9.81;
+
 SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     double integration_step, double precision) {
         
     model_ = std::move(model);
+    initializeParameters(integration_step, precision);
+    initializeMathCache(integration_step);
+    initializeLidarCache();
+    initializeImuCache();
+    resetRear();
+}
 
+void SimulatorEngine::initializeParameters(double integration_step, double precision) {
     params_.integration_step = integration_step;
     params_.precision = precision;
+}
 
+void SimulatorEngine::initializeMathCache(double integration_step) {
     cache_.integration_step_2 = integration_step / 2;
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
-    
+}
+
+void SimulatorEngine::initializeLidarCache() {
     const auto lidar_translation = model_->getLatestTranform("base", "lidar_link").getOrigin();
     cache_.base_to_lidar.x = lidar_translation.x();
     cache_.base_to_lidar.y = lidar_translation.y();
@@ -36,8 +54,14 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     cache_.lidar_rays_number = (angle_max_rad - angle_min_rad) / angle_increment_rad;
     cache_.lidar_angle_min = geom::AngleVec2(model_->lidar().angle_min);
     cache_.lidar_angle_increment = model_->lidar().angle_increment;
+}
 
-    resetRear();
+void SimulatorEngine::initializeImuCache() {
+    const auto imu_tf = model_->getLatestTranform("base", "camera_imu_optical_frame");
+
+    cache_.rear_to_hyro_translation.x = imu_tf.getOrigin().x() - model_->wheelBase().base_to_rear;
+    cache_.rear_to_hyro_translation.y = imu_tf.getOrigin().y();
+    cache_.base_to_hyro_rotation.setRotation(imu_tf.getRotation());
 }
 
 void SimulatorEngine::resetRear(double x, double y, double yaw,
@@ -102,26 +126,12 @@ model::Steering SimulatorEngine::getTargetSteering() const {
     return model_->rearCurvatureToSteering(control_.curvature);
 }
 
-model::Twist SimulatorEngine::rearToOdomBaseTwist(double rear_curvature) const {
+model::Twist SimulatorEngine::getRearTwist(double rear_curvature) const {
     const double linear_velocity = rear_ax_state_[StateIndex::kLinearVelocity];
-    const auto twist = model::Twist {
+    return model::Twist {
         rear_curvature,
         linear_velocity
     };
-
-    return model_->rearToBaseTwist(twist);
-}
-
-geom::Vec2 SimulatorEngine::rearToOdomBaseLinearVelocity(
-    truck::geom::AngleVec2 dir, double base_velocity) const {
-
-    return dir * base_velocity;
-}
-
-double SimulatorEngine::rearToBaseAngularVelocity(
-    double base_velocity, double rear_curvature) const {
-
-    return base_velocity * rear_curvature;
 }
 
 namespace {
@@ -238,6 +248,57 @@ std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_p
     return ranges;
 }
 
+namespace {
+
+geom::Vec3 applyRotation(const tf2::Transform& rotation, const geom::Vec3& vector) {
+    tf2::Vector3 v(vector.x, vector.y, vector.z);
+    v = rotation * v;
+    return geom::Vec3(v.getX(), v.getY(), v.getZ());
+}
+
+} // namespace
+
+geom::Vec3 SimulatorEngine::getImuAngularVelocity(double angular_velocity) const {
+    const geom::Vec3 w(0, 0, angular_velocity);
+    return applyRotation(cache_.base_to_hyro_rotation, w);
+}
+
+namespace {
+
+geom::Vec3 getLinearAcceleration(const model::Twist& twist, double acceleration, double yaw) {
+    const auto yaw_vec = geom::Vec2::fromAngle(geom::Angle::fromRadians(yaw));
+    const auto normal_a = squared(twist.velocity) * twist.curvature;
+    const auto tan_a = std::sqrt(squared(acceleration) - squared(normal_a));
+    return geom::Vec3(
+        tan_a * yaw_vec + yaw_vec.left() * normal_a,
+        FREE_FALL_ACCELERATION
+    );
+}
+
+} // namespace
+
+geom::Vec3 SimulatorEngine::getImuLinearAcceleration(const model::Twist& rear_twist) const {
+    const auto twist = model_->rearToArbitraryPointTwist(rear_twist, cache_.rear_to_hyro_translation);
+    const auto acceleration = getCurrentAcceleration();
+    const auto yaw = rear_ax_state_[StateIndex::kYaw];
+
+    const auto la = getLinearAcceleration(twist, acceleration, yaw);
+
+    return applyRotation(cache_.base_to_hyro_rotation, la);
+}
+
+namespace {
+
+geom::Vec2 rearToOdomBaseLinearVelocity(truck::geom::AngleVec2 dir, double base_velocity) {
+    return dir * base_velocity;
+}
+
+double getAngularVelocity(const model::Twist& base_twist) {
+    return base_twist.velocity * base_twist.curvature;
+}
+
+} // namespace
+
 TruckState SimulatorEngine::getTruckState() const {
     const double steering = rear_ax_state_[StateIndex::kSteering];
 
@@ -245,12 +306,15 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto rear_curvature = model_->middleSteeringToRearCurvature(steering);
     const auto current_steering = getCurrentSteering(rear_curvature);
     const auto target_steering = getTargetSteering();
-    const auto twist = rearToOdomBaseTwist(rear_curvature);
+    const auto rear_twist = getRearTwist(rear_curvature);
+    const auto twist = model_->rearToBaseTwist(rear_twist);
     const auto linear_velocity = rearToOdomBaseLinearVelocity(pose.dir, twist.velocity);
-    const auto angular_velocity = rearToBaseAngularVelocity(twist.velocity, rear_curvature);
+    const auto angular_velocity = getAngularVelocity(twist);
     auto lidar_ranges = getLidarRanges(pose);
     const auto current_rps = model_->linearVelocityToMotorRPS(twist.velocity);
     const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
+    const auto gyro_angular_velocity = getImuAngularVelocity(angular_velocity);
+    const auto accel_linear_acceleration = getImuLinearAcceleration(rear_twist);
     
     return TruckState()
         .time(time_)
@@ -262,7 +326,9 @@ TruckState SimulatorEngine::getTruckState() const {
         .baseAngularVelocity(angular_velocity)
         .lidarRanges(std::move(lidar_ranges))
         .currentMotorRps(current_rps)
-        .targetMotorRps(target_rps);
+        .targetMotorRps(target_rps)
+        .gyroAngularVelocity(gyro_angular_velocity)
+        .accelLinearAcceleration(accel_linear_acceleration);
 }
 
 namespace {
