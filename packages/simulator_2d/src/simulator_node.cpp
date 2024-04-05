@@ -197,11 +197,11 @@ void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
 
 void SimulatorNode::publishImuMessage(const TruckState& truck_state) {
     sensor_msgs::msg::Imu imu_msg;
-    imu_msg.header.frame_id = "camera_link";
+    imu_msg.header.frame_id = "camera_imu_optical_frame";
     imu_msg.header.stamp = truck_state.time();
 
     // Set the sensor orientation.
-    imu_msg.orientation.covariance[0] = -1;
+    imu_msg.orientation_covariance[0] = -1;
 
     // Set the gyroscope.
     const auto angular_velocity = truck_state.gyroAngularVelocity();
