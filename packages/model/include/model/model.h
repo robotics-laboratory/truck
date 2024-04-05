@@ -56,6 +56,11 @@ class Model {
     const Wheel& wheel() const;
     const Lidar& lidar() const;
 
+    double rearToArbitraryPointRatio(double rear_curvature,
+      const geom::Vec2& rear_to_point) const;
+    double rearToArbitraryPointCurvature(double rear_curvature,
+      const geom::Vec2& rear_to_point) const;
+    Twist rearToArbitraryPointTwist(Twist twist, const geom::Vec2& rear_to_point) const;
     Twist baseToRearTwist(Twist twist) const;
     Twist rearToBaseTwist(Twist twist) const;
     Steering rearTwistToSteering(Twist twist) const;
