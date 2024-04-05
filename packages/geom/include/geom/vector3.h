@@ -11,6 +11,10 @@ struct Vec3 {
 
     constexpr Vec3(double x, double y, double z) : x(x), y(y), z(z) {}
 
+    constexpr Vec3(Vec2 vec2, double z) : x(vec2.x), y(vec2.y), z(z) {}
+
+    constexpr Vec3(Vec2 vec2) : Vec3(vec2, 0) {}
+
     Vec3& operator+=(const Vec3& other) noexcept {
         x += other.x;
         y += other.y;
