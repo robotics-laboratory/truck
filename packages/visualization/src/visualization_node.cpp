@@ -23,12 +23,13 @@ using namespace std::chrono_literals;
 
 using namespace geom::literals;
 
+const double M_2PI = M_PI * 2;
+
 VisualizationNode::VisualizationNode() : Node("visualization") {
     initializePtrFields();
     initializeParams();
     initializeTopicHandlers();
-    initializeCacheBodyBaseTf();
-    initializeCacheWheelBaseTfs();
+    initializeCache();
 }
 
 void VisualizationNode::initializePtrFields() {
@@ -155,6 +156,12 @@ void VisualizationNode::initializeCacheWheelBaseTfs() {
     }
 }
 
+void VisualizationNode::initializeCache() {
+    initializeCacheBodyBaseTf();
+    initializeCacheWheelBaseTfs();
+    cache_.last_ego_update_second = now().seconds();
+}
+
 void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg) {
     state_.telemetry = msg;
 }
@@ -163,7 +170,7 @@ void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr o
     state_.odom = std::move(odom);
     ++state_.odom_seq_id;
 
-    publishEgo();
+    updateEgo();
     publishEgoTrack();
     publishArc();
 }
@@ -229,7 +236,7 @@ void VisualizationNode::publishTrajectory() const {
 
 void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg) {
     state_.mode = std::move(msg);
-    publishEgo();
+    updateEgo();
 }
 
 namespace {
@@ -257,11 +264,24 @@ visualization_msgs::msg::Marker makeMeshMarker(
 
 }  // namespace
 
-void VisualizationNode::publishEgo() const {
+void VisualizationNode::updateWheelsSpin() {
+    const auto now_seconds = now().seconds();
+    const auto time = now_seconds - cache_.last_ego_update_second;
+    const auto velocity = state_.telemetry->current_rps * model_->gearRatio() * M_2PI;
+    cache_.wheels_spin_angle = std::fmod(cache_.wheels_spin_angle + velocity * time, M_2PI);
+    cache_.last_ego_update_second = now_seconds;
+}
+
+void VisualizationNode::updateEgo() {
     if (!state_.odom || !state_.mode || !state_.telemetry) {
         return;
     }
 
+    updateWheelsSpin();
+    publishEgo();
+}
+
+void VisualizationNode::publishEgo() const {
     tf2::Transform base_to_odom;
     tf2::fromMsg(state_.odom->pose.pose, base_to_odom);
 
@@ -275,20 +295,29 @@ void VisualizationNode::publishEgo() const {
     msg_array.markers.push_back(body_msg);
 
     for (auto wheel : kAllWheels) {
-        const double z_angle = [&]() {
-            switch (wheel) {
-                case WheelIndex::kFrontLeft:
-                    return state_.telemetry->current_left_steering;
-                case WheelIndex::kFrontRight:
-                    return state_.telemetry->current_right_steering;
-                default:
-                    return 0.0;
-            }
-        }();
+        double y_angle, z_angle;
+        switch (wheel) {
+            case WheelIndex::kFrontLeft:
+                y_angle = cache_.wheels_spin_angle;
+                z_angle = state_.telemetry->current_left_steering;
+                break;
+            case WheelIndex::kRearLeft:
+                y_angle = cache_.wheels_spin_angle;
+                z_angle = 0.0;
+                break;
+            case WheelIndex::kFrontRight:
+                y_angle = -cache_.wheels_spin_angle;
+                z_angle = state_.telemetry->current_right_steering;
+                break;
+            case WheelIndex::kRearRight:
+                y_angle = -cache_.wheels_spin_angle;
+                z_angle = 0.0;
+                break;
+        }
 
         auto rotation = tf2::Quaternion::getIdentity();
-        rotation.setRPY(0, 0, z_angle);
-        const auto wheel_tf =
+        rotation.setRPY(0, y_angle, z_angle);
+        const auto wheel_tf = 
             base_to_odom * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
 
         auto wheel_msg = makeMeshMarker(wheel + 1, state_.odom->header, params_.mesh_wheel, color);
