@@ -35,6 +35,7 @@ class VisualizationNode : public rclcpp::Node {
     void initializeTopicHandlers();
     void initializeCacheBodyBaseTf();
     void initializeCacheWheelBaseTfs();
+    void initializeCache();
 
     void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr trajectory);
     void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
@@ -44,6 +45,9 @@ class VisualizationNode : public rclcpp::Node {
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
     void handleNavigationMesh(truck_msgs::msg::NavigationMesh::ConstSharedPtr msg);
     void handleNavigationRoute(truck_msgs::msg::NavigationRoute::ConstSharedPtr msg);
+
+    void updateWheelsSpin();
+    void updateEgo();
 
     void publishTrajectory() const;
     void publishEgo() const;
@@ -113,6 +117,8 @@ class VisualizationNode : public rclcpp::Node {
     struct Cache {
         tf2::Transform body_base_tf;
         std::array<tf2::Transform, 4> wheel_base_tfs;
+        double wheels_spin_angle = 0.0;
+        double last_ego_update_second;
     } cache_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
