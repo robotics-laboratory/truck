@@ -186,7 +186,7 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto twist = model_->rearToBaseTwist(rear_twist);
     const auto linear_velocity = rearToOdomBaseLinearVelocity(pose.dir, twist.velocity);
     const auto angular_velocity = getAngularVelocity(twist);
-    auto lidar_ranges = map_.getLidarRanges(pose);
+    auto lidar_ranges = map_->getLidarRanges(pose);
     const auto current_rps = model_->linearVelocityToMotorRPS(twist.velocity);
     const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
     const auto gyro_angular_velocity = getImuAngularVelocity(angular_velocity);
