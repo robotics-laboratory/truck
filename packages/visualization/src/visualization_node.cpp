@@ -267,8 +267,30 @@ visualization_msgs::msg::Marker makeMeshMarker(
 void VisualizationNode::updateWheelsSpin() {
     const auto now_seconds = now().seconds();
     const auto time = now_seconds - cache_.last_ego_update_second;
-    const auto velocity = state_.telemetry->current_rps * model_->gearRatio() * M_2PI;
-    cache_.wheels_spin_angle = std::fmod(cache_.wheels_spin_angle + velocity * time, M_2PI);
+    const auto rear_twist = model::Twist {
+        state_.telemetry->rear_curvature,
+        state_.telemetry->rear_velocity
+    };
+    const auto velocities = model_->rearTwistToWheelVelocity(rear_twist);
+    for (auto wheel : kAllWheels) {
+        const double velocity = [&]() {
+            switch (wheel) {
+                case WheelIndex::kFrontLeft:
+                    return velocities.left.radians();
+                case WheelIndex::kFrontRight:
+                    return -velocities.right.radians();
+                case WheelIndex::kRearLeft:
+                    return velocities.rear.radians();
+                case WheelIndex::kRearRight:
+                default:
+                    return -velocities.rear.radians();
+            }
+        }();
+
+        const double angle = cache_.wheel_spin_angles[wheel] + velocity * time;
+        cache_.wheel_spin_angles[wheel] = std::fmod(angle, M_2PI);
+    }
+
     cache_.last_ego_update_second = now_seconds;
 }
 
@@ -295,25 +317,17 @@ void VisualizationNode::publishEgo() const {
     msg_array.markers.push_back(body_msg);
 
     for (auto wheel : kAllWheels) {
-        double y_angle, z_angle;
-        switch (wheel) {
-            case WheelIndex::kFrontLeft:
-                y_angle = cache_.wheels_spin_angle;
-                z_angle = state_.telemetry->current_left_steering;
-                break;
-            case WheelIndex::kRearLeft:
-                y_angle = cache_.wheels_spin_angle;
-                z_angle = 0.0;
-                break;
-            case WheelIndex::kFrontRight:
-                y_angle = -cache_.wheels_spin_angle;
-                z_angle = state_.telemetry->current_right_steering;
-                break;
-            case WheelIndex::kRearRight:
-                y_angle = -cache_.wheels_spin_angle;
-                z_angle = 0.0;
-                break;
-        }
+        const double y_angle = cache_.wheel_spin_angles[wheel];
+        const double z_angle = [&]() {
+            switch (wheel) {
+                case WheelIndex::kFrontLeft:
+                    return state_.telemetry->current_left_steering;
+                case WheelIndex::kFrontRight:
+                    return state_.telemetry->current_right_steering;
+                default:
+                    return 0.0;
+            }
+        }();
 
         auto rotation = tf2::Quaternion::getIdentity();
         rotation.setRPY(0, y_angle, z_angle);

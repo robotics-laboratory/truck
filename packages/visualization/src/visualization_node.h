@@ -107,7 +107,7 @@ class VisualizationNode : public rclcpp::Node {
     struct Cache {
         tf2::Transform body_base_tf;
         std::array<tf2::Transform, 4> wheel_base_tfs;
-        double wheels_spin_angle = 0.0;
+        double wheel_spin_angles[4] = {0.0};
         double last_ego_update_second;
     } cache_;
 
