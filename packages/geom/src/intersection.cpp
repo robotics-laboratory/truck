@@ -17,9 +17,9 @@ enum class Mode : int8_t { Colinear = 0, Clockwise = 1, Counterclockwise = -1 };
  *
  * See https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect
  */
-bool intersect(const geom::Segment& seg1, const geom::Segment& seg2, const double eps) noexcept {
+bool intersect(const Segment& seg1, const Segment& seg2, const double eps) noexcept {
     // Find orientation of ordered triplet (p, q, r)
-    auto orientation = [&](const geom::Vec2& p, const geom::Vec2& q, const geom::Vec2& r) {
+    auto orientation = [&](const Vec2& p, const Vec2& q, const Vec2& r) {
         double val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
         if (std::abs(val) < eps) {
@@ -35,7 +35,7 @@ bool intersect(const geom::Segment& seg1, const geom::Segment& seg2, const doubl
 
     // Given three collinear points p, q, r, the function checks if
     // point q lies on line segment 'pr'
-    auto onSegment = [](const geom::Vec2& p, const geom::Vec2& q, const geom::Vec2& r) {
+    auto onSegment = [](const Vec2& p, const Vec2& q, const Vec2& r) {
         if (q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) &&
             q.y <= std::max(p.y, r.y) && q.y >= std::min(p.y, r.y)) {
             return true;
@@ -44,10 +44,10 @@ bool intersect(const geom::Segment& seg1, const geom::Segment& seg2, const doubl
         return false;
     };
 
-    const geom::Vec2& p1 = seg1.begin;
-    const geom::Vec2& q1 = seg1.end;
-    const geom::Vec2& p2 = seg2.begin;
-    const geom::Vec2& q2 = seg2.end;
+    const Vec2& p1 = seg1.begin;
+    const Vec2& q1 = seg1.end;
+    const Vec2& p2 = seg2.begin;
+    const Vec2& q2 = seg2.end;
 
     auto o1 = orientation(p1, q1, p2);
     auto o2 = orientation(p1, q1, q2);
@@ -77,9 +77,9 @@ bool intersect(const geom::Segment& seg1, const geom::Segment& seg2, const doubl
     return false;
 }
 
-bool intersect(const geom::Polygon& polygon, const Segment& seg, const double eps) noexcept {
-    for (const geom::Segment& poly_seg : polygon.segments()) {
-        if (geom::intersect(poly_seg, seg, eps)) {
+bool intersect(const Polygon& polygon, const Segment& seg, const double eps) noexcept {
+    for (const Segment& poly_seg : polygon.segments()) {
+        if (intersect(poly_seg, seg, eps)) {
             return true;
         }
     }
