@@ -178,6 +178,7 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
     state_msg.header.stamp = truck_state.time();
     state_msg.speed = truck_state.baseTwist().velocity;
     state_msg.steering = truck_state.currentSteering().middle.radians();
+    state_msg.fail = truck_state.fail();
     signals_.state->publish(state_msg);
 }
 

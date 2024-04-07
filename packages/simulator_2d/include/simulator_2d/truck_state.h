@@ -10,7 +10,7 @@ namespace truck::simulator {
 
 class TruckState {
   public:
-    bool fail const;
+    bool fail() const;
     rclcpp::Time time() const;
     geom::Pose odomBasePose() const;
     model::Steering currentSteering() const;
