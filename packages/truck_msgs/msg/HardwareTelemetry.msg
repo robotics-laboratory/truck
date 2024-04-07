@@ -8,3 +8,6 @@ float64 target_left_steering   # Radians
 float64 current_left_steering  # Radians
 float64 target_right_steering  # Radians
 float64 current_right_steering # Radians
+
+float64 rear_curvature         # 1/m
+float64 rear_velocity          # m/s

@@ -197,6 +197,7 @@ TruckState SimulatorEngine::getTruckState() const {
         .currentSteering(current_steering)
         .targetSteering(target_steering)
         .baseTwist(twist)
+        .rearTwist(rear_twist)
         .odomBaseLinearVelocity(linear_velocity)
         .baseAngularVelocity(angular_velocity)
         .lidarRanges(std::move(lidar_ranges))

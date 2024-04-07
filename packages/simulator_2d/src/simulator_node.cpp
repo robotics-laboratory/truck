@@ -170,6 +170,9 @@ void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
     telemetry_msg.current_rps = truck_state.currentMotorRps();
     telemetry_msg.target_rps = truck_state.targetMotorRps();
 
+    telemetry_msg.rear_curvature = truck_state.rearTwist().curvature;
+    telemetry_msg.rear_velocity = truck_state.rearTwist().velocity;
+
     signals_.telemetry->publish(telemetry_msg);
 }
 
