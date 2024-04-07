@@ -157,12 +157,20 @@ Steering Model::rearTwistToSteering(Twist rear_twist) const {
     return rearCurvatureToSteering(rear_twist.curvature);
 }
 
-WheelVelocity Model::rearTwistToWheelVelocity(Twist rear_twist) const {
-    const double ratio = rear_twist.curvature * cache_.width_half;
+WheelVelocity Model::rearSpinToWheelVelocity(
+    double rear_curvature, double rear_spin_velocity) const {
 
-    return WheelVelocity{
-        geom::Angle{(1 - ratio) * rear_twist.velocity / params_.wheel.radius},
-        geom::Angle{(1 + ratio) * rear_twist.velocity / params_.wheel.radius}};
+    const double ratio = rear_curvature * cache_.width_half;
+
+    return WheelVelocity {
+        geom::Angle{(1 - ratio) * rear_spin_velocity},
+        geom::Angle{(1 + ratio) * rear_spin_velocity},
+        geom::Angle{rear_spin_velocity}
+    };
+}
+
+WheelVelocity Model::rearTwistToWheelVelocity(Twist rear_twist) const {
+    return rearSpinToWheelVelocity(rear_twist.curvature, rear_twist.velocity / params_.wheel.radius);
 }
 
 double Model::linearVelocityToMotorRPS(double velocity) const {

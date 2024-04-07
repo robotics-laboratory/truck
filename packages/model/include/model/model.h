@@ -26,6 +26,7 @@ struct Steering {
 struct WheelVelocity {
     geom::Angle left;
     geom::Angle right;
+    geom::Angle rear;
 };
 
 struct Twist {
@@ -87,6 +88,7 @@ class Model {
     Steering rearCurvatureToSteering(double curvature) const;
     double middleSteeringToRearCurvature(double steering) const;
     double baseToRearAcceleration(double acceleration, double base_curvature) const;
+    WheelVelocity rearSpinToWheelVelocity(double rear_curvature, double rear_spin_velocity) const;
     WheelVelocity rearTwistToWheelVelocity(Twist rear_twist) const;
     double linearVelocityToMotorRPS(double velocity) const;
     double motorRPStoLinearVelocity(double rps) const;
