@@ -5,6 +5,10 @@
 
 namespace truck::simulator {
 
+bool TruckState::fail() const {
+    return cache_.fail;
+}
+
 rclcpp::Time TruckState::time() const {
     return cache_.time;
 }
@@ -51,6 +55,11 @@ geom::Vec3 TruckState::gyroAngularVelocity() const {
 
 geom::Vec3 TruckState::accelLinearAcceleration() const {
     return cache_.accel_linear_acceleration;
+}
+
+TruckState& TruckState::fail(bool fail) {
+    cache_.fail = fail;
+    return *this;
 }
 
 TruckState& TruckState::time(const rclcpp::Time& time) {

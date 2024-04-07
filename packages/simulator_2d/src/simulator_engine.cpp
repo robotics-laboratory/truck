@@ -107,6 +107,12 @@ void SimulatorEngine::eraseMap() {
     obstacles_.clear();
 }
 
+bool SimulatorEngine::checkForCollisions() const {
+    const var intersection = geom::intersect(a, b, params_.precision);
+
+    return false;
+}
+
 geom::Pose SimulatorEngine::getOdomBasePose() const {
     const double x = rear_ax_state_[StateIndex::kX];
     const double y = rear_ax_state_[StateIndex::kY];
@@ -511,6 +517,10 @@ rclcpp::Duration convertFromSecondsToDuration(double seconds) {
 } // namespace
 
 void SimulatorEngine::advance(double seconds) {
+    if (fail_) {
+        return;
+    }
+
     time_ += convertFromSecondsToDuration(seconds);
 
     const int integration_steps = seconds * cache_.inverse_integration_step;

@@ -10,6 +10,7 @@ namespace truck::simulator {
 
 class TruckState {
   public:
+    bool fail const;
     rclcpp::Time time() const;
     geom::Pose odomBasePose() const;
     model::Steering currentSteering() const;
@@ -23,6 +24,7 @@ class TruckState {
     geom::Vec3 gyroAngularVelocity() const;
     geom::Vec3 accelLinearAcceleration() const;
 
+    TruckState& fail(bool fail);
     TruckState& time(const rclcpp::Time& time);
     TruckState& odomBasePose(const geom::Pose& pose);
     TruckState& currentSteering(const model::Steering& current_steering);
@@ -38,6 +40,7 @@ class TruckState {
 
   private:
     struct Cache {
+        bool fail;
         rclcpp::Time time;
         geom::Pose base_odom_pose;
         model::Steering current_steering;

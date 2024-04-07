@@ -51,6 +51,8 @@ class SimulatorEngine {
         double steering, double linear_velocity);
     void resetRear();
 
+    bool checkForCollisions() const;
+
     geom::Pose getOdomBasePose() const;
     model::Steering getCurrentSteering(double rear_curvature) const;
     model::Steering getTargetSteering() const;
@@ -89,6 +91,8 @@ class SimulatorEngine {
         std::optional<double> acceleration = 0.0;
         double curvature = 0.0;
     } control_;
+
+    bool fail_ = false;
 
     rclcpp::Time time_;
 
