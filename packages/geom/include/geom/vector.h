@@ -87,6 +87,14 @@ constexpr Vec2 operator*(double c, Vec2 v) noexcept { return v * c; }
 
 constexpr Vec2 operator/(const Vec2& v, double c) noexcept { return {v.x / c, v.y / c}; }
 
+constexpr bool operator<(Vec2 left, Vec2 right) noexcept {
+    if (left.x == right.x) {
+        return true;
+    }
+
+    return left.y < right.y;
+}
+
 constexpr double dot(const Vec2& a, const Vec2& b) noexcept { return a.x * b.x + a.y * b.y; }
 
 constexpr double cross(const Vec2& a, const Vec2& b) noexcept { return a.x * b.y - a.y * b.x; }
