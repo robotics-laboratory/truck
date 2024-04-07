@@ -1,10 +1,10 @@
+#include "simulator_2d/simulator_map.h"
 #include "simulator_2d/truck_state.h"
 
 #include "model/model.h"
 #include "geom/angle.h"
 #include "geom/angle_vector.h"
 #include "geom/pose.h"
-#include "geom/segment.h"
 #include "geom/vector.h"
 #include "geom/vector3.h"
 
@@ -44,20 +44,19 @@ class SimulatorEngine {
 
     void initializeParameters(double integration_step, double precision);
     void initializeMathCache(double integration_step);
-    void initializeLidarCache();
     void initializeImuCache();
+    void initializeMap();
 
     void resetRear(double x, double y, double yaw,
         double steering, double linear_velocity);
     void resetRear();
 
-    bool checkForCollisions() const;
+    void checkForCollisions();
 
     geom::Pose getOdomBasePose() const;
     model::Steering getCurrentSteering(double rear_curvature) const;
     model::Steering getTargetSteering() const;
     model::Twist getRearTwist(double rear_curvature) const;
-    std::vector<float> getLidarRanges(const geom::Pose& odom_base_pose) const;
     geom::Vec3 getImuAngularVelocity(double angular_velocity) const;
     geom::Vec3 getImuLinearAcceleration(const model::Twist& rear_twist) const;
 
@@ -77,10 +76,8 @@ class SimulatorEngine {
         double integration_step_6;
         double inverse_integration_step;
         double inverse_wheelbase_length;
-        geom::Vec2 base_to_lidar;
-        int lidar_rays_number;
-        geom::AngleVec2 lidar_angle_min;
-        geom::Angle lidar_angle_increment;
+        double shape_length;
+        double shape_width_half;
         geom::Vec2 rear_to_hyro_translation;
         tf2::Transform base_to_hyro_rotation;
     } cache_;
@@ -100,7 +97,7 @@ class SimulatorEngine {
 
     std::unique_ptr<model::Model> model_ = nullptr;
 
-    geom::Segments obstacles_;
+    std::unique_ptr<SimulatorMap> map_ = nullptr;
 };
 
 }  // namespace truck::simulator
