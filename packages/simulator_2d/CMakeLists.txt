@@ -14,10 +14,12 @@ find_package(rosgraph_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(map REQUIRED)
+find_package(Boost REQUIRED)
 
 add_library(simulator_engine SHARED 
     src/simulator_engine.cpp
-    src/truck_state.cpp)
+    src/truck_state.cpp
+    src/simulator_map.cpp)
 
 ament_target_dependencies(
     simulator_engine
