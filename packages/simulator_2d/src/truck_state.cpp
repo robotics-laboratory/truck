@@ -17,6 +17,8 @@ model::Steering TruckState::targetSteering() const { return cache_.target_steeri
 
 model::Twist TruckState::baseTwist() const { return cache_.base_odom_twist; }
 
+model::Twist TruckState::rearTwist() const { return cache_.rear_twist; }
+
 geom::Vec2 TruckState::odomBaseLinearVelocity() const { return cache_.base_odom_linear_velocity; }
 
 double TruckState::baseAngularVelocity() const { return cache_.base_odom_angular_velocity; }
@@ -58,6 +60,11 @@ TruckState& TruckState::targetSteering(const model::Steering& target_steering) {
 
 TruckState& TruckState::baseTwist(const model::Twist& twist) {
     cache_.base_odom_twist = twist;
+    return *this;
+}
+
+TruckState& TruckState::rearTwist(const model::Twist& twist) {
+    cache_.rear_twist = twist;
     return *this;
 }
 
