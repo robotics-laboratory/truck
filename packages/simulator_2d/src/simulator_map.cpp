@@ -4,42 +4,49 @@
 #include "geom/distance.h"
 #include "geom/intersection.h"
 
-#include <boost/geometry.hpp>
-
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
 namespace truck::simulator {
 
-namespace bg = boost::geometry;
-namespace bgi = boost::geometry::index;
-
-using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
-using RTreeSegment = bg::model::segment<RTreePoint>;
-using RTreeBox = bg::model::box<RTreePoint>;
-using RTreeIndexedPoint = std::pair<RTreeSegment, size_t>;
-using RTreeIndexedPoints = std::vector<RTreeIndexedPoint>;
-using RTree = bgi::rtree<RTreeIndexedPoint, bgi::rstar<16>>;
-
 SimulatorMap::SimulatorMap(double precision, const geom::Vec2& base_to_lidar,
-    const model::Lidar& lidar_config) {
+    const model::Lidar& lidar, const model::Shape& shape) {
 
     params_.precision = precision;
-    initializeLidarParams(base_to_lidar, lidar_config);
+    initializeLidarParams(base_to_lidar, lidar);
+    initializeShapeParams(shape);
 }
 
 void SimulatorMap::initializeLidarParams(const geom::Vec2& base_to_lidar,
-    const model::Lidar& lidar_config) {
+    const model::Lidar& lidar) {
 
     params_.base_to_lidar = base_to_lidar;
 
-    const double angle_min_rad = lidar_config.angle_min.radians();
-    const double angle_max_rad = lidar_config.angle_max.radians();
-    const double angle_increment_rad = lidar_config.angle_increment.radians();
+    const double angle_min_rad = lidar.angle_min.radians();
+    const double angle_max_rad = lidar.angle_max.radians();
+    const double angle_increment_rad = lidar.angle_increment.radians();
 
     params_.lidar_rays_number = (angle_max_rad - angle_min_rad) / angle_increment_rad;
-    params_.lidar_angle_min = geom::AngleVec2(lidar_config.angle_min);
-    params_.lidar_angle_increment = lidar_config.angle_increment;
+    params_.lidar_angle_min = geom::AngleVec2(lidar.angle_min);
+    params_.lidar_angle_increment = lidar.angle_increment;
+}
+
+void SimulatorMap::initializeShapeParams(const model::Shape& shape) {
+    params_.shape_length = shape.length;
+    params_.shape_width_half = shape.width / 2;
+}
+
+void SimulatorMap::initializeRTree() {
+    RTreeIndexedSegments segments;
+    segments.reserve(obstacles_.size());
+    for (auto i = 0; i < obstacles_.size(); ++i) {
+        const auto first = RTreePoint(obstacles_[i].begin.x, obstacles_[i].begin.y);
+        const auto second = RTreePoint(obstacles_[i].end.x, obstacles_[i].end.y);
+        segments.push_back({RTreeSegment(first, second), i});
+    }
+
+    rtree_ = RTree(segments.begin(), segments.end());
 }
 
 void SimulatorMap::resetMap(const std::string& path) {
@@ -52,13 +59,30 @@ void SimulatorMap::resetMap(const std::string& path) {
             std::make_move_iterator(segments.begin()), 
             std::make_move_iterator(segments.end()));
     }
+
+    initializeRTree();
 }
 
 void SimulatorMap::eraseMap() {
     obstacles_.clear();
+    rtree_.clear();
 }
 
 namespace {
+
+RTreeBox getBox(const geom::Vec2& rear_ax_center,
+    double length, double width_half, double yaw) {
+
+    const geom::Vec2 center(
+        rear_ax_center.x + length / 2 * cos(yaw),
+        rear_ax_center.y + length / 2 * sin(yaw));
+    const double radius = length * 2;
+
+    return {
+        RTreePoint(center.x - radius, center.y - radius),
+        RTreePoint(center.x + radius, center.y + radius)
+    };
+}
 
 geom::Polygon getBounds(const geom::Vec2& rear_ax_center,
     double length, double width_half, double yaw) {
@@ -73,16 +97,32 @@ geom::Polygon getBounds(const geom::Vec2& rear_ax_center,
 
 } // namespace
 
-void SimulatorMap::checkForCollisions(const geom::Vec2& rear_ax_center,
-    double length, double width_half, double yaw) {
+bool SimulatorMap::checkForCollisions(const geom::Vec2& rear_ax_center, double yaw) const {
+    const auto box = getBox(rear_ax_center,
+        params_.shape_length, params_.shape_width_half, yaw);
+    std::vector<RTreeIndexedSegment> query_result;
+    std::vector<RTreeIndexedSegment> result;
+    rtree_.query(bgi::intersects(box), std::back_inserter(result));
 
-    const geom::Polygon bounds = getBounds(rear_ax_center, length, width_half, yaw);
-    for (const auto& segment : obstacles_) {
+    const auto bounds = getBounds(rear_ax_center,
+        params_.shape_length, params_.shape_width_half, yaw);
+    for (const auto& rtreeSegment : result) {
+        const geom::Segment segment(
+            {
+                bg::get<0, 0>(rtreeSegment),
+                bg::get<0, 1>(rtreeSegment)
+            }, 
+            {
+                bg::get<1, 0>(rtreeSegment),
+                bg::get<1, 1>(rtreeSegment)
+            });
+
         if (geom::intersect(bounds, segment, params_.precision)) {
-            fail_ = true;
-            return;
+            return true;
         }
     }
+
+    return false;
 }
 
 namespace {
