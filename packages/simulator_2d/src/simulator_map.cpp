@@ -109,12 +109,12 @@ bool SimulatorMap::checkForCollisions(const geom::Vec2& rear_ax_center, double y
     for (const auto& rtreeSegment : result) {
         const geom::Segment segment(
             {
-                bg::get<0, 0>(rtreeSegment),
-                bg::get<0, 1>(rtreeSegment)
+                bg::get<0, 0>(rtreeSegment.first),
+                bg::get<0, 1>(rtreeSegment.first)
             }, 
             {
-                bg::get<1, 0>(rtreeSegment),
-                bg::get<1, 1>(rtreeSegment)
+                bg::get<1, 0>(rtreeSegment.first),
+                bg::get<1, 1>(rtreeSegment.first)
             });
 
         if (geom::intersect(bounds, segment, params_.precision)) {
