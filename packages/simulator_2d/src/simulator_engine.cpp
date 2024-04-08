@@ -34,8 +34,6 @@ void SimulatorEngine::initializeMathCache(double integration_step) {
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
-    cache_.shape_length = model_->shape().length;
-    cache_.shape_width_half = model_->shape().width / 2;
 }
 
 void SimulatorEngine::initializeImuCache() {
@@ -49,7 +47,8 @@ void SimulatorEngine::initializeImuCache() {
 void SimulatorEngine::initializeMap() {
     const auto lidar_translation = model_->getLatestTranform("base", "lidar_link").getOrigin();
     const geom::Vec2 base_to_lidar(lidar_translation.x(), lidar_translation.y());
-    map_ = std::make_unique<SimulatorMap>(params_.precision, base_to_lidar, model_->lidar());
+    map_ = std::make_unique<SimulatorMap>(params_.precision,
+        base_to_lidar, model_->lidar(), model_->shape());
 }
 
 void SimulatorEngine::resetRear(double x, double y, double yaw,
@@ -94,7 +93,7 @@ void SimulatorEngine::checkForCollisions() {
     const double y = rear_ax_state_[StateIndex::kY];
     const double yaw = rear_ax_state_[StateIndex::kYaw];
 
-    fail_ |= map_->checkForCollisions({x, y}, cache_.shape_length, cache_.shape_width_half, yaw);
+    fail_ = map_->checkForCollisions({x, y}, yaw);
 }
 
 geom::Pose SimulatorEngine::getOdomBasePose() const {

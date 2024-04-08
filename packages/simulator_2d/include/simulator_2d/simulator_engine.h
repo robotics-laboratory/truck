@@ -76,8 +76,6 @@ class SimulatorEngine {
         double integration_step_6;
         double inverse_integration_step;
         double inverse_wheelbase_length;
-        double shape_length;
-        double shape_width_half;
         geom::Vec2 rear_to_hyro_translation;
         tf2::Transform base_to_hyro_rotation;
     } cache_;
