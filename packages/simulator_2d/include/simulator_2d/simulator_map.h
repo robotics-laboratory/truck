@@ -43,8 +43,13 @@ class SimulatorMap {
         geom::AngleVec2 lidar_angle_min;
         geom::Angle lidar_angle_increment;
         double shape_length;
-        double shape_width_half;
     } params_;
+
+    struct Cache {
+        double shape_length_half;
+        double shape_width_half;
+        double box_radius;
+    } cache_;
 
     geom::Segments obstacles_;
     RTree rtree_;

@@ -34,7 +34,9 @@ void SimulatorMap::initializeLidarParams(const geom::Vec2& base_to_lidar,
 
 void SimulatorMap::initializeShapeParams(const model::Shape& shape) {
     params_.shape_length = shape.length;
-    params_.shape_width_half = shape.width / 2;
+    cache_.shape_width_half = shape.width / 2;
+    cache_.shape_length_half = shape.length / 2;
+    cache_.box_radius = shape.length * 2;
 }
 
 void SimulatorMap::initializeRTree() {
@@ -70,14 +72,11 @@ void SimulatorMap::eraseMap() {
 
 namespace {
 
-RTreeBox getBox(const geom::Vec2& rear_ax_center,
-    double length, double width_half, double yaw) {
+RTreeBox getBox(const geom::Vec2& rear_ax_center, double length_half, double radius, double yaw) {
 
     const geom::Vec2 center(
-        rear_ax_center.x + length / 2 * cos(yaw),
-        rear_ax_center.y + length / 2 * sin(yaw));
-    const double radius = length * 2;
-
+        rear_ax_center.x + length_half * cos(yaw),
+        rear_ax_center.y + length_half * sin(yaw));
     return {
         RTreePoint(center.x - radius, center.y - radius),
         RTreePoint(center.x + radius, center.y + radius)
@@ -98,14 +97,12 @@ geom::Polygon getBounds(const geom::Vec2& rear_ax_center,
 } // namespace
 
 bool SimulatorMap::checkForCollisions(const geom::Vec2& rear_ax_center, double yaw) const {
-    const auto box = getBox(rear_ax_center,
-        params_.shape_length, params_.shape_width_half, yaw);
-    std::vector<RTreeIndexedSegment> query_result;
+    const auto box = getBox(rear_ax_center, cache_.shape_length_half, cache_.box_radius, yaw);
     std::vector<RTreeIndexedSegment> result;
     rtree_.query(bgi::intersects(box), std::back_inserter(result));
 
     const auto bounds = getBounds(rear_ax_center,
-        params_.shape_length, params_.shape_width_half, yaw);
+        params_.shape_length, cache_.shape_width_half, yaw);
     for (const auto& rtreeSegment : result) {
         const geom::Segment segment(
             {
