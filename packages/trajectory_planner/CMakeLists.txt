@@ -10,7 +10,7 @@ find_package(model REQUIRED)
 find_package(collision REQUIRED)
 
 add_library(
-    ${PROJECT_NAME} SHARED src/state.cpp src/planner.cpp
+    ${PROJECT_NAME} SHARED src/planner.cpp src/rtree.cpp src/state.cpp src/tree.cpp src/sampler.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME} common geom model collision)

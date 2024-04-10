@@ -8,29 +8,37 @@ namespace truck::collision {
 
 StaticCollisionChecker::StaticCollisionChecker(const model::Shape& shape) : shape_(shape) {}
 
-bool StaticCollisionChecker::initialized() const { return state_.collision_map != nullptr; }
+bool StaticCollisionChecker::initialized() const { return state_.has_value(); }
 
-void StaticCollisionChecker::reset(std::shared_ptr<CollisionMap> collision_map) {
-    state_.collision_map = std::move(collision_map);
+void StaticCollisionChecker::reset(Map disntace_transform) {
+    const auto& origin = disntace_transform.origin;
+    const auto tf = geom::Transform(origin.pos, origin.dir);
+
+    state_ = State{
+        .distance_transform = std::move(disntace_transform),
+        .tf = tf.inv(),
+    };
 }
 
-double StaticCollisionChecker::distance(const geom::Vec2& point) const noexcept {
+double StaticCollisionChecker::distance(const geom::Vec2& point) const {
     VERIFY(initialized());
+    const auto grid_point = state_->tf(point);
 
-    auto interpolation = fastgrid::Bilinear<float>(state_.collision_map->GetDistanceMap());
-    const auto [x, y] = interpolation.domain.Transform(point);
+    // find relevant indices of distance transform matrix
+    const auto x = floor<int>(grid_point.x / state_->distance_transform.resolution);
+    const auto y = floor<int>(grid_point.y / state_->distance_transform.resolution);
 
     // check borders
-    if ((x < 0) || (y < 0) ||
-        (interpolation.domain.size.height * interpolation.domain.resolution <= y) ||
-        (interpolation.domain.size.width * interpolation.domain.resolution <= x)) {
+    if ((x < 0) || (y < 0)\
+            || (state_->distance_transform.size.height <= y)
+            || (state_->distance_transform.size.width <= x)) {
         return kMaxDistance;
     }
 
-    return interpolation.Get(point);
+    return state_->distance_transform.data.at<float>(y, x) * state_->distance_transform.resolution;
 }
 
-double StaticCollisionChecker::distance(const geom::Pose& ego_pose) const noexcept {
+double StaticCollisionChecker::distance(const geom::Pose& ego_pose) const {
     double min_dist = kMaxDistance;
     std::vector<geom::Vec2> points = shape_.getCircleDecomposition(ego_pose);
 

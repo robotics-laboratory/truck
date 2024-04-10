@@ -1,6 +1,6 @@
 #pragma once
 
-#include "trajectory_planner/state.h"
+#include "trajectory_planner/tree.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
@@ -23,23 +23,35 @@ namespace truck::trajectory_planner {
 
 class SpatioTemporalRTree {
   public:
-    using TreeBox = typename bg::model::box<geom::Vec2>;
-    using TreeValue = typename std::pair<geom::Vec2, const State*>;
-    using Tree = typename bg::index::rtree<TreeValue, bg::index::rstar<16>>;
+    using RTreeBox = typename bg::model::box<geom::Vec2>;
+    using RTreeValue = typename std::pair<geom::Vec2, Node*>;
+    using RTree = typename bg::index::rtree<RTreeValue, bg::index::rstar<16>>;
 
-    using SearchResult = typename std::pair<double, const State*>;
+    using SearchResult = typename std::pair<double, Node*>;
+
+    SpatioTemporalRTree() = default;
 
     SpatioTemporalRTree(const Discretization<double>& velocity_discretization);
 
-    SpatioTemporalRTree& Add(const State& state) noexcept;
+    SpatioTemporalRTree(
+        const Discretization<double>& velocity_discretization, const Edge::Estimator& estimator);
 
-    void RangeSearch(
-        const State& state, double radius, std::vector<SearchResult>& result_buffer) const noexcept;
+    SpatioTemporalRTree& Add(Node& node) noexcept;
+
+    SpatioTemporalRTree& Remove(Node& node) noexcept;
+
+    const std::vector<SearchResult>& RangeSearch(const Node& node, double radius) noexcept;
+
+    SpatioTemporalRTree& Clear() noexcept;
+
+    SpatioTemporalRTree& UpdateEstimator(const Edge::Estimator& estimator) noexcept;
 
   private:
     Discretization<double> velocity_discretization_;
+    Edge::Estimator estimator_;
 
-    std::vector<Tree> layers_;
+    std::vector<RTree> layers_;
+    std::vector<SearchResult> result_buffer_;
 };
 
 }  // namespace truck::trajectory_planner

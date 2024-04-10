@@ -7,34 +7,57 @@ SpatioTemporalRTree::SpatioTemporalRTree(const Discretization<double>& velocity_
     layers_.resize(velocity_discretization_.total_states);
 }
 
-SpatioTemporalRTree& SpatioTemporalRTree::Add(const State& state) noexcept {
-    size_t velocity_layer = velocity_discretization_(state.velocity);
-    layers_[velocity_layer].insert({state.pose.pos, &state});
+SpatioTemporalRTree::SpatioTemporalRTree(
+    const Discretization<double>& velocity_discretization, const Edge::Estimator& estimator)
+    : velocity_discretization_(velocity_discretization), estimator_(estimator) {
+    layers_.resize(velocity_discretization_.total_states);
+}
+
+SpatioTemporalRTree& SpatioTemporalRTree::Add(Node& node) noexcept {
+    size_t velocity_layer = velocity_discretization_(node.state->velocity);
+    layers_[velocity_layer].insert({node.state->pose.pos, &node});
     return *this;
 }
 
-void SpatioTemporalRTree::RangeSearch(
-    const State& state, double radius, std::vector<SearchResult>& result_buffer) const noexcept {
-    const auto motion_time = [&state](const auto& value) {
-        return MotionTime(
-            MotionLength(FindMotion(state.pose, value.second->pose, 3)),
-            state.velocity,
-            value.second->velocity);
-    };
+SpatioTemporalRTree& SpatioTemporalRTree::Remove(Node& node) noexcept {
+    size_t velocity_layer = velocity_discretization_(node.state->velocity);
+    layers_[velocity_layer].remove({node.state->pose.pos, &node});
+    return *this;
+}
+
+const std::vector<SpatioTemporalRTree::SearchResult>& SpatioTemporalRTree::RangeSearch(
+    const Node& node, double radius) noexcept {
+    result_buffer_.clear();
     for (size_t i = 0; i < velocity_discretization_.total_states; ++i) {
-        const double dist_radius = radius * (state.velocity + velocity_discretization_[i]) * 0.5;
-        const TreeBox range_box(
-            geom::Vec2(state.pose.pos.x - dist_radius, state.pose.pos.y - dist_radius),
-            geom::Vec2(state.pose.pos.x + dist_radius, state.pose.pos.y + dist_radius));
+        const double dist_radius =
+            radius * (node.state->velocity + velocity_discretization_[i]) * 0.5;
+        const RTreeBox range_box(
+            geom::Vec2(node.state->pose.pos.x - dist_radius, node.state->pose.pos.y - dist_radius),
+            geom::Vec2(node.state->pose.pos.x + dist_radius, node.state->pose.pos.y + dist_radius));
         layers_[i].query(
-            bg::index::covered_by(range_box) &&
-                bg::index::satisfies([&motion_time, &radius](const auto& value) {
-                    return motion_time(value) <= radius;
-                }),
-            boost::make_function_output_iterator([&motion_time, &result_buffer](const auto& value) {
-                result_buffer.emplace_back(motion_time(value), value.second);
+            bg::index::covered_by(range_box) && bg::index::satisfies([&](const auto& value) {
+                return estimator_.HeuristicCost(*node.state, *value.second->state) <= radius;
+            }),
+            boost::make_function_output_iterator([&](const auto& value) {
+                result_buffer_.emplace_back(
+                    estimator_.HeuristicCost(*node.state, *value.second->state), value.second);
             }));
     }
+    return result_buffer_;
+}
+
+SpatioTemporalRTree& SpatioTemporalRTree::Clear() noexcept {
+    for (auto& layer : layers_) {
+        layer.clear();
+    }
+    result_buffer_.clear();
+    return *this;
+}
+
+SpatioTemporalRTree& SpatioTemporalRTree::UpdateEstimator(
+    const Edge::Estimator& estimator) noexcept {
+    estimator_ = estimator;
+    return *this;
 }
 
 }  // namespace truck::trajectory_planner

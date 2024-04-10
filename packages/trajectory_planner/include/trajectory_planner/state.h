@@ -6,17 +6,36 @@
 #include "geom/pose.h"
 #include "geom/polyline.h"
 
-#include <unordered_set>
-#include <vector>
+#include "collision/collision_checker.h"
+
+#include "model/model.h"
+
+#include <memory>
 
 namespace truck::trajectory_planner {
 
+struct TruckState {
+    struct Params {
+        double min_dist_to_obstacle = 0.1;
+    };
+
+    TruckState() = default;
+
+    TruckState(const Params& params);
+
+    bool IsCollisionFree(const geom::Pose& pose) const noexcept;
+
+    Params params;
+    const collision::StaticCollisionChecker* collision_checker = nullptr;
+    const model::Model* model = nullptr;
+};
+
 struct State {
+    class Estimator;
+
     geom::Pose pose;
     double velocity;
 };
-
-using States = std::vector<State>;
 
 struct StateArea {
     bool IsInside(const State& state) const noexcept;
@@ -28,46 +47,57 @@ struct StateArea {
     Limits<double> velocity_range;
 };
 
-class StateSpace {
-  public:
+struct States {
+    State* data = nullptr;
+    int size = 0;
+};
+
+struct StateSpace {
     struct Params {
+        size_t Size() const noexcept;
+
         Discretization<double> longitude = {.limits = Limits<double>(-10, 11), .total_states = 10};
         Discretization<double> latitude = {.limits = Limits<double>(-5, 6), .total_states = 10};
-        Discretization<geom::Angle> forward_yaw = {
-            .limits = Limits<geom::Angle>(-geom::PI_2, geom::PI_2), .total_states = 5};
-        Discretization<geom::Angle> backward_yaw = {
-            .limits = Limits<geom::Angle>(geom::PI_2, 3 * geom::PI_2), .total_states = 3};
+        size_t total_forward_yaw_states = 5;
+        size_t total_backward_yaw_states = 3;
         Discretization<double> velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10};
     };
-
-    StateSpace(const Params& params);
-
-    StateSpace(const StateSpace& other);
-
-    StateSpace(StateSpace&& other) = default;
-
-    StateSpace& operator=(StateSpace other) &;
 
     StateSpace& Build(
         const State& ego_state, const StateArea& finish_area, const geom::Polyline& route) noexcept;
 
-    const StateSpace::Params& GetParams() const noexcept;
+    int Size() const noexcept;
 
-    const State& GetStartState() const noexcept;
+    StateSpace& Clear() noexcept;
 
-    const std::unordered_set<const State*>& GetFinishStates() const noexcept;
+    Params params;
 
-    const States& GetStates() const noexcept;
+    States start_states;
+    States finish_states;
+    States regular_states;
 
-    void Clear() noexcept;
+    TruckState truck_state;
 
-    ~StateSpace() = default;
+    States data;
+};
 
-  private:
-    Params params_;
+struct StateSpaceHolder {
+    StateSpaceHolder(int size);
 
-    States states_;
-    std::unordered_set<const State*> finish_states_;
+    StateSpaceHolder(const StateSpace::Params& params);
+
+    StateSpaceHolder(const StateSpaceHolder& other) = delete;
+
+    StateSpaceHolder(StateSpaceHolder&& other) = default;
+
+    StateSpaceHolder& operator=(const StateSpaceHolder&) = delete;
+
+    StateSpaceHolder& operator=(StateSpaceHolder&& other) & = default;
+
+    ~StateSpaceHolder() = default;
+
+    StateSpace state_space;
+    std::unique_ptr<State[]> states_ptr = nullptr;
 };
 
 }  // namespace truck::trajectory_planner

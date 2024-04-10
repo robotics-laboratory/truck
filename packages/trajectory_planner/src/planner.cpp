@@ -3,125 +3,19 @@
 #include "common/math.h"
 #include "common/exception.h"
 
-#include "geom/bezier.h"
-#include "geom/distance.h"
-
 #include <algorithm>
-#include <limits>
-
-namespace {
-
-truck::geom::Poses FindMotion(
-    const truck::geom::Pose& from, const truck::geom::Pose& to, size_t max_steps,
-    double eps = 1e-7) noexcept {
-    const auto dist = truck::geom::distance(from.pos, to.pos);
-
-    if (dist < eps && std::abs(from.dir.angle().radians() - to.dir.angle().radians()) < eps) {
-        return truck::geom::Poses({from});
-    }
-
-    if (dist < eps) {
-        return truck::geom::Poses();
-    }
-
-    const double gamma = dist * 0.5;
-    const truck::geom::Vec2 from_ref = from.pos + from.dir * gamma;
-    const truck::geom::Vec2 to_ref = to.pos - to.dir * gamma;
-
-    return truck::geom::bezier3(from.pos, from_ref, to_ref, to.pos, max_steps);
-}
-
-truck::geom::Poses FindMotion(
-    const truck::geom::Pose& from, const truck::geom::Pose& to, double step,
-    double eps = 1e-7) noexcept {
-    const auto dist = truck::geom::distance(from.pos, to.pos);
-
-    if (dist < eps && std::abs(from.dir.angle().radians() - to.dir.angle().radians()) < eps) {
-        return truck::geom::Poses({from});
-    }
-
-    if (dist < eps) {
-        return truck::geom::Poses();
-    }
-
-    const double gamma = dist * 0.5;
-    const truck::geom::Vec2 from_ref = from.pos + from.dir * gamma;
-    const truck::geom::Vec2 to_ref = to.pos - to.dir * gamma;
-
-    return truck::geom::bezier3(from.pos, from_ref, to_ref, to.pos, step);
-}
-
-double MotionLength(const truck::geom::Poses& motion) noexcept {
-    double motion_lenght = 0;
-
-    if (motion.size() < 2) {
-        return motion_lenght;
-    }
-
-    for (auto it = motion.begin(); it + 1 != motion.end(); ++it) {
-        motion_lenght += truck::geom::distance(it->pos, (it + 1)->pos);
-    }
-
-    return motion_lenght;
-}
-
-double ExactMotionTime(
-    double motion_length, double from_velocity, double to_velocity, double eps = 1e-7,
-    double inf = std::numeric_limits<double>::max()) noexcept {
-    if (motion_length < eps && std::abs(from_velocity - to_velocity) < eps) {
-        return 0;
-    }
-
-    const auto av_velocity = (from_velocity + to_velocity) * 0.5;
-
-    if (motion_length < eps || std::abs(av_velocity) < eps) {
-        return inf;
-    }
-
-    return motion_length / av_velocity;
-}
-
-}  // namespace
 
 namespace truck::trajectory_planner {
 
-NodeId SearchTree::AddNode(Node node) noexcept {
-    nodes.push_back(std::move(node));
-    return nodes.size() - 1;
-}
-
-EdgeId SearchTree::AddEdge(Edge edge) noexcept {
-    edges.push_back(std::move(edge));
-    return edges.size() - 1;
-}
-
-void SearchTree::Clear() noexcept {
-    nodes.clear();
-    edges.clear();
-    start_node = InvalidNodeId;
-    finish_nodes.clear();
-}
-
-Sampler::Sampler() : generator_(), distribution_(0.0, 1.0) {}
-
-Sampler::Sampler(std::vector<double> data)
-    : generator_()
-    , distribution_(0.0, 1.0)
-    , data_(std::move(data))
-    , bit_(data_.data(), data_.size()) {
-    bit_.Build();
-}
-
-NodeId Sampler::Sample() noexcept {
-    return bit_.LowerBound(distribution_(generator_) * bit_.Sum(bit_.Size()));
-}
-
-void Sampler::Remove(NodeId node_id) noexcept {
-    bit_.Add(node_id, -bit_.Sum(node_id, node_id + 1));
-}
-
 Planner::Planner(const Params& params, const model::Model& model)
-    : params_(params), model_(model) {}
+    : params_(params)
+    , model_(model)
+    , truck_state_(params_.truck_state_params)
+    , state_space_holder_(params_.state_space_params)
+    , tree_holder_(params_.tree_params, params_.state_space_params.Size() + 1, params_.max_edges)
+    , sampler_(tree_holder_.nodes_holder.nodes.capacity)
+    , verticies_{.rtree = SpatioTemporalRTree(params_.state_space_params.velocity)}
+    , samples_{.rtree = SpatioTemporalRTree(params_.state_space_params.velocity)} {}
 
 Planner& Planner::SetCollisionChecker(
     std::shared_ptr<const collision::StaticCollisionChecker> collision_checker) {
@@ -129,182 +23,281 @@ Planner& Planner::SetCollisionChecker(
     return *this;
 }
 
-Planner& Planner::Build(const StateSpace& state_space) noexcept {
-    search_tree_.Clear();
+Planner& Planner::Build(
+    const State& ego_state, const StateArea& finish_area, const geom::Polyline& route) noexcept {
+    Clear();
 
-    search_tree_.nodes.reserve(state_space.GetStates().size());
+    if (collision_checker_ && collision_checker_->initialized()) {
+        truck_state_.collision_checker = collision_checker_.get();
+    }
+    truck_state_.model = &model_;
 
-    VERIFY(IsCollisionFree(state_space.GetStartState().pose));
-    search_tree_.start_node = search_tree_.AddNode(Node{.state = &state_space.GetStartState()});
+    auto& state_space = state_space_holder_.state_space;
+    state_space.truck_state = truck_state_;
 
-    for (const auto& state : state_space.GetStates()) {
-        if (!IsCollisionFree(state.pose)) {
-            continue;
-        }
-        const auto node_id = search_tree_.AddNode(Node{.state = &state});
-        if (state_space.GetFinishStates().contains(&state)) {
-            search_tree_.nodes[node_id].is_finish = true;
-            search_tree_.finish_nodes.push_back(node_id);
+    state_space.Build(ego_state, finish_area, route);
+
+    auto& tree = tree_holder_.tree;
+    tree.Build(state_space);
+
+    sampler_.Build(tree.nodes);
+
+    verticies_.rtree.UpdateEstimator(*tree.edges.estimator);
+    samples_.rtree.UpdateEstimator(*tree.edges.estimator);
+
+    for (int i = 0; i < tree.nodes.size; ++i) {
+        auto& node = tree.nodes.data[i];
+        switch (node.type) {
+            case Node::Type::START:
+                node.cost_to_come = 0.0;
+                nodes_queue_.emplace(node.cost_to_come + node.heuristic_cost_to_finish, &node);
+                verticies_.Insert(node);
+                break;
+            case Node::Type::FINISH:
+                samples_.Insert(node);
+                break;
+            default:
+                break;
         }
     }
 
-    std::vector<double> node_probabilities(search_tree_.nodes.size(), 0.0);
-    const double heuristics_sum = std::accumulate(
-        search_tree_.nodes.begin(),
-        search_tree_.nodes.end(),
-        0.0,
-        [&](double sum, const auto& node) {
-            const auto heuristic_cost_from_start = HeuristicCostFromStart(*node.state);
-            const auto heuristic_cost_to_finish = HeuristicCostToFinish(*node.state);
-            if (!heuristic_cost_from_start || !heuristic_cost_to_finish) {
-                return sum;
+    int last_cost_to_finish = CurrentCostToFinish();
+    while (current_batch_ < params_.max_batches && tree.edges.size < params_.max_edges) {
+        if (nodes_queue_.empty() && edges_queue_.empty()) {
+            ++current_batch_;
+            int current_cost_to_finish = CurrentCostToFinish();
+            if (current_cost_to_finish < last_cost_to_finish) {
+                Prune(current_cost_to_finish);
+                last_cost_to_finish = current_cost_to_finish;
             }
-            return sum + 1 / (*heuristic_cost_from_start + *heuristic_cost_to_finish);
-        });
 
-    for (NodeId node_id = 0; node_id < search_tree_.nodes.size(); ++node_id) {
-        const auto heuristic_cost_from_start =
-            HeuristicCostFromStart(*search_tree_.nodes[node_id].state);
-        const auto heuristic_cost_to_finish =
-            HeuristicCostToFinish(*search_tree_.nodes[node_id].state);
-        if (node_id == search_tree_.start_node || !heuristic_cost_from_start ||
-            !heuristic_cost_to_finish) {
-            node_probabilities[node_id] = 0.0;
+            int sampled = 0;
+            while (!sampler_.Empty() && sampled < params_.batch_size) {
+                auto& node = sampler_.Sample();
+                sampler_.Remove(node);
+                if (node.heuristic_cost_from_start + node.heuristic_cost_from_start >
+                    CurrentCostToFinish()) {
+                    continue;
+                }
+                samples_.Insert(node);
+                ++sampled;
+            }
+            // TODO: переписать на кучу с построением O(n)
+            for (auto& [node, gen] : verticies_.generation) {
+                nodes_queue_.emplace(node->cost_to_come + node->heuristic_cost_to_finish, node);
+            }
+        }
+        while (!nodes_queue_.empty() &&
+               (edges_queue_.empty() || nodes_queue_.top().first <= edges_queue_.top().first)) {
+            auto& [cost, node] = nodes_queue_.top();
+            nodes_queue_.pop();
+            if (cost > node->cost_to_come + node->heuristic_cost_to_finish) {
+                continue;
+            }
+            const auto& near_samples = samples_.rtree.RangeSearch(
+                *node, Radius(verticies_.generation.size() + samples_.data.size()));
+            for (auto& sample : near_samples) {
+                if (node->heuristic_cost_from_start +
+                        tree.edges.estimator->HeuristicCost(*node->state, *sample.second->state) +
+                        sample.second->heuristic_cost_to_finish <
+                    CurrentCostToFinish()) {
+                    edges_queue_.emplace(
+                        node->cost_to_come +
+                            tree.edges.estimator->HeuristicCost(
+                                *node->state, *sample.second->state) +
+                            sample.second->heuristic_cost_to_finish,
+                        std::make_pair(node, sample.second));
+                }
+            }
+            auto it = verticies_.generation.find(node);
+            if (it != verticies_.generation.end() && it->second == current_batch_) {
+                const auto& near_verticies = verticies_.rtree.RangeSearch(
+                    *node, Radius(verticies_.generation.size() + samples_.data.size()));
+                for (auto& vertex : near_verticies) {
+                    if (node->heuristic_cost_from_start + tree.edges.estimator->HeuristicCost(
+                                                              *node->state, *vertex.second->state) <
+                            CurrentCostToFinish() &&
+                        node->cost_to_come + tree.edges.estimator->HeuristicCost(
+                                                 *node->state, *vertex.second->state) <
+                            vertex.second->cost_to_come) {
+                        edges_queue_.emplace(
+                            node->cost_to_come +
+                                tree.edges.estimator->HeuristicCost(
+                                    *node->state, *vertex.second->state) +
+                                vertex.second->heuristic_cost_to_finish,
+                            std::make_pair(node, vertex.second));
+                    }
+                }
+            }
+        }
+        if (edges_queue_.empty()) {
             continue;
         }
-        node_probabilities[node_id] =
-            1 / (*heuristic_cost_from_start + *heuristic_cost_to_finish) / heuristics_sum;
+        auto potential_edge = edges_queue_.top();
+        edges_queue_.pop();
+        while (potential_edge.first >
+               potential_edge.second.first->cost_to_come +
+                   tree.edges.estimator->HeuristicCost(
+                       *potential_edge.second.first->state, *potential_edge.second.second->state) +
+                   potential_edge.second.second->heuristic_cost_to_finish) {
+            potential_edge = edges_queue_.top();
+            edges_queue_.pop();
+        }
+        auto& [from, to] = potential_edge.second;
+        if (from->cost_to_come + tree.edges.estimator->HeuristicCost(*from->state, *to->state) +
+                to->heuristic_cost_to_finish >=
+            CurrentCostToFinish()) {
+            while (!nodes_queue_.empty()) {
+                nodes_queue_.pop();
+            }
+            while (!edges_queue_.empty()) {
+                edges_queue_.pop();
+            }
+            continue;
+        }
+        auto exact_edge_cost = tree.edges.estimator->Cost(*from->state, *to->state);
+        if (from->cost_to_come + exact_edge_cost + to->heuristic_cost_to_finish <
+                CurrentCostToFinish() &&
+            from->cost_to_come + exact_edge_cost < to->cost_to_come) {
+            if (!verticies_.generation.contains(to)) {
+                samples_.Remove(*to);
+                verticies_.Insert(*to, current_batch_);
+
+                nodes_queue_.emplace(
+                    from->cost_to_come + exact_edge_cost + to->heuristic_cost_to_finish, to);
+            }
+            tree.edges.AddEdge(*from, *to);
+            if (to->type == Node::Type::FINISH && to->cost_to_come < CurrentCostToFinish()) {
+                finish_node_ = to;
+            }
+        }
     }
-    sampler_ = Sampler(std::move(node_probabilities));
+
+    if (finish_node_ != nullptr) {
+        plan_.push_back(finish_node_);
+        while (plan_.back()->type != Node::Type::START) {
+            plan_.push_back(plan_.back()->parent_node);
+        }
+        std::reverse(plan_.begin(), plan_.end());
+    }
 
     return *this;
 }
 
-std::optional<double> Planner::HeuristicCost(const State& from, const State& to) const noexcept {
-    const auto motion = FindMotion(from.pose, to.pose, params_.total_heuristic_steps);
-    const auto motion_length = MotionLength(motion);
-    if (motion.empty() || !IsDifferentiallyFeasible(motion)) {
-        return std::nullopt;
+const Node* Planner::GetFinishNode() noexcept { return finish_node_; }
+
+const Plan& Planner::GetPlan() noexcept { return plan_; }
+
+void Planner::Clear() noexcept {
+    state_space_holder_.state_space.Clear();
+    tree_holder_.tree.Clear();
+    verticies_.Clear();
+    samples_.Clear();
+
+    while (!nodes_queue_.empty()) {
+        nodes_queue_.pop();
     }
-    const auto motion_time = ExactMotionTime(motion_length, from.velocity, to.velocity);
-    if (!IsKinodynamicFeasible(motion_time, from.velocity, to.velocity)) {
-        return std::nullopt;
+
+    while (!edges_queue_.empty()) {
+        edges_queue_.pop();
     }
-    return motion_time;
+
+    finish_node_ = nullptr;
+
+    plan_.clear();
 }
 
-std::optional<double> Planner::Cost(const State& from, const State& to) const noexcept {
-    const auto motion = FindMotion(from.pose, to.pose, params_.step_resolution);
-    const auto motion_length = MotionLength(motion);
-    if (motion.empty() || !IsDifferentiallyFeasible(motion)) {
-        return std::nullopt;
-    }
-    const auto motion_time = ExactMotionTime(motion_length, from.velocity, to.velocity);
-    if (!IsKinodynamicFeasible(motion_time, from.velocity, to.velocity)) {
-        return std::nullopt;
-    }
-    return motion_time;
+double Planner::Radius(int n) const noexcept {
+    return 2 * params_.radius_multiplier * std::pow(1 + 0.25, 0.25) *
+           std::pow(std::log(n) / n, 0.25);
 }
 
-std::optional<double> Planner::HeuristicCostFromStart(const State& state) const noexcept {
-    VERIFY(search_tree_.start_node != SearchTree::InvalidNodeId);
-
-    const auto* start_state = search_tree_.nodes[search_tree_.start_node].state;
-    const auto cost = AdmissibleMotionTime(
-        geom::distance(start_state->pose.pos, state.pose.pos),
-        start_state->velocity,
-        state.velocity);
-    if (cost > params_.planning_horizon) {
-        return std::nullopt;
+void Planner::Prune(double cost) noexcept {
+    while (!samples_.data.empty() && !samples_.by_pass_heuristic.empty() &&
+           samples_.by_pass_heuristic.top().first >= cost) {
+        auto& [cost, node] = samples_.by_pass_heuristic.top();
+        samples_.by_pass_heuristic.pop();
+        samples_.Remove(*node);
     }
-    return cost;
-}
-
-std::optional<double> Planner::HeuristicCostToFinish(const State& state) const noexcept {
-    double min_cost = std::numeric_limits<double>::max();
-    for (const auto& finish_node_id : search_tree_.finish_nodes) {
-        const auto cost = AdmissibleMotionTime(
-            geom::distance(state.pose.pos, search_tree_.nodes[finish_node_id].state->pose.pos),
-            state.velocity,
-            search_tree_.nodes[finish_node_id].state->velocity);
-        min_cost = std::min(min_cost, cost);
+    while (!verticies_.generation.empty() && !verticies_.by_pass_heuristic.empty() &&
+           verticies_.by_pass_heuristic.top().first >= cost) {
+        auto& [cost, node] = verticies_.by_pass_heuristic.top();
+        verticies_.by_pass_heuristic.pop();
+        verticies_.Remove(*node);
     }
-
-    if (min_cost > params_.planning_horizon) {
-        return std::nullopt;
-    }
-
-    return min_cost;
-}
-
-bool Planner::IsCollisionFree(const geom::Pose& pose) const noexcept {
-    if (!collision_checker_) {
-        return true;
-    }
-    return collision_checker_->distance(pose) > params_.min_dist_to_obstacle;
-}
-
-bool Planner::IsDifferentiallyFeasible(const geom::Poses& motion) const noexcept {
-    if (motion.empty()) {
-        return true;
-    }
-
-    for (auto it = motion.begin(); it + 1 != motion.end(); ++it) {
-        if (!IsCollisionFree(*it)) {
-            return false;
+    while (!verticies_.generation.empty() && !verticies_.by_cost_to_come.empty() &&
+           verticies_.by_cost_to_come.top().first >= params_.planning_horizon) {
+        auto& [cost, node] = verticies_.by_cost_to_come.top();
+        verticies_.by_cost_to_come.pop();
+        if (verticies_.generation.find(node) == verticies_.generation.end()) {
+            continue;
         }
-        if (!model_.middleSteeringLimits().isMet(((it + 1)->dir - it->dir).angle().radians())) {
-            return false;
+        samples_.Insert(*node);
+        verticies_.Remove(*node);
+    }
+}
+
+double Planner::CurrentCostToFinish() const noexcept {
+    return finish_node_ == nullptr ? params_.planning_horizon : finish_node_->cost_to_come;
+}
+
+void Planner::Verticies::Insert(Node& node, int gen) noexcept {
+    auto it = generation.find(&node);
+    if (it != generation.end()) {
+        if (it->second < gen) {
+            it->second = gen;
         }
+        return;
     }
-    if (!IsCollisionFree(motion.back())) {
-        return false;
-    }
-
-    return true;
+    generation[&node] = gen;
+    by_pass_heuristic.emplace(node.heuristic_pass_cost, &node);
+    by_cost_to_come.emplace(node.cost_to_come, &node);
+    rtree.Add(node);
 }
 
-bool Planner::IsKinodynamicFeasible(
-    double motion_time, double from_velocity, double to_velocity) const noexcept {
-    if (!model_.baseVelocityLimits().isMet(from_velocity) &&
-        !model_.baseVelocityLimits().isMet(to_velocity)) {
-        return false;
+void Planner::Verticies::Remove(Node& node) noexcept {
+    auto it = generation.find(&node);
+    if (it == generation.end()) {
+        return;
     }
-
-    if (motion_time < 0 || motion_time > params_.planning_horizon) {
-        return false;
-    }
-
-    const double acceleration = (to_velocity - from_velocity) / motion_time;
-    if (acceleration < model_.baseMaxDeceleration() ||
-        acceleration > model_.baseMaxAcceleration()) {
-        return false;
-    }
-
-    return true;
+    generation.erase(it);
+    rtree.Remove(node);
 }
 
-double Planner::AdmissibleMotionTime(
-    double motion_length, double from_velocity, double to_velocity) const noexcept {
-    const double a_min = -model_.baseMaxDeceleration();
-    const double a_max = model_.baseMaxAcceleration();
+void Planner::Verticies::Clear() noexcept {
+    generation.clear();
+    while (!by_pass_heuristic.empty()) {
+        by_pass_heuristic.pop();
+    }
+    while (!by_cost_to_come.empty()) {
+        by_cost_to_come.pop();
+    }
+    rtree.Clear();
+}
 
-    const double mid_velocity = std::min(
-        std::sqrt(
-            (2 * motion_length * a_min * a_max + from_velocity * from_velocity * a_min -
-             to_velocity * to_velocity * a_max) /
-            (a_min - a_max)),
-        model_.baseVelocityLimits().max);
+void Planner::Samples::Insert(Node& node) noexcept {
+    if (data.contains(&node)) {
+        return;
+    }
+    data.insert(&node);
+    by_pass_heuristic.emplace(node.heuristic_pass_cost, &node);
+    rtree.Add(node);
+}
 
-    const double acceleration_time = (mid_velocity - from_velocity) / a_max;
-    const double decelaration_time = (to_velocity - mid_velocity) / a_min;
-    const double constant_speed_time =
-        (motion_length - from_velocity * acceleration_time -
-         a_max * acceleration_time * acceleration_time * 0.5 - mid_velocity * decelaration_time -
-         a_min * decelaration_time * decelaration_time * 0.5) /
-        mid_velocity;
+void Planner::Samples::Remove(Node& node) noexcept {
+    if (!data.contains(&node)) {
+        return;
+    }
+    data.erase(&node);
+    rtree.Remove(node);
+}
 
-    return acceleration_time + constant_speed_time + decelaration_time;
+void Planner::Samples::Clear() noexcept {
+    data.clear();
+    while (!by_pass_heuristic.empty()) {
+        by_pass_heuristic.pop();
+    }
+    rtree.Clear();
 }
 
 }  // namespace truck::trajectory_planner

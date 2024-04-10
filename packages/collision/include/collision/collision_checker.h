@@ -1,8 +1,6 @@
 #pragma once
 
-#include "collision/collision_map.h"
-
-#include "fastgrid/interpolation.h"
+#include "collision/map.h"
 
 #include "geom/pose.h"
 #include "geom/transform.h"
@@ -11,7 +9,6 @@
 
 #include <opencv2/core.hpp>
 
-#include <memory>
 #include <optional>
 
 namespace truck::collision {
@@ -23,17 +20,20 @@ class StaticCollisionChecker {
     StaticCollisionChecker(const model::Shape& shape);
 
     bool initialized() const;
-    void reset(const std::shared_ptr<CollisionMap> collision_map);
+    void reset(Map distance_transform);
 
-    double distance(const geom::Pose& ego_pose) const noexcept;
-    double distance(const geom::Vec2& point) const noexcept;
+    double distance(const geom::Pose& ego_pose) const;
+    double distance(const geom::Vec2& point) const;
 
   private:
     model::Shape shape_;
 
     struct State {
-        std::shared_ptr<CollisionMap> collision_map = nullptr;
-    } state_;
+        Map distance_transform;
+        geom::Transform tf;
+    };
+
+    std::optional<State> state_ = std::nullopt;
 };
 
 }  // namespace truck::collision
