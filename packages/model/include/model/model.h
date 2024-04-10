@@ -24,9 +24,10 @@ struct Steering {
 };
 
 struct WheelVelocity {
-    geom::Angle left;
-    geom::Angle right;
-    geom::Angle rear;
+    geom::Angle rear_left;
+    geom::Angle rear_right;
+    geom::Angle front_left;
+    geom::Angle front_right;
 };
 
 struct Twist {
@@ -99,6 +100,8 @@ class Model {
   private:
     struct Cache {
         double width_half;
+        double width_half_squared;
+        double length_squared;
         double max_abs_curvature;
         Limits<double> middle_steering_limits;
         Limits<double> base_curvature_limits;

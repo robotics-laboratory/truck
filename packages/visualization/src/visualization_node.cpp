@@ -276,14 +276,14 @@ void VisualizationNode::updateWheelsSpin() {
         const double velocity = [&]() {
             switch (wheel) {
                 case WheelIndex::kFrontLeft:
-                    return velocities.left.radians();
+                    return velocities.front_left.radians();
                 case WheelIndex::kFrontRight:
-                    return -velocities.right.radians();
+                    return -velocities.front_right.radians();
                 case WheelIndex::kRearLeft:
-                    return velocities.rear.radians();
+                    return velocities.rear_left.radians();
                 case WheelIndex::kRearRight:
                 default:
-                    return -velocities.rear.radians();
+                    return -velocities.rear_right.radians();
             }
         }();
 

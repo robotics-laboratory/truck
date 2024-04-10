@@ -65,6 +65,8 @@ double rearToArbitraryPointCurvature(double rear_curvature, const geom::Vec2& re
 
 Model::Model(const std::string& config_path) : params_(config_path) {
     cache_.width_half = params_.wheel_base.width / 2;
+    cache_.width_half_squared = squared(cache_.width_half);
+    cache_.length_squared = squared(params_.wheel_base.length);
 
     {
         const double tan_inner = tan(abs(params_.limits.steering.inner));
@@ -160,12 +162,18 @@ Steering Model::rearTwistToSteering(Twist rear_twist) const {
 WheelVelocity Model::rearSpinToWheelVelocity(
     double rear_curvature, double rear_spin_velocity) const {
 
-    const double ratio = rear_curvature * cache_.width_half;
+    const double rear_curvature_squared = squared(rear_curvature);
+
+    const double rear_ratio = rear_curvature * cache_.width_half;
+    const double front_left_ratio_squared = 1 + rear_curvature_squared * cache_.width_half_squared
+        - rear_curvature * params_.wheel_base.width + cache_.length_squared;
+    const double front_right_ratio_squared = 1 + rear_curvature_squared * cache_.length_squared;
 
     return WheelVelocity {
-        geom::Angle{(1 - ratio) * rear_spin_velocity},
-        geom::Angle{(1 + ratio) * rear_spin_velocity},
-        geom::Angle{rear_spin_velocity}
+        geom::Angle{(1 - rear_ratio) * rear_spin_velocity},
+        geom::Angle{(1 + rear_ratio) * rear_spin_velocity},
+        geom::Angle{sqrt(front_left_ratio_squared) * rear_spin_velocity},
+        geom::Angle{sqrt(front_right_ratio_squared) * rear_spin_velocity}
     };
 }
 
