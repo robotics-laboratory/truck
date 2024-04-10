@@ -29,7 +29,7 @@ Grid& Grid::build() {
             Node node = Node{
                 .index = (i * params_.width) + j,
                 .point = grid_origin_point + (geom::Vec2(j, i) * params_.resolution),
-                .collision = (checker_->distance(node.point) < (shape_.width / 2)) ? true : false};
+                .collision = (checker_->Distance(node.point) < (shape_.width / 2)) ? true : false};
 
             node_cache_.nodes.emplace_back(node);
             node_cache_.indexed_point_rtree.insert(
