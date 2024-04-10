@@ -1,0 +1,46 @@
+launch:
+- arg:
+    name: "model_config"
+    default: "$(find-pkg-share model)/config/model.yaml"
+- arg:
+    name: "radius"
+    default: "6.0"
+- node:
+    pkg: "routing_planner"
+    exec: "routing_planner_node"
+    name: "routing_planner_node"
+    output: "log"
+    param:
+    - {name: "model_config", value: "$(var model_config)"}
+    - {name: "radius", value: "$(var radius)"}
+
+    - name: "graph"
+      param:
+        - name: "circular_sector"
+          param:
+            - { name: "angle", value: 1.6 }
+            - { name: "radius", value: 2.0 }
+
+        - name: "spline"
+          param:
+            - { name: "step", value: 0.1 }
+            - { name: "gamma_ratio", value: 0.5 }
+
+        - name: "yaw"
+          param:
+            - { name: "front_count", value: 9 }
+            - { name: "back_count", value: 3 }
+            - { name: "max_shift_abs", value: 0.8 }
+
+        - { name: "obstacle_dist", value: 0.4 }
+
+    - name: "searcher"
+      param:
+        - { name: "max_vertices_count", value: -1 }
+        - { name: "finish_radius", value: 0.8 }
+
+    - name: "routing_mesh"
+      param:
+        - { name: "step", value: 0.4 }
+        - { name: "width", value: 4.0 }
+        - { name: "offset", value: 0.3 }

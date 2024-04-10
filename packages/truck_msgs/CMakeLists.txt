@@ -21,6 +21,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/NavigationMesh.msg
   msg/NavigationRoute.msg
   msg/PerfStat.msg
+  msg/PlannerMesh.msg
+  msg/PlannerTrajectory.msg
   msg/Point.msg
   msg/PurePursuitStatus.msg
   msg/SimulationState.msg

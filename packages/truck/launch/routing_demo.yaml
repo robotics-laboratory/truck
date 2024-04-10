@@ -1,5 +1,6 @@
 launch:
 - arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
+- arg: { name: "radius", default: "6.0" }
 
 - include:
     file: $(find-pkg-share simulator_2d)/launch/simulator_pipeline.yaml
@@ -7,7 +8,16 @@ launch:
       - { name: "map_config", value: "$(var map_config)" }
 
 - include:
+    file: $(find-pkg-share occupancy_grid)/launch/occupancy_grid.yaml
+    arg:
+      - { name: "radius", value: "$(var radius)" }
+
+- include:
     file: $(find-pkg-share routing)/launch/routing.yaml
     arg:
       - { name: "map_config", value: "$(var map_config)" }
-  
+
+- include:
+    file: $(find-pkg-share routing_planner)/launch/routing_planner.yaml
+    arg:
+      - { name: "radius", value: "$(var radius)" }

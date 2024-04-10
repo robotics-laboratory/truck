@@ -29,6 +29,12 @@ Eigen::MatrixXd toEigenMatrixXd(const std::vector<Vec2>& points) {
 
 }  // namespace
 
+Polyline::Polyline(const Poses& poses) {
+    for (const Pose& pose : poses) {
+        this->emplace_back(pose.pos);
+    }
+}
+
 UniformStepper<Polyline> Polyline::ubegin() const noexcept { return UniformStepper(this); }
 
 UniformStepper<Polyline> Polyline::ubegin(double step_length) const noexcept {
