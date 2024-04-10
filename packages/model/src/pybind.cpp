@@ -27,8 +27,12 @@ std::string to_string<model::Steering>(const model::Steering& obj) {
 template<>
 std::string to_string<model::WheelVelocity>(const model::WheelVelocity& obj) {
     return boost::str(
-        boost::format("WheelVelocity(left=%s, right=%s)") % to_string(obj.left)
-        % to_string(obj.right));
+        boost::format("WheelVelocity(rear_left=%s, rear_right=%s, front_left=%s, front_right=%s)")
+        % to_string(obj.rear_left)
+        % to_string(obj.rear_right)
+        % to_string(obj.front_left)
+        % to_string(obj.front_right)
+    );
 }
 
 template<>
@@ -69,8 +73,10 @@ PYBIND11_MODULE(pymodel, m) {
         .def_readonly("right", &model::Steering::right)
         .def("__repr__", &to_string<model::Steering>);
     py::class_<model::WheelVelocity>(m, "WheelVelocity")
-        .def_readonly("left", &model::WheelVelocity::left)
-        .def_readonly("right", &model::WheelVelocity::right)
+        .def_readonly("rear_left", &model::WheelVelocity::rear_left)
+        .def_readonly("rear_right", &model::WheelVelocity::rear_right)
+        .def_readonly("front_left", &model::WheelVelocity::front_left)
+        .def_readonly("front_right", &model::WheelVelocity::front_right)
         .def("__repr__", &to_string<model::WheelVelocity>);
     py::class_<model::Twist>(m, "Twist")
         .def(py::init<double, double>())
