@@ -145,7 +145,7 @@ class HardwareNode(Node):
         self._log.debug(f"Center curvature: {msg.curvature:.2f}")
         self._log.debug(f"Rear curvature: {twist.curvature:.2f}")
         self._teensy.push(steering.left.radians, steering.right.radians)
-        self._cache.target_rear_curvature = twist.curvature
+        self._cache.target_curvature = msg.curvature
 
     def _push_status(self):
         armed = self._axis.current_state != odrive.enums.AXIS_STATE_IDLE
@@ -189,7 +189,7 @@ class HardwareNode(Node):
 
         rps = self._axis.encoder.vel_estimate
         vel = self._model.motor_rps_to_linear_velocity(rps)
-        curv = self._cache.target_rear_curvature
+        curv = self._cache.target_curvature
         twist = pymodel.Twist(vel, curv)
         twist = self._model.base_to_rear_twist(twist)
         steering = self._model.rear_twist_to_steering(twist)
