@@ -28,7 +28,6 @@ using namespace truck::model;
 
 using namespace std;
 
-/*
 TEST(StateSpace, StatePoses) {
     const auto draw_poses = [](sdd::SDD& img, const StateSpace& state_space) {
         for (int i = 0; i < state_space.start_states.size; ++i) {
@@ -411,7 +410,6 @@ TEST(Sampler, Sample) {
         EXPECT_TRUE(sampler.Empty());
     }
 }
-*/
 
 TEST(Planner, Search) {
     const auto draw_motion = [](sdd::SDD& img, const Pose& from, const Pose& to) {

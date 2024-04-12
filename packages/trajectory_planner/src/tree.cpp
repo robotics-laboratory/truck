@@ -240,10 +240,6 @@ bool Edge::Estimator::IsDifferentiallyFeasible(const geom::Poses& motion) const 
             return false;
         }
         // TODO: Добавить проверку кривизны кривой Безье
-        if ((it->dir - motion.front().dir) < -geom::PI_4 ||
-            (it->dir - motion.front().dir) > geom::PI_4) {
-            return false;
-        }
     }
     if (!state_space_.truck_state.IsCollisionFree(motion.back())) {
         return false;
