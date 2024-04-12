@@ -30,9 +30,25 @@ struct TruckState {
     const model::Model* model = nullptr;
 };
 
-struct State {
-    class Estimator;
+template<typename T>
+struct Discretization {
+    T Step() const noexcept { return (limits.max - limits.min) / total_states; }
 
+    T operator[](int index) const {
+        VERIFY(index < total_states);
+        return limits.min + Step() * index;
+    }
+
+    int operator()(const T& value) const {
+        VERIFY(limits.min <= value && value < limits.max);
+        return static_cast<size_t>(limits.ratio(value) * total_states);
+    }
+
+    Limits<T> limits;
+    int total_states;
+};
+
+struct State {
     geom::Pose pose;
     double velocity;
 };
@@ -54,12 +70,12 @@ struct States {
 
 struct StateSpace {
     struct Params {
-        size_t Size() const noexcept;
+        int Size() const noexcept;
 
         Discretization<double> longitude = {.limits = Limits<double>(-10, 11), .total_states = 10};
         Discretization<double> latitude = {.limits = Limits<double>(-5, 6), .total_states = 10};
-        size_t total_forward_yaw_states = 5;
-        size_t total_backward_yaw_states = 3;
+        int total_forward_yaw_states = 5;
+        int total_backward_yaw_states = 3;
         Discretization<double> velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10};
     };
 
@@ -70,6 +86,8 @@ struct StateSpace {
 
     StateSpace& Clear() noexcept;
 
+    StateSpace& Reset(State* ptr) noexcept;
+
     Params params;
 
     States start_states;
@@ -78,13 +96,15 @@ struct StateSpace {
 
     TruckState truck_state;
 
-    States data;
+    State* data = nullptr;
 };
 
-struct StateSpaceHolder {
-    StateSpaceHolder(int size);
+using StateSpaceDataPtr = std::unique_ptr<State[]>;
 
-    StateSpaceHolder(const StateSpace::Params& params);
+struct StateSpaceHolder {
+    StateSpaceHolder() = default;
+
+    StateSpaceHolder(StateSpace&& state_space, StateSpaceDataPtr&& states_ptr) noexcept;
 
     StateSpaceHolder(const StateSpaceHolder& other) = delete;
 
@@ -97,7 +117,9 @@ struct StateSpaceHolder {
     ~StateSpaceHolder() = default;
 
     StateSpace state_space;
-    std::unique_ptr<State[]> states_ptr = nullptr;
+    StateSpaceDataPtr states_ptr = nullptr;
 };
+
+StateSpaceHolder MakeStateSpace(const StateSpace::Params& params);
 
 }  // namespace truck::trajectory_planner

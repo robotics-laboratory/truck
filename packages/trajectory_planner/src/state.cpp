@@ -27,22 +27,6 @@ bool StateArea::IsInside(const State& state) const noexcept {
                .isMet(state.velocity);
 }
 
-size_t StateSpace::Params::Size() const noexcept {
-    return longitude.total_states * latitude.total_states *
-           (total_forward_yaw_states + total_backward_yaw_states) * velocity.total_states;
-}
-
-int StateSpace::Size() const noexcept {
-    return start_states.size + finish_states.size + regular_states.size;
-}
-
-StateSpace& StateSpace::Clear() noexcept {
-    start_states = {};
-    finish_states = {};
-    regular_states = {};
-    return *this;
-}
-
 StateSpace& StateSpace::Build(
     const State& ego_state, const StateArea& finish_area, const geom::Polyline& route) noexcept {
     Clear();
@@ -50,7 +34,7 @@ StateSpace& StateSpace::Build(
     const auto start_pose = ego_state.pose;
     VERIFY(truck_state.IsCollisionFree(start_pose));
 
-    *data.data = ego_state;
+    *data = ego_state;
 
     // TODO - подумать, можно ли быстрее
     auto nearest_segment_it = route.begin();
@@ -69,25 +53,25 @@ StateSpace& StateSpace::Build(
         geom::projection(
             start_pose.pos, geom::Segment(*nearest_segment_it, *(nearest_segment_it + 1))));
 
-    auto regular_states_end = data.data + 1;
-    auto finish_states_begin = data.data + data.size;
+    auto regular_states_end = data + 1;
+    auto finish_states_begin = data + params.Size();
 
     auto longitude_it = geom::UniformStepper(
         &route, params.longitude.Step(), dist_from_milestone, nearest_segment_it);
     longitude_it += params.longitude.limits.min;
 
-    for (size_t i = 0; i < params.longitude.total_states && longitude_it != route.uend();
+    for (int i = 0; i < params.longitude.total_states && longitude_it != route.uend();
          ++i, ++longitude_it) {
         const auto longitude_pose = *longitude_it;
-        for (size_t j = 0; j < params.latitude.total_states; ++j) {
+        for (int j = 0; j < params.latitude.total_states; ++j) {
             const auto latitude_pose = geom::Pose(
                 longitude_pose.pos + longitude_pose.dir.vec().left() * params.latitude[j],
                 longitude_pose.dir);
             Discretization<geom::Angle> forward_yaw = {
                 .limits = Limits<geom::Angle>(-geom::PI_2, geom::PI_2),
                 .total_states = params.total_forward_yaw_states};
-            for (size_t k = 0; k < forward_yaw.total_states; ++k) {
-                for (size_t v = 0; v < params.velocity.total_states; ++v) {
+            for (int k = 0; k < forward_yaw.total_states; ++k) {
+                for (int v = 0; v < params.velocity.total_states; ++v) {
                     const auto state = State{
                         .pose = geom::Pose(
                             latitude_pose.pos,
@@ -108,8 +92,8 @@ StateSpace& StateSpace::Build(
             Discretization<geom::Angle> backward_yaw = {
                 .limits = Limits<geom::Angle>(geom::PI_2, 3 * geom::PI_2),
                 .total_states = params.total_backward_yaw_states};
-            for (size_t k = 0; k < backward_yaw.total_states; ++k) {
-                for (size_t v = 0; v < params.velocity.total_states; ++v) {
+            for (int k = 0; k < backward_yaw.total_states; ++k) {
+                for (int v = 0; v < params.velocity.total_states; ++v) {
                     const auto state = State{
                         .pose = geom::Pose(
                             latitude_pose.pos,
@@ -130,29 +114,48 @@ StateSpace& StateSpace::Build(
         }
     }
 
-    start_states = {.data = data.data, .size = 1};
+    start_states = {.data = data, .size = 1};
 
     finish_states = {
-        .data = data.data + static_cast<int>(finish_states_begin - data.data),
-        .size = static_cast<int>(data.data + data.size - finish_states_begin)};
+        .data = data + static_cast<int>(finish_states_begin - data),
+        .size = static_cast<int>(data + params.Size() - finish_states_begin)};
 
-    regular_states = {
-        .data = data.data + 1, .size = static_cast<int>(regular_states_end - data.data - 1)};
+    regular_states = {.data = data + 1, .size = static_cast<int>(regular_states_end - data - 1)};
 
     return *this;
 }
 
-StateSpaceHolder::StateSpaceHolder(int size) {
-    state_space.data.size = size;
-    states_ptr = std::make_unique<State[]>(size);
-    state_space.data.data = states_ptr.get();
+int StateSpace::Params::Size() const noexcept {
+    return longitude.total_states * latitude.total_states *
+               (total_forward_yaw_states + total_backward_yaw_states) * velocity.total_states +
+           1;
 }
 
-StateSpaceHolder::StateSpaceHolder(const StateSpace::Params& params) {
-    state_space.params = params;
-    state_space.data.size = params.Size() + 1;
-    states_ptr = std::make_unique<State[]>(state_space.data.size);
-    state_space.data.data = states_ptr.get();
+int StateSpace::Size() const noexcept {
+    return start_states.size + finish_states.size + regular_states.size;
+}
+
+StateSpace& StateSpace::Clear() noexcept {
+    start_states = {};
+    finish_states = {};
+    regular_states = {};
+    return *this;
+}
+
+StateSpace& StateSpace::Reset(State* ptr) noexcept {
+    data = ptr;
+    return *this;
+}
+
+StateSpaceHolder::StateSpaceHolder(
+    StateSpace&& state_space, StateSpaceDataPtr&& states_ptr) noexcept
+    : state_space(std::move(state_space)), states_ptr(std::move(states_ptr)) {}
+
+StateSpaceHolder MakeStateSpace(const StateSpace::Params& params) {
+    auto state_space = StateSpace{.params = params};
+    auto states_ptr = std::make_unique<State[]>(state_space.params.Size());
+    state_space.Reset(states_ptr.get());
+    return {std::move(state_space), std::move(states_ptr)};
 }
 
 }  // namespace truck::trajectory_planner

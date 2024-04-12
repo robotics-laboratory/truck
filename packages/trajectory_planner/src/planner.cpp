@@ -11,8 +11,8 @@ Planner::Planner(const Params& params, const model::Model& model)
     : params_(params)
     , model_(model)
     , truck_state_(params_.truck_state_params)
-    , state_space_holder_(params_.state_space_params)
-    , tree_holder_(params_.tree_params, params_.state_space_params.Size() + 1, params_.max_edges)
+    , state_space_holder_(MakeStateSpace(params_.state_space_params))
+    , tree_holder_(params_.tree_params, params_.state_space_params.Size(), params_.max_edges)
     , sampler_(tree_holder_.nodes_holder.nodes.capacity)
     , verticies_{.rtree = SpatioTemporalRTree(params_.state_space_params.velocity)}
     , samples_{.rtree = SpatioTemporalRTree(params_.state_space_params.velocity)} {}

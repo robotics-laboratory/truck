@@ -49,24 +49,6 @@ struct Limits {
     T min, max;
 };
 
-template<typename T>
-struct Discretization {
-    T Step() const noexcept { return (limits.max - limits.min) / total_states; }
-
-    T operator[](size_t index) const {
-        VERIFY(index < total_states);
-        return limits.min + Step() * index;
-    }
-
-    size_t operator()(const T& value) const {
-        VERIFY(limits.min <= value && value < limits.max);
-        return static_cast<size_t>(limits.ratio(value) * total_states);
-    }
-
-    Limits<T> limits;
-    size_t total_states;
-};
-
 template<class Int, class Float>
 Int ceil(Float value) {
     return static_cast<Int>(std::ceil(value));

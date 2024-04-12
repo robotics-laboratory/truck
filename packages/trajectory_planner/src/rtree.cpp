@@ -28,7 +28,7 @@ SpatioTemporalRTree& SpatioTemporalRTree::Remove(Node& node) noexcept {
 const std::vector<SpatioTemporalRTree::SearchResult>& SpatioTemporalRTree::RangeSearch(
     const Node& node, double radius) noexcept {
     result_buffer_.clear();
-    for (size_t i = 0; i < velocity_discretization_.total_states; ++i) {
+    for (int i = 0; i < velocity_discretization_.total_states; ++i) {
         const double dist_radius =
             radius * (node.state->velocity + velocity_discretization_[i]) * 0.5;
         const RTreeBox range_box(

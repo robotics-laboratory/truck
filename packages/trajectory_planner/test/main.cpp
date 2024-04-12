@@ -30,19 +30,19 @@ using namespace std;
 
 TEST(StateSpace, StatePoses) {
     const auto draw_poses = [](sdd::SDD& img, const StateSpace& state_space) {
-        for (int i = 0; i < state_space.start_states.size; ++i) {
-            img.Add(sdd::Pose{
-                .pose = state_space.start_states.data[i].pose,
-                .scale = max(img.GetSize().width, img.GetSize().height) * 0.005,
-                .length = max(img.GetSize().width, img.GetSize().height) * 0.005,
-                .color = sdd::color::red});
-        }
         for (int i = 0; i < state_space.regular_states.size; ++i) {
             img.Add(sdd::Pose{
                 .pose = state_space.regular_states.data[i].pose,
                 .scale = max(img.GetSize().width, img.GetSize().height) * 0.0025,
                 .length = max(img.GetSize().width, img.GetSize().height) * 0.0025,
                 .color = sdd::color::fuchsia});
+        }
+        for (int i = 0; i < state_space.start_states.size; ++i) {
+            img.Add(sdd::Pose{
+                .pose = state_space.start_states.data[i].pose,
+                .scale = max(img.GetSize().width, img.GetSize().height) * 0.005,
+                .length = max(img.GetSize().width, img.GetSize().height) * 0.005,
+                .color = sdd::color::red});
         }
         for (int i = 0; i < state_space.finish_states.size; ++i) {
             img.Add(sdd::Pose{
@@ -69,7 +69,7 @@ TEST(StateSpace, StatePoses) {
             Polyline{Vec2(10, 30), Vec2(20, 27), Vec2(25, 25), Vec2(33, 20), Vec2(38, 13)};
         img.Add(sdd::Polyline{.polyline = route, .thickness = 0.25, .color = sdd::color::blue});
 
-        StateSpaceHolder state_space_holder(
+        auto state_space_holder = MakeStateSpace(
             {.longitude = {.limits = Limits<double>(-5, 16), .total_states = 20},
              .latitude = {.limits = Limits<double>(-5, 6), .total_states = 20},
              .total_forward_yaw_states = 5,
@@ -104,7 +104,7 @@ TEST(StateSpace, StatePoses) {
             Polyline{Vec2(10, 40), Vec2(20, 30), Vec2(25, 20), Vec2(35, 15), Vec2(50, 10)};
         img.Add(sdd::Polyline{.polyline = route, .thickness = 0.5, .color = sdd::color::blue});
 
-        StateSpaceHolder state_space_holder(
+        auto state_space_holder = MakeStateSpace(
             {.longitude = {.limits = Limits<double>(-5, 16), .total_states = 20},
              .latitude = {.limits = Limits<double>(-5, 6), .total_states = 20},
              .total_forward_yaw_states = 5,
@@ -246,7 +246,7 @@ TEST(Edge, Estimator) {
 }
 
 TEST(RTree, Search) {
-    StateSpaceHolder state_space_holder(
+    auto state_space_holder = MakeStateSpace(
         {.longitude = {.limits = Limits<double>(0, 100), .total_states = 25},
          .latitude = {.limits = Limits<double>(0, 100), .total_states = 25},
          .total_forward_yaw_states = 4,
@@ -256,14 +256,14 @@ TEST(RTree, Search) {
     int pos = 0;
 
     NodesHolder nodes(params.Size());
-    for (size_t i = 0; i < params.longitude.total_states; ++i) {
-        for (size_t j = 0; j < params.latitude.total_states; ++j) {
+    for (int i = 0; i < params.longitude.total_states; ++i) {
+        for (int j = 0; j < params.latitude.total_states; ++j) {
             Discretization<geom::Angle> forward_yaw = {
                 .limits = Limits<geom::Angle>(-geom::PI_2, geom::PI_2),
                 .total_states = params.total_forward_yaw_states};
 
-            for (size_t k = 0; k < params.total_forward_yaw_states; ++k) {
-                for (size_t l = 0; l < params.velocity.total_states; ++l) {
+            for (int k = 0; k < params.total_forward_yaw_states; ++k) {
+                for (int l = 0; l < params.velocity.total_states; ++l) {
                     state_space_holder.states_ptr[pos] = {
                         .pose = Pose(Vec2(params.longitude[i], params.latitude[j]), forward_yaw[k]),
                         .velocity = params.velocity[l]};
@@ -276,8 +276,8 @@ TEST(RTree, Search) {
                 .limits = Limits<geom::Angle>(geom::PI_2, 3 * geom::PI_2),
                 .total_states = params.total_backward_yaw_states};
 
-            for (size_t k = 0; k < params.total_backward_yaw_states; ++k) {
-                for (size_t l = 0; l < params.velocity.total_states; ++l) {
+            for (int k = 0; k < params.total_backward_yaw_states; ++k) {
+                for (int l = 0; l < params.velocity.total_states; ++l) {
                     state_space_holder.states_ptr[pos] = {
                         .pose =
                             Pose(Vec2(params.longitude[i], params.latitude[j]), backward_yaw[k]),
