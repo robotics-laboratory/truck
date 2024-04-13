@@ -4,6 +4,13 @@
 #include <vector>
 #include <regex>
 
+namespace servo {
+
+struct __attribute__((packed)) Angles {
+    float left_angle;
+    float right_angle;
+};
+
 struct SteeringControl {
     SteeringControl(const std::string& path) : stream_(path) { steering_ = parse(stream_); }
 
@@ -29,3 +36,5 @@ struct SteeringControl {
     std::ifstream stream_;
     std::vector<std::pair<float, float>> steering_;
 };
+
+}  // namespace servo

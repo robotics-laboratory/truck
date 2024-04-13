@@ -3,6 +3,7 @@
 #include <ACAN_T4.h>
 #include <cstring>
 #include <cassert>
+#include "servo.h"
 
 #define SERIAL_SPEED 115200
 #define LEFT_SERVO_PWM_PIN 2
@@ -13,13 +14,6 @@
 
 Servo leftServo;
 Servo rightServo;
-
-#pragma pack(push, 1)
-struct ServoAngles {
-    float left_angle;
-    float right_angle;
-};
-#pragma pack(pop))
 
 float clamp(float x) {
     if (x < SERVO_MIN_ANGLE) return SERVO_MIN_ANGLE;
@@ -36,7 +30,7 @@ void writeFloat(Servo& servo, float angle) {
     servo.writeMicroseconds(value);
 }
 
-void handleCommand(const ServoAngles& cmd) {
+void handleCommand(const servo::Angles& cmd) {
     if (cmd.left_angle > 0) writeFloat(leftServo, cmd.left_angle);
     if (cmd.right_angle > 0) writeFloat(rightServo, cmd.right_angle);
     SERIAL_PORT.println("ok");
@@ -68,7 +62,7 @@ void loop() {
     if (ACAN_T4::can1.receive(message)) {
         if (message.id == 0x555) {
             Serial.print("recived message\n");
-            struct ServoAngles cmd {};
+            servo::Angles cmd {};
             std::memcpy(&cmd.left_angle, message.data, sizeof(cmd.left_angle));
             std::memcpy(&cmd.right_angle, message.data + 4, sizeof(cmd.right_angle));
             Serial.print("left: ");

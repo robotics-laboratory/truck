@@ -54,7 +54,7 @@ void HardwareNode::initializeOdrive() {
 }
 
 void HardwareNode::initializeTeensy() {
-    steeringControl_ = std::make_unique<SteeringControl>(params_.steeringPath);
+    steeringControl_ = std::make_unique<servo::SteeringControl>(params_.steeringPath);
     RCLCPP_INFO(this->get_logger(), "Teensy initialized");
 }
 
@@ -133,11 +133,6 @@ struct __attribute__((packed)) InputVel {
     float torq;
 };
 
-struct __attribute__((packed)) ServoAngles {
-    float left_angle;
-    float right_angle;
-};
-
 float interpolate(const std::vector<std::pair<float, float>>& data, float x) noexcept {
     auto comp = [](const std::pair<float, float>& elem, float value) { return elem.first < value; };
     auto it = std::lower_bound(data.begin(), data.end(), x, comp);
@@ -164,14 +159,14 @@ void HardwareNode::pushTeensy(float left_wheel_angle, float right_wheel_angle) {
     auto right_servo_angle = interpolate(steeringControl_->steering_, right_wheel_angle);
     left_servo_angle = params_.servoHomeAngleLeft + left_servo_angle;
     right_servo_angle = params_.servoHomeAngleRight - right_servo_angle;
-    ServoAngles data = {rad2degree(left_servo_angle), rad2degree(right_servo_angle)};
+    servo::Angles data = {rad2degree(left_servo_angle), rad2degree(right_servo_angle)};
     RCLCPP_INFO(
         this->get_logger(),
         "Servo angles: {left = %.3f, right = %.3f}",
         data.left_angle,
         data.right_angle);
-    static_assert(sizeof(ServoAngles) == 8, "Padding issues with servo angles struct");
-    sendFrame(CmdId::SET_SERVO_ANGLE, sizeof(ServoAngles), &data);
+    static_assert(sizeof(servo::Angles) == 8, "Padding issues with servo angles struct");
+    sendFrame(CmdId::SET_SERVO_ANGLE, sizeof(servo::Angles), &data);
 }
 
 void HardwareNode::readFromSocket() {

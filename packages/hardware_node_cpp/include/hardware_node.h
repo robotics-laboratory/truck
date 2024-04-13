@@ -49,7 +49,7 @@ enum CmdId : uint32_t {
     GET_TORQUES = 0x01c,              // ControllerStatus  - publisher
 
     // [Jetson -> Teensy]:
-    SET_SERVO_ANGLE = 0x555  // SetServoAngle     - service
+    SET_SERVO_ANGLE = 0x555           // SetServoAngle     - service
 };
 
 enum AxisState : uint32_t {
@@ -66,7 +66,7 @@ class HardwareNode : public rclcpp::Node {
     uint8_t curMode = ControlMode::OFF;
     std::unordered_map<CmdId, CanFrameTimePair> canFramesCache;
     std::unique_ptr<model::Model> model_ = nullptr;
-    std::unique_ptr<SteeringControl> steeringControl_ = nullptr;
+    std::unique_ptr<servo::SteeringControl> steeringControl_ = nullptr;
 
     void initializePtrFields();
     void initializeParams();
