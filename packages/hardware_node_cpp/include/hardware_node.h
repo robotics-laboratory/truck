@@ -32,24 +32,24 @@ namespace truck::hardware_node {
 // https://docs.odriverobotics.com/v/0.5.6/can-protocol.html
 enum CmdId : uint32_t {
     // [Jetson -> ODrive]:
-    HEARTBEAT = 0x001,               // ControllerStatus  - publisher
-    GET_MOTOR_ERROR = 0x003,         // SystemStatus      - publisher
-    GET_ENCODER_ERROR = 0x004,       // SystemStatus      - publisher
-    GET_SENSORLESS_ERROR = 0x005,    // SystemStatus      - publisher
-    GET_CONTROLLER_ERROR = 0x1d,     // SystemStatus      - publisher
-    SET_AXIS_STATE = 0x007,          // SetAxisState      - service
-    GET_ENCODER_ESTIMATES = 0x009,   // ControllerStatus  - publisher
-    SET_CONTROLLER_MODE = 0x00b,     // ControlMessage    - subscriber
-    SET_INPUT_POS = 0x00C,           // ControlMessage    - subscriber
-    SET_INPUT_VEL = 0x00D,           // ControlMessage    - subscriber
-    SET_INPUT_TORQUE = 0x00E,        // ControlMessage    - subscriber
-    GET_IQ = 0x014,                  // ControllerStatus  - publisher
-    GET_BUS_VOLTAGE_CURRENT = 0x017, // SystemStatus      - publisher
-    CLEAR_ERRORS = 0x018,            // SystemStatus      - publisher
-    GET_TORQUES = 0x01c,             // ControllerStatus  - publisher
+    HEARTBEAT = 0x001,                // ControllerStatus  - publisher
+    GET_MOTOR_ERROR = 0x003,          // SystemStatus      - publisher
+    GET_ENCODER_ERROR = 0x004,        // SystemStatus      - publisher
+    GET_SENSORLESS_ERROR = 0x005,     // SystemStatus      - publisher
+    GET_CONTROLLER_ERROR = 0x1d,      // SystemStatus      - publisher
+    SET_AXIS_STATE = 0x007,           // SetAxisState      - service
+    GET_ENCODER_ESTIMATES = 0x009,    // ControllerStatus  - publisher
+    SET_CONTROLLER_MODE = 0x00b,      // ControlMessage    - subscriber
+    SET_INPUT_POS = 0x00C,            // ControlMessage    - subscriber
+    SET_INPUT_VEL = 0x00D,            // ControlMessage    - subscriber
+    SET_INPUT_TORQUE = 0x00E,         // ControlMessage    - subscriber
+    GET_IQ = 0x014,                   // ControllerStatus  - publisher
+    GET_BUS_VOLTAGE_CURRENT = 0x017,  // SystemStatus      - publisher
+    CLEAR_ERRORS = 0x018,             // SystemStatus      - publisher
+    GET_TORQUES = 0x01c,              // ControllerStatus  - publisher
 
     // [Jetson -> Teensy]:
-    SET_SERVO_ANGLE = 0x555          // SetServoAngle     - service
+    SET_SERVO_ANGLE = 0x555  // SetServoAngle     - service
 };
 
 enum AxisState : uint32_t {
@@ -86,7 +86,7 @@ class HardwareNode : public rclcpp::Node {
     void sendFrame(uint32_t cmdId, uint8_t can_dlc, const void* data);
 
     std::optional<can_frame> checkCanFrame(const CmdId& command, const double reportRate);
-    
+
     struct SocketCan {
         int socket;
         struct ifreq ifr;

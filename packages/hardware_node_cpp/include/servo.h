@@ -5,9 +5,7 @@
 #include <regex>
 
 struct SteeringControl {
-    SteeringControl(const std::string& path) : stream_(path) {
-        steering_ = parse(stream_);
-    }
+    SteeringControl(const std::string& path) : stream_(path) { steering_ = parse(stream_); }
 
     static std::unique_ptr<SteeringControl> create(const std::string& path) {
         return std::make_unique<SteeringControl>(path);
@@ -20,10 +18,10 @@ struct SteeringControl {
         std::regex fieldsRegx(",");
         while (std::getline(stream, line)) {
             std::sregex_token_iterator iter(line.begin(), line.end(), fieldsRegx, -1);
-            float key = std::stof(iter->str()); 
-            ++iter; 
-            float value = std::stof(iter->str()); 
-            result.emplace_back(key, value); 
+            float key = std::stof(iter->str());
+            ++iter;
+            float value = std::stof(iter->str());
+            result.emplace_back(key, value);
         }
         return result;
     }
@@ -31,5 +29,3 @@ struct SteeringControl {
     std::ifstream stream_;
     std::vector<std::pair<float, float>> steering_;
 };
-
-

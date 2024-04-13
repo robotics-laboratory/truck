@@ -28,7 +28,7 @@ float clamp(float x) {
 }
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 void writeFloat(Servo& servo, float angle) {
@@ -53,10 +53,10 @@ void setup() {
     ACAN_T4_Settings settings(500 * 1000);
     const uint32_t errorCode = ACAN_T4::can1.begin(settings);
     if (0 == errorCode) {
-        Serial.println ("can1 ok") ;
+        Serial.println("can1 ok");
     } else {
-        Serial.print ("Error can1: 0x") ;
-        Serial.println (errorCode, HEX) ;
+        Serial.print("Error can1: 0x");
+        Serial.println(errorCode, HEX);
     }
 }
 
@@ -68,7 +68,7 @@ void loop() {
     if (ACAN_T4::can1.receive(message)) {
         if (message.id == 0x555) {
             Serial.print("recived message\n");
-            struct ServoAngles cmd{};
+            struct ServoAngles cmd {};
             std::memcpy(&cmd.left_angle, message.data, sizeof(cmd.left_angle));
             std::memcpy(&cmd.right_angle, message.data + 4, sizeof(cmd.right_angle));
             Serial.print("left: ");
