@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <unistd.h>
 #include <utility>
+#include "servo.h"
 
 using namespace truck_msgs::msg;
 
@@ -30,6 +31,7 @@ namespace truck::hardware_node {
 
 // https://docs.odriverobotics.com/v/0.5.6/can-protocol.html
 enum CmdId : uint32_t {
+    // [Jetson -> ODrive]:
     HEARTBEAT = 0x001,               // ControllerStatus  - publisher
     GET_MOTOR_ERROR = 0x003,         // SystemStatus      - publisher
     GET_ENCODER_ERROR = 0x004,       // SystemStatus      - publisher
@@ -45,6 +47,9 @@ enum CmdId : uint32_t {
     GET_BUS_VOLTAGE_CURRENT = 0x017, // SystemStatus      - publisher
     CLEAR_ERRORS = 0x018,            // SystemStatus      - publisher
     GET_TORQUES = 0x01c,             // ControllerStatus  - publisher
+
+    // [Jetson -> Teensy]:
+    SET_SERVO_ANGLE = 0x555          // SetServoAngle     - service
 };
 
 enum AxisState : uint32_t {
@@ -61,7 +66,7 @@ class HardwareNode : public rclcpp::Node {
     uint8_t curMode = ControlMode::OFF;
     std::unordered_map<CmdId, CanFrameTimePair> canFramesCache;
     std::unique_ptr<model::Model> model_ = nullptr;
-    std::unique_ptr<model::Steering> steering_ = nullptr;
+    std::unique_ptr<SteeringControl> steeringControl_ = nullptr;
 
     void initializePtrFields();
     void initializeParams();
@@ -75,6 +80,7 @@ class HardwareNode : public rclcpp::Node {
     void disableMotor();
     void pushStatus();
     void pushTelemetry();
+    void pushTeensy(float left_wheel_angle, float right_wheel_angle);
     void modeCallback(const ControlMode& msg);
     void commandCallback(const Control& msg);
     void sendFrame(uint32_t cmdId, uint8_t can_dlc, const void* data);
@@ -93,7 +99,10 @@ class HardwareNode : public rclcpp::Node {
         std::string odriveAxis;
         std::string interface;
         std::string teensySerialPort;
+        std::string steeringPath;
         std::chrono::milliseconds odriveTimeout;
+        float servoHomeAngleLeft;
+        float servoHomeAngleRight;
         double statusReportRate;
         double telemetryReportRate;
         double readReportRate;

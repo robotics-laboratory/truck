@@ -1,14 +1,16 @@
 #include "hardware_node.h"
 
 #include <chrono>
+#include <cmath>
 #include <fcntl.h>
+#include <fstream>
 #include <linux/sockios.h>
+#include <netinet/tcp.h>
 #include <rclcpp/time.hpp>
 #include <rclcpp/timer.hpp>
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2_ros/qos.hpp>
 #include <unistd.h>
-#include <netinet/tcp.h>
 
 using namespace std::placeholders;
 using namespace std::chrono_literals;
@@ -22,6 +24,7 @@ HardwareNode::HardwareNode() : Node("hardware_node") {
     initializeTopicHandlers();
     initializeTimers();
     initializeOdrive();
+    initializeTeensy();
     RCLCPP_INFO(this->get_logger(), "Hardware node initialized");
 }
 
@@ -43,18 +46,34 @@ void HardwareNode::initializeSocketCan() {
     readFromSocket();
 }
 
+void HardwareNode::initializeOdrive() {
+    auto accelMps = static_cast<float>(model_->baseMaxAcceleration());
+    auto accelRps = static_cast<float>(model_->linearVelocityToMotorRPS(accelMps));
+    RCLCPP_INFO(this->get_logger(), "Acceleration: %.1f m/s^2, %.1f turns/s^2", accelMps, accelRps);
+    disableMotor();
+}
+
+void HardwareNode::initializeTeensy() {
+    steeringControl_ = std::make_unique<SteeringControl>(params_.steeringPath);
+    RCLCPP_INFO(this->get_logger(), "Teensy initialized");
+}
+
 void HardwareNode::initializeParams() {
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
-
+    params_.steeringPath = this->declare_parameter("steering_path", "../resource/steering.csv");
     params_.odriveCanId = this->declare_parameter("node_id", 39);
+    params_.servoHomeAngleLeft = this->declare_parameter("steering_base_left", 90.0);
+    params_.servoHomeAngleRight = this->declare_parameter("steering_base_right", 90.0);
     params_.odriveAxis = this->declare_parameter("odrive_axis", "axis1");
-    params_.interface = this->declare_parameter("interface", "vxcan1");
+    params_.interface = this->declare_parameter("interface", "vcan0");
     params_.statusReportRate = this->declare_parameter("status_report_rate", 20.0);
     params_.telemetryReportRate = this->declare_parameter("telemetry_report_rate", 20.0);
     params_.readReportRate = this->declare_parameter("read_report_rate", 20.0);
+    /*
     params_.teensySerialPort = this->declare_parameter("teensy_serial_port", "/dev/ttyTHS0");
     params_.teensySerialSpeed = this->declare_parameter("teensy_serial_speed", 500000);
+    */ 
     params_.odriveTimeout =
         std::chrono::milliseconds(this->declare_parameter<long int>("odrive_timeout", 250));
 
@@ -108,8 +127,51 @@ void HardwareNode::initializeTimers() {
         std::bind(&HardwareNode::readFromSocket, this));
 }
 
-void HardwareNode::initializeTeensy() {
-    __asm__ ("nop");
+namespace {
+    struct __attribute__((packed)) InputVel {
+        float input_vel;
+        float torq;
+    };
+
+    struct __attribute__((packed)) ServoAngles {
+        float left_angle;
+        float right_angle;
+    };
+
+    float interpolate(const std::vector<std::pair<float, float>>& data, float x) noexcept {
+        auto comp = [](const std::pair<float, float>& elem, float value) {
+            return elem.first < value;
+        };
+        auto it = std::lower_bound(data.begin(), data.end(), x, comp);
+        if (it == data.end()) {
+            return (it - 1)->second;
+        }
+        if (it == data.begin()) {
+            return it->second;
+        }
+        auto itPrev = it - 1;
+        float x0 = itPrev->first, y0 = itPrev->second;
+        float x1 = it->first, y1 = it->second;
+        if (x1 == x0) {
+            return y0;
+        }
+        return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+    }
+
+    float rad2degree(float rad) noexcept {
+        return rad * (180.0f / M_PI);
+    }
+}
+
+void HardwareNode::pushTeensy(float left_wheel_angle, float right_wheel_angle) {
+    auto left_servo_angle = interpolate(steeringControl_->steering_, -left_wheel_angle);
+    auto right_servo_angle = interpolate(steeringControl_->steering_, right_wheel_angle);
+    left_servo_angle = params_.servoHomeAngleLeft + left_servo_angle;
+    right_servo_angle = params_.servoHomeAngleRight - right_servo_angle;
+    ServoAngles data = {rad2degree(left_servo_angle), rad2degree(right_servo_angle)};
+    RCLCPP_INFO(this->get_logger(), "Servo angles: {left = %.3f, right = %.3f}", data.left_angle, data.right_angle);
+    static_assert(sizeof(ServoAngles) == 8, "Padding issues with servo angles struct");
+    sendFrame(CmdId::SET_SERVO_ANGLE, sizeof(ServoAngles), &data);
 }
 
 void HardwareNode::readFromSocket() {
@@ -182,9 +244,11 @@ void HardwareNode::sendFrame(uint32_t cmd_id, uint8_t can_dlc, const void* data 
         std::memcpy(frame.data, data, can_dlc);
     }
     RCLCPP_INFO(this->get_logger(), "COMMAND: %u", cmd_id);
+    std::stringstream ss;
     for (int i = 0; i < can_dlc; ++i) {
-            RCLCPP_INFO(this->get_logger(), "%02X ", frame.data[i]);
+        ss >> frame.data[i];
     }
+    RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
     ssize_t nbytes = write(can_.socket, &frame, sizeof(frame));
     if (nbytes < 0 || nbytes != sizeof(frame)) {
         RCLCPP_INFO(this->get_logger(), "Unnable to write to socket");
@@ -192,35 +256,20 @@ void HardwareNode::sendFrame(uint32_t cmd_id, uint8_t can_dlc, const void* data 
     }
 }
 
-#pragma pack(push,1)
-struct InputVel {
-    float input_vel;
-    float torq;
-};
-#pragma pack(pop)
-
-void HardwareNode::initializeOdrive() {
-    auto accelMps = static_cast<float>(model_->baseMaxAcceleration());
-    auto accelRps = static_cast<float>(model_->linearVelocityToMotorRPS(accelMps));
-    RCLCPP_INFO(this->get_logger(), "Acceleration: %.1f m/s^2, %.1f turns/s^2", accelMps, accelRps);
-    // InputVel ss = {accelRps, 0.0};
-    // sendFrame(CmdId::SET_INPUT_VEL, sizeof(InputVel), &ss);
-    disableMotor();
-}
-
 void HardwareNode::commandCallback(const Control& msg) {
-    if (curMode == ControlMode::OFF) {
-        return;
-    }
+    if (curMode == ControlMode::OFF) return; 
     auto rpm = static_cast<float>(model_->linearVelocityToMotorRPS(msg.velocity));
     InputVel ss{rpm, 0.0};
+    static_assert(sizeof(ss) == 8, "Padding issues with InputVel struct");
     sendFrame(CmdId::SET_INPUT_VEL, sizeof(InputVel), &ss);
     truck::model::Twist twist = truck::model::Twist{msg.curvature, msg.velocity};
     twist = model_->baseToRearTwist(twist);
-    [[maybe_unused]] auto steering = model_->rearTwistToSteering(twist);
+    auto steering = model_->rearTwistToSteering(twist);
     RCLCPP_DEBUG(this->get_logger(), "Center curv: %.2f", msg.curvature);
     RCLCPP_DEBUG(this->get_logger(), "Rear curv: %.2f", twist.curvature);
-
+    auto left = static_cast<float>(steering.left.radians());
+    auto right = static_cast<float>(steering.right.radians());
+    pushTeensy(left, right);
 }
 
 void HardwareNode::enableMotor() {
@@ -258,7 +307,6 @@ std::optional<can_frame> HardwareNode::checkCanFrame(
     return {};
 }
 
-
 void HardwareNode::pushTelemetry() {
     auto header = std_msgs::msg::Header();
     header.stamp = now();
@@ -295,7 +343,6 @@ void HardwareNode::pushTelemetry() {
     odometry.twist.covariance = covariance_matrix;
     signals_.odometry->publish(odometry);
 
-    
     RCLCPP_INFO(
         this->get_logger(),
         "odometry.twist.linear = {.x = %f, .y = %f, .z = %f}",
@@ -319,54 +366,44 @@ void HardwareNode::pushStatus() {
     uint64_t motorError = 0;
     uint32_t axisState = 0, axisError = 0, encoderError = 0;
     uint8_t motorFlag = 0, encoderFlag = 0;
-
     auto heartbeatFrame = checkCanFrame(CmdId::HEARTBEAT, params_.statusReportRate);
     auto motorFrame = checkCanFrame(CmdId::GET_MOTOR_ERROR, params_.statusReportRate);
     auto encoderFrame = checkCanFrame(CmdId::GET_ENCODER_ERROR, params_.statusReportRate);
-
     if (!heartbeatFrame || !motorFrame || !encoderFrame) {
-        RCLCPP_WARN(this->get_logger(), "ERROR. GOT OLD FRAME WITH STATUS");
+        RCLCPP_WARN(this->get_logger(), "Too old status frame");
         rclcpp::shutdown();
     }
-
     std::memcpy(&axisError, heartbeatFrame->data, sizeof(axisError));
     std::memcpy(&axisState, heartbeatFrame->data + 4, sizeof(axisState));
     std::memcpy(&motorFlag, heartbeatFrame->data + 5, sizeof(motorFlag));
     std::memcpy(&encoderFlag, heartbeatFrame->data + 6, sizeof(encoderFlag));
-
     if (axisError) {
         auto msg = "Axis Error Detected: " + std::to_string(axisError);
         RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
         status.errors.push_back(msg);
     }
-    
     if (prevMotorFlag) {
         std::memcpy(&motorError, motorFrame->data, sizeof(motorError));
         auto msg = "Motor Error Detected: " + std::to_string(motorError);
         RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
         status.errors.push_back(msg);
     }
-
     if (prevEncoderFlag) {
         std::memcpy(&encoderError, encoderFrame->data, sizeof(encoderError));
         auto msg = "Encoder Error Detected: " + std::to_string(encoderError);
         RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
         status.errors.push_back(msg);   
     }
-
     if (motorFlag) {
         sendFrame(CmdId::GET_MOTOR_ERROR, 0);
         prevMotorFlag = 1;
     }
-
     if (encoderFlag) {
         sendFrame(CmdId::GET_ENCODER_ERROR, 0);
         prevEncoderFlag = 1;
     } 
-    
     prevMotorFlag = 0;
     prevEncoderFlag = 0;
-
     bool armed = (axisState != AxisState::AXIS_STATE_IDLE);
     status.header.stamp = now();
     status.armed = armed;
