@@ -58,13 +58,18 @@ void HardwareNode::initializeTeensy() {
     RCLCPP_INFO(this->get_logger(), "Teensy initialized");
 }
 
+namespace {
+constexpr float rad2degree(float rad) noexcept { return rad * (180.0f / M_PI); }
+constexpr float deg2rad(float deg) noexcept { return deg * (M_PI / 180.0f); }
+}  // namespace
+
 void HardwareNode::initializeParams() {
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
     params_.steeringPath = this->declare_parameter("steering_path", "../resource/steering.csv");
     params_.odriveCanId = this->declare_parameter("node_id", 39);
-    params_.servoHomeAngleLeft = this->declare_parameter("steering_base_left", 90.0);
-    params_.servoHomeAngleRight = this->declare_parameter("steering_base_right", 90.0);
+    params_.servoHomeAngleLeft = this->declare_parameter("steering_base_left", deg2rad(90.0));
+    params_.servoHomeAngleRight = this->declare_parameter("steering_base_right", deg2rad(90.0));
     params_.odriveAxis = this->declare_parameter("odrive_axis", "axis1");
     params_.interface = this->declare_parameter("interface", "vcan0");
     params_.statusReportRate = this->declare_parameter("status_report_rate", 20.0);
@@ -133,7 +138,7 @@ struct __attribute__((packed)) InputVel {
     float torq;
 };
 
-float interpolate(const std::vector<std::pair<float, float>>& data, float x) noexcept {
+float interpolate(const std::vector<std::pair<float, float>>& data, float x) {
     auto comp = [](const std::pair<float, float>& elem, float value) { return elem.first < value; };
     auto it = std::lower_bound(data.begin(), data.end(), x, comp);
     if (it == data.end()) {
@@ -150,8 +155,6 @@ float interpolate(const std::vector<std::pair<float, float>>& data, float x) noe
     }
     return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
 }
-
-float rad2degree(float rad) noexcept { return rad * (180.0f / M_PI); }
 }  // namespace
 
 void HardwareNode::pushTeensy(float left_wheel_angle, float right_wheel_angle) {

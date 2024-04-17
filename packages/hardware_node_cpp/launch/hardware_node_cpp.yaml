@@ -14,5 +14,3 @@ launch:
     - {name: "status_report_rate", value: 20.0}
     - {name: "telemetry_report_rate", value: 20.0}
     - {name: "read_report_rate", value: 20.0}
-    - {name: "steering_base_left", value: 90.0}
-    - {name: "steering_base_right", value: 90.0}
