@@ -50,6 +50,17 @@ tf2_msgs::msg::TFMessage loadTf(const std::string& path) {
     return result;
 }
 
+constexpr double rearToArbitraryPointRatio(double rear_curvature, const geom::Vec2& rear_to_point) {
+    const double a = 1 - rear_curvature * rear_to_point.y;
+    const double b = rear_curvature * rear_to_point.x;
+    return std::sqrt(squared(a) + squared(b));
+}
+
+constexpr double rearToArbitraryPointCurvature(double rear_curvature, const geom::Vec2& rear_to_point) {
+    const double ratio = rearToArbitraryPointRatio(rear_curvature, rear_to_point);
+    return rear_curvature / ratio;
+}
+
 } // namespace
 
 Model::Model(const std::string& config_path) : params_(config_path) {
@@ -83,25 +94,6 @@ Model::Model(const std::string& config_path) : params_(config_path) {
         }
     }
 }
-
-namespace {
-
-double rearToArbitraryPointRatio(double rear_curvature,
-    const geom::Vec2& rear_to_point) const {
-
-    const double a = 1 - rear_curvature * rear_to_point.y;
-    const double b = rear_curvature * rear_to_point.x;
-    return std::sqrt(squared(a) + squared(b));
-}
-
-double rearToArbitraryPointCurvature(double rear_curvature,
-    const geom::Vec2& rear_to_point) const {
-
-    const double ratio = rearToArbitraryPointRatio(rear_curvature, rear_to_point);
-    return rear_curvature / ratio;
-}
-
-} // namespace
 
 Twist Model::rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) const {
     const double ratio = rearToArbitraryPointRatio(rear_twist.curvature, rear_to_point);
