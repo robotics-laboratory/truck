@@ -51,6 +51,7 @@ class SimulatorEngine {
         double steering, double linear_velocity);
     void resetRear();
 
+    geom::Pose getArbitraryPointPose(const geom::Vec2& rear_to_point) const;
     geom::Pose getOdomBasePose() const;
     model::Steering getTargetSteering() const;
     std::vector<float> getLidarRanges(const geom::Pose& odom_base_pose) const;

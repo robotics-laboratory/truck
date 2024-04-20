@@ -57,7 +57,6 @@ void SimulatorEngine::initializeLidarCache() {
 
 void SimulatorEngine::initializeImuCache() {
     const auto imu_tf = model_->getLatestTranform("base", "camera_imu_optical_frame");
-
     cache_.rear_to_hyro_translation.x = imu_tf.getOrigin().x() - model_->wheelBase().base_to_rear;
     cache_.rear_to_hyro_translation.y = imu_tf.getOrigin().y();
     cache_.base_to_hyro_rotation.setRotation(imu_tf.getRotation());
@@ -106,15 +105,23 @@ void SimulatorEngine::eraseMap() {
     obstacles_.clear();
 }
 
-geom::Pose SimulatorEngine::getOdomBasePose() const {
+geom::Pose SimulatorEngine::getArbitraryPointPose(const geom::Vec2& rear_to_point) const {
     const double x = rear_ax_state_[StateIndex::kX];
     const double y = rear_ax_state_[StateIndex::kY];
     const double yaw = rear_ax_state_[StateIndex::kYaw];
 
     geom::Pose pose;
     pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
-    pose.pos = geom::Vec2{x, y} + model_->wheelBase().base_to_rear * pose.dir;
+    pose.pos = {
+        x + rear_to_point.x * pose.dir.x() - rear_to_point.y * pose.dir.y(),
+        y + rear_to_point.x * pose.dir.y() + rear_to_point.y * pose.dir.x()
+    };
     return pose;
+}
+
+geom::Pose SimulatorEngine::getOdomBasePose() const {
+    const auto rear_to_base = geom::Vec2(model_->wheelBase().base_to_rear, 0);
+    return getArbitraryPointPose(rear_to_base);
 }
 
 model::Steering SimulatorEngine::getTargetSteering() const {
@@ -243,16 +250,6 @@ geom::Vec3 applyRotation(const tf2::Transform& rotation, const geom::Vec3& vecto
     return geom::Vec3(v.getX(), v.getY(), v.getZ());
 }
 
-geom::Vec3 getLinearAcceleration(const model::Twist& twist, double acceleration, double yaw) {
-    const auto yaw_vec = geom::Vec2::fromAngle(geom::Angle::fromRadians(yaw));
-    const auto normal_a = squared(twist.velocity) * twist.curvature;
-    const auto tan_a = std::sqrt(squared(acceleration) - squared(normal_a));
-    return geom::Vec3(
-        tan_a * yaw_vec + yaw_vec.left() * normal_a,
-        FREE_FALL_ACCELERATION
-    );
-}
-
 } // namespace
 
 geom::Vec3 SimulatorEngine::getImuAngularVelocity(double angular_velocity) const {
@@ -263,10 +260,15 @@ geom::Vec3 SimulatorEngine::getImuAngularVelocity(double angular_velocity) const
 geom::Vec3 SimulatorEngine::getImuLinearAcceleration(const model::Twist& rear_twist) const {
     const auto twist = model_->rearToArbitraryPointTwist(rear_twist, cache_.rear_to_hyro_translation);
     const auto acceleration = getCurrentAcceleration();
-    const auto yaw = rear_ax_state_[StateIndex::kYaw];
 
-    const auto la = getLinearAcceleration(twist, acceleration, yaw);
+    const auto tan_a = geom::Vec2(acceleration, 0);
+    
+    const auto rotation = geom::Vec2(0, 1 / rear_twist.curvature);
+    const auto imu_pose = getArbitraryPointPose(cache_.rear_to_hyro_translation);
+    const auto imu_to_rotation = rotation - imu_pose.pos();
+    const auto centr_a = imu_to_rotation.unit() * squared(twist.velocity) * twist.curvature;
 
+    const auto la = geom::Vec3(tan_a + centr_a, FREE_FALL_ACCELERATION);
     return applyRotation(cache_.base_to_hyro_rotation, la);
 }
 
