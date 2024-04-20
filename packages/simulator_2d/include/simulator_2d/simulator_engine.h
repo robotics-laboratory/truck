@@ -52,9 +52,7 @@ class SimulatorEngine {
     void resetRear();
 
     geom::Pose getOdomBasePose() const;
-    model::Steering getCurrentSteering(double rear_curvature) const;
     model::Steering getTargetSteering() const;
-    model::Twist getRearTwist(double rear_curvature) const;
     std::vector<float> getLidarRanges(const geom::Pose& odom_base_pose) const;
     geom::Vec3 getImuAngularVelocity(double angular_velocity) const;
     geom::Vec3 getImuLinearAcceleration(const model::Twist& rear_twist) const;
