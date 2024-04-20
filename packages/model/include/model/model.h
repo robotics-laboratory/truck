@@ -61,22 +61,26 @@ class Model {
 
     /**
      * @param rear_twist Twist of the center of the rear axle.
-     * @param rear_to_point Translation from the center of the rear axle to the arbitrary point.
+     * @param rear_to_point Translation from the center of the
+     * rear axle to the arbitrary point in the base coordinate system.
      *
      * @return Twist of the arbitrary point.
      * 
      * Truck scheme:
-     * -------
-     * |     |
-     * | X   |
-     * |  C  |
-     * |     |
-     * |     |
-     * ---R---
-     * C - the center of the base.
+     * 
+     * OY ↑
+     * 
+     * ---------------------------
+     * |                         |
+     * |                 A       |
+     * R            C            | OX →
+     * |                         |
+     * |                         |
+     * ---------------------------
+     * C - the center of the base (and the center of the coordinate system).
      * R - the center of the rear axle.
-     * X - the arbitrary point.
-     * rear_to_point - a vector RX.
+     * A - the arbitrary point.
+     * rear_to_point - a vector RA.
      */
     Twist rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) const;
     Twist baseToRearTwist(Twist base_twist) const;
