@@ -29,8 +29,11 @@ struct WheelVelocity {
 };
 
 struct Twist {
-  double curvature;
-  double velocity;
+    double curvature;
+    double velocity;
+    double angularVelocity() {
+        return curvature * velocity;  
+    }
 };
 
 class Model {
