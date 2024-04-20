@@ -84,7 +84,9 @@ Model::Model(const std::string& config_path) : params_(config_path) {
     }
 }
 
-double Model::rearToArbitraryPointRatio(double rear_curvature,
+namespace {
+
+double rearToArbitraryPointRatio(double rear_curvature,
     const geom::Vec2& rear_to_point) const {
 
     const double a = 1 - rear_curvature * rear_to_point.y;
@@ -92,27 +94,29 @@ double Model::rearToArbitraryPointRatio(double rear_curvature,
     return std::sqrt(squared(a) + squared(b));
 }
 
-double Model::rearToArbitraryPointCurvature(double rear_curvature,
+double rearToArbitraryPointCurvature(double rear_curvature,
     const geom::Vec2& rear_to_point) const {
 
     const double ratio = rearToArbitraryPointRatio(rear_curvature, rear_to_point);
     return rear_curvature / ratio;
 }
 
-Twist Model::rearToArbitraryPointTwist(Twist twist, const geom::Vec2& rear_to_point) const {
-    const double ratio = rearToArbitraryPointRatio(twist.curvature, rear_to_point);
-    return {twist.curvature / ratio, twist.velocity * ratio};
+} // namespace
+
+Twist Model::rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) const {
+    const double ratio = rearToArbitraryPointRatio(rear_twist.curvature, rear_to_point);
+    return {rear_twist.curvature / ratio, rear_twist.velocity * ratio};
 }
 
-Twist Model::baseToRearTwist(Twist twist) const {
-    const double ratio = getBaseToRearRatio(twist.curvature, params_.wheel_base.base_to_rear);
-    return {twist.curvature / ratio, twist.velocity * ratio};
+Twist Model::baseToRearTwist(Twist base_twist) const {
+    const double ratio = getBaseToRearRatio(base_twist.curvature, params_.wheel_base.base_to_rear);
+    return {base_twist.curvature / ratio, base_twist.velocity * ratio};
 }
 
-Twist Model::rearToBaseTwist(Twist twist) const {
+Twist Model::rearToBaseTwist(Twist rear_twist) const {
     const geom::Vec2 rear_to_base(params_.wheel_base.base_to_rear, 0);
-    const double ratio = rearToArbitraryPointRatio(twist.curvature, rear_to_base);
-    return {twist.curvature / ratio, twist.velocity * ratio};
+    const double ratio = rearToArbitraryPointRatio(rear_twist.curvature, rear_to_base);
+    return {rear_twist.curvature / ratio, rear_twist.velocity * ratio};
 }
 
 double Model::baseToRearAcceleration(double acceleration, double base_curvature) const {
@@ -162,16 +166,16 @@ double Model::middleSteeringToRearCurvature(double steering) const {
     return tan(steering) / params_.wheel_base.length;
 }
 
-Steering Model::rearTwistToSteering(Twist twist) const {
-    return rearCurvatureToSteering(twist.curvature);
+Steering Model::rearTwistToSteering(Twist rear_twist) const {
+    return rearCurvatureToSteering(rear_twist.curvature);
 }
 
-WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
-    const double ratio = twist.curvature * cache_.width_half;
+WheelVelocity Model::rearTwistToWheelVelocity(Twist rear_twist) const {
+    const double ratio = rear_twist.curvature * cache_.width_half;
 
     return WheelVelocity {
-        geom::Angle{(1 - ratio) * twist.velocity / params_.wheel.radius},
-        geom::Angle{(1 + ratio) * twist.velocity / params_.wheel.radius}
+        geom::Angle{(1 - ratio) * rear_twist.velocity / params_.wheel.radius},
+        geom::Angle{(1 + ratio) * rear_twist.velocity / params_.wheel.radius}
     };
 }
 

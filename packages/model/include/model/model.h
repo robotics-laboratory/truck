@@ -56,18 +56,33 @@ class Model {
     const Wheel& wheel() const;
     const Lidar& lidar() const;
 
-    double rearToArbitraryPointRatio(double rear_curvature,
-      const geom::Vec2& rear_to_point) const;
-    double rearToArbitraryPointCurvature(double rear_curvature,
-      const geom::Vec2& rear_to_point) const;
-    Twist rearToArbitraryPointTwist(Twist twist, const geom::Vec2& rear_to_point) const;
-    Twist baseToRearTwist(Twist twist) const;
-    Twist rearToBaseTwist(Twist twist) const;
-    Steering rearTwistToSteering(Twist twist) const;
+    /**
+     * @param rear_twist Twist of the center of the rear axle.
+     * @param rear_to_point Translation from the center of the rear axle to the arbitrary point.
+     *
+     * @return Twist of the arbitrary point.
+     * 
+     * Truck scheme:
+     * -------
+     * |     |
+     * | X   |
+     * |  C  |
+     * |     |
+     * |     |
+     * ---R---
+     * C - the center of the base.
+     * R - the center of the rear axle.
+     * X - the arbitrary point.
+     * rear_to_point - a vector RX.
+     */
+    Twist rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) const;
+    Twist baseToRearTwist(Twist base_twist) const;
+    Twist rearToBaseTwist(Twist rear_twist) const;
+    Steering rearTwistToSteering(Twist rear_twist) const;
     Steering rearCurvatureToSteering(double curvature) const;
     double middleSteeringToRearCurvature(double steering) const;
     double baseToRearAcceleration(double acceleration, double base_curvature) const;
-    WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
+    WheelVelocity rearTwistToWheelVelocity(Twist rear_twist) const;
     double linearVelocityToMotorRPS(double velocity) const;
     double motorRPStoLinearVelocity(double rps) const;
 
