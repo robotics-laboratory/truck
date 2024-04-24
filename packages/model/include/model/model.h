@@ -31,7 +31,7 @@ struct WheelVelocity {
 struct Twist {
     double curvature;
     double velocity;
-    double angularVelocity() {
+    double angularVelocity() const {
         return curvature * velocity;  
     }
 };

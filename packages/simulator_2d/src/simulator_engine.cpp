@@ -265,7 +265,7 @@ geom::Vec3 SimulatorEngine::getImuLinearAcceleration(const model::Twist& rear_tw
     
     const auto rotation = geom::Vec2(0, 1 / rear_twist.curvature);
     const auto imu_pose = getArbitraryPointPose(cache_.rear_to_hyro_translation);
-    const auto imu_to_rotation = rotation - imu_pose.pos();
+    const auto imu_to_rotation = rotation - imu_pose.pos;
     const auto centr_a = imu_to_rotation.unit() * squared(twist.velocity) * twist.curvature;
 
     const auto la = geom::Vec3(tan_a + centr_a, FREE_FALL_ACCELERATION);
@@ -279,7 +279,7 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto rear_curvature = model_->middleSteeringToRearCurvature(steering);
     const auto current_steering = model_->rearCurvatureToSteering(rear_curvature);
     const auto target_steering = getTargetSteering();
-    const auto rear_twist = {rear_curvature, rear_ax_state_[StateIndex::kLinearVelocity]};
+    const auto rear_twist = model::Twist{rear_curvature, rear_ax_state_[StateIndex::kLinearVelocity]};
     const auto twist = model_->rearToBaseTwist(rear_twist);
     const auto linear_velocity = pose.dir * twist.velocity;
     const auto angular_velocity = twist.angularVelocity();

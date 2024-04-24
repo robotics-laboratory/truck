@@ -50,13 +50,13 @@ tf2_msgs::msg::TFMessage loadTf(const std::string& path) {
     return result;
 }
 
-constexpr double rearToArbitraryPointRatio(double rear_curvature, const geom::Vec2& rear_to_point) {
+double rearToArbitraryPointRatio(double rear_curvature, const geom::Vec2& rear_to_point) {
     const double a = 1 - rear_curvature * rear_to_point.y;
     const double b = rear_curvature * rear_to_point.x;
     return std::sqrt(squared(a) + squared(b));
 }
 
-constexpr double rearToArbitraryPointCurvature(double rear_curvature, const geom::Vec2& rear_to_point) {
+double rearToArbitraryPointCurvature(double rear_curvature, const geom::Vec2& rear_to_point) {
     const double ratio = rearToArbitraryPointRatio(rear_curvature, rear_to_point);
     return rear_curvature / ratio;
 }
