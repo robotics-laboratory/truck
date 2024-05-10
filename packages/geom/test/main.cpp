@@ -157,16 +157,14 @@ TEST(Vector3, constructor) {
 
 TEST(Vector3, len) {
     const Vec3 a = {1, 1, 1};
-    ASSERT_GEOM_EQUAL(a.len(), std::sqrt(3), 1e-9);
-
     const Vec3 b = {-1, -1, -1};
-    ASSERT_GEOM_EQUAL(b.len(), std::sqrt(3), 1e-9);
-
     const Vec3 c = {-1, 1, 0};
-    ASSERT_GEOM_EQUAL(c.len(), std::sqrt(2), 1e-9);
+    const Vec3 d = {2, 5, 7};
 
-    const Vec3 c = {2, 5, 7};
-    ASSERT_GEOM_EQUAL(c.len(), std::sqrt(78), 1e-9);
+    ASSERT_GEOM_EQUAL(a.len(), std::sqrt(3), 1e-9);
+    ASSERT_GEOM_EQUAL(b.len(), std::sqrt(3), 1e-9);
+    ASSERT_GEOM_EQUAL(c.len(), std::sqrt(2), 1e-9);
+    ASSERT_GEOM_EQUAL(d.len(), std::sqrt(78), 1e-9);
 }
 
 TEST(AngleVec2, constructor) {
