@@ -176,8 +176,25 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
     truck_msgs::msg::SimulationState state_msg;
     state_msg.header.frame_id = "base";
     state_msg.header.stamp = truck_state.time();
+
     state_msg.speed = truck_state.baseTwist().velocity;
     state_msg.steering = truck_state.currentSteering().middle.radians();
+
+    const auto pose = truck_state.odomBasePose();
+    state_msg.pose.position.x = pose.pos.x;
+    state_msg.pose.position.y = pose.pos.y;
+    state_msg.pose.orientation = truck::geom::msg::toQuaternion(pose.dir);
+
+    const auto angular_velocity = truck_state.gyroAngularVelocity();
+    state_msg.gyro_angular_velocity.x = angular_velocity.x;
+    state_msg.gyro_angular_velocity.y = angular_velocity.y;
+    state_msg.gyro_angular_velocity.z = angular_velocity.z;
+
+    const auto acceleration = truck_state.accelLinearAcceleration();
+    state_msg.accel_linear_acceleration.x = acceleration.x;
+    state_msg.accel_linear_acceleration.y = acceleration.y;
+    state_msg.accel_linear_acceleration.z = acceleration.z;
+
     signals_.state->publish(state_msg);
 }
 
