@@ -47,7 +47,7 @@ Rotation matrix – T
 
 Tangential acceleration – 𝑡 ⃗
 
-Centripetal acceleration – 𝑐 ⃗  = 𝑒 ⃗ ∙ ⱱ`^2 ∙ C`
+Centripetal acceleration – 𝑐 ⃗  = 𝑒 ⃗ ∙ ⱱ\`^2 ∙ C\`
 
 Acceleration of free fall – 𝑔 ⃗
 
