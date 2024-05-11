@@ -61,7 +61,7 @@ The IMU message consists of linear acceleration and angular velocity vectors for
 
 Tangential acceleration is directed tangentially to the trajectory of motion. Its x coordinate is equal to the acceleration scalar, y and z are equal to 0.
 
-Vector e is a unit vector co-directed to the vector IO (i-o). The centripetal acceleration is equal to the vector e multiplied by the square of the scalar of the linear velocity and the curvature of the trajectory.
+Vector e is a unit vector co-directed to the vector IO. The centripetal acceleration is equal to the vector e multiplied by the square of the scalar of the linear velocity and the curvature of the trajectory.
 
 Linear acceleration is the vector sum of tangential, centripetal acceleration and free fall acceleration.
 
