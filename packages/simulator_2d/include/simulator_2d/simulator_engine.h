@@ -21,8 +21,8 @@ class SimulatorEngine {
     SimulatorEngine(std::unique_ptr<model::Model> model,
         double integration_step = 1e-3, double precision = 1e-8);
 
-    void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
-    void resetMap(const std::string& path);
+    void resetBase(const geom::Pose &pose, double middle_steering, double linear_velocity);
+    void resetMap(const std::string &path);
     void eraseMap();
 
     TruckState getTruckState() const;
