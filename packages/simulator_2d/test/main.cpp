@@ -3,13 +3,13 @@
 #include "geom/msg.h"
 #include "geom/test/equal_assert.h"
 
-#include <rclcpp/serialization.hpp>
 #include <gtest/gtest.h>
+#include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/writers/sequential_writer.hpp>
 #include <rosbag2_cpp/converter_options.hpp>
 #include <rosbag2_cpp/typesupport_helpers.hpp>
 #include <rosbag2_storage/storage_options.hpp>
-#include "rosbag2_storage/topic_metadata.hpp"
+#include <rosbag2_storage/topic_metadata.hpp>
 
 #include <iomanip>
 #include <vector>
@@ -71,7 +71,8 @@ std::shared_ptr<rosbag2_storage::SerializedBagMessage> serializeMsg(
     serialization.serialize_message(&state_msg, &serialized_msg);
 
     auto bag_msg = std::make_shared<rosbag2_storage::SerializedBagMessage>();
-    bag_msg->time_stamp = state_msg.header.stamp.nanosec;
+    bag_msg->time_stamp = RCUTILS_S_TO_NS(static_cast<int64_t>(state_msg.header.stamp.sec))
+        + state_msg.header.stamp.nanosec;
     bag_msg->topic_name = TEST_OUTPUT_TOPIC.name;
     bag_msg->serialized_data = std::shared_ptr<rcutils_uint8_array_t>(
         new rcutils_uint8_array_t,
