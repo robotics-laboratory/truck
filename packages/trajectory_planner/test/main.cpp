@@ -123,6 +123,41 @@ TEST(StateSpace, StatePoses) {
 
         draw_poses(img, state_space_holder.state_space);
     }
+    {
+        const auto map = Map::fromGeoJson("/truck/packages/map/data/map_1.geojson");
+
+        sdd::SDD img(
+            {.width = 50, .height = 50},
+            fmt::format(
+                "/truck/packages/trajectory_planner/test/data/{}_3.svg", this->test_info_->name()));
+        img.Add(
+            sdd::ComplexPolygon{.complex_polygon = map.polygons()[0], .color = sdd::color::white});
+
+        const auto ego_pose = Pose(Vec2(28.5, 22.5), AngleVec2::fromVector(Vec2(1, -1)));
+
+        const auto route =
+            Polyline{Vec2(10, 30), Vec2(20, 27), Vec2(25, 25), Vec2(33, 20), Vec2(38, 13)};
+        img.Add(sdd::Polyline{.polyline = route, .thickness = 0.25, .color = sdd::color::blue});
+
+        auto state_space_holder = MakeStateSpace(
+            {.longitude = {.limits = Limits<double>(-2, 3), .total_states = 5},
+             .latitude = {.limits = Limits<double>(-2, 3), .total_states = 5},
+             .total_forward_yaw_states = 5,
+             .total_backward_yaw_states = 3,
+             .velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10}});
+        state_space_holder.state_space.Build(
+            {.pose = ego_pose, .velocity = 0.0},
+            {.base_state =
+                 {.pose = geom::Pose(Vec2(30, 21), AngleVec2::fromVector(Vec2(1, -1))),
+                  .velocity = 0.5},
+             .x_range = Limits<double>(-1, 1),
+             .y_range = Limits<double>(-1, 1),
+             .yaw_range = Limits<Angle>(-PI_4, PI_4),
+             .velocity_range = Limits<double>(-0.2, 0.2)},
+            route);
+
+        draw_poses(img, state_space_holder.state_space);
+    }
 }
 
 TEST(Node, Estimator) {
@@ -139,7 +174,7 @@ TEST(Node, Estimator) {
         .finish_states = {.data = &finish_state, .size = 1},
         .regular_states = {.data = nullptr, .size = 0},
         .truck_state = truck_state};
-    auto node_estimator = Node::Estimator(state_space);
+    auto node_estimator = Node::Estimator().Reset(state_space);
     EXPECT_DOUBLE_EQ(
         node_estimator.HeuristicCostFromStart(
             State{.pose = Pose(Vec2(1, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0}),
@@ -158,91 +193,124 @@ TEST(Edge, Estimator) {
     auto truck_state = TruckState();
     truck_state.model = &model;
 
-    auto edge_estimator = Edge::Estimator({.truck_state = truck_state}, 3, 0.05);
+    auto edge_estimator = Edge::Estimator(3, 0.05).Reset({.truck_state = truck_state});
 
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.HeuristicCost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0}),
-        0.0,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.HeuristicCost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.8}),
-        inf,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.HeuristicCost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.0}),
-        inf,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.HeuristicCost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.5},
-            {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.5}),
-        3.2015621187,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.HeuristicCost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.8}),
-        4.0019526483,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.HeuristicCost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 1000}),
-        inf,
-        eps);
-    EXPECT_LE(
-        edge_estimator.HeuristicCost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(0, 1), AngleVec2::fromVector(Vec2(-1, 0))), .velocity = 0.5}),
-        inf - eps);
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.HeuristicCost({.state = &from_state}, {.state = &to_state}), 0.0, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.8};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.HeuristicCost({.state = &from_state}, {.state = &to_state}), inf, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.0};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.HeuristicCost({.state = &from_state}, {.state = &to_state}), inf, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.5};
+        auto to_state =
+            State{.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.5};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.HeuristicCost({.state = &from_state}, {.state = &to_state}),
+            3.2015621187,
+            eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.8};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.HeuristicCost({.state = &from_state}, {.state = &to_state}),
+            4.0019526483,
+            eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(5, 1), AngleVec2::fromVector(Vec2(2, 1))), .velocity = 1000};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.HeuristicCost({.state = &from_state}, {.state = &to_state}), inf, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(0, 1), AngleVec2::fromVector(Vec2(-1, 0))), .velocity = 0.5};
+        EXPECT_LE(
+            edge_estimator.HeuristicCost({.state = &from_state}, {.state = &to_state}), inf - eps);
+    }
 
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.Cost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0}),
-        0.0,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.Cost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.8}),
-        inf,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.Cost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.0}),
-        inf,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.Cost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.5},
-            {.pose = Pose(Vec2(5, 1), AngleVec2::fromVector(Vec2(2, 1))), .velocity = 0.5}),
-        10.373307661,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.Cost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(5, 1), AngleVec2::fromVector(Vec2(2, 1))), .velocity = 0.8}),
-        12.966634576,
-        eps);
-    ASSERT_GEOM_EQUAL(
-        edge_estimator.Cost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(1, 1), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 1000}),
-        inf,
-        eps);
-    EXPECT_LE(
-        edge_estimator.Cost(
-            {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
-            {.pose = Pose(Vec2(0, 1), AngleVec2::fromVector(Vec2(-1, 0))), .velocity = 0.5}),
-        inf - eps);
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.Cost({.state = &from_state}, {.state = &to_state}), 0.0, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.8};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.Cost({.state = &from_state}, {.state = &to_state}), inf, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(0, 1))), .velocity = 0.0};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.Cost({.state = &from_state}, {.state = &to_state}), inf, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.5};
+        auto to_state =
+            State{.pose = Pose(Vec2(5, 1), AngleVec2::fromVector(Vec2(2, 1))), .velocity = 0.5};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.Cost({.state = &from_state}, {.state = &to_state}), 10.373307661, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(5, 1), AngleVec2::fromVector(Vec2(2, 1))), .velocity = 0.8};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.Cost({.state = &from_state}, {.state = &to_state}), 12.966634576, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(5, 1), AngleVec2::fromVector(Vec2(2, 1))), .velocity = 1000};
+        ASSERT_GEOM_EQUAL(
+            edge_estimator.Cost({.state = &from_state}, {.state = &to_state}), inf, eps);
+    }
+    {
+        auto from_state =
+            State{.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0};
+        auto to_state =
+            State{.pose = Pose(Vec2(0, 1), AngleVec2::fromVector(Vec2(-1, 0))), .velocity = 0.5};
+        EXPECT_LE(edge_estimator.Cost({.state = &from_state}, {.state = &to_state}), inf - eps);
+    }
 }
 
 TEST(RTree, Search) {
@@ -255,7 +323,7 @@ TEST(RTree, Search) {
     const auto& params = state_space_holder.state_space.params;
     int pos = 0;
 
-    NodesHolder nodes(params.Size());
+    auto nodes = MakeNodes(params.Size());
     for (int i = 0; i < params.longitude.total_states; ++i) {
         for (int j = 0; j < params.latitude.total_states; ++j) {
             Discretization<geom::Angle> forward_yaw = {
@@ -293,7 +361,7 @@ TEST(RTree, Search) {
     auto truck_state = TruckState();
     truck_state.model = &model;
 
-    auto edge_estimator = Edge::Estimator({.truck_state = truck_state}, 3, 0.05);
+    auto edge_estimator = Edge::Estimator(3, 0.05).Reset({.truck_state = truck_state});
 
     SpatioTemporalRTree rtree(params.velocity, edge_estimator);
 
@@ -335,7 +403,7 @@ TEST(Sampler, Sample) {
     Sampler sampler(2);
 
     {
-        NodesHolder nodes(2);
+        auto nodes = MakeNodes(2);
         nodes.nodes
             .AddNode(
                 {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
@@ -362,7 +430,7 @@ TEST(Sampler, Sample) {
         EXPECT_TRUE(sampler.Empty());
     }
     {
-        NodesHolder nodes(2);
+        auto nodes = MakeNodes(2);
         nodes.nodes
             .AddNode(
                 {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
@@ -386,7 +454,7 @@ TEST(Sampler, Sample) {
         EXPECT_TRUE(sampler.Empty());
     }
     {
-        NodesHolder nodes(2);
+        auto nodes = MakeNodes(2);
         nodes.nodes
             .AddNode(
                 {.pose = Pose(Vec2(0, 0), AngleVec2::fromVector(Vec2(1, 0))), .velocity = 0.0},
@@ -423,36 +491,76 @@ TEST(Planner, Search) {
             .color = sdd::color::gray});
     };
 
+    const auto draw_geom_profile = [&draw_motion](sdd::SDD& img, const Plan& plan) {
+        for (auto it = plan.begin(); it + 1 != plan.end(); ++it) {
+            draw_motion(img, (*it)->state->pose, (*(it + 1))->state->pose);
+        }
+        {
+            img.Add(sdd::Pose{
+                .pose = plan.front()->state->pose,
+                .scale = max(img.GetSize().width, img.GetSize().height) * 0.005,
+                .length = max(img.GetSize().width, img.GetSize().height) * 0.005,
+                .color = sdd::color::red});
+        }
+        {
+            img.Add(sdd::Pose{
+                .pose = plan.back()->state->pose,
+                .scale = max(img.GetSize().width, img.GetSize().height) * 0.005,
+                .length = max(img.GetSize().width, img.GetSize().height) * 0.005,
+                .color = sdd::color::green});
+        }
+        for (auto it = plan.begin() + 1; it + 1 != plan.end(); ++it) {
+            img.Add(sdd::Pose{
+                .pose = (*it)->state->pose,
+                .scale = max(img.GetSize().width, img.GetSize().height) * 0.005,
+                .length = max(img.GetSize().width, img.GetSize().height) * 0.005,
+                .color = sdd::color::fuchsia});
+        }
+    };
+
+    const auto draw_velocity_profile = [](sdd::SDD& img, const Plan& plan) {
+        for (auto it = plan.begin(); it != plan.end(); ++it) {
+            img.Add(sdd::Marker{
+                .point = Vec2((*it)->cost_to_come, (*it)->state->velocity),
+                .shape = sdd::Marker::Shape::Circle,
+                .scale = 0.5,
+                .color = sdd::color::red});
+        }
+    };
+
     {
         const auto map = Map::fromGeoJson("/truck/packages/map/data/map_1.geojson");
 
-        sdd::SDD img(
+        sdd::SDD img_geom(
             {.width = 50, .height = 50},
             fmt::format(
-                "/truck/packages/trajectory_planner/test/data/{}_1.svg", this->test_info_->name()));
-        img.Add(
+                "/truck/packages/trajectory_planner/test/data/{}_Geom_1.svg",
+                this->test_info_->name()));
+        img_geom.Add(
             sdd::ComplexPolygon{.complex_polygon = map.polygons()[0], .color = sdd::color::white});
 
         const auto ego_pose = Pose(Vec2(30, 25), AngleVec2::fromVector(Vec2(1, -1)));
 
         const auto route =
             Polyline{Vec2(10, 30), Vec2(20, 27), Vec2(25, 25), Vec2(33, 20), Vec2(38, 13)};
-        img.Add(sdd::Polyline{.polyline = route, .thickness = 0.25, .color = sdd::color::blue});
+        img_geom.Add(
+            sdd::Polyline{.polyline = route, .thickness = 0.25, .color = sdd::color::blue});
 
-        auto model = model::Model("/truck/packages/model/config/model.yaml");
+        auto model =
+            std::make_shared<model::Model>(model::Model("/truck/packages/model/config/model.yaml"));
 
-        auto collision_checker = std::make_shared<collision::StaticCollisionChecker>(model.shape());
+        auto collision_checker =
+            std::make_shared<collision::StaticCollisionChecker>(model->shape());
 
         Planner planner(
             {.truck_state_params = {.min_dist_to_obstacle = 0.1},
-             .state_space_params =
-                 {.longitude = {.limits = Limits<double>(-5, 16), .total_states = 20},
-                  .latitude = {.limits = Limits<double>(-5, 6), .total_states = 20},
-                  .total_forward_yaw_states = 5,
-                  .total_backward_yaw_states = 3,
-                  .velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10}}},
-            model);
-        planner.SetCollisionChecker(collision_checker);
+             .state_space_params = {
+                 .longitude = {.limits = Limits<double>(-5, 16), .total_states = 20},
+                 .latitude = {.limits = Limits<double>(-5, 6), .total_states = 20},
+                 .total_forward_yaw_states = 5,
+                 .total_backward_yaw_states = 3,
+                 .velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10}}});
+        planner.SetModel(model).SetCollisionChecker(collision_checker);
 
         const auto& plan =
             planner
@@ -470,48 +578,49 @@ TEST(Planner, Search) {
 
         EXPECT_FALSE(plan.empty());
 
-        for (auto it = plan.begin(); it + 1 != plan.end(); ++it) {
-            draw_motion(img, (*it)->state->pose, (*(it + 1))->state->pose);
-        }
-        for (const auto* node : plan) {
-            img.Add(sdd::Pose{
-                .pose = node->state->pose,
-                .scale = max(img.GetSize().width, img.GetSize().height) * 0.005,
-                .length = max(img.GetSize().width, img.GetSize().height) * 0.005,
-                .color = sdd::color::red});
-        }
+        draw_geom_profile(img_geom, plan);
+
+        sdd::SDD img_vel(
+            {.width = 50, .height = 50},
+            fmt::format(
+                "/truck/packages/trajectory_planner/test/data/{}_Vel_1.svg",
+                this->test_info_->name()));
+
+        draw_velocity_profile(img_vel, plan);
     }
 
     {
         const auto map = Map::fromGeoJson("/truck/packages/map/data/map_2.geojson");
 
-        sdd::SDD img(
+        sdd::SDD img_geom(
             {.width = 100, .height = 100},
             fmt::format(
-                "/truck/packages/trajectory_planner/test/data/{}_2.svg", this->test_info_->name()));
-        img.Add(
+                "/truck/packages/trajectory_planner/test/data/{}_Geom_2.svg",
+                this->test_info_->name()));
+        img_geom.Add(
             sdd::ComplexPolygon{.complex_polygon = map.polygons()[0], .color = sdd::color::white});
 
         const auto ego_pose = Pose(Vec2(30, 20), AngleVec2::fromVector(Vec2(1, -1)));
 
         const auto route =
             Polyline{Vec2(10, 40), Vec2(20, 30), Vec2(25, 20), Vec2(35, 15), Vec2(50, 10)};
-        img.Add(sdd::Polyline{.polyline = route, .thickness = 0.5, .color = sdd::color::blue});
+        img_geom.Add(sdd::Polyline{.polyline = route, .thickness = 0.5, .color = sdd::color::blue});
 
-        auto model = model::Model("/truck/packages/model/config/model.yaml");
+        auto model =
+            std::make_shared<model::Model>(model::Model("/truck/packages/model/config/model.yaml"));
 
-        auto collision_checker = std::make_shared<collision::StaticCollisionChecker>(model.shape());
+        auto collision_checker =
+            std::make_shared<collision::StaticCollisionChecker>(model->shape());
 
         Planner planner(
             {.truck_state_params = {.min_dist_to_obstacle = 0.1},
-             .state_space_params =
-                 {.longitude = {.limits = Limits<double>(-5, 16), .total_states = 20},
-                  .latitude = {.limits = Limits<double>(-5, 6), .total_states = 20},
-                  .total_forward_yaw_states = 5,
-                  .total_backward_yaw_states = 3,
-                  .velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10}}},
-            model);
-        planner.SetCollisionChecker(collision_checker);
+             .state_space_params = {
+                 .longitude = {.limits = Limits<double>(-5, 16), .total_states = 20},
+                 .latitude = {.limits = Limits<double>(-5, 6), .total_states = 20},
+                 .total_forward_yaw_states = 5,
+                 .total_backward_yaw_states = 3,
+                 .velocity = {.limits = Limits<double>(0.0, 0.8), .total_states = 10}}});
+        planner.SetModel(model).SetCollisionChecker(collision_checker);
 
         const auto& plan =
             planner
@@ -529,16 +638,15 @@ TEST(Planner, Search) {
 
         EXPECT_FALSE(plan.empty());
 
-        for (auto it = plan.begin(); it + 1 != plan.end(); ++it) {
-            draw_motion(img, (*it)->state->pose, (*(it + 1))->state->pose);
-        }
-        for (const auto* node : plan) {
-            img.Add(sdd::Pose{
-                .pose = node->state->pose,
-                .scale = max(img.GetSize().width, img.GetSize().height) * 0.005,
-                .length = max(img.GetSize().width, img.GetSize().height) * 0.005,
-                .color = sdd::color::red});
-        }
+        draw_geom_profile(img_geom, plan);
+
+        sdd::SDD img_vel(
+            {.width = 50, .height = 50},
+            fmt::format(
+                "/truck/packages/trajectory_planner/test/data/{}_Vel_2.svg",
+                this->test_info_->name()));
+
+        draw_velocity_profile(img_vel, plan);
     }
 }
 

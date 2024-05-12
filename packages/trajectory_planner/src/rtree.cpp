@@ -36,11 +36,11 @@ const std::vector<SpatioTemporalRTree::SearchResult>& SpatioTemporalRTree::Range
             geom::Vec2(node.state->pose.pos.x + dist_radius, node.state->pose.pos.y + dist_radius));
         layers_[i].query(
             bg::index::covered_by(range_box) && bg::index::satisfies([&](const auto& value) {
-                return estimator_.HeuristicCost(*node.state, *value.second->state) <= radius;
+                return estimator_.HeuristicCost(node, *value.second) <= radius;
             }),
             boost::make_function_output_iterator([&](const auto& value) {
                 result_buffer_.emplace_back(
-                    estimator_.HeuristicCost(*node.state, *value.second->state), value.second);
+                    estimator_.HeuristicCost(node, *value.second), value.second);
             }));
     }
     return result_buffer_;

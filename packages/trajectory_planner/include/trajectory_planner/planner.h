@@ -30,23 +30,27 @@ class Planner {
         double planning_horizon = 100.0;
         int batch_size = 500;
         int max_batches = 300;
-        int max_edges = 100000;
+        int max_edges = 200000;
         double radius_multiplier = 30;
     };
 
-    Planner(const Params& params, const model::Model& model);
+    Planner() = default;
+
+    Planner(const Params& params);
 
     Planner& Build(
         const State& ego_state, const StateArea& finish_area, const geom::Polyline& route) noexcept;
 
+    Planner& SetModel(std::shared_ptr<const model::Model> model);
+
     Planner& SetCollisionChecker(
         std::shared_ptr<const collision::StaticCollisionChecker> collision_checker);
 
-    const Node* GetFinishNode() noexcept;
+    const Node* GetFinishNode() const noexcept;
 
-    const Plan& GetPlan() noexcept;
+    const Plan& GetPlan() const noexcept;
 
-    void Clear() noexcept;
+    Planner& Clear() noexcept;
 
   private:
     double Radius(int n) const noexcept;
@@ -56,8 +60,8 @@ class Planner {
     double CurrentCostToFinish() const noexcept;
 
     Params params_;
-    model::Model model_;
 
+    std::shared_ptr<const model::Model> model_ = nullptr;
     std::shared_ptr<const collision::StaticCollisionChecker> collision_checker_ = nullptr;
 
     TruckState truck_state_;
@@ -96,9 +100,8 @@ class Planner {
         std::greater<std::pair<double, Node*>>>
         nodes_queue_;
     std::priority_queue<
-        std::pair<double, std::pair<Node*, Node*>>,
-        std::vector<std::pair<double, std::pair<Node*, Node*>>>,
-        std::greater<std::pair<double, std::pair<Node*, Node*>>>>
+        std::pair<double, Edge*>, std::vector<std::pair<double, Edge*>>,
+        std::greater<std::pair<double, Edge*>>>
         edges_queue_;
 
     Node* finish_node_ = nullptr;

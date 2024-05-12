@@ -22,6 +22,8 @@ AngleVec2 toYawDir(const geometry_msgs::msg::Quaternion& q) { return toYawAngle(
 
 Pose toPose(const geometry_msgs::msg::Pose& p) { return Pose{toVec2(p), toYawDir(p.orientation)}; }
 
+Pose toPose(const geometry_msgs::msg::PoseStamped& p) { return toPose(p.pose); }
+
 Pose toPose(const nav_msgs::msg::Odometry& odom) { return toPose(odom.pose.pose); }
 
 Vec2 toVec2(const geometry_msgs::msg::Vector3& v) { return Vec2(v.x, v.y); }

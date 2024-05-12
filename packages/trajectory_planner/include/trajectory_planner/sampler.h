@@ -13,6 +13,8 @@ class Sampler {
   public:
     static constexpr double eps = 1e-7;
 
+    Sampler() = default;
+
     Sampler(int capacity);
 
     Sampler& Build(const Nodes& nodes) noexcept;

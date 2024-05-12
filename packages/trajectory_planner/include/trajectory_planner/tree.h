@@ -4,12 +4,12 @@
 
 #include "collision/collision_checker.h"
 
+#include "geom/bezier.h"
 #include "geom/pose.h"
 
 #include "model/model.h"
 
 #include <memory>
-#include <optional>
 
 namespace truck::trajectory_planner {
 
@@ -37,15 +37,17 @@ struct Node {
     double cost_to_come = INF_COST;
 };
 
+using NodesDataPtr = std::unique_ptr<Node[]>;
+
 class Node::Estimator {
   public:
     Estimator() = default;
 
-    Estimator(const StateSpace& state_space);
+    double HeuristicCostFromStart(const State& state) const noexcept;
 
-    double HeuristicCostFromStart(const State& to) const noexcept;
+    double HeuristicCostToFinish(const State& state) const noexcept;
 
-    double HeuristicCostToFinish(const State& from) const noexcept;
+    Node::Estimator& Reset(StateSpace state_space) noexcept;
 
   private:
     double AdmissibleMotionTime(
@@ -63,15 +65,18 @@ struct Nodes {
 
     Nodes& Clear() noexcept;
 
+    Nodes& Reset(Node* ptr) noexcept;
+
     Node* data = nullptr;
     int size = 0;
-    int capacity = 0;
 
-    std::optional<Node::Estimator> estimator = std::nullopt;
+    Node::Estimator estimator;
 };
 
 struct NodesHolder {
-    NodesHolder(int capacity);
+    NodesHolder() = default;
+
+    NodesHolder(Nodes&& nodes, NodesDataPtr&& nodes_ptr) noexcept;
 
     NodesHolder(const NodesHolder&) = delete;
 
@@ -84,41 +89,45 @@ struct NodesHolder {
     ~NodesHolder() = default;
 
     Nodes nodes;
-    std::unique_ptr<Node[]> nodes_ptr = nullptr;
+    NodesDataPtr nodes_ptr = nullptr;
 };
+
+NodesHolder MakeNodes(int capacity);
 
 struct Edge {
     class Estimator;
 
-    const Node* from = nullptr;
-    const Node* to = nullptr;
+    Node* from = nullptr;
+    Node* to = nullptr;
 
     double heuristic_cost = INF_COST;
-    double cost = INF_COST;
 };
+
+using EdgesDataPtr = std::unique_ptr<Edge[]>;
 
 class Edge::Estimator {
   public:
     Estimator() = default;
 
-    Estimator(
-        const StateSpace& state_space, size_t total_heuristic_steps = 3,
-        double step_resolution = 0.05);
+    Estimator(size_t total_heuristic_steps, double step_resolution);
 
-    double HeuristicCost(const State& from, const State& to) const noexcept;
+    double HeuristicCost(const Node& from, const Node& to) const noexcept;
 
-    double Cost(const State& from, const State& to) const noexcept;
+    double Cost(const Node& from, const Node& to) const noexcept;
+
+    Edge::Estimator& Reset(StateSpace state_space) noexcept;
 
   private:
-    bool IsDifferentiallyFeasible(const geom::Poses& motion) const noexcept;
+    bool IsDifferentiallyFeasible(const geom::CurvePoses& motion) const noexcept;
 
     bool IsKinodynamicFeasible(
-        const geom::Poses& motion, double motion_time, double from_velocity, double to_velocity,
-        double eps = 1e-7) const noexcept;
+        const geom::CurvePoses& motion, double motion_time, double from_velocity,
+        double to_velocity, bool check_steering = true, double eps = 1e-7) const noexcept;
 
-    StateSpace state_space_;
     size_t total_heuristic_steps_ = 0;
     double step_resolution_ = 0.0;
+
+    StateSpace state_space_;
 };
 
 struct Edges {
@@ -126,15 +135,18 @@ struct Edges {
 
     Edges& Clear() noexcept;
 
+    Edges& Reset(Edge* ptr) noexcept;
+
     Edge* data = nullptr;
     int size = 0;
-    int capacity = 0;
 
-    std::optional<Edge::Estimator> estimator = std::nullopt;
+    Edge::Estimator estimator;
 };
 
 struct EdgesHolder {
-    EdgesHolder(int capacity);
+    EdgesHolder() = default;
+
+    EdgesHolder(Edges&& edges, EdgesDataPtr&& edges_ptr) noexcept;
 
     EdgesHolder(const EdgesHolder&) = delete;
 
@@ -147,8 +159,10 @@ struct EdgesHolder {
     ~EdgesHolder() = default;
 
     Edges edges;
-    std::unique_ptr<Edge[]> edges_ptr = nullptr;
+    EdgesDataPtr edges_ptr = nullptr;
 };
+
+EdgesHolder MakeEdges(int capacity);
 
 struct Tree {
     struct Params {
@@ -158,16 +172,25 @@ struct Tree {
 
     Tree& Build(const StateSpace& state_space) noexcept;
 
-    void Clear() noexcept;
+    Tree& Clear() noexcept;
+
+    Tree& Reset(Nodes nodes, Edges edges) noexcept;
 
     Params params;
 
     Nodes nodes;
+
+    Nodes start_nodes;
+    Nodes finish_nodes;
+    Nodes regular_nodes;
+
     Edges edges;
 };
 
 struct TreeHolder {
-    TreeHolder(const Tree::Params& params, int nodes_capacity, int edges_capacity);
+    TreeHolder() = default;
+
+    TreeHolder(Tree&& tree, NodesHolder&& nodes_holder, EdgesHolder&& edges_holder) noexcept;
 
     TreeHolder(const TreeHolder&) = delete;
 
@@ -179,10 +202,12 @@ struct TreeHolder {
 
     ~TreeHolder() = default;
 
+    Tree tree;
+
     NodesHolder nodes_holder;
     EdgesHolder edges_holder;
-
-    Tree tree;
 };
+
+TreeHolder MakeTree(const Tree::Params& params, int nodes_capacity, int edges_capacity);
 
 }  // namespace truck::trajectory_planner

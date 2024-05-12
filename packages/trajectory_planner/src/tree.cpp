@@ -2,22 +2,21 @@
 
 #include "common/exception.h"
 
-#include "geom/bezier.h"
 #include "geom/distance.h"
 
 namespace {
 
-truck::geom::Poses FindMotion(
+truck::geom::CurvePoses FindMotion(
     const truck::geom::Pose& from, const truck::geom::Pose& to, size_t max_steps,
     double eps = 1e-7) noexcept {
     const auto dist = truck::geom::distance(from.pos, to.pos);
 
     if (dist < eps && std::abs(from.dir.angle().radians() - to.dir.angle().radians()) < eps) {
-        return truck::geom::Poses({from});
+        return truck::geom::CurvePoses({{.pose = from, .curvature = 0.0}});
     }
 
     if (dist < eps) {
-        return truck::geom::Poses();
+        return truck::geom::CurvePoses();
     }
 
     const double gamma = dist * 0.5;
@@ -27,17 +26,17 @@ truck::geom::Poses FindMotion(
     return truck::geom::bezier3(from.pos, from_ref, to_ref, to.pos, max_steps);
 }
 
-truck::geom::Poses FindMotion(
+truck::geom::CurvePoses FindMotion(
     const truck::geom::Pose& from, const truck::geom::Pose& to, double step,
     double eps = 1e-7) noexcept {
     const auto dist = truck::geom::distance(from.pos, to.pos);
 
     if (dist < eps && std::abs(from.dir.angle().radians() - to.dir.angle().radians()) < eps) {
-        return truck::geom::Poses({from});
+        return truck::geom::CurvePoses({{.pose = from, .curvature = 0.0}});
     }
 
     if (dist < eps) {
-        return truck::geom::Poses();
+        return truck::geom::CurvePoses();
     }
 
     const double gamma = dist * 0.5;
@@ -47,7 +46,7 @@ truck::geom::Poses FindMotion(
     return truck::geom::bezier3(from.pos, from_ref, to_ref, to.pos, step);
 }
 
-double MotionLength(const truck::geom::Poses& motion) noexcept {
+double MotionLength(const truck::geom::CurvePoses& motion) noexcept {
     double motion_lenght = 0;
 
     if (motion.size() < 2) {
@@ -55,7 +54,7 @@ double MotionLength(const truck::geom::Poses& motion) noexcept {
     }
 
     for (auto it = motion.begin(); it + 1 != motion.end(); ++it) {
-        motion_lenght += truck::geom::distance(it->pos, (it + 1)->pos);
+        motion_lenght += truck::geom::distance(it->pose.pos, (it + 1)->pose.pos);
     }
 
     return motion_lenght;
@@ -81,16 +80,17 @@ double ExactMotionTime(
 
 namespace truck::trajectory_planner {
 
-Node::Estimator::Estimator(const StateSpace& state_space) : state_space_(state_space) {
-    VERIFY(state_space_.truck_state.model);
+double Node::Estimator::HeuristicCostFromStart(const State& state) const noexcept {
+    return HeuristicCost(state_space_.start_states, state);
 }
 
-double Node::Estimator::HeuristicCostFromStart(const State& to) const noexcept {
-    return HeuristicCost(state_space_.start_states, to);
+double Node::Estimator::HeuristicCostToFinish(const State& state) const noexcept {
+    return HeuristicCost(state_space_.finish_states, state);
 }
 
-double Node::Estimator::HeuristicCostToFinish(const State& from) const noexcept {
-    return HeuristicCost(state_space_.finish_states, from);
+Node::Estimator& Node::Estimator::Reset(StateSpace state_space) noexcept {
+    state_space_ = std::move(state_space);
+    return *this;
 }
 
 double Node::Estimator::AdmissibleMotionTime(
@@ -139,109 +139,106 @@ double Node::Estimator::HeuristicCost(const States& from, const State& to) const
 }
 
 Node& Nodes::AddNode(const State& state, Node::Type type) noexcept {
-    VERIFY(size < capacity);
-
     auto& node = data[size++];
     node.state = &state;
     node.type = type;
-    if (estimator) {
-        node.heuristic_cost_from_start =
-            (type == Node::Type::START ? 0 : estimator->HeuristicCostFromStart(state));
-        node.heuristic_cost_to_finish =
-            (type == Node::Type::FINISH ? 0 : estimator->HeuristicCostToFinish(state));
-    }
+    node.heuristic_cost_from_start =
+        (type == Node::Type::START ? 0.0 : estimator.HeuristicCostFromStart(state));
+    node.heuristic_cost_to_finish =
+        (type == Node::Type::FINISH ? 0.0 : estimator.HeuristicCostToFinish(state));
     node.heuristic_pass_cost = node.heuristic_cost_from_start + node.heuristic_cost_to_finish;
-
     return node;
 }
 
 Nodes& Nodes::FillProbabilities() noexcept {
     const double heuristics_sum =
         std::accumulate(data, data + size, 0.0, [&](double sum, const auto& node) {
-            return sum + (node.type == Node::Type::REGULAR
-                              ? 1 / (node.heuristic_cost_from_start + node.heuristic_cost_to_finish)
-                              : 0.0);
+            return sum + (1 / node.heuristic_pass_cost);
         });
 
     for (int i = 0; i < size; ++i) {
-        switch (data[i].type) {
-            case Node::Type::START:
-                data[i].probability = 0.0;
-                break;
-            case Node::Type::FINISH:
-                data[i].probability = 0.0;
-                break;
-            default:
-                data[i].probability = heuristics_sum / (data[i].heuristic_cost_from_start +
-                                                        data[i].heuristic_cost_to_finish);
-                break;
-        }
+        data[i].probability = (1 / data[i].heuristic_pass_cost) / heuristics_sum;
     }
-
     return *this;
 }
 
 Nodes& Nodes::Clear() noexcept {
     size = 0;
-    estimator = std::nullopt;
+    estimator.Reset({});
     return *this;
 }
 
-NodesHolder::NodesHolder(int capacity) {
-    nodes_ptr = std::make_unique<Node[]>(capacity);
-    nodes = {nodes_ptr.get(), 0, capacity};
+Nodes& Nodes::Reset(Node* ptr) noexcept {
+    data = ptr;
+    return *this;
 }
 
-Edge::Estimator::Estimator(
-    const StateSpace& state_space, size_t total_heuristic_steps, double step_resolution)
-    : state_space_(state_space)
-    , total_heuristic_steps_(total_heuristic_steps)
-    , step_resolution_(step_resolution) {
-    VERIFY(state_space_.truck_state.model);
+NodesHolder::NodesHolder(Nodes&& nodes, NodesDataPtr&& nodes_ptr) noexcept
+    : nodes(std::move(nodes)), nodes_ptr(std::move(nodes_ptr)) {}
+
+NodesHolder MakeNodes(int capacity) {
+    auto nodes_ptr = std::make_unique<Node[]>(capacity);
+    auto nodes = Nodes{.data = nodes_ptr.get(), .size = 0};
+    nodes.Reset(nodes_ptr.get());
+    return {std::move(nodes), std::move(nodes_ptr)};
 }
 
-double Edge::Estimator::HeuristicCost(const State& from, const State& to) const noexcept {
-    const auto motion = FindMotion(from.pose, to.pose, total_heuristic_steps_);
+Edge::Estimator::Estimator(size_t total_heuristic_steps, double step_resolution)
+    : total_heuristic_steps_(total_heuristic_steps), step_resolution_(step_resolution) {}
+
+double Edge::Estimator::HeuristicCost(const Node& from, const Node& to) const noexcept {
+    const auto motion = FindMotion(from.state->pose, to.state->pose, total_heuristic_steps_);
     const auto motion_length = MotionLength(motion);
     if (motion.empty()) {
         return INF_COST;
     }
-    const auto motion_time = ExactMotionTime(motion_length, from.velocity, to.velocity);
-    if (!IsKinodynamicFeasible(motion, motion_time, from.velocity, to.velocity)) {
+    const auto motion_time =
+        ExactMotionTime(motion_length, from.state->velocity, to.state->velocity);
+    if (!IsKinodynamicFeasible(
+            motion, motion_time, from.state->velocity, to.state->velocity, false)) {
         return INF_COST;
     }
     return motion_time;
 }
 
-double Edge::Estimator::Cost(const State& from, const State& to) const noexcept {
-    const auto motion = FindMotion(from.pose, to.pose, step_resolution_);
+double Edge::Estimator::Cost(const Node& from, const Node& to) const noexcept {
+    const auto motion = FindMotion(from.state->pose, to.state->pose, step_resolution_);
     const auto motion_length = MotionLength(motion);
     if (motion.empty() || !IsDifferentiallyFeasible(motion)) {
         return INF_COST;
     }
-    const auto motion_time = ExactMotionTime(motion_length, from.velocity, to.velocity);
-    if (!IsKinodynamicFeasible(motion, motion_time, from.velocity, to.velocity)) {
+    const auto motion_time =
+        ExactMotionTime(motion_length, from.state->velocity, to.state->velocity);
+    if (!IsKinodynamicFeasible(motion, motion_time, from.state->velocity, to.state->velocity)) {
         return INF_COST;
     }
     return motion_time;
 }
 
-bool Edge::Estimator::IsDifferentiallyFeasible(const geom::Poses& motion) const noexcept {
+Edge::Estimator& Edge::Estimator::Reset(StateSpace state_space) noexcept {
+    state_space_ = std::move(state_space);
+    return *this;
+}
+
+bool Edge::Estimator::IsDifferentiallyFeasible(const geom::CurvePoses& motion) const noexcept {
     if (motion.empty()) {
         return true;
     }
 
     for (auto it = motion.begin(); it + 1 != motion.end(); ++it) {
-        if (!state_space_.truck_state.IsCollisionFree(*it)) {
+        if (!state_space_.truck_state.IsCollisionFree(it->pose)) {
             return false;
         }
         if (!state_space_.truck_state.model->middleSteeringLimits().isMet(
-                ((it + 1)->dir - it->dir).angle().degrees())) {
+                ((it + 1)->pose.dir - it->pose.dir).angle().degrees())) {
             return false;
         }
-        // TODO: Добавить проверку кривизны кривой Безье
+        if (state_space_.truck_state.model->baseMaxAbsCurvature() < std::abs(it->curvature)) {
+            return false;
+        }
     }
-    if (!state_space_.truck_state.IsCollisionFree(motion.back())) {
+    if (!state_space_.truck_state.IsCollisionFree(motion.back().pose) ||
+        state_space_.truck_state.model->baseMaxAbsCurvature() < std::abs(motion.back().curvature)) {
         return false;
     }
 
@@ -249,8 +246,8 @@ bool Edge::Estimator::IsDifferentiallyFeasible(const geom::Poses& motion) const 
 }
 
 bool Edge::Estimator::IsKinodynamicFeasible(
-    const geom::Poses& motion, double motion_time, double from_velocity, double to_velocity,
-    double eps) const noexcept {
+    const geom::CurvePoses& motion, double motion_time, double from_velocity, double to_velocity,
+    bool check_steering, double eps) const noexcept {
     if (!state_space_.truck_state.model->baseVelocityLimits().isMet(from_velocity) ||
         !state_space_.truck_state.model->baseVelocityLimits().isMet(to_velocity)) {
         return false;
@@ -278,11 +275,23 @@ bool Edge::Estimator::IsKinodynamicFeasible(
         return true;
     }
 
-    const double dt = motion_time / (motion.size() - 1);
-    for (auto it = motion.begin(); it + 1 != motion.end(); ++it) {
-        if (std::abs((it + 1)->dir.angle().radians() - it->dir.angle().radians()) / dt >
-            state_space_.truck_state.model->steeringVelocity()) {
-            return false;
+    if (check_steering) {
+        double l = 0;
+        double last_time = 0;
+        for (auto it = motion.begin(); it + 1 != motion.end(); ++it) {
+            l += geom::distance(it->pose.pos, (it + 1)->pose.pos);
+            const double D = from_velocity * from_velocity + 2 * acceleration * l;
+            if (D < 0) {
+                return false;
+            }
+            const double cur_time = (-from_velocity + std::sqrt(D)) / acceleration;
+            const double dt = cur_time - last_time;
+            if (std::abs((it + 1)->pose.dir.angle().radians() - it->pose.dir.angle().radians()) /
+                    dt >
+                state_space_.truck_state.model->steeringVelocity()) {
+                return false;
+            }
+            last_time = cur_time;
         }
     }
 
@@ -290,68 +299,86 @@ bool Edge::Estimator::IsKinodynamicFeasible(
 }
 
 Edge& Edges::AddEdge(Node& from, Node& to) noexcept {
-    VERIFY(size < capacity);
-
     auto& edge = data[size++];
     edge.from = &from;
     edge.to = &to;
-    if (estimator) {
-        edge.heuristic_cost = estimator->HeuristicCost(*from.state, *to.state);
-        edge.cost = estimator->Cost(*from.state, *to.state);
-    }
-    if (from.cost_to_come + edge.cost < to.cost_to_come) {
-        to.cost_to_come = from.cost_to_come + edge.cost;
-        to.parent_node = &from;
-    }
-
+    edge.heuristic_cost = estimator.HeuristicCost(from, to);
     return edge;
 }
 
 Edges& Edges::Clear() noexcept {
     size = 0;
-    estimator = std::nullopt;
+    estimator.Reset({});
     return *this;
 }
 
-EdgesHolder::EdgesHolder(int capacity) {
-    edges_ptr = std::make_unique<Edge[]>(capacity);
-    edges = {edges_ptr.get(), 0, capacity};
+Edges& Edges::Reset(Edge* ptr) noexcept {
+    data = ptr;
+    return *this;
+}
+
+EdgesHolder::EdgesHolder(Edges&& edges, EdgesDataPtr&& edges_ptr) noexcept
+    : edges(std::move(edges)), edges_ptr(std::move(edges_ptr)) {}
+
+EdgesHolder MakeEdges(int capacity) {
+    auto edges_ptr = std::make_unique<Edge[]>(capacity);
+    auto edges = Edges{.data = edges_ptr.get(), .size = 0};
+    edges.Reset(edges_ptr.get());
+    return {std::move(edges), std::move(edges_ptr)};
 }
 
 Tree& Tree::Build(const StateSpace& state_space) noexcept {
     Clear();
 
-    nodes.estimator = Node::Estimator(state_space);
+    nodes.estimator.Reset(state_space);
     edges.estimator =
-        Edge::Estimator(state_space, params.total_heuristic_steps, params.step_resolution);
+        Edge::Estimator(params.total_heuristic_steps, params.step_resolution).Reset(state_space);
 
+    start_nodes.data = nodes.data + nodes.size;
     for (int i = 0; i < state_space.start_states.size; ++i) {
         nodes.AddNode(state_space.start_states.data[i], Node::Type::START);
     }
+    start_nodes.size = nodes.size;
 
+    finish_nodes.data = nodes.data + nodes.size;
     for (int i = 0; i < state_space.finish_states.size; ++i) {
         nodes.AddNode(state_space.finish_states.data[i], Node::Type::FINISH);
     }
+    finish_nodes.size = nodes.size - start_nodes.size;
 
+    regular_nodes.data = nodes.data + nodes.size;
     for (int i = 0; i < state_space.regular_states.size; ++i) {
         nodes.AddNode(state_space.regular_states.data[i], Node::Type::REGULAR);
     }
+    regular_nodes.size = nodes.size - start_nodes.size - finish_nodes.size;
 
-    nodes.FillProbabilities();
+    regular_nodes.FillProbabilities();
 
     return *this;
 }
 
-void Tree::Clear() noexcept {
+Tree& Tree::Clear() noexcept {
     nodes.Clear();
     edges.Clear();
+    return *this;
 }
 
-TreeHolder::TreeHolder(const Tree::Params& params, int nodes_capacity, int edges_capacity)
-    : nodes_holder(nodes_capacity), edges_holder(edges_capacity) {
-    tree.params = params;
-    tree.nodes = nodes_holder.nodes;
-    tree.edges = edges_holder.edges;
+Tree& Tree::Reset(Nodes nodes, Edges edges) noexcept {
+    this->nodes = std::move(nodes);
+    this->edges = std::move(edges);
+    return *this;
+}
+
+TreeHolder::TreeHolder(Tree&& tree, NodesHolder&& nodes_holder, EdgesHolder&& edges_holder) noexcept
+    : tree(std::move(tree))
+    , nodes_holder(std::move(nodes_holder))
+    , edges_holder(std::move(edges_holder)) {}
+
+TreeHolder MakeTree(const Tree::Params& params, int nodes_capacity, int edges_capacity) {
+    auto nodes_holder = MakeNodes(nodes_capacity);
+    auto edges_holder = MakeEdges(edges_capacity);
+    auto tree = Tree{.params = params}.Reset(nodes_holder.nodes, edges_holder.edges);
+    return {std::move(tree), std::move(nodes_holder), std::move(edges_holder)};
 }
 
 }  // namespace truck::trajectory_planner

@@ -80,12 +80,12 @@ class WaypointFollowerNode : public rclcpp::Node {
         nav_msgs::msg::Odometry::SharedPtr odometry = nullptr;
         std::optional<geom::Localization> localization = std::nullopt;
         nav_msgs::msg::OccupancyGrid::SharedPtr grid = nullptr;
+        std::shared_ptr<collision::Map> distance_transform = nullptr;
         double scheduled_velocity = 0;
     } state_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
     std::unique_ptr<WaypointFollower> follower_ = nullptr;
-    std::shared_ptr<collision::CollisionMap> collision_map_ = nullptr;
     std::unique_ptr<collision::StaticCollisionChecker> checker_ = nullptr;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
 };

@@ -10,7 +10,7 @@ ament_target_dependencies(${PROJECT_NAME}_tests svg_debug_drawer map fmt)
 
 ament_export_dependencies(svg_debug_drawer map fmt)
 
-target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME} fmt)
+target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME}_lib fmt)
 set_tests_properties(${Tests} PROPERTIES TIMEOUT 10)
 
 target_include_directories(${PROJECT_NAME}_tests PRIVATE

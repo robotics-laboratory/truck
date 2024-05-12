@@ -3,6 +3,7 @@
 #include "common/math.h"
 
 #include "geom/angle.h"
+#include "geom/localization.h"
 #include "geom/pose.h"
 #include "geom/polyline.h"
 
@@ -48,10 +49,7 @@ struct Discretization {
     int total_states;
 };
 
-struct State {
-    geom::Pose pose;
-    double velocity;
-};
+using State = geom::Localization;
 
 struct StateArea {
     bool IsInside(const State& state) const noexcept;

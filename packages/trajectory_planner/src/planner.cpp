@@ -7,15 +7,20 @@
 
 namespace truck::trajectory_planner {
 
-Planner::Planner(const Params& params, const model::Model& model)
+Planner::Planner(const Params& params)
     : params_(params)
-    , model_(model)
     , truck_state_(params_.truck_state_params)
     , state_space_holder_(MakeStateSpace(params_.state_space_params))
-    , tree_holder_(params_.tree_params, params_.state_space_params.Size(), params_.max_edges)
-    , sampler_(tree_holder_.nodes_holder.nodes.capacity)
+    , tree_holder_(
+          MakeTree(params_.tree_params, params_.state_space_params.Size(), params_.max_edges))
+    , sampler_(params_.state_space_params.Size())
     , verticies_{.rtree = SpatioTemporalRTree(params_.state_space_params.velocity)}
     , samples_{.rtree = SpatioTemporalRTree(params_.state_space_params.velocity)} {}
+
+Planner& Planner::SetModel(std::shared_ptr<const model::Model> model) {
+    model_ = std::move(model);
+    return *this;
+}
 
 Planner& Planner::SetCollisionChecker(
     std::shared_ptr<const collision::StaticCollisionChecker> collision_checker) {
@@ -30,7 +35,9 @@ Planner& Planner::Build(
     if (collision_checker_ && collision_checker_->initialized()) {
         truck_state_.collision_checker = collision_checker_.get();
     }
-    truck_state_.model = &model_;
+
+    VERIFY(model_ != nullptr);
+    truck_state_.model = model_.get();
 
     auto& state_space = state_space_holder_.state_space;
     state_space.truck_state = truck_state_;
@@ -38,32 +45,33 @@ Planner& Planner::Build(
     state_space.Build(ego_state, finish_area, route);
 
     auto& tree = tree_holder_.tree;
+    auto& edges_estimator = tree.edges.estimator;
     tree.Build(state_space);
 
-    sampler_.Build(tree.nodes);
+    verticies_.rtree.UpdateEstimator(edges_estimator);
+    samples_.rtree.UpdateEstimator(edges_estimator);
 
-    verticies_.rtree.UpdateEstimator(*tree.edges.estimator);
-    samples_.rtree.UpdateEstimator(*tree.edges.estimator);
-
-    for (int i = 0; i < tree.nodes.size; ++i) {
-        auto& node = tree.nodes.data[i];
-        switch (node.type) {
-            case Node::Type::START:
-                node.cost_to_come = 0.0;
-                nodes_queue_.emplace(node.cost_to_come + node.heuristic_cost_to_finish, &node);
-                verticies_.Insert(node);
-                break;
-            case Node::Type::FINISH:
-                samples_.Insert(node);
-                break;
-            default:
-                break;
-        }
+    for (int i = 0; i < tree.start_nodes.size; ++i) {
+        auto& node = tree.start_nodes.data[i];
+        node.cost_to_come = 0.0;
+        nodes_queue_.emplace(node.cost_to_come + node.heuristic_cost_to_finish, &node);
+        verticies_.Insert(node, 0);
     }
+
+    for (int i = 0; i < tree.finish_nodes.size; ++i) {
+        auto& node = tree.finish_nodes.data[i];
+        samples_.Insert(node);
+    }
+
+    sampler_.Build(tree.regular_nodes);
 
     int last_cost_to_finish = CurrentCostToFinish();
     while (current_batch_ < params_.max_batches && tree.edges.size < params_.max_edges) {
         if (nodes_queue_.empty() && edges_queue_.empty()) {
+            if (sampler_.Empty()) {
+                break;
+            }
+
             ++current_batch_;
             int current_cost_to_finish = CurrentCostToFinish();
             if (current_cost_to_finish < last_cost_to_finish) {
@@ -75,8 +83,7 @@ Planner& Planner::Build(
             while (!sampler_.Empty() && sampled < params_.batch_size) {
                 auto& node = sampler_.Sample();
                 sampler_.Remove(node);
-                if (node.heuristic_cost_from_start + node.heuristic_cost_from_start >
-                    CurrentCostToFinish()) {
+                if (node.heuristic_pass_cost > CurrentCostToFinish()) {
                     continue;
                 }
                 samples_.Insert(node);
@@ -87,65 +94,74 @@ Planner& Planner::Build(
                 nodes_queue_.emplace(node->cost_to_come + node->heuristic_cost_to_finish, node);
             }
         }
+
         while (!nodes_queue_.empty() &&
                (edges_queue_.empty() || nodes_queue_.top().first <= edges_queue_.top().first)) {
-            auto& [cost, node] = nodes_queue_.top();
+            auto cost = nodes_queue_.top().first;
+            auto& from = *nodes_queue_.top().second;
             nodes_queue_.pop();
-            if (cost > node->cost_to_come + node->heuristic_cost_to_finish) {
+
+            if (cost > from.cost_to_come + from.heuristic_cost_to_finish) {
                 continue;
             }
+
             const auto& near_samples = samples_.rtree.RangeSearch(
-                *node, Radius(verticies_.generation.size() + samples_.data.size()));
-            for (auto& sample : near_samples) {
-                if (node->heuristic_cost_from_start +
-                        tree.edges.estimator->HeuristicCost(*node->state, *sample.second->state) +
-                        sample.second->heuristic_cost_to_finish <
+                from, Radius(verticies_.generation.size() + samples_.data.size()));
+            for (auto& near_sample : near_samples) {
+                if (tree.edges.size == params_.max_edges) {
+                    break;
+                }
+                auto& to = *near_sample.second;
+                auto& edge = tree.edges.AddEdge(from, to);
+                if (from.heuristic_cost_from_start + edge.heuristic_cost +
+                        to.heuristic_cost_to_finish <
                     CurrentCostToFinish()) {
                     edges_queue_.emplace(
-                        node->cost_to_come +
-                            tree.edges.estimator->HeuristicCost(
-                                *node->state, *sample.second->state) +
-                            sample.second->heuristic_cost_to_finish,
-                        std::make_pair(node, sample.second));
+                        from.cost_to_come + edge.heuristic_cost + to.heuristic_cost_to_finish,
+                        &edge);
                 }
             }
-            auto it = verticies_.generation.find(node);
+
+            auto it = verticies_.generation.find(&from);
             if (it != verticies_.generation.end() && it->second == current_batch_) {
                 const auto& near_verticies = verticies_.rtree.RangeSearch(
-                    *node, Radius(verticies_.generation.size() + samples_.data.size()));
-                for (auto& vertex : near_verticies) {
-                    if (node->heuristic_cost_from_start + tree.edges.estimator->HeuristicCost(
-                                                              *node->state, *vertex.second->state) <
+                    from, Radius(verticies_.generation.size() + samples_.data.size()));
+                for (auto& near_vertex : near_verticies) {
+                    if (tree.edges.size == params_.max_edges) {
+                        break;
+                    }
+                    auto& to = *near_vertex.second;
+                    auto& edge = tree.edges.AddEdge(from, to);
+                    if (from.heuristic_cost_from_start + edge.heuristic_cost +
+                                to.heuristic_cost_to_finish <
                             CurrentCostToFinish() &&
-                        node->cost_to_come + tree.edges.estimator->HeuristicCost(
-                                                 *node->state, *vertex.second->state) <
-                            vertex.second->cost_to_come) {
+                        from.cost_to_come + edge.heuristic_cost < to.cost_to_come) {
                         edges_queue_.emplace(
-                            node->cost_to_come +
-                                tree.edges.estimator->HeuristicCost(
-                                    *node->state, *vertex.second->state) +
-                                vertex.second->heuristic_cost_to_finish,
-                            std::make_pair(node, vertex.second));
+                            from.cost_to_come + edge.heuristic_cost + to.heuristic_cost_to_finish,
+                            &edge);
                     }
                 }
             }
         }
+
         if (edges_queue_.empty()) {
             continue;
         }
+
         auto potential_edge = edges_queue_.top();
         edges_queue_.pop();
-        while (potential_edge.first >
-               potential_edge.second.first->cost_to_come +
-                   tree.edges.estimator->HeuristicCost(
-                       *potential_edge.second.first->state, *potential_edge.second.second->state) +
-                   potential_edge.second.second->heuristic_cost_to_finish) {
+        while (potential_edge.first > potential_edge.second->from->cost_to_come +
+                                          potential_edge.second->heuristic_cost +
+                                          potential_edge.second->to->heuristic_cost_to_finish) {
             potential_edge = edges_queue_.top();
             edges_queue_.pop();
         }
-        auto& [from, to] = potential_edge.second;
-        if (from->cost_to_come + tree.edges.estimator->HeuristicCost(*from->state, *to->state) +
-                to->heuristic_cost_to_finish >=
+
+        auto& edge = *potential_edge.second;
+        auto& from = *edge.from;
+        auto& to = *edge.to;
+
+        if (from.cost_to_come + edge.heuristic_cost + to.heuristic_cost_to_finish >=
             CurrentCostToFinish()) {
             while (!nodes_queue_.empty()) {
                 nodes_queue_.pop();
@@ -155,20 +171,24 @@ Planner& Planner::Build(
             }
             continue;
         }
-        auto exact_edge_cost = tree.edges.estimator->Cost(*from->state, *to->state);
-        if (from->cost_to_come + exact_edge_cost + to->heuristic_cost_to_finish <
-                CurrentCostToFinish() &&
-            from->cost_to_come + exact_edge_cost < to->cost_to_come) {
-            if (!verticies_.generation.contains(to)) {
-                samples_.Remove(*to);
-                verticies_.Insert(*to, current_batch_);
+
+        auto edge_cost = edges_estimator.Cost(from, to);
+
+        if (from.cost_to_come + edge_cost + to.heuristic_cost_to_finish < CurrentCostToFinish() &&
+            from.cost_to_come + edge_cost < to.cost_to_come) {
+            if (!verticies_.generation.contains(&to)) {
+                samples_.Remove(to);
+                verticies_.Insert(to, current_batch_);
 
                 nodes_queue_.emplace(
-                    from->cost_to_come + exact_edge_cost + to->heuristic_cost_to_finish, to);
+                    from.cost_to_come + edge_cost + to.heuristic_cost_to_finish, &to);
             }
-            tree.edges.AddEdge(*from, *to);
-            if (to->type == Node::Type::FINISH && to->cost_to_come < CurrentCostToFinish()) {
-                finish_node_ = to;
+            if (to.cost_to_come > from.cost_to_come + edge_cost) {
+                to.cost_to_come = from.cost_to_come + edge_cost;
+                to.parent_node = &from;
+            }
+            if (to.type == Node::Type::FINISH && to.cost_to_come < CurrentCostToFinish()) {
+                finish_node_ = &to;
             }
         }
     }
@@ -184,11 +204,11 @@ Planner& Planner::Build(
     return *this;
 }
 
-const Node* Planner::GetFinishNode() noexcept { return finish_node_; }
+const Node* Planner::GetFinishNode() const noexcept { return finish_node_; }
 
-const Plan& Planner::GetPlan() noexcept { return plan_; }
+const Plan& Planner::GetPlan() const noexcept { return plan_; }
 
-void Planner::Clear() noexcept {
+Planner& Planner::Clear() noexcept {
     state_space_holder_.state_space.Clear();
     tree_holder_.tree.Clear();
     verticies_.Clear();
@@ -205,6 +225,8 @@ void Planner::Clear() noexcept {
     finish_node_ = nullptr;
 
     plan_.clear();
+
+    return *this;
 }
 
 double Planner::Radius(int n) const noexcept {

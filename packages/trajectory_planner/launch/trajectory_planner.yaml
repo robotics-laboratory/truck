@@ -1,0 +1,65 @@
+launch:
+  - arg:
+      name: "model_config"
+      default: "$(find-pkg-share model)/config/model.yaml"
+  - node:
+      pkg: "trajectory_planner"
+      exec: "trajectory_planner_node"
+      name: "trajectory_planner_node"
+      output: "log"
+      param:
+        - { name: "model_config", value: "$(var model_config)" }
+
+        - name: "node"
+          param:
+            - { name: "z_lev", value: 0.1 }
+            - { name: "scale", value: 0.1 }
+
+            - name: "color_rgba"
+              param:
+                - { name: "base", value: [0.5, 0.2, 0.2, 0.2] }
+                - { name: "start", value: [1.0, 0.8, 0.8, 0.8] }
+                - { name: "finish", value: [0.3, 0.0, 1.0, 0.0] }
+                - { name: "optimal_finish", value: [1.0, 0.0, 1.0, 0.0] }
+
+        - name: "trajectory_planner"
+          param:
+            - name: "truck_state_params"
+              param:
+                - { name: "min_dist_to_obstacle", value: 0.1 }
+              
+            - name: "state_space_params"
+              param:
+                - name: "longitude"
+                  param:
+                    - { name: "negative_offset", value: -1.0 }
+                    - { name: "positive_offset", value: 1.1 }
+                    - { name: "discretization", value: 10 }
+                  
+                - name: "latitude"
+                  param:
+                    - { name: "negative_offset", value: -0.5 }
+                    - { name: "positive_offset", value: 0.6 }
+                    - { name: "discretization", value: 10 }
+                
+                - name: "yaw"
+                  param:
+                    - { name: "total_forward_states", value: 5 }
+                    - { name: "total_backward_states", value: 3 }
+                
+                - name: "velocity"
+                  param:
+                    - { name: "min", value: 0.0 }
+                    - { name: "max", value: 0.8 }
+                    - { name: "discretization", value: 10 }
+            
+            - name: "tree_params"
+              param:
+                - { name: "total_heuristic_steps", value: 3 }
+                - { name: "step_resolution", value: 0.01 }
+
+            - { name: "planning_horizon", value: 100.0 }
+            - { name: "batch_size", value: 500 }
+            - { name: "max_batches", value: 300 }
+            - { name: "max_edges", value: 200000 }
+            - { name: "radius_multiplier", value: 5.0 }
