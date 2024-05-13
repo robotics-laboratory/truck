@@ -60,12 +60,6 @@ class Model {
     const Lidar& lidar() const;
 
     /**
-     * @param rear_twist Twist of the center of the rear axle.
-     * @param rear_to_point Translation from the center of the
-     * rear axle to the arbitrary point in the base coordinate system.
-     *
-     * @return Twist of the arbitrary point.
-     * 
      * Truck scheme:
      * 
      * OY ↑
@@ -77,10 +71,16 @@ class Model {
      * |                         |
      * |                         |
      * ---------------------------
+     * 
+     * @param rear_twist Twist of the R point.
+     * @param rear_to_point Vector RA.
+     *
+     * @return Twist of the A point.
+     * 
      * C - the center of the base (and the center of the coordinate system).
      * R - the center of the rear axle.
      * A - the arbitrary point.
-     * rear_to_point - a vector RA.
+     * rear_to_point - translation from the R point to the A point in the base coordinate system.
      */
     Twist rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) const;
     Twist baseToRearTwist(Twist base_twist) const;
