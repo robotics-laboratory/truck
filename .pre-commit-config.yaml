@@ -4,4 +4,4 @@ repos:
     rev: v4.5.0
     hooks:
       - id: check-added-large-files
-        args: [--enforce-all]
+        args: [--enforce-all, --maxkb=13000]
