@@ -11,5 +11,3 @@
 
 ### Build docs
 To rebuild docs run `make` in current dir.
-
-

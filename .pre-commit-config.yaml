@@ -8,3 +8,4 @@ repos:
       - id: check-merge-conflict
       - id: check-xml
       - id: check-toml
+      - id: end-of-file-fixer
