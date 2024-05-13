@@ -1,15 +1,15 @@
 launch:
-- arg: {name: "world", default: "simple.world"}
-- arg: {name: "control_name", default: "$(env TRUCK_CONTROL)"}
+- arg: { name: "world", default: "simple.world" }
+- arg: { name: "control_name", default: "$(env TRUCK_CONTROL)" }
 
 - include:
     file: $(find-pkg-share truck_gazebo)/launch/simulator.yaml
     arg:
-    - {name: "world", value: "$(var world)"}
+    - { name: "world", value: "$(var world)" }
 
 - include:
     file: $(find-pkg-share truck)/launch/common.yaml
     arg:
-    - {name: "simulation", value: "true"}
-    - {name: "qos", value: "2"}
-    - {name: "control_name", value: "$(var control_name)"}
+    - { name: "simulation", value: "true" }
+    - { name: "qos", value: "2" }
+    - { name: "control_name", value: "$(var control_name)" }

@@ -7,12 +7,12 @@ launch:
     output: "log"
 
     param:
-    - {name: "port", value: 9090}
-    - {name: "use_compression", value: false}
-    - {name: "fragment_timeout", value: 400}
-    - {name: "unregister_timeout", value: 10.0}
-    - {name: "bson_only_mode", value: false}
-    - {name: "delay_between_messages", value: 0}
+    - { name: "port", value: 9090 }
+    - { name: "use_compression", value: false }
+    - { name: "fragment_timeout", value: 400 }
+    - { name: "unregister_timeout", value: 10.0 }
+    - { name: "bson_only_mode", value: false }
+    - { name: "delay_between_messages", value: 0 }
 
 - node:
     pkg: "rosapi"

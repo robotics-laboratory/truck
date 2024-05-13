@@ -14,8 +14,8 @@ launch:
     name: "hardware_node"
     output: "log"
     param:
-    - {name: "model_config", value: "$(var model_config)"}
-    - {name: "steering_config", value: "$(var steering_config)"}
-    - {name: "odrive_timeout", value: 250}  # ms
-    - {name: "status_report_rate", value: 1.0}  # Hz
-    - {name: "telemetry_report_rate", value: 20.0}  # Hz
+    - { name: "model_config", value: "$(var model_config)" }
+    - { name: "steering_config", value: "$(var steering_config)" }
+    - { name: "odrive_timeout", value: 250 }            # ms
+    - { name: "status_report_rate", value: 1.0 }        # Hz
+    - { name: "telemetry_report_rate", value: 20.0 }    # Hz

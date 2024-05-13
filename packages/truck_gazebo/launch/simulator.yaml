@@ -1,5 +1,5 @@
 launch:
-- arg: {name: "world", default: "simple.world"}
+- arg: { name: "world", default: "simple.world" }
 
 - executable:
     name: "gzserver"
@@ -7,4 +7,4 @@ launch:
     output: "log"
     shell: True
     env:
-    - {name: 'GAZEBO_MODEL_PATH', value: "$(find-pkg-share truck_gazebo)/models"}
+    - { name: "GAZEBO_MODEL_PATH", value: "$(find-pkg-share truck_gazebo)/models" }

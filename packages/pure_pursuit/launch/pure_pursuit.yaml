@@ -14,12 +14,12 @@ launch:
     name: "pure_pursuit_node"
     output: "log"
     param:
-    - {name: "use_sim_time", value: "$(var simulation)"}
-    - {name: "qos", value: "$(var qos)"}
-    - {name: "model_config", value: "$(var model_config)"}
-    - {name: "period", value: 0.05}
-    - {name: "radius/min", value: 0.30}
-    - {name: "radius/max", value: 2.0}
-    - {name: "velocity_factor", value: 2.0}
-    - {name: "tolerance", value: 0.05}
-    - {name: "max_distance", value: 0.3}
+    - { name: "use_sim_time", value: "$(var simulation)" }
+    - { name: "qos", value: "$(var qos)" }
+    - { name: "model_config", value: "$(var model_config)" }
+    - { name: "period", value: 0.05 }
+    - { name: "radius/min", value: 0.30 }
+    - { name: "radius/max", value: 2.0 }
+    - { name: "velocity_factor", value: 2.0 }
+    - { name: "tolerance", value: 0.05 }
+    - { name: "max_distance", value: 0.3 }

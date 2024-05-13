@@ -7,6 +7,8 @@ repos:
         args: [--enforce-all, --maxkb=12300]
       - id: check-merge-conflict
       - id: check-xml
+      - id: check-json
+      - id: check-yaml
       - id: check-toml
       - id: end-of-file-fixer
       - id: mixed-line-ending

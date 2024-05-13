@@ -1,12 +1,12 @@
 launch:
-- arg: {name: "simulation", default: "false"}
-- arg: {name: "qos", default: "0"}
+- arg: { name: "simulation", default: "false" }
+- arg: { name: "qos", default: "0" }
 
 - include:
     file: $(find-pkg-share icp_odometry)/launch/icp_odometry.yaml
     arg:
-    - {name: "use_sim_time", value: "$(var simulation)"}
-    - {name: "qos", value: "$(var qos)"}
+    - { name: "use_sim_time", value: "$(var simulation)" }
+    - { name: "qos", value: "$(var qos)" }
 
 - node:
     pkg: "robot_localization"
@@ -15,24 +15,24 @@ launch:
     namespace: "ekf"
     output: "log"
     param:
-    - {name: "use_sim_time", value: "$(var simulation)"}
-    - {name: "qos", value: "$(var qos)"}
-    - {name: "use_control", value: False}
+    - { name: "use_sim_time", value: "$(var simulation)" }
+    - { name: "qos", value: "$(var qos)" }
+    - { name: "use_control", value: False }
 
-    - {name: "frequency", value: 30.0}
-    - {name: "sensor_timeout", value: 0.3}
-    - {name: "world_frame", value: "odom_ekf"}
-    - {name: "odom_frame", value: "odom_ekf"}
-    - {name: "base_link_frame", value: "base"}
-    - {name: "publish_tf", value: True}
-    - {name: "publish_acceleration", value: False}
-    - {name: "predict_to_current_time", value: True}
-    - {name: "dynamic_process_noise_covariance", value: True}
+    - { name: "frequency", value: 30.0 }
+    - { name: "sensor_timeout", value: 0.3 }
+    - { name: "world_frame", value: "odom_ekf" }
+    - { name: "odom_frame", value: "odom_ekf" }
+    - { name: "base_link_frame", value: "base" }
+    - { name: "publish_tf", value: True }
+    - { name: "publish_acceleration", value: False }
+    - { name: "predict_to_current_time", value: True }
+    - { name: "dynamic_process_noise_covariance", value: True }
 
-    - {name: "imu0", value: "/camera/imu"}
-    - {name: "imu0_queue_size", value: 30}
-    - {name: "imu0_remove_gravitational_acceleration", value: False}
-    - {name: "imu0_config", value: [
+    - { name: "imu0", value: "/camera/imu" }
+    - { name: "imu0_queue_size", value: 30 }
+    - { name: "imu0_remove_gravitational_acceleration", value: False }
+    - { name: "imu0_config", value: [
             False, False, False, # pos
             False, False, False, # rot
             False, False, False, # pos`
@@ -41,10 +41,10 @@ launch:
         ]
     }
 
-    - {name: "odom0", value: "/odometry/odom"}
-    - {name: "odom0_differential", value: False}
-    - {name: "odom0_queue_size", value: 30}
-    - {name: "odom0_config", value: [
+    - { name: "odom0", value: "/odometry/odom" }
+    - { name: "odom0_differential", value: False }
+    - { name: "odom0_queue_size", value: 30 }
+    - { name: "odom0_config", value: [
             False, False, False,   # pos
             False, False, False,   # rot
             True, False, False,    # pos`
@@ -53,10 +53,10 @@ launch:
         ]
     }
 
-    - {name: "odom0", value: "/hardware/odom"}
-    - {name: "odom0_differential", value: False}
-    - {name: "odom0_queue_size", value: 30}
-    - {name: "odom0_config", value: [
+    - { name: "odom0", value: "/hardware/odom" }
+    - { name: "odom0_differential", value: False }
+    - { name: "odom0_queue_size", value: 30 }
+    - { name: "odom0_config", value: [
             False, False, False,   # pos
             False, False, False,   # rot
             True, False, False,    # pos`
@@ -65,7 +65,7 @@ launch:
         ]
     }
 
-    - {name: "process_noise_covariance", value: [
+    - { name: "process_noise_covariance", value: [
             0.001, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
             0.0,    0.001, 0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
             0.0,    0.0,    0.001, 0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,

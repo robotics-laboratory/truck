@@ -20,13 +20,13 @@ launch:
     name: "occupancy_grid_node"
     output: "log"
     param:
-    - {name: "use_sim_time", value: "$(var simulation)"}
-    - {name: "qos", value: "$(var qos)"}
-    - {name: "resolution", value: 0.05}
-    - {name: "radius", value: 6.0}
-    - {name: "enable_camera_cloud", value: "$(var enable_camera_cloud)"}
-    - {name: "enable_lidar_grid", value: "$(var enable_lidar_grid)"}
-    - {name: "enable_camera_grid", value: "$(var enable_camera_grid)"}
-    - {name: "camera_view_distance", value: 2.0}
-    - {name: "camera_view_hmax", value: 0.15}
-    - {name: "camera_view_hmin", value: -0.165}
+    - { name: "use_sim_time", value: "$(var simulation)" }
+    - { name: "qos", value: "$(var qos)" }
+    - { name: "resolution", value: 0.05 }
+    - { name: "radius", value: 6.0 }
+    - { name: "enable_camera_cloud", value: "$(var enable_camera_cloud)" }
+    - { name: "enable_lidar_grid", value: "$(var enable_lidar_grid)" }
+    - { name: "enable_camera_grid", value: "$(var enable_camera_grid)" }
+    - { name: "camera_view_distance", value: 2.0 }
+    - { name: "camera_view_hmax", value: 0.15 }
+    - { name: "camera_view_hmin", value: -0.165 }
