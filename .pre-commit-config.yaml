@@ -7,3 +7,4 @@ repos:
         args: [--enforce-all, --maxkb=12300]
       - id: check-merge-conflict
       - id: check-xml
+      - id: check-toml
