@@ -51,8 +51,10 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
         this->get_logger(), "distance_to_obstacle: %.2fm", speed_params_.distance_to_obstacle);
 
     RCLCPP_INFO(
-        this->get_logger(), "acceleration: [%.2f, %.2f]",
-        speed_params_.acceleration.min, speed_params_.acceleration.max);
+        this->get_logger(),
+        "acceleration: [%.2f, %.2f]",
+        speed_params_.acceleration.min,
+        speed_params_.acceleration.max);
 
     // TODO: change service name
     service_.reset = this->create_service<std_srvs::srv::Empty>(

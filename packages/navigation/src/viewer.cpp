@@ -130,8 +130,7 @@ void drawPath(
 
 }  // namespace
 
-Viewer::Viewer(const ViewerParams& params, const geom::ComplexPolygon& polygon)
-    : params_(params) {
+Viewer::Viewer(const ViewerParams& params, const geom::ComplexPolygon& polygon) : params_(params) {
     bbox_ = cv::boundingRect(toCVPoints(geom::Vec2(0, 0), params.res, polygon.outer));
     bbox_origin_ = geom::Vec2(bbox_.x, bbox_.y);
 
@@ -153,9 +152,7 @@ void Viewer::addGraph(const navigation::graph::Graph& graph) {
     drawNodes(params_, bbox_origin_, frame_, graph);
 }
 
-void Viewer::addPath(const geom::Polyline& path) {
-    drawPath(params_, bbox_origin_, frame_, path);
-}
+void Viewer::addPath(const geom::Polyline& path) { drawPath(params_, bbox_origin_, frame_, path); }
 
 void Viewer::draw() {
     /**

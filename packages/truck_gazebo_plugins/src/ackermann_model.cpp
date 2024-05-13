@@ -13,9 +13,8 @@ namespace gazebo {
 void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) {
     node_ = gazebo_ros::Node::Get(sdf);
 
-    model_ = truck::model::makeUniquePtr(
-        node_->get_logger(),
-        GetParam<std::string>(sdf, "config_path"));
+    model_ =
+        truck::model::makeUniquePtr(node_->get_logger(), GetParam<std::string>(sdf, "config_path"));
 
     {  // steering
         const auto steering = GetElement(sdf, "steering");
@@ -52,7 +51,7 @@ void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
         velocity_right_pd_.SetCmdMax(+wheel_torque);
 
         gzwarn << "velocity:pd: p=" << pd.X() << " d=" << pd.Y() << " t=" << motor_torque
-              << std::endl;
+               << std::endl;
     }
 
     command_slot_ = node_->create_subscription<truck_msgs::msg::Control>(

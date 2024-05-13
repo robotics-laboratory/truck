@@ -20,4 +20,4 @@ tf2::Vector3 ElementWiseMul(const tf2::Vector3& x, const tf2::Vector3& y) {
     return res;
 }
 
-} // namespace rosaruco
+}  // namespace rosaruco

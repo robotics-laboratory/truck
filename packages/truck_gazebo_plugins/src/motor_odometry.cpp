@@ -13,9 +13,8 @@ namespace gazebo {
 void MotorOdometryPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
     node_ = gazebo_ros::Node::Get(sdf);
 
-    model_ = truck::model::makeUniquePtr(
-        node_->get_logger(),
-        GetParam<std::string>(sdf, "config_path"));
+    model_ =
+        truck::model::makeUniquePtr(node_->get_logger(), GetParam<std::string>(sdf, "config_path"));
 
     left_joint_ = GetJoint(model, GetParam<std::string>(sdf, "left_joint"));
     right_joint_ = GetJoint(model, GetParam<std::string>(sdf, "right_joint"));
@@ -24,9 +23,7 @@ void MotorOdometryPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
 
     slot_.odometry = node_->create_publisher<nav_msgs::msg::Odometry>("/hardware/odom", 1);
     RCLCPP_INFO(
-        node_->get_logger(),
-        "Publish odometry on [/motor/odom] with period %f s",
-        period_.count());
+        node_->get_logger(), "Publish odometry on [/motor/odom] with period %f s", period_.count());
 
     update_ = event::Events::ConnectWorldUpdateBegin(
         std::bind(&MotorOdometryPlugin::OnUpdate, this, std::placeholders::_1));

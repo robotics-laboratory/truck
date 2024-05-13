@@ -41,7 +41,8 @@ void OdometryPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
     odometry_publisher_ = node_->create_publisher<nav_msgs::msg::Odometry>("/simulation/odom", 1);
     tf_publisher_ = node_->create_publisher<tf2_msgs::msg::TFMessage>("/simulation/tf", 1);
 
-    RCLCPP_INFO(node_->get_logger(), "Publish odometry on [/odom] with period %zu ms", period_.count());
+    RCLCPP_INFO(
+        node_->get_logger(), "Publish odometry on [/odom] with period %zu ms", period_.count());
 
     update_ = event::Events::ConnectWorldUpdateBegin(
         std::bind(&OdometryPlugin::OnUpdate, this, std::placeholders::_1));

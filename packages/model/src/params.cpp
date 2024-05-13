@@ -10,7 +10,7 @@ SteeringLimit toSteeringLimits(const YAML::Node& node) {
         geom::Angle::fromDegrees(node["outer"].as<double>())};
 }
 
-template <typename T>
+template<typename T>
 Limits<double> toLimits(const YAML::Node& node) {
     return {node["min"].as<double>(), node["max"].as<double>()};
 }
@@ -33,9 +33,7 @@ Shape::Shape(const YAML::Node& node)
     BOOST_VERIFY(circles_count * 2 * radius() > length);
 }
 
-double Shape::radius() const {
-    return width / 2;
-}
+double Shape::radius() const { return width / 2; }
 
 std::vector<geom::Vec2> Shape::getCircleDecomposition(const geom::Pose& ego_pose) const {
     std::vector<geom::Vec2> points;
@@ -74,7 +72,6 @@ VehicleLimits::VehicleLimits(const YAML::Node& node)
 
     BOOST_VERIFY(velocity.min <= 0);
     BOOST_VERIFY(0 < velocity.max);
-
 }
 
 ServoAngles::ServoAngles(const YAML::Node& node)
@@ -85,8 +82,7 @@ ServoAngles::ServoAngles(const YAML::Node& node)
 }
 
 Wheel::Wheel(const YAML::Node& node)
-    : radius(node["radius"].as<double>())
-    , width(node["width"].as<double>()) {
+    : radius(node["radius"].as<double>()), width(node["width"].as<double>()) {
     BOOST_VERIFY(radius > 0);
     BOOST_VERIFY(width > 0);
 }

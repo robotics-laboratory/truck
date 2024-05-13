@@ -33,15 +33,14 @@ VisualizationNode::VisualizationNode() : Node("visualization") {
 
 void VisualizationNode::initializePtrFields() {
     model_ = model::makeUniquePtr(
-        this->get_logger(),
-        Node::declare_parameter<std::string>("model_config", "model.yaml"));
+        this->get_logger(), Node::declare_parameter<std::string>("model_config", "model.yaml"));
 
     map_ = std::make_unique<map::Map>(
         map::Map::fromGeoJson(Node::declare_parameter<std::string>("map_config")));
 }
 
 void VisualizationNode::initializeParams() {
-    params_ = Parameters {
+    params_ = Parameters{
         .ttl = rclcpp::Duration::from_seconds(this->declare_parameter("ttl", 1.0)),
 
         .ego_z_lev = this->declare_parameter("ego.z_lev", 0.0),
@@ -126,28 +125,22 @@ void VisualizationNode::initializeTopicHandlers() {
         "/visualization/ego/track", rclcpp::QoS(1).reliability(qos));
 
     signal_.arc = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/visualization/arc",
-        rclcpp::QoS(1).reliability(qos));
+        "/visualization/arc", rclcpp::QoS(1).reliability(qos));
 
     signal_.waypoints = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/visualization/waypoints",
-        rclcpp::QoS(1).reliability(qos));
+        "/visualization/waypoints", rclcpp::QoS(1).reliability(qos));
 
     signal_.trajectory = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/visualization/trajectory",
-        rclcpp::QoS(1).reliability(qos));
+        "/visualization/trajectory", rclcpp::QoS(1).reliability(qos));
 
     signal_.map = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/visualization/map",
-        rclcpp::QoS(1).reliability(qos));
+        "/visualization/map", rclcpp::QoS(1).reliability(qos));
 
     signal_.navigation_mesh = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/visualization/navigation/mesh",
-        rclcpp::QoS(1).reliability(qos));
+        "/visualization/navigation/mesh", rclcpp::QoS(1).reliability(qos));
 
     signal_.navigation_route = Node::create_publisher<visualization_msgs::msg::Marker>(
-        "/visualization/navigation/route",
-        rclcpp::QoS(1).reliability(qos));
+        "/visualization/navigation/route", rclcpp::QoS(1).reliability(qos));
 
     timer_ = Node::create_wall_timer(1s, std::bind(&VisualizationNode::publishMap, this));
 }
@@ -177,24 +170,22 @@ void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr o
 
 namespace {
 
-std_msgs::msg::ColorRGBA modeToColor(
-    const truck_msgs::msg::ControlMode::ConstSharedPtr& mode) {
-
+std_msgs::msg::ColorRGBA modeToColor(const truck_msgs::msg::ControlMode::ConstSharedPtr& mode) {
     return color::make(*mode);
 }
 
-} // namespace
+}  // namespace
 
 std_msgs::msg::ColorRGBA VisualizationNode::velocityToColor(double velocity, double alpha) const {
     const auto [v_min, v_max] = model_->baseVelocityLimits();
     BOOST_ASSERT(v_min <= 0 && 0 < v_max);
 
-    const double ratio = [&]{
+    const double ratio = [&] {
         if (velocity >= 0) {
             return velocity / v_max;
         }
 
-        return abs(v_min) > 0  ? (velocity / v_min) : 0.0;
+        return abs(v_min) > 0 ? (velocity / v_min) : 0.0;
     }();
 
     return color::plasma(1 - ratio, alpha);
@@ -224,12 +215,10 @@ void VisualizationNode::publishTrajectory() const {
     msg.colors.reserve(state_.trajectory->states.size());
 
     bool collision = false;
-    for (const auto& state: state_.trajectory->states) {
+    for (const auto& state : state_.trajectory->states) {
         collision |= state.collision;
 
-        const auto color = collision
-            ? color::gray(0.5)
-            : velocityToColor(state.velocity, 0.5);
+        const auto color = collision ? color::gray(0.5) : velocityToColor(state.velocity, 0.5);
 
         msg.points.push_back(state.pose.position);
         msg.colors.push_back(color);
@@ -245,9 +234,9 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
 
 namespace {
 
-visualization_msgs::msg::Marker makeMeshMarker(int id, const std_msgs::msg::Header &header,
-    const std::string mesh, const std_msgs::msg::ColorRGBA &color) {
-
+visualization_msgs::msg::Marker makeMeshMarker(
+    int id, const std_msgs::msg::Header& header, const std::string mesh,
+    const std_msgs::msg::ColorRGBA& color) {
     visualization_msgs::msg::Marker msg;
     msg.id = id;
     msg.header = header;
@@ -266,7 +255,7 @@ visualization_msgs::msg::Marker makeMeshMarker(int id, const std_msgs::msg::Head
     return msg;
 }
 
-} // namespace
+}  // namespace
 
 void VisualizationNode::publishEgo() const {
     if (!state_.odom || !state_.mode || !state_.telemetry) {
@@ -299,8 +288,8 @@ void VisualizationNode::publishEgo() const {
 
         auto rotation = tf2::Quaternion::getIdentity();
         rotation.setRPY(0, 0, z_angle);
-        const auto wheel_tf = base_to_odom
-            * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
+        const auto wheel_tf =
+            base_to_odom * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
 
         auto wheel_msg = makeMeshMarker(wheel + 1, state_.odom->header, params_.mesh_wheel, color);
         tf2::toMsg(wheel_tf, wheel_msg.pose);
@@ -353,7 +342,7 @@ geom::Poses arcTrace(const geom::Pose& pose, double curvature, double length) {
     const geom::Vec2 begin = (pose.pos - center).unit();
     const auto delta = clamp(geom::Angle(length * curvature), -geom::PI, geom::PI);
 
-    return geom::Arc(center, abs(1/curvature), begin, delta).trace(step);
+    return geom::Arc(center, abs(1 / curvature), begin, delta).trace(step);
 }
 
 }  // namespace
@@ -376,10 +365,8 @@ void VisualizationNode::publishArc() const {
         return;
     }
 
-    const auto trace = arcTrace(
-        geom::toPose(*state_.odom),
-        state_.control->curvature,
-        params_.arc_length);
+    const auto trace =
+        arcTrace(geom::toPose(*state_.odom), state_.control->curvature, params_.arc_length);
 
     visualization_msgs::msg::Marker msg;
 
@@ -395,7 +382,7 @@ void VisualizationNode::publishArc() const {
     msg.points.reserve(trace.size());
     msg.color = color::white(0.6);
 
-    for (const auto& pose: trace) {
+    for (const auto& pose : trace) {
         msg.points.push_back(geom::msg::toPoint(pose.pos));
     }
 
@@ -503,7 +490,8 @@ void VisualizationNode::publishNavigationMesh() const {
     signal_.navigation_mesh->publish(msg);
 }
 
-void VisualizationNode::handleNavigationRoute(truck_msgs::msg::NavigationRoute::ConstSharedPtr msg) {
+void VisualizationNode::handleNavigationRoute(
+    truck_msgs::msg::NavigationRoute::ConstSharedPtr msg) {
     state_.navigation_route = std::move(msg);
     publishNavigationRoute();
 }

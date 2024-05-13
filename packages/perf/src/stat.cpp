@@ -34,7 +34,7 @@ std::vector<CpuStat> CpuStat::read() {
     std::ifstream stat("/proc/stat");
     std::vector<CpuStat> result;
 
-    for (std::string line; std::getline(stat, line); ) {
+    for (std::string line; std::getline(stat, line);) {
         if (not line.starts_with("cpu")) {
             continue;
         }

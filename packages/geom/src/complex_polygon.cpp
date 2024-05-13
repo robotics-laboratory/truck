@@ -31,10 +31,7 @@ std::vector<Triangle> ComplexPolygon::triangles() const noexcept {
     }
 
     cgal_cdt.insert_constraint(
-        cgal_polygon_outer.vertices_begin(),
-        cgal_polygon_outer.vertices_end(),
-        true
-    );
+        cgal_polygon_outer.vertices_begin(), cgal_polygon_outer.vertices_end(), true);
 
     for (const Polygon& inner : inners) {
         CGAL_Polygon cgal_polygon_inner;
@@ -43,14 +40,12 @@ std::vector<Triangle> ComplexPolygon::triangles() const noexcept {
         }
 
         cgal_cdt.insert_constraint(
-            cgal_polygon_inner.vertices_begin(),
-            cgal_polygon_inner.vertices_end(),
-            true
-        );
+            cgal_polygon_inner.vertices_begin(), cgal_polygon_inner.vertices_end(), true);
     }
 
     std::unordered_map<CGAL_Face_handle, bool> in_domain_map;
-    boost::associative_property_map<std::unordered_map<CGAL_Face_handle, bool>> in_domain(in_domain_map);
+    boost::associative_property_map<std::unordered_map<CGAL_Face_handle, bool>> in_domain(
+        in_domain_map);
     CGAL::mark_domain_in_triangulation(cgal_cdt, in_domain);
 
     for (const auto& cgal_face_it : cgal_cdt.finite_face_handles()) {
@@ -60,12 +55,7 @@ std::vector<Triangle> ComplexPolygon::triangles() const noexcept {
             CGAL_Point p3 = cgal_face_it->vertex(2)->point();
 
             triangles.emplace_back(
-                Triangle(
-                    Vec2(p1.x(), p1.y()),
-                    Vec2(p2.x(), p2.y()),
-                    Vec2(p3.x(), p3.y())
-                )
-            );
+                Triangle(Vec2(p1.x(), p1.y()), Vec2(p2.x(), p2.y()), Vec2(p3.x(), p3.y())));
         }
     }
 
@@ -83,15 +73,11 @@ Segments ComplexPolygon::segments() const noexcept {
     segments.reserve(size);
 
     auto current_segments = outer.segments();
-    segments.insert(segments.end(),
-            current_segments.begin(),
-            current_segments.end());
+    segments.insert(segments.end(), current_segments.begin(), current_segments.end());
 
     for (const auto& inner : inners) {
         current_segments = inner.segments();
-        segments.insert(segments.end(),
-            current_segments.begin(),
-            current_segments.end());
+        segments.insert(segments.end(), current_segments.begin(), current_segments.end());
     }
 
     return segments;

@@ -9,7 +9,8 @@
 
 namespace rosaruco {
 
-visualization_msgs::msg::Marker GetMarker(const Transform &t, int id, double size, bool is_visible) {
+visualization_msgs::msg::Marker GetMarker(
+    const Transform &t, int id, double size, bool is_visible) {
     std::vector<tf2::Vector3> points = {
         {0, 0, 0},
         {0, size, 0},
@@ -17,22 +18,18 @@ visualization_msgs::msg::Marker GetMarker(const Transform &t, int id, double siz
         {size, 0, 0},
     };
 
-    std::transform(points.begin(), points.end(), points.begin(),
-        [&t](const tf2::Vector3 &v) {
-            return t(v);
-        }
-    );
+    std::transform(
+        points.begin(), points.end(), points.begin(), [&t](const tf2::Vector3 &v) { return t(v); });
 
     points.push_back(points[0]);
 
     visualization_msgs::msg::Marker marker;
     marker.points.reserve(points.size());
 
-    std::transform(points.begin(), points.end(), back_inserter(marker.points),
-        [](const tf2::Vector3& v) {
+    std::transform(
+        points.begin(), points.end(), back_inserter(marker.points), [](const tf2::Vector3 &v) {
             return geometry_msgs::msg::Point().set__x(v[0]).set__y(v[1]).set__z(v[2]);
-        }
-    );
+        });
 
     marker.id = id;
     marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
@@ -67,9 +64,11 @@ visualization_msgs::msg::Marker GetLabel(int id, const tf2::Vector3 &p, double s
     return marker;
 }
 
-void AddLabeledMarker(std::vector<visualization_msgs::msg::Marker> &markers, const Transform &t, int id, double size, bool is_visible) {
+void AddLabeledMarker(
+    std::vector<visualization_msgs::msg::Marker> &markers, const Transform &t, int id, double size,
+    bool is_visible) {
     markers.push_back(GetMarker(t, id, size, is_visible));
     markers.push_back(GetLabel(id, t(tf2::Vector3(size / 2, size / 2, 0)), size / 5));
 }
 
-} // namespace rosaruco
+}  // namespace rosaruco

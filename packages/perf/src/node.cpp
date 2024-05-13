@@ -32,8 +32,7 @@ truck_msgs::msg::CpuStat toMsg(const CpuStat& stat) {
     return msg;
 }
 
-} // namespace
-
+}  // namespace
 
 void PerfStatNode::OnTimer() {
     auto stat = Stat::read();
@@ -54,4 +53,4 @@ void PerfStatNode::OnTimer() {
     stat_ = std::move(stat);
 }
 
-} // namespace truck::perf
+}  // namespace truck::perf

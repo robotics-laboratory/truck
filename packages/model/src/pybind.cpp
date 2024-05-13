@@ -5,10 +5,10 @@
 namespace py = pybind11;
 using namespace truck;
 
-template <typename T>
+template<typename T>
 std::string to_string(const T &obj);
 
-template <>
+template<>
 std::string to_string<double>(const double &obj) {
     return boost::str(boost::format("%.5d") % obj);
 }
@@ -18,39 +18,33 @@ std::string to_string<geom::Angle>(const geom::Angle &obj) {
     return boost::str(boost::format("Angle(%.1d deg)") % obj.degrees());
 }
 
-template <>
+template<>
 std::string to_string<model::Steering>(const model::Steering &obj) {
     return boost::str(
-        boost::format("Steering(left=%s, right=%s)")
-        % to_string(obj.left) % to_string(obj.right)
-    );
+        boost::format("Steering(left=%s, right=%s)") % to_string(obj.left) % to_string(obj.right));
 }
 
-template <>
+template<>
 std::string to_string<model::WheelVelocity>(const model::WheelVelocity &obj) {
     return boost::str(
-        boost::format("WheelVelocity(left=%s, right=%s)")
-        % to_string(obj.left) % to_string(obj.right)
-    );
+        boost::format("WheelVelocity(left=%s, right=%s)") % to_string(obj.left) %
+        to_string(obj.right));
 }
 
-template <>
+template<>
 std::string to_string<model::Twist>(const model::Twist &obj) {
     return boost::str(
-        boost::format("Twist(curvature=%.5d, velocity=%.5d)")
-        % obj.curvature % obj.velocity
-    );
+        boost::format("Twist(curvature=%.5d, velocity=%.5d)") % obj.curvature % obj.velocity);
 }
 
-template <>
+template<>
 std::string to_string<model::ServoAngles>(const model::ServoAngles &obj) {
     return boost::str(
-        boost::format("ServoAngles(left=%s, right=%s)")
-        % to_string(obj.left) % to_string(obj.right)
-    );
+        boost::format("ServoAngles(left=%s, right=%s)") % to_string(obj.left) %
+        to_string(obj.right));
 }
 
-template <typename T>
+template<typename T>
 void bind_limits_class(py::module &m, const std::string &name) {
     using Class = Limits<T>;
     py::class_<Class>(m, name.c_str())
@@ -58,9 +52,8 @@ void bind_limits_class(py::module &m, const std::string &name) {
         .def_readonly("max", &Class::max)
         .def("__repr__", [name](const Class &obj) {
             return boost::str(
-                boost::format("%s(min=%s, max=%s)")
-                % name % to_string<T>(obj.min) % to_string<T>(obj.max)
-            );
+                boost::format("%s(min=%s, max=%s)") % name % to_string<T>(obj.min) %
+                to_string<T>(obj.max));
         });
 }
 

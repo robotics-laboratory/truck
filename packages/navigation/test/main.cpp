@@ -19,9 +19,7 @@ TEST(Navigation, map) {
         map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
 
     viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png",
-        .color_rgb = {},
-        .thickness = {}};
+        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png", .color_rgb = {}, .thickness = {}};
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
@@ -39,9 +37,7 @@ TEST(Navigation, map_mesh) {
         map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
 
     viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png",
-        .color_rgb = {},
-        .thickness = {}};
+        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png", .color_rgb = {}, .thickness = {}};
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
@@ -64,9 +60,7 @@ TEST(Navigation, map_graph) {
         map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
 
     viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png",
-        .color_rgb = {},
-        .thickness = {}};
+        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png", .color_rgb = {}, .thickness = {}};
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
@@ -89,7 +83,7 @@ TEST(Navigation, map_graph) {
     viewer.draw();
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

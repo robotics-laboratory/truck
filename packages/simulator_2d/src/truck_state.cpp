@@ -5,45 +5,25 @@
 
 namespace truck::simulator {
 
-rclcpp::Time TruckState::time() const {
-    return cache_.time;
-}
+rclcpp::Time TruckState::time() const { return cache_.time; }
 
-geom::Pose TruckState::odomBasePose() const {
-    return cache_.base_odom_pose;
-}
+geom::Pose TruckState::odomBasePose() const { return cache_.base_odom_pose; }
 
-model::Steering TruckState::currentSteering() const {
-    return cache_.current_steering;
-}
+model::Steering TruckState::currentSteering() const { return cache_.current_steering; }
 
-model::Steering TruckState::targetSteering() const {
-    return cache_.target_steering;
-}
+model::Steering TruckState::targetSteering() const { return cache_.target_steering; }
 
-model::Twist TruckState::baseTwist() const {
-    return cache_.base_odom_twist;
-}
+model::Twist TruckState::baseTwist() const { return cache_.base_odom_twist; }
 
-geom::Vec2 TruckState::odomBaseLinearVelocity() const {
-    return cache_.base_odom_linear_velocity;
-}
+geom::Vec2 TruckState::odomBaseLinearVelocity() const { return cache_.base_odom_linear_velocity; }
 
-double TruckState::baseAngularVelocity() const {
-    return cache_.base_odom_angular_velocity;
-}
+double TruckState::baseAngularVelocity() const { return cache_.base_odom_angular_velocity; }
 
-const std::vector<float>& TruckState::lidarRanges() const {
-    return cache_.lidar_ranges;
-}
+const std::vector<float>& TruckState::lidarRanges() const { return cache_.lidar_ranges; }
 
-double TruckState::currentMotorRps() const {
-    return cache_.current_motor_rps;
-}
+double TruckState::currentMotorRps() const { return cache_.current_motor_rps; }
 
-double TruckState::targetMotorRps() const {
-    return cache_.target_motor_rps;
-}
+double TruckState::targetMotorRps() const { return cache_.target_motor_rps; }
 
 TruckState& TruckState::time(const rclcpp::Time& time) {
     cache_.time = time;

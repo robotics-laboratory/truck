@@ -13,17 +13,16 @@
 namespace rosaruco {
 
 class CameraTracker {
-public:
+  public:
     CameraTracker(int marker_count);
 
     void Update(const std::vector<int> &ids, const std::vector<Transform> &transforms);
 
-    const std::optional<Transform>& GetTransformToAnchor(int from_id) const;
+    const std::optional<Transform> &GetTransformToAnchor(int from_id) const;
 
     Pose GetPose();
 
-private:
-
+  private:
     TfGraph graph_;
 
     std::vector<std::optional<Transform>> to_anchor_;
@@ -33,4 +32,4 @@ private:
     int anchor_id_ = -1;
 };
 
-} // namespace rosaruco
+}  // namespace rosaruco

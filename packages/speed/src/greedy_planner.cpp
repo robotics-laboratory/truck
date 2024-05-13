@@ -52,10 +52,8 @@ It findTrajectoryEnd(It begin, It end, double distance_to_obstacle) {
 
 // return last acceleration state
 It fillAcceleration(
-        const model::Model& model,
-        double scheduled_velocity,
-        double desired_acceleration,
-        It begin, It end) {
+    const model::Model& model, double scheduled_velocity, double desired_acceleration, It begin,
+    It end) {
     VERIFY(begin != end);
 
     if (scheduled_velocity + eps > model.baseVelocityLimits().max) {
@@ -85,9 +83,8 @@ It fillAcceleration(
             next->velocity = model.baseVelocityLimits().max;
             it->acceleration = findAcceleration(distance, it->velocity, next->velocity);
 
-            dt = abs(it->acceleration) > eps
-                ? (next->velocity - it->velocity) / it->acceleration
-                : distance / it->velocity;
+            dt = abs(it->acceleration) > eps ? (next->velocity - it->velocity) / it->acceleration
+                                             : distance / it->velocity;
 
             next->time = it->getTime() + dt;
             next->acceleration = 0;
@@ -145,7 +142,7 @@ bool fillBraking(const model::Model& model, It begin, It end) {
     const double a = findAcceleration(last->distance - begin->distance, begin->velocity, 0);
 
     auto it = begin;
-    for (auto next = it + 1; next != end; ) {
+    for (auto next = it + 1; next != end;) {
         VERIFY(it->reachable());
 
         const double distance = next->distance - it->distance;
@@ -191,11 +188,8 @@ void GreedyPlanner::fill(motion::Trajectory& trajectory) const {
 
     // check collision at the first pose
     if (begin != end) {
-        const auto acceleration_last = fillAcceleration(
-            model_,
-            scheduled_velocity_,
-            params_.acceleration.max,
-            begin, end);
+        const auto acceleration_last =
+            fillAcceleration(model_, scheduled_velocity_, params_.acceleration.max, begin, end);
 
         fillConstVelocity(acceleration_last, end);
 
