@@ -17,8 +17,9 @@ namespace truck::simulator {
 
 class SimulatorEngine {
   public:
-    SimulatorEngine(std::unique_ptr<model::Model> model,
-        double integration_step = 1e-3, double precision = 1e-8);
+    SimulatorEngine(
+        std::unique_ptr<model::Model> model, double integration_step = 1e-3,
+        double precision = 1e-8);
 
     void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
     void resetMap(const std::string& path);
@@ -31,34 +32,25 @@ class SimulatorEngine {
     void advance(double seconds = 1.0);
 
   private:
-    enum StateIndex {
-        kX = 0,
-        kY = 1,
-        kYaw = 2,
-        kSteering = 3,
-        kLinearVelocity = 4
-    };
+    enum StateIndex { kX = 0, kY = 1, kYaw = 2, kSteering = 3, kLinearVelocity = 4 };
 
     using State = Eigen::Matrix<double, 5, 1>;
 
-    void resetRear(double x, double y, double yaw,
-        double steering, double linear_velocity);
+    void resetRear(double x, double y, double yaw, double steering, double linear_velocity);
     void resetRear();
 
     geom::Pose getOdomBasePose() const;
     model::Steering getCurrentSteering(double rear_curvature) const;
     model::Steering getTargetSteering() const;
     model::Twist rearToOdomBaseTwist(double rear_curvature) const;
-    geom::Vec2 rearToOdomBaseLinearVelocity(
-        truck::geom::AngleVec2 dir,double base_velocity) const;
-    double rearToBaseAngularVelocity(
-        double base_velocity, double rear_curvature) const;
+    geom::Vec2 rearToOdomBaseLinearVelocity(truck::geom::AngleVec2 dir, double base_velocity) const;
+    double rearToBaseAngularVelocity(double base_velocity, double rear_curvature) const;
     std::vector<float> getLidarRanges(const geom::Pose& odom_base_pose) const;
 
     double getCurrentAcceleration() const;
     double getCurrentSteeringVelocity() const;
-    State calculateStateDerivative(const State &state,
-        double acceleration, double steering_velocity) const;
+    State calculateStateDerivative(
+        const State& state, double acceleration, double steering_velocity) const;
     State calculateRK4(double acceleration, double steering_velocity) const;
 
     struct Parameters {

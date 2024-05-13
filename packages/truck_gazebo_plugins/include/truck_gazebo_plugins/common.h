@@ -6,7 +6,7 @@
 
 namespace gazebo {
 
-template <class T>
+template<class T>
 T GetParam(sdf::ElementPtr sdf, const std::string& name) {
     const auto [value, has_value] = sdf->Get<T>(name, T());
     if (not has_value) {

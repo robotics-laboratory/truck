@@ -18,4 +18,4 @@ std_msgs::msg::ColorRGBA make(const truck_msgs::msg::ControlMode& mode);
 
 std_msgs::msg::ColorRGBA plasma(float x, float alpha = 1.0);
 
-} // namespace truck::visualization::color
+}  // namespace truck::visualization::color

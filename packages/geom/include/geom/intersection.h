@@ -10,8 +10,7 @@
 
 namespace truck::geom {
 
-bool intersect(
-    const Segment& seg1, const Segment& seg2, const double eps = 1e-4) noexcept;
+bool intersect(const Segment& seg1, const Segment& seg2, const double eps = 1e-4) noexcept;
 
 bool intersect(const Polygon& polygon, const Segment& seg, const double eps = 1e-4) noexcept;
 

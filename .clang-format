@@ -1,6 +1,5 @@
 BasedOnStyle: Google
 Language: Cpp
-
 AlignTrailingComments: true
 AccessModifierOffset: -2
 AlignAfterOpenBracket: AlwaysBreak

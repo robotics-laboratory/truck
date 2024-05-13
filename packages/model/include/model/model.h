@@ -29,8 +29,8 @@ struct WheelVelocity {
 };
 
 struct Twist {
-  double curvature;
-  double velocity;
+    double curvature;
+    double velocity;
 };
 
 class Model {
@@ -67,8 +67,7 @@ class Model {
     double motorRPStoLinearVelocity(double rps) const;
 
     tf2_msgs::msg::TFMessage getTfStaticMsg() const;
-    tf2::Transform getLatestTranform(const std::string& source,
-      const std::string& target) const;
+    tf2::Transform getLatestTranform(const std::string& source, const std::string& target) const;
 
   private:
     struct Cache {
