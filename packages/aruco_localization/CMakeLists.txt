@@ -16,7 +16,7 @@ find_package(tf2_msgs REQUIRED)
 add_executable(
     aruco_localization
     src/aruco_localization.cpp
-    src/math_helpers.cpp 
+    src/math_helpers.cpp
     src/camera_tracker.cpp
     src/transform.cpp
     src/visualization_helpers.cpp

@@ -556,7 +556,7 @@ TEST(Ray, segment_intersections) {
     using namespace truck::geom;
 
     constexpr double precision = 1e-4;
-    
+
     {
         Vec2 ray_origin(4, 0), segment_begin(2, 2), segment_end(6, 2), correct_intersection(4, 2);
         AngleVec2 ray_dir(Angle::fromDegrees(90));

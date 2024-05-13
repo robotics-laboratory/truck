@@ -14,7 +14,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(map REQUIRED)
 
-add_library(simulator_engine SHARED 
+add_library(simulator_engine SHARED
     src/simulator_engine.cpp
     src/truck_state.cpp)
 

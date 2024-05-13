@@ -14,7 +14,7 @@ namespace truck::simulator {
 
 SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     double integration_step, double precision) {
-        
+
     model_ = std::move(model);
 
     params_.integration_step = integration_step;
@@ -24,7 +24,7 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
     cache_.integration_step_6 = integration_step / 6;
     cache_.inverse_integration_step = 1 / integration_step;
     cache_.inverse_wheelbase_length = 1 / model_->wheelBase().length;
-    
+
     const auto lidar_translation = model_->getLatestTranform("base", "lidar_link").getOrigin();
     cache_.base_to_lidar.x = lidar_translation.x();
     cache_.base_to_lidar.y = lidar_translation.y();
@@ -43,7 +43,7 @@ SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
 void SimulatorEngine::resetRear(double x, double y, double yaw,
     double steering, double linear_velocity) {
 
-    rear_ax_state_ = (SimulatorEngine::State() 
+    rear_ax_state_ = (SimulatorEngine::State()
         << x, y, yaw, steering, linear_velocity)
         .finished();
 }
@@ -54,8 +54,8 @@ void SimulatorEngine::resetRear() {
 
 void SimulatorEngine::resetBase(const geom::Pose& pose,
     double middle_steering, double linear_velocity) {
-    
-    const auto [rear_x, rear_y] = geom::Vec2{pose.pos.x, pose.pos.y} 
+
+    const auto [rear_x, rear_y] = geom::Vec2{pose.pos.x, pose.pos.y}
         - model_->wheelBase().base_to_rear * pose.dir;
 
     const double yaw = pose.dir.angle().radians();
@@ -73,8 +73,8 @@ void SimulatorEngine::resetMap(const std::string& path) {
     const auto polygons = map.polygons();
     for (const auto &polygon: polygons) {
         auto segments = polygon.segments();
-        obstacles_.insert(obstacles_.end(), 
-            std::make_move_iterator(segments.begin()), 
+        obstacles_.insert(obstacles_.end(),
+            std::make_move_iterator(segments.begin()),
             std::make_move_iterator(segments.end()));
     }
 }
@@ -130,7 +130,7 @@ int softSign(double number, double precision) {
     if (number > precision) {
         return 1;
     }
-    
+
     if (number < -precision) {
         return -1;
     }
@@ -144,14 +144,14 @@ int mod(int number, int divider) {
 
 geom::Vec2 getLidarOrigin(const geom::Pose& odom_base_pose, const geom::Vec2& from_base) {
     const auto dir_vec = odom_base_pose.dir.vec();
-    const auto x = odom_base_pose.pos.x 
+    const auto x = odom_base_pose.pos.x
         + from_base.x * dir_vec.x - from_base.y * dir_vec.y;
     const auto y = odom_base_pose.pos.y
         + from_base.y * dir_vec.x + from_base.x * dir_vec.y;
     return geom::Vec2(x, y);
 }
 
-geom::Angle getOrientedAngle(const geom::Vec2& origin_to_point, 
+geom::Angle getOrientedAngle(const geom::Vec2& origin_to_point,
     const geom::Vec2& dir) {
 
     auto origin_to_point_angle = geom::angleBetween(dir, origin_to_point);
@@ -162,14 +162,14 @@ double ceil_with_precision(double number, double precision) {
     return std::ceil(number / precision) * precision;
 }
 
-geom::AngleVec2 getRayDir(const geom::AngleVec2& zero_dir, 
+geom::AngleVec2 getRayDir(const geom::AngleVec2& zero_dir,
     const geom::Angle increment, const int index) {
-    
+
     const auto mult_increment = geom::AngleVec2(index * increment);
     return zero_dir + mult_increment;
 }
 
-float getIntersectionDistance(const geom::Ray& ray, 
+float getIntersectionDistance(const geom::Ray& ray,
     const geom::Segment& segment, double precision) {
 
     const auto intersection = geom::intersect(ray, segment, precision);
@@ -185,7 +185,7 @@ float getIntersectionDistance(const geom::Ray& ray,
 
 std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_pose) const {
     std::vector<float> ranges(cache_.lidar_rays_number, std::numeric_limits<float>::max());
-    
+
     const auto origin = getLidarOrigin(odom_base_pose, cache_.base_to_lidar);
     const auto dir = (odom_base_pose.dir + cache_.lidar_angle_min);
     const auto dir_vector = dir.vec();
@@ -204,13 +204,13 @@ std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_p
 
         if (sign > 0) {
             begin_index = ceil_with_precision(
-                begin_oriented_angle.radians() / increment_rad, 
+                begin_oriented_angle.radians() / increment_rad,
                 params_.precision);
             end_index = end_oriented_angle.radians() / increment_rad;
         } else {
             begin_index = begin_oriented_angle.radians() / increment_rad;
             end_index = ceil_with_precision(
-                end_oriented_angle.radians() / increment_rad, 
+                end_oriented_angle.radians() / increment_rad,
                 params_.precision);
         }
 
@@ -222,11 +222,11 @@ std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_p
         begin_index = std::min(begin_index, cache_.lidar_rays_number - 1);
         end_index = std::min(end_index, cache_.lidar_rays_number - 1);
 
-        geom::Ray current_ray(origin, 
+        geom::Ray current_ray(origin,
             getRayDir(dir, cache_.lidar_angle_increment, begin_index));
         const auto increment = geom::AngleVec2(sign * cache_.lidar_angle_increment);
         int index = begin_index - sign;
-        
+
         do {
             index = mod(index + sign, cache_.lidar_rays_number);
             const auto distance = getIntersectionDistance(current_ray, segment, params_.precision);
@@ -251,7 +251,7 @@ TruckState SimulatorEngine::getTruckState() const {
     auto lidar_ranges = getLidarRanges(pose);
     const auto current_rps = model_->linearVelocityToMotorRPS(twist.velocity);
     const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
-    
+
     return TruckState()
         .time(time_)
         .odomBasePose(pose)
@@ -271,14 +271,14 @@ namespace {
  * @param desired_velocity The velocity to strive for.
  * @param velocity Current (initial) velocity.
  * @param precision Precision of calculations.
- * 
+ *
  * @return A pair of values:
  * first - the maneuver sign of the model;
  * second - the target speed.
- * 
- * If the sign is positive, it is necessary to accelerate. 
+ *
+ * If the sign is positive, it is necessary to accelerate.
  * If the sign is negative, it is necessary to decelerate.
- * 
+ *
  * If the current and desired velocities are of different signs,
  * the target speed will be 0 (the model must first stop,
  * and then start moving in the opposite direction).
@@ -316,7 +316,7 @@ void SimulatorEngine::setBaseControl(
 
     control_.curvature = rear_twist.curvature;
     control_.velocity = rear_twist.velocity;
-    control_.acceleration 
+    control_.acceleration
         = model_->baseToRearAcceleration(acceleration, curvature);
 }
 
@@ -350,17 +350,17 @@ double getOptionalValue(const std::optional<double>& opt, double max) {
 
 double SimulatorEngine::getCurrentAcceleration() const {
     const double velocity = rear_ax_state_[StateIndex::kLinearVelocity];
-    
-    const auto [action_sign, target_velocity] 
+
+    const auto [action_sign, target_velocity]
         = actionSign(control_.velocity, velocity, params_.precision);
 
-    const int acceleration_sign = softSign(target_velocity 
+    const int acceleration_sign = softSign(target_velocity
         - velocity, params_.precision);
 
     double current_acceleration = 0;
     if (action_sign == 1) {
         // Acceleration.
-        current_acceleration = acceleration_sign 
+        current_acceleration = acceleration_sign
             * getOptionalValue(control_.acceleration, model_->baseMaxAcceleration());
     } else if (action_sign == -1) {
         // Deceleration.
@@ -370,12 +370,12 @@ double SimulatorEngine::getCurrentAcceleration() const {
 
     const double velocity_delta = current_acceleration * params_.integration_step;
     const double new_velocity = velocity + velocity_delta;
-    const bool target_velocity_achieved 
+    const bool target_velocity_achieved
         = (acceleration_sign > 0 && (new_velocity + params_.precision > target_velocity))
         || (acceleration_sign < 0 && (new_velocity - params_.precision < target_velocity));
 
     if (target_velocity_achieved) {
-        current_acceleration = (target_velocity 
+        current_acceleration = (target_velocity
             - velocity) * cache_.inverse_integration_step;
     }
 
@@ -395,7 +395,7 @@ double SimulatorEngine::getCurrentSteeringVelocity() const {
         || (velocity_sign < 0 && (new_steering - params_.precision < target_steering));
 
     if (target_steering_achieved) {
-        current_velocity = (target_steering 
+        current_velocity = (target_steering
             - steering) * cache_.inverse_integration_step;
     }
 
@@ -404,7 +404,7 @@ double SimulatorEngine::getCurrentSteeringVelocity() const {
 
 SimulatorEngine::State SimulatorEngine::calculateStateDerivative(
     const SimulatorEngine::State &state, double acceleration, double steering_velocity) const {
-    
+
     const double yaw = state[StateIndex::kYaw];
     const double velocity = state[StateIndex::kLinearVelocity];
     const double steering = state[StateIndex::kSteering];

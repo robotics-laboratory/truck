@@ -20,7 +20,7 @@ CGAL::Polygon_2<CGAL_K> toCGALPolygon(const geom::Polygon& polygon) {
     for (const geom::Vec2& point : polygon) {
         cgal_poly.push_back(CGAL_K::Point_2(point.x, point.y));
     }
-    
+
     return cgal_poly;
 }
 
@@ -55,7 +55,7 @@ MeshBuild MeshBuilder::build(const geom::ComplexPolygons& polygons) const {
     buildSkeleton(mesh_build, polygon);
     buildLevelLines(mesh_build, polygon, params_.offset);
     buildMesh(mesh_build, params_.dist);
-    
+
     return mesh_build;
 }
 

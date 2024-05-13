@@ -67,7 +67,7 @@ class Model {
     double motorRPStoLinearVelocity(double rps) const;
 
     tf2_msgs::msg::TFMessage getTfStaticMsg() const;
-    tf2::Transform getLatestTranform(const std::string& source, 
+    tf2::Transform getLatestTranform(const std::string& source,
       const std::string& target) const;
 
   private:

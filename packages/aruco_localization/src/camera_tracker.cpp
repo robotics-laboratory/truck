@@ -37,16 +37,16 @@ void CameraTracker::Update(const std::vector<int> &ids, const std::vector<Transf
     size_t best_visible_idx = std::min_element(errors.begin(), errors.end()) - errors.begin();
 
     if (std::isinf(errors[best_visible_idx])) {
-        RCLCPP_ERROR(rclcpp::get_logger(kLoggerName), 
+        RCLCPP_ERROR(rclcpp::get_logger(kLoggerName),
             "Current position can not be calculated: No visible marker reachable from an anchor marker.");
         return;
     }
-    
-    auto from_best_visible_to_anchor = transforms_to_anchor[best_visible_idx] 
+
+    auto from_best_visible_to_anchor = transforms_to_anchor[best_visible_idx]
         * from_marker_to_cam[best_visible_idx].Inverse();
 
     Pose new_pose;
-    new_pose.orientation = from_best_visible_to_anchor.GetRotation() * tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2) 
+    new_pose.orientation = from_best_visible_to_anchor.GetRotation() * tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2)
                 * tf2::Quaternion(tf2::Vector3(1, 0, 0), M_PI / 2);
     new_pose.point = from_best_visible_to_anchor({0, 0, 0});
 

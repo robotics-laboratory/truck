@@ -45,7 +45,7 @@ void TfGraph::GetBestTransformFromStartNode(int start_node, const std::vector<in
     for (const int &finish_node : finish_nodes) {
 
         if (std::isinf(distance[finish_node])) {
-            continue;   
+            continue;
         }
 
         errors.push_back(distance[finish_node]);
@@ -54,7 +54,7 @@ void TfGraph::GetBestTransformFromStartNode(int start_node, const std::vector<in
 
         Transform from_finish_to_current({0, 0, 0, 1}, {0, 0, 0});
         while (current_node != start_node) {
-            from_finish_to_current = 
+            from_finish_to_current =
                 GetTransform(current_node, prev_node[current_node]) * from_finish_to_current;
             current_node = prev_node[current_node];
         }
@@ -68,12 +68,12 @@ TfGraph::Edge::Edge() :
     transforms_count_(0),
     average_transform_({0, 0, 0, 0}, {0, 0, 0}),
     error_(kDefaultEdgeError) {
-        
+
     quaternion_sum_ = cv::Mat::zeros(4, 4, CV_64F);
 }
 
 const Transform& TfGraph::Edge::GetAverage() const {
-    return average_transform_;   
+    return average_transform_;
 }
 
 double TfGraph::Edge::GetError() const {
@@ -91,15 +91,15 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
     quat_vec.at<double>(2, 0) = rotation.z();
     quat_vec.at<double>(3, 0) = rotation.w();
 
-    quaternion_sum_ = quaternion_sum_ * transforms_count_ / (transforms_count_ + 1) 
+    quaternion_sum_ = quaternion_sum_ * transforms_count_ / (transforms_count_ + 1)
         + quat_vec * quat_vec.t() / (transforms_count_ + 1);
 
-    average_translation_ = average_translation_ * transforms_count_  / (transforms_count_ + 1) 
+    average_translation_ = average_translation_ * transforms_count_  / (transforms_count_ + 1)
         + t.GetTranslation() / (transforms_count_ + 1);
 
     auto translation_square = ElementWiseMul(t.GetTranslation(), t.GetTranslation());
 
-    average_translation_square_ = average_translation_square_ * transforms_count_  / (transforms_count_ + 1) 
+    average_translation_square_ = average_translation_square_ * transforms_count_  / (transforms_count_ + 1)
         + translation_square / (transforms_count_ + 1);
 
     transforms_count_++;
@@ -116,7 +116,7 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
     cv::SVD::compute(quaternion_sum_, w, u, vt);
 
     average_transform_.SetRotation(tf2::Quaternion(
-        vt.at<double>(0, 0), 
+        vt.at<double>(0, 0),
         vt.at<double>(0, 1),
         vt.at<double>(0, 2),
         vt.at<double>(0, 3)

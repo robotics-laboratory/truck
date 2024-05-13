@@ -79,7 +79,7 @@ class VisualizationNode : public rclcpp::Node {
 
         std::string mesh_body = "";
         std::string mesh_wheel = "";
-      
+
         double map_z_lev = 0.0;
 
         double navigation_mesh_z_lev = 0.0;
@@ -89,11 +89,11 @@ class VisualizationNode : public rclcpp::Node {
         double navigation_route_width = 0.0;
     } params_{};
 
-    enum WheelIndex { 
-        kFrontLeft = 0, 
-        kFrontRight = 1, 
+    enum WheelIndex {
+        kFrontLeft = 0,
+        kFrontRight = 1,
         kRearLeft = 2,
-        kRearRight = 3 
+        kRearRight = 3
     };
 
     static constexpr std::array<int, 4> kAllWheels {

@@ -29,7 +29,7 @@ std::vector<Triangle> ComplexPolygon::triangles() const noexcept {
     for (const Vec2& point : outer) {
         cgal_polygon_outer.push_back(CGAL_Point(point.x, point.y));
     }
-    
+
     cgal_cdt.insert_constraint(
         cgal_polygon_outer.vertices_begin(),
         cgal_polygon_outer.vertices_end(),
@@ -83,14 +83,14 @@ Segments ComplexPolygon::segments() const noexcept {
     segments.reserve(size);
 
     auto current_segments = outer.segments();
-    segments.insert(segments.end(), 
-            current_segments.begin(), 
+    segments.insert(segments.end(),
+            current_segments.begin(),
             current_segments.end());
 
     for (const auto& inner : inners) {
         current_segments = inner.segments();
-        segments.insert(segments.end(), 
-            current_segments.begin(), 
+        segments.insert(segments.end(),
+            current_segments.begin(),
             current_segments.end());
     }
 

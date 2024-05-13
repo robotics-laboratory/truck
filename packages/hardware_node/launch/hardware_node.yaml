@@ -7,7 +7,7 @@ launch:
 - arg:
     name: "steering_config"
     default: "$(find-pkg-share hardware_node)/resource/steering.csv"
-    
+
 - node:
     pkg: "hardware_node"
     exec: "hardware_node"

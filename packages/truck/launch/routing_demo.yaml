@@ -10,4 +10,3 @@ launch:
     file: $(find-pkg-share routing)/launch/routing.yaml
     arg:
       - { name: "map_config", value: "$(var map_config)" }
-  

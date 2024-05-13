@@ -22,4 +22,4 @@ Publishes static transformation of models (listed in yaml file). This is the sim
 ```
 
 ### Output:
-- `/tf` [[tf2_msgs/TFMessage]](http://docs.ros.org/en/api/tf2_msgs/html/msg/TFMessage.html) - transforms 
+- `/tf` [[tf2_msgs/TFMessage]](http://docs.ros.org/en/api/tf2_msgs/html/msg/TFMessage.html) - transforms

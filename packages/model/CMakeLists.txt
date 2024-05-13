@@ -17,10 +17,10 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_library(model SHARED src/params.cpp src/model.cpp)
 ament_target_dependencies(
-  model 
-  common 
-  geom 
-  rclcpp 
+  model
+  common
+  geom
+  rclcpp
   tf2_ros
   tf2_msgs
   tf2_geometry_msgs
@@ -33,8 +33,8 @@ target_include_directories(model PUBLIC
 
 ament_export_targets(modelTargets HAS_LIBRARY_TARGET)
 ament_export_dependencies(
-  common 
-  geom 
+  common
+  geom
   rclcpp
   tf2_ros
   tf2_msgs

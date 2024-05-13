@@ -14,4 +14,3 @@ launch:
     - {name: "use_sim_time", value: "$(var simulation)"}
     - {name: "model_path", value: "$(var model_path)"}
     - {name: "period", value: 100}
- 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(svg_debug_drawer)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)   
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)

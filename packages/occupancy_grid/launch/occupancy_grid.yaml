@@ -30,5 +30,3 @@ launch:
     - {name: "camera_view_distance", value: 2.0}
     - {name: "camera_view_hmax", value: 0.15}
     - {name: "camera_view_hmin", value: -0.165}
-
-    

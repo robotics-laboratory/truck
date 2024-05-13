@@ -31,11 +31,11 @@ class SimulatorEngine {
     void advance(double seconds = 1.0);
 
   private:
-    enum StateIndex { 
-        kX = 0, 
-        kY = 1, 
-        kYaw = 2, 
-        kSteering = 3, 
+    enum StateIndex {
+        kX = 0,
+        kY = 1,
+        kYaw = 2,
+        kSteering = 3,
         kLinearVelocity = 4
     };
 

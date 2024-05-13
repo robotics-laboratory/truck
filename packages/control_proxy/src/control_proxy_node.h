@@ -97,7 +97,7 @@ class ControlProxyNode : public rclcpp::Node {
         rclcpp::TimerBase::SharedPtr watchdog = nullptr;
         rclcpp::TimerBase::SharedPtr mode = nullptr;
     } timer_;
- 
+
     struct State {
         Mode mode = Mode::Off;
         sensor_msgs::msg::Joy::ConstSharedPtr prev_joypad_command = nullptr;

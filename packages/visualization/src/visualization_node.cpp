@@ -35,7 +35,7 @@ void VisualizationNode::initializePtrFields() {
     model_ = model::makeUniquePtr(
         this->get_logger(),
         Node::declare_parameter<std::string>("model_config", "model.yaml"));
-  
+
     map_ = std::make_unique<map::Map>(
         map::Map::fromGeoJson(Node::declare_parameter<std::string>("map_config")));
 }
@@ -64,7 +64,7 @@ void VisualizationNode::initializeParams() {
 
         .mesh_body = this->declare_parameter("mesh.body", ""),
         .mesh_wheel = this->declare_parameter("mesh.wheel", ""),
-      
+
         .map_z_lev = this->declare_parameter("map.z_lev", 0.0),
 
         .navigation_mesh_z_lev = this->declare_parameter("navigation_mesh.z_lev", 0.0),
@@ -108,12 +108,12 @@ void VisualizationNode::initializeTopicHandlers() {
         "/motion/trajectory",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleTrajectory, this, _1));
-    
+
     slot_.navigation_mesh = Node::create_subscription<truck_msgs::msg::NavigationMesh>(
         "/navigation/mesh",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&VisualizationNode::handleNavigationMesh, this, _1));
-    
+
     slot_.navigation_route = Node::create_subscription<truck_msgs::msg::NavigationRoute>(
         "/navigation/route",
         rclcpp::QoS(1).reliability(qos),
@@ -140,11 +140,11 @@ void VisualizationNode::initializeTopicHandlers() {
     signal_.map = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/map",
         rclcpp::QoS(1).reliability(qos));
-    
+
     signal_.navigation_mesh = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/navigation/mesh",
         rclcpp::QoS(1).reliability(qos));
-    
+
     signal_.navigation_route = Node::create_publisher<visualization_msgs::msg::Marker>(
         "/visualization/navigation/route",
         rclcpp::QoS(1).reliability(qos));
@@ -281,7 +281,7 @@ void VisualizationNode::publishEgo() const {
 
     const auto body_tf = base_to_odom * cache_.body_base_tf;
     tf2::toMsg(body_tf, body_msg.pose);
-    
+
     visualization_msgs::msg::MarkerArray msg_array;
     msg_array.markers.push_back(body_msg);
 
@@ -299,7 +299,7 @@ void VisualizationNode::publishEgo() const {
 
         auto rotation = tf2::Quaternion::getIdentity();
         rotation.setRPY(0, 0, z_angle);
-        const auto wheel_tf = base_to_odom 
+        const auto wheel_tf = base_to_odom
             * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
 
         auto wheel_msg = makeMeshMarker(wheel + 1, state_.odom->header, params_.mesh_wheel, color);
@@ -307,7 +307,7 @@ void VisualizationNode::publishEgo() const {
 
         msg_array.markers.push_back(wheel_msg);
     }
-    
+
     signal_.ego->publish(msg_array);
 }
 
@@ -523,7 +523,7 @@ void VisualizationNode::publishNavigationRoute() const {
     msg.action = visualization_msgs::msg::Marker::ADD;
     msg.color = color::blue(0.5);
     msg.scale.x = params_.navigation_route_width;
-    msg.pose.position.z = params_.navigation_route_z_lev;  
+    msg.pose.position.z = params_.navigation_route_z_lev;
 
     for (size_t i = postfix_index; i < points_count; i++) {
         msg.points.emplace_back(state_.navigation_route->data[i]);

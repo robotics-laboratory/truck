@@ -11,10 +11,10 @@ private:
     tf2::Quaternion rotation_;
     tf2::Vector3 translation_;
 
-public:   
+public:
 
     Transform(const tf2::Quaternion &rotation, const tf2::Vector3 &translation);
-    
+
     tf2::Vector3 Apply(const tf2::Vector3 &v) const;
 
     tf2::Vector3 operator()(const tf2::Vector3 &v) const;

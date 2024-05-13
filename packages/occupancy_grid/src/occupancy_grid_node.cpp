@@ -123,7 +123,7 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
     }
 
     geom::Transform tf(*tf_opt);
-    
+
     auto odom_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
 
     odom_cloud->header.frame_id = to_id;
@@ -214,7 +214,7 @@ void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPt
     sensor_msgs::PointCloud2Modifier pcd_modifier(*odom_cloud);
     pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
     pcd_modifier.resize(image->height * image->width);
-    
+
     sensor_msgs::PointCloud2Iterator<float> x(*odom_cloud, "x");
     sensor_msgs::PointCloud2Iterator<float> y(*odom_cloud, "y");
     sensor_msgs::PointCloud2Iterator<float> z(*odom_cloud, "z");
@@ -328,7 +328,7 @@ void OccupancyGridNode::publishOccupancyGrid() {
     grid.info.resolution = params_.resolution;
     grid.info.width = cell_num;
     grid.info.height = cell_num;
-    
+
     grid.info.origin.position.x = origin.x;
     grid.info.origin.position.y = origin.y;
     grid.info.origin.position.z = 0;
@@ -337,7 +337,7 @@ void OccupancyGridNode::publishOccupancyGrid() {
     grid.info.origin.orientation.y = 0;
     grid.info.origin.orientation.z = 0;
     grid.info.origin.orientation.w = 1;
-    
+
     grid.data.resize(cell_num * cell_num);
     std::fill(grid.data.begin(), grid.data.end(), 0);
 

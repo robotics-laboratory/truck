@@ -9,8 +9,8 @@ namespace rosaruco {
 class TfGraph {
 public:
     TfGraph(int nodes_count);
-    
-    void AddTransform(int x, int y, const Transform& t);  
+
+    void AddTransform(int x, int y, const Transform& t);
 
     void GetBestTransformFromStartNode(int start_node, const std::vector<int> &finish_nodes,
         std::vector<Transform>& best_transforms, std::vector<double>& errors);
@@ -35,7 +35,7 @@ private:
         int transforms_count_;
 
         Transform average_transform_;
-        
+
         double quaternion_error_square_;
         double translation_error_square_;
         double error_;

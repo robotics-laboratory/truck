@@ -216,7 +216,7 @@ ENV PYTORCH_WHL="torch-1.13.0a0+340c4120.nv22.06-cp38-cp38-linux_aarch64.whl"
 ENV PYTORCH_URL="https://developer.download.nvidia.com/compute/redist/jp/v50/pytorch/${PYTORCH_WHL}"
 
 RUN wget --no-check-certificate -qO ${PYTORCH_WHL} ${PYTORCH_URL} \
-    && pip3 install --no-cache-dir ${PYTORCH_WHL} \ 
+    && pip3 install --no-cache-dir ${PYTORCH_WHL} \
     && rm -rf /tmp/*
 
 RUN wget -qO - https://github.com/pytorch/vision/archive/refs/tags/v${TORCHVISION_VERSION}.tar.gz | tar -xz \
@@ -243,7 +243,7 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
         -DBUILD_WITH_TM2=false \
     && make -j$(($(nproc)-1)) install \
     && rm -rf /tmp/*
- 
+
 FROM --platform=linux/amd64 truck-common AS truck-cuda-amd64
 
 # INSTALL OPENCV
@@ -443,7 +443,7 @@ RUN cd ${ROS_TMP} \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
-        --cmake-args -DBUILD_TESTING=OFF \ 
+        --cmake-args -DBUILD_TESTING=OFF \
     && rm -rf /tmp/*
 
 RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
@@ -460,7 +460,7 @@ RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
-        --cmake-args -DBUILD_TESTING=OFF \ 
+        --cmake-args -DBUILD_TESTING=OFF \
     && rm -rf /tmp/*
 
 FROM truck-ros AS truck-dev
@@ -481,7 +481,7 @@ RUN apt-get update -q && \
         libeigen3-dev \
         libtbb-dev \
         libproj-dev \
-        libsuitesparse-dev \ 
+        libsuitesparse-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 ARG LIBNABO_VERSION="1.0.7"

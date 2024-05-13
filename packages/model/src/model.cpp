@@ -73,10 +73,10 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
         cache_.max_abs_curvature =
-            std::min(rearToBaseCurvature(max_abs_rear_curvature, params_.wheel_base.base_to_rear), 
+            std::min(rearToBaseCurvature(max_abs_rear_curvature, params_.wheel_base.base_to_rear),
             params_.limits.max_abs_curvature);
 
-        const double steering_limit 
+        const double steering_limit
             = std::atan2(max_abs_rear_curvature, params_.wheel_base.length);
         cache_.middle_steering_limits = {-steering_limit, steering_limit};
 
@@ -182,7 +182,7 @@ const Lidar& Model::lidar() const { return params_.lidar; }
 
 tf2_msgs::msg::TFMessage Model::getTfStaticMsg() const { return cache_.tf_static_msg; }
 
-tf2::Transform Model::getLatestTranform(const std::string& source, 
+tf2::Transform Model::getLatestTranform(const std::string& source,
     const std::string& target) const {
     try {
         const auto tf = cache_.tf_static_buffer->lookupTransform(

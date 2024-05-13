@@ -7,10 +7,10 @@
 5. Remove jumper just before flashing process.
 6. After flashing make initial configuration then run fron current dir.
 
-    ```sudo bash jetson.sh``` 
+    ```sudo bash jetson.sh```
 
 # Jetson Nano (SD card)
 1. Follow this [instructions](https://developer.nvidia.com/embedded/learn/get-started-jetson-nano-devkit).
 2. After flashing make initial configuration then run fron current dir.
 
-    ```sudo bash jetson.sh``` 
+    ```sudo bash jetson.sh```

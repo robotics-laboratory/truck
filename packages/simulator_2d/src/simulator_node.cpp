@@ -21,7 +21,7 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
-        std::bind(&SimulatorNode::makeSimulationTick, this));    
+        std::bind(&SimulatorNode::makeSimulationTick, this));
 }
 
 void SimulatorNode::initializeParameters() {
@@ -88,7 +88,7 @@ void SimulatorNode::initializeEngine() {
 
     engine_ = std::make_unique<SimulatorEngine>(
         std::move(model),
-        declare_parameter("integration_step", 0.001), 
+        declare_parameter("integration_step", 0.001),
         declare_parameter("calculations_precision", 1e-8));
     engine_->resetBase(pose, steering, velocity);
     engine_->resetMap(declare_parameter("map_config", ""));

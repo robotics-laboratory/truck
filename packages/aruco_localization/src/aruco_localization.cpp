@@ -64,7 +64,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
 
     std::vector<int> marker_ids;
     std::vector<std::vector<cv::Point2f>> marker_corners, rejected_candidates;
-    
+
     cv::aruco::detectMarkers(cv_image->image, marker_dictionary_, marker_corners, marker_ids,
                              detector_parameters_, rejected_candidates);
 
@@ -81,7 +81,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     for (size_t i = 0; i < rvecs.size(); i++) {
         from_cam_to_marker.push_back(GetTransform(rvecs[i], tvecs[i]));
     }
-    
+
     coordinator_.Update(marker_ids, from_cam_to_marker);
 
     auto pose = coordinator_.GetPose();
@@ -89,7 +89,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     geometry_msgs::msg::Pose pose_msg;
 
     SetPoint(pose.point, pose_msg.position);
-    
+
     auto orientation_msg = tf2::toMsg(pose.orientation);
 
     pose_msg.orientation = orientation_msg;

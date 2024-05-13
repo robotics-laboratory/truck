@@ -13,7 +13,7 @@ referenceDataPointsFilters:
 matcher:
   KDTreeMatcher:
     knn: 1
-    epsilon: 0 
+    epsilon: 0
 
 outlierFilters:
   - TrimmedDistOutlierFilter:
@@ -28,7 +28,7 @@ transformationCheckers:
   - DifferentialTransformationChecker:
       minDiffRotErr: 0.001
       minDiffTransErr: 0.01
-      smoothLength: 4   
+      smoothLength: 4
 
 inspector:
  NullInspector

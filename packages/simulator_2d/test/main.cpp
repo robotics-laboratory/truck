@@ -18,7 +18,7 @@ struct ScriptStep {
 using Script = std::vector<ScriptStep>;
 
 void printTruckState(const TruckState& truck_state) {
-    std::cerr << "{" 
+    std::cerr << "{"
         << std::fixed << std::setprecision(5)
         << "\"time\":" << truck_state.time().seconds()
         << ", \"x\":" << truck_state.odomBasePose().pos.x
@@ -39,7 +39,7 @@ void processTestCase(const Script& script, double update_period) {
         } else {
             engine.setBaseControl(step.velocity, step.curvature);
         }
-        
+
         for (int j = 0; j < step.iterations; ++j) {
             engine.advance(update_period);
             printTruckState(engine.getTruckState());
@@ -50,15 +50,15 @@ void processTestCase(const Script& script, double update_period) {
 TEST(SimulatorEngine, straight) {
     Script script {{500, 10, 0, std::nullopt}};
     const double update_period = 0.01;
-    
+
     processTestCase(script, update_period);
 }
 
 TEST(SimulatorEngine, straightBackward) {
     Script script {
-        {100, 10, 0, std::nullopt}, 
-        {200, -10, 0, std::nullopt}, 
-        {300, 10, 0, std::nullopt}, 
+        {100, 10, 0, std::nullopt},
+        {200, -10, 0, std::nullopt},
+        {300, 10, 0, std::nullopt},
         {200, 0, 0, std::nullopt}
     };
     const double update_period = 0.01;

@@ -2,7 +2,7 @@
 
 namespace rosaruco {
 
-void Dijkstra(int nodes_count, int start_node, std::vector<double> &distance, 
+void Dijkstra(int nodes_count, int start_node, std::vector<double> &distance,
     std::vector<int> &prev_node, const std::function<double(int, int)> &get_weight) {
 
     distance.resize(nodes_count);
@@ -11,8 +11,8 @@ void Dijkstra(int nodes_count, int start_node, std::vector<double> &distance,
     prev_node.resize(nodes_count);
 
     std::priority_queue<
-        std::pair<double, int>, 
-        std::vector<std::pair<double, int>>, 
+        std::pair<double, int>,
+        std::vector<std::pair<double, int>>,
         std::greater<std::pair<double, int>>
     > q;
 

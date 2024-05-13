@@ -17,7 +17,7 @@ visualization_msgs::msg::Marker GetMarker(const Transform &t, int id, double siz
         {size, 0, 0},
     };
 
-    std::transform(points.begin(), points.end(), points.begin(), 
+    std::transform(points.begin(), points.end(), points.begin(),
         [&t](const tf2::Vector3 &v) {
             return t(v);
         }
@@ -44,7 +44,7 @@ visualization_msgs::msg::Marker GetMarker(const Transform &t, int id, double siz
     } else {
         marker.color.r = 1.0;
     }
-    
+
     marker.scale.x = size / 10;
 
     return marker;

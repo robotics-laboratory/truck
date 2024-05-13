@@ -22,7 +22,7 @@ docker-compose up -d truck-jetson
 # exit doesn't stop the container
 docker exec -it truck bash
 
-# also you 
+# also you
 
 # stop container
 docker stop truck
@@ -91,18 +91,18 @@ gzclient --verbose
 ```
 
 ## Connecting bluetooth gamepad
-Note: you should run the following commands on a host device, not in a docker container.  
+Note: you should run the following commands on a host device, not in a docker container.
 Start bluetoothctl. Enable the agent and set it as default:
 ```
 [bluetooth]# agent on
 [bluetooth]# default-agent
 ```
 
-Power on the Bluetooth controller, and set it as discoverable: 
+Power on the Bluetooth controller, and set it as discoverable:
 ```
 [bluetooth]# power on
 [bluetooth]# discoverable on
-[bluetooth]# pairable on 
+[bluetooth]# pairable on
 ```
 
 Switch controller to pairing mode:
