@@ -12,6 +12,14 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
 
+  # YAML linter
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        exclude: ^.clang-tidy$
+        args: [--strict, -d, ".yamllint-config.yaml"]
+
   # CMake linter and formatter
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.10
