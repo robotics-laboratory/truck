@@ -32,7 +32,7 @@ TrajectoryPlannerNode::TrajectoryPlannerNode() : rclcpp::Node("trajectory_planne
         std::bind(&TrajectoryPlannerNode::OnOdometry, this, _1));
 
     slot_.clicked_pose = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "/move_base_simple/goal",
+        "/clicked_pose",
         rclcpp::QoS(1).reliability(qos),
         bind(&TrajectoryPlannerNode::OnFinishPose, this, _1));
 
@@ -50,11 +50,10 @@ TrajectoryPlannerNode::TrajectoryPlannerNode() : rclcpp::Node("trajectory_planne
     slot_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
         "/tf_static", tf2_ros::StaticListenerQoS(100), static_tf_callback);
 
-    signal_.tree = this->create_publisher<visualization_msgs::msg::Marker>("/tree", 10);
+    signal_.nodes = this->create_publisher<visualization_msgs::msg::Marker>("/nodes", 10);
 
-    signal_.path = this->create_publisher<visualization_msgs::msg::Marker>("/path", 10);
-
-    signal_.finish = this->create_publisher<visualization_msgs::msg::Marker>("/finish", 10);
+    signal_.trajectory =
+        this->create_publisher<truck_msgs::msg::Trajectory>("/motion/trajectory", 10);
 
     Planner::Params trajectory_planner_params =
         {.truck_state_params =
@@ -84,7 +83,7 @@ TrajectoryPlannerNode::TrajectoryPlannerNode() : rclcpp::Node("trajectory_planne
               .velocity =
                   {.limits = Limits<double>(
                        this->declare_parameter<double>(
-                           "trajectory_planner.tate_space_params.velocity.min", 0.0),
+                           "trajectory_planner.state_space_params.velocity.min", 0.0),
                        this->declare_parameter<double>(
                            "trajectory_planner.state_space_params.velocity.max", 0.8)),
                    .total_states = static_cast<int>(this->declare_parameter<int>(
@@ -180,7 +179,12 @@ void TrajectoryPlannerNode::OnOdometry(const nav_msgs::msg::Odometry::SharedPtr 
 }
 
 void TrajectoryPlannerNode::OnFinishPose(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
-    state_.finish_area = {.base_state = {.pose = geom::toPose(*msg), .velocity = 0.0}};
+    state_.finish_area = {
+        .base_state = {.pose = geom::toPose(*msg), .velocity = 0.0},
+        .x_range = Limits<double>(-0.2, 0.2),
+        .y_range = Limits<double>(-0.2, 0.2),
+        .yaw_range = Limits<geom::Angle>(-geom::PI_2, geom::PI_2),
+        .velocity_range = Limits<double>(0.0, 0.3)};
 }
 
 void TrajectoryPlannerNode::OnTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
@@ -209,6 +213,62 @@ std_msgs::msg::ColorRGBA TrajectoryPlannerNode::GetNodeColor(
     return node_color;
 }
 
+void TrajectoryPlannerNode::PublishNodes() const {
+    visualization_msgs::msg::Marker marker;
+    marker.header.stamp = now();
+    marker.header.frame_id = "odom_ekf";
+    marker.id = 0;
+    marker.type = visualization_msgs::msg::Marker::POINTS;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+    marker.lifetime = rclcpp::Duration::from_seconds(0);
+
+    marker.scale.x = params_.node.scale;
+    marker.scale.y = params_.node.scale;
+    marker.scale.z = params_.node.scale;
+    marker.pose.position.z = params_.node.z_lev;
+
+    const auto& nodes = planner_.GetNodes();
+
+    for (int i = 0; i < nodes.size; ++i) {
+        const auto& node = nodes.data[i];
+        if (trajectory_planner::Node::Type::REGULAR != node.type) {
+            continue;
+        }
+        marker.points.push_back(geom::msg::toPoint(node.state->pose));
+        marker.colors.push_back(GetNodeColor(node));
+    }
+
+    for (int i = 0; i < nodes.size; ++i) {
+        const auto& node = nodes.data[i];
+        if (trajectory_planner::Node::Type::REGULAR == node.type) {
+            continue;
+        }
+        marker.points.push_back(geom::msg::toPoint(node.state->pose));
+        marker.colors.push_back(GetNodeColor(node));
+    }
+
+    signal_.nodes->publish(marker);
+}
+
+void TrajectoryPlannerNode::PublishTrajectory() const {
+    if (!state_.odom || !state_.distance_transform) {
+        return;
+    }
+
+    motion::Trajectory trajectory = planner_.GetTrajectory();
+    if (trajectory.states.empty()) {
+        RCLCPP_WARN(this->get_logger(), "No trajectory!");
+        return;
+    }
+
+    signal_.trajectory->publish(motion::msg::toTrajectory(state_.odom->header, trajectory));
+}
+
+void TrajectoryPlannerNode::Publish() const {
+    PublishNodes();
+    PublishTrajectory();
+}
+
 std::optional<geom::Transform> TrajectoryPlannerNode::GetLatestTranform(
     std::string_view source, std::string_view target) {
     try {
@@ -233,16 +293,16 @@ void TrajectoryPlannerNode::DoPlanningLoop() {
         return;
     }
 
+    RCLCPP_WARN(this->get_logger(), "Planning!");
+
     auto route =
         geom::Polyline{state_.ego_state->pose.pos, state_.finish_area->base_state.pose.pos};
 
     planner_.Clear().Build(*state_.ego_state, *state_.finish_area, route);
 
-    if (planner_.GetPlan().empty()) {
-        RCLCPP_WARN(this->get_logger(), "Path not found!");
-    }
+    RCLCPP_WARN(this->get_logger(), "Publishing!");
 
-    // Publish();
+    Publish();
 }
 
 }  // namespace truck::trajectory_planner::visualization

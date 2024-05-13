@@ -112,7 +112,7 @@ CurvePoses bezier3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p
     VERIFY(step > 0);
 
     const double dist = (p1 - p0).len() + (p2 - p1).len() + (p3 - p2).len();
-    const size_t n = 1 + ceil<size_t>(dist / step);
+    const size_t n = 1 + std::max(ceil<size_t>(dist / step), static_cast<size_t>(2));
     return bezier3(p0, p1, p2, p3, n);
 }
 

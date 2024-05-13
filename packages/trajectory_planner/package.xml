@@ -14,11 +14,13 @@
   <depend>geom</depend>
   <depend>map</depend>
   <depend>model</depend>
+  <depend>motion</depend>
   <depend>svg_debug_drawer</depend>
   <depend>rclcpp</depend>
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
-  <depend>visualization_msgs</depend>z
+  <depend>visualization_msgs</depend>
+  <depend>truck_msgs</depend>
   <depend>Boost</depend>
 
   <test_depend>ament_cmake_lint_cmake</test_depend>

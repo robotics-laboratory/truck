@@ -32,20 +32,20 @@ launch:
               param:
                 - name: "longitude"
                   param:
-                    - { name: "negative_offset", value: -1.0 }
-                    - { name: "positive_offset", value: 1.1 }
-                    - { name: "discretization", value: 10 }
+                    - { name: "negative_offset", value: -2.0 }
+                    - { name: "positive_offset", value: 2.1 }
+                    - { name: "discretization", value: 25 }
                   
                 - name: "latitude"
                   param:
-                    - { name: "negative_offset", value: -0.5 }
-                    - { name: "positive_offset", value: 0.6 }
-                    - { name: "discretization", value: 10 }
+                    - { name: "negative_offset", value: -1.0 }
+                    - { name: "positive_offset", value: 1.1 }
+                    - { name: "discretization", value: 25 }
                 
                 - name: "yaw"
                   param:
-                    - { name: "total_forward_states", value: 5 }
-                    - { name: "total_backward_states", value: 3 }
+                    - { name: "total_forward_states", value: 11 }
+                    - { name: "total_backward_states", value: 5 }
                 
                 - name: "velocity"
                   param:
@@ -56,10 +56,10 @@ launch:
             - name: "tree_params"
               param:
                 - { name: "total_heuristic_steps", value: 3 }
-                - { name: "step_resolution", value: 0.01 }
+                - { name: "step_resolution", value: 0.025 }
 
-            - { name: "planning_horizon", value: 100.0 }
-            - { name: "batch_size", value: 500 }
+            - { name: "planning_horizon", value: 10000.0 }
+            - { name: "batch_size", value: 200 }
             - { name: "max_batches", value: 300 }
             - { name: "max_edges", value: 200000 }
-            - { name: "radius_multiplier", value: 5.0 }
+            - { name: "radius_multiplier", value: 35.0 }

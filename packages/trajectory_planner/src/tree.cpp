@@ -381,4 +381,48 @@ TreeHolder MakeTree(const Tree::Params& params, int nodes_capacity, int edges_ca
     return {std::move(tree), std::move(nodes_holder), std::move(edges_holder)};
 }
 
+motion::Trajectory ToTrajectory(const Plan& plan, double step_resolution, double eps) {
+    motion::Trajectory trajectory;
+    trajectory.states.push_back(motion::State{
+        .pose = plan.front()->state->pose,
+        .time = 0,
+        .distance = 0,
+        .velocity = plan.front()->state->velocity,
+        .acceleration = (plan[1]->state->velocity - plan[0]->state->velocity) /
+                        (plan[1]->cost_to_come - plan[0]->cost_to_come)});
+
+    for (auto it = plan.begin() + 1; it != plan.end(); ++it) {
+        const auto* from = *(it - 1);
+        const auto* to = *it;
+
+        if (geom::distance(from->state->pose.pos, to->state->pose.pos) < eps) {
+            continue;
+        }
+
+        const auto motion = FindMotion(from->state->pose, to->state->pose, step_resolution);
+
+        for (auto motion_it = motion.begin() + 1; motion_it != motion.end(); ++motion_it) {
+            const auto& prev_state = trajectory.states.back();
+            motion::State state;
+
+            const double dist = geom::distance(prev_state.pose.pos, motion_it->pose.pos);
+            state.pose = motion_it->pose;
+            state.distance = prev_state.distance + dist;
+            state.acceleration = (to->state->velocity - from->state->velocity) /
+                                 (to->cost_to_come - from->cost_to_come);
+
+            const double D = prev_state.velocity * prev_state.velocity +
+                             2 * prev_state.acceleration * (state.distance - prev_state.distance);
+            const double dt = (-prev_state.velocity + std::sqrt(D)) / prev_state.acceleration;
+
+            state.time = *prev_state.time + dt;
+            state.velocity = prev_state.velocity + prev_state.acceleration * dt;
+
+            trajectory.states.push_back(state);
+        }
+    }
+
+    return trajectory;
+}
+
 }  // namespace truck::trajectory_planner

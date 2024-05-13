@@ -32,11 +32,7 @@ Planner& Planner::Build(
     const State& ego_state, const StateArea& finish_area, const geom::Polyline& route) noexcept {
     Clear();
 
-    if (collision_checker_ && collision_checker_->initialized()) {
-        truck_state_.collision_checker = collision_checker_.get();
-    }
-
-    VERIFY(model_ != nullptr);
+    VERIFY(model_);
     truck_state_.model = model_.get();
 
     auto& state_space = state_space_holder_.state_space;
@@ -83,11 +79,11 @@ Planner& Planner::Build(
             while (!sampler_.Empty() && sampled < params_.batch_size) {
                 auto& node = sampler_.Sample();
                 sampler_.Remove(node);
+                ++sampled;
                 if (node.heuristic_pass_cost > CurrentCostToFinish()) {
                     continue;
                 }
                 samples_.Insert(node);
-                ++sampled;
             }
             // TODO: переписать на кучу с построением O(n)
             for (auto& [node, gen] : verticies_.generation) {
@@ -150,7 +146,8 @@ Planner& Planner::Build(
 
         auto potential_edge = edges_queue_.top();
         edges_queue_.pop();
-        while (potential_edge.first > potential_edge.second->from->cost_to_come +
+        while (!edges_queue_.empty() &&
+               potential_edge.first > potential_edge.second->from->cost_to_come +
                                           potential_edge.second->heuristic_cost +
                                           potential_edge.second->to->heuristic_cost_to_finish) {
             potential_edge = edges_queue_.top();
@@ -199,6 +196,8 @@ Planner& Planner::Build(
             plan_.push_back(plan_.back()->parent_node);
         }
         std::reverse(plan_.begin(), plan_.end());
+
+        trajectory_ = ToTrajectory(plan_, params_.tree_params.step_resolution);
     }
 
     return *this;
@@ -207,6 +206,10 @@ Planner& Planner::Build(
 const Node* Planner::GetFinishNode() const noexcept { return finish_node_; }
 
 const Plan& Planner::GetPlan() const noexcept { return plan_; }
+
+const Nodes& Planner::GetNodes() const noexcept { return tree_holder_.tree.nodes; }
+
+const motion::Trajectory& Planner::GetTrajectory() const noexcept { return trajectory_; }
 
 Planner& Planner::Clear() noexcept {
     state_space_holder_.state_space.Clear();
@@ -223,8 +226,10 @@ Planner& Planner::Clear() noexcept {
     }
 
     finish_node_ = nullptr;
+    current_batch_ = 0;
 
     plan_.clear();
+    trajectory_.states.clear();
 
     return *this;
 }

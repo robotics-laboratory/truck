@@ -19,8 +19,6 @@
 
 namespace truck::trajectory_planner {
 
-using Plan = std::vector<Node*>;
-
 class Planner {
   public:
     struct Params {
@@ -49,6 +47,10 @@ class Planner {
     const Node* GetFinishNode() const noexcept;
 
     const Plan& GetPlan() const noexcept;
+
+    const Nodes& GetNodes() const noexcept;
+
+    const motion::Trajectory& GetTrajectory() const noexcept;
 
     Planner& Clear() noexcept;
 
@@ -108,6 +110,7 @@ class Planner {
     int current_batch_ = 0;
 
     Plan plan_;
+    motion::Trajectory trajectory_;
 };
 
 }  // namespace truck::trajectory_planner

@@ -11,6 +11,7 @@
 #include <nav_msgs/msg/occupancy_grid.h>
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include <truck_msgs/msg/trajectory.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 #include <tf2_ros/buffer.h>
@@ -30,11 +31,10 @@ class TrajectoryPlannerNode : public rclcpp::Node {
 
     std_msgs::msg::ColorRGBA GetNodeColor(const trajectory_planner::Node& node) const;
 
-    // void PublishTree() const;
-    // void PublishPath() const;
-    // void PublishGoal() const;
+    void PublishNodes() const;
+    void PublishTrajectory() const;
 
-    // void Publish() const;
+    void Publish() const;
 
     std::optional<geom::Transform> GetLatestTranform(
         std::string_view source, std::string_view target);
@@ -50,9 +50,8 @@ class TrajectoryPlannerNode : public rclcpp::Node {
     } slot_;
 
     struct Signal {
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr tree = nullptr;
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr path = nullptr;
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr finish = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr nodes = nullptr;
+        rclcpp::Publisher<truck_msgs::msg::Trajectory>::SharedPtr trajectory = nullptr;
     } signal_;
 
     struct State {

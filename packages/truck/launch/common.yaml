@@ -16,12 +16,6 @@ launch:
     - {name: "control_name", value: "$(var control_name)"}
 
 - include:
-    file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml
-    arg:
-    - {name: "simulation", value: "$(var simulation)"}
-    - {name: "qos", value: "$(var qos)"}
-
-- include:
     file: $(find-pkg-share visualization)/launch/visualization.yaml
     arg:
     - {name: "simulation", value: "$(var simulation)"}

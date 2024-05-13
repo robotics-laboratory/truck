@@ -7,6 +7,7 @@ find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(model REQUIRED)
+find_package(motion REQUIRED)
 find_package(collision REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
@@ -23,7 +24,7 @@ add_library(
     src/sampler.cpp
 )
 
-ament_target_dependencies(${PROJECT_NAME}_lib common geom model collision)
+ament_target_dependencies(${PROJECT_NAME}_lib common geom model motion collision)
 
 target_include_directories(
     ${PROJECT_NAME}_lib PUBLIC
@@ -32,7 +33,7 @@ target_include_directories(
 )
 
 ament_export_targets(${PROJECT_NAME}_lib HAS_LIBRARY_TARGET)
-ament_export_dependencies(common geom model collision)
+ament_export_dependencies(common geom model motion collision)
 
 install(
     TARGETS ${PROJECT_NAME}_lib
@@ -63,6 +64,7 @@ ament_target_dependencies(
     tf2
     tf2_ros
     visualization_msgs
+    truck_msgs
     Boost
 )
 

@@ -6,6 +6,7 @@
 
 #include "geom/bezier.h"
 #include "geom/pose.h"
+#include "motion/trajectory.h"
 
 #include "model/model.h"
 
@@ -209,5 +210,9 @@ struct TreeHolder {
 };
 
 TreeHolder MakeTree(const Tree::Params& params, int nodes_capacity, int edges_capacity);
+
+using Plan = std::vector<Node*>;
+
+motion::Trajectory ToTrajectory(const Plan& plan, double step_resolution = 0.01, double eps = 1e-7);
 
 }  // namespace truck::trajectory_planner
