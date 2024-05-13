@@ -57,8 +57,8 @@ void SimulatorEngine::initializeLidarCache() {
 
 void SimulatorEngine::initializeImuCache() {
     const auto imu_tf = model_->getLatestTranform("base", "camera_imu_optical_frame");
-    cache_.rear_to_hyro_translation.x = imu_tf.getOrigin().x() - model_->wheelBase().base_to_rear;
-    cache_.rear_to_hyro_translation.y = imu_tf.getOrigin().y();
+    cache_.rear_to_imu_translation.x = imu_tf.getOrigin().x() + model_->wheelBase().base_to_rear;
+    cache_.rear_to_imu_translation.y = imu_tf.getOrigin().y();
     cache_.base_to_hyro_rotation.setRotation(imu_tf.getRotation());
 }
 
@@ -105,30 +105,19 @@ void SimulatorEngine::eraseMap() {
     obstacles_.clear();
 }
 
-geom::Pose SimulatorEngine::getArbitraryPointPose(const geom::Vec2& rear_to_point) const {
-    const double x = rear_ax_state_[StateIndex::kX];
-    const double y = rear_ax_state_[StateIndex::kY];
-    const double yaw = rear_ax_state_[StateIndex::kYaw];
+namespace {
+
+geom::Pose getArbitraryPointPose(const geom::Vec2& rear_to_point,
+    double rear_x, double rear_y, double yaw) {
 
     geom::Pose pose;
     pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
     pose.pos = {
-        x + rear_to_point.x * pose.dir.x() - rear_to_point.y * pose.dir.y(),
-        y + rear_to_point.x * pose.dir.y() + rear_to_point.y * pose.dir.x()
+        rear_x + rear_to_point.x * pose.dir.x() - rear_to_point.y * pose.dir.y(),
+        rear_y + rear_to_point.x * pose.dir.y() + rear_to_point.y * pose.dir.x()
     };
     return pose;
 }
-
-geom::Pose SimulatorEngine::getOdomBasePose() const {
-    const auto rear_to_base = geom::Vec2(model_->wheelBase().base_to_rear, 0);
-    return getArbitraryPointPose(rear_to_base);
-}
-
-model::Steering SimulatorEngine::getTargetSteering() const {
-    return model_->rearCurvatureToSteering(control_.curvature);
-}
-
-namespace {
 
 int softSign(double number, double precision) {
     if (number > precision) {
@@ -186,6 +175,18 @@ float getIntersectionDistance(const geom::Ray& ray,
 }
 
 } // namespace
+
+geom::Pose SimulatorEngine::getOdomBasePose() const {
+    const auto rear_to_base = geom::Vec2(model_->wheelBase().base_to_rear, 0);
+    const double x = rear_ax_state_[StateIndex::kX];
+    const double y = rear_ax_state_[StateIndex::kY];
+    const double yaw = rear_ax_state_[StateIndex::kYaw];
+    return getArbitraryPointPose(rear_to_base, x, y, yaw);
+}
+
+model::Steering SimulatorEngine::getTargetSteering() const {
+    return model_->rearCurvatureToSteering(control_.curvature);
+}
 
 std::vector<float> SimulatorEngine::getLidarRanges(const geom::Pose& odom_base_pose) const {
     std::vector<float> ranges(cache_.lidar_rays_number, std::numeric_limits<float>::max());
@@ -258,13 +259,14 @@ geom::Vec3 SimulatorEngine::getImuAngularVelocity(double angular_velocity) const
 }
 
 geom::Vec3 SimulatorEngine::getImuLinearAcceleration(const model::Twist& rear_twist) const {
-    const auto twist = model_->rearToArbitraryPointTwist(rear_twist, cache_.rear_to_hyro_translation);
+    const auto twist = model_->rearToArbitraryPointTwist(rear_twist, cache_.rear_to_imu_translation);
     const auto acceleration = getCurrentAcceleration();
 
     const auto tan_a = geom::Vec2(acceleration, 0);
     
     const auto rotation = geom::Vec2(0, 1 / rear_twist.curvature);
-    const auto imu_pose = getArbitraryPointPose(cache_.rear_to_hyro_translation);
+    const auto imu_pose = getArbitraryPointPose(cache_.rear_to_imu_translation,
+        -model_->wheelBase().base_to_rear, 0, 0);
     const auto imu_to_rotation = rotation - imu_pose.pos;
     const auto centr_a = imu_to_rotation.unit() * squared(twist.velocity) * twist.curvature;
 

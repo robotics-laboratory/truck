@@ -21,8 +21,8 @@ class SimulatorEngine {
     SimulatorEngine(std::unique_ptr<model::Model> model,
         double integration_step = 1e-3, double precision = 1e-8);
 
-    void resetBase(const geom::Pose &pose, double middle_steering, double linear_velocity);
-    void resetMap(const std::string &path);
+    void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
+    void resetMap(const std::string& path);
     void eraseMap();
 
     TruckState getTruckState() const;
@@ -51,7 +51,6 @@ class SimulatorEngine {
         double steering, double linear_velocity);
     void resetRear();
 
-    geom::Pose getArbitraryPointPose(const geom::Vec2& rear_to_point) const;
     geom::Pose getOdomBasePose() const;
     model::Steering getTargetSteering() const;
     std::vector<float> getLidarRanges(const geom::Pose& odom_base_pose) const;
@@ -78,7 +77,7 @@ class SimulatorEngine {
         int lidar_rays_number;
         geom::AngleVec2 lidar_angle_min;
         geom::Angle lidar_angle_increment;
-        geom::Vec2 rear_to_hyro_translation;
+        geom::Vec2 rear_to_imu_translation;
         tf2::Transform base_to_hyro_rotation;
     } cache_;
 
