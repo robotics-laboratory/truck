@@ -1,12 +1,13 @@
+from functools import cached_property
+
 import odrive
 import pymodel
 import rclpy
-from rclpy.node import Node
-from truck_msgs.msg import Control, ControlMode, HardwareStatus, HardwareTelemetry
-from std_msgs.msg import Header
-from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3
-from functools import cached_property
+from nav_msgs.msg import Odometry
+from rclpy.node import Node
+from std_msgs.msg import Header
+from truck_msgs.msg import Control, ControlMode, HardwareStatus, HardwareTelemetry
 
 from hardware_node.teensy import TeensyBridge
 
@@ -217,7 +218,7 @@ class HardwareNode(Node):
             value = value.integer_value
         else:
             raise RuntimeError(f"Unsupported type: {type}")
-        readable_name = name.replace('_', ' ').capitalize()
+        readable_name = name.replace("_", " ").capitalize()
         self._log.info(f"{readable_name}: {value!r} {unit}")
         return value
 

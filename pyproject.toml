@@ -1,0 +1,9 @@
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["I", "F", "E"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
