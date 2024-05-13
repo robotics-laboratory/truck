@@ -9,3 +9,4 @@ repos:
       - id: check-xml
       - id: check-toml
       - id: end-of-file-fixer
+      - id: mixed-line-ending
