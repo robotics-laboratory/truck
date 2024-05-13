@@ -14,31 +14,29 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
 
 add_executable(
-    aruco_localization
-    src/aruco_localization.cpp
-    src/math_helpers.cpp
-    src/camera_tracker.cpp
-    src/transform.cpp
-    src/visualization_helpers.cpp
-    src/tf_graph.cpp
-    src/graph_algorithms.cpp
-)
+  aruco_localization
+  src/aruco_localization.cpp
+  src/math_helpers.cpp
+  src/camera_tracker.cpp
+  src/transform.cpp
+  src/visualization_helpers.cpp
+  src/tf_graph.cpp
+  src/graph_algorithms.cpp)
 
-target_include_directories(aruco_localization PRIVATE include/aruco_localization)
+target_include_directories(aruco_localization
+                           PRIVATE include/aruco_localization)
 ament_target_dependencies(
-    ${PROJECT_NAME}
-    cv_bridge
-    nav_msgs
-    OpenCV
-    rclcpp
-    sensor_msgs
-    tf2
-    tf2_geometry_msgs
-    tf2_msgs
-    visualization_msgs )
+  ${PROJECT_NAME}
+  cv_bridge
+  nav_msgs
+  OpenCV
+  rclcpp
+  sensor_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_msgs
+  visualization_msgs)
 
-install(TARGETS
-    ${PROJECT_NAME}
-    DESTINATION lib/${PROJECT_NAME})
+install(TARGETS ${PROJECT_NAME} DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
