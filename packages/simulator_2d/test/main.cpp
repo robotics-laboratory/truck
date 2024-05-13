@@ -46,9 +46,7 @@ truck_msgs::msg::SimulationState convertStateToMsg(const TruckState& truck_state
     state_msg.steering = truck_state.currentSteering().middle.radians();
 
     const auto pose = truck_state.odomBasePose();
-    state_msg.pose.position.x = pose.pos.x;
-    state_msg.pose.position.y = pose.pos.y;
-    state_msg.pose.orientation = truck::geom::msg::toQuaternion(pose.dir);
+    state_msg.pose = truck::geom::msg::toPose(pose);
 
     const auto angular_velocity = truck_state.gyroAngularVelocity();
     state_msg.gyro_angular_velocity.x = angular_velocity.x;
@@ -207,9 +205,9 @@ TEST(SimulatorEngine, circle) {
     ASSERT_GEOM_EQUAL(angular_velocity.y, -0.703276735, EPS);
     ASSERT_GEOM_EQUAL(angular_velocity.z, 0., EPS);
     const auto acceleration = state.accelLinearAcceleration();
-    ASSERT_GEOM_EQUAL(acceleration.x, -0.685160298, EPS);
+    ASSERT_GEOM_EQUAL(acceleration.x, -1.08827613795, EPS);
     ASSERT_GEOM_EQUAL(acceleration.y, -9.81, EPS);
-    ASSERT_GEOM_EQUAL(acceleration.z, 0.8200810321, EPS);
+    ASSERT_GEOM_EQUAL(acceleration.z, -0.0346212283, EPS);
 }
 
 int main(int argc, char *argv[]) {

@@ -122,9 +122,7 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
 
     // Set the pose.
     const auto pose = truck_state.odomBasePose();
-    odom_msg.pose.pose.position.x = pose.pos.x;
-    odom_msg.pose.pose.position.y = pose.pos.y;
-    odom_msg.pose.pose.orientation = truck::geom::msg::toQuaternion(pose.dir);
+    odom_msg.pose.pose = truck::geom::msg::toPose(pose);
 
     // Set the twist.
     const auto linear_velocity = truck_state.odomBaseLinearVelocity();
@@ -181,9 +179,7 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
     state_msg.steering = truck_state.currentSteering().middle.radians();
 
     const auto pose = truck_state.odomBasePose();
-    state_msg.pose.position.x = pose.pos.x;
-    state_msg.pose.position.y = pose.pos.y;
-    state_msg.pose.orientation = truck::geom::msg::toQuaternion(pose.dir);
+    state_msg.pose = truck::geom::msg::toPose(pose);
 
     const auto angular_velocity = truck_state.gyroAngularVelocity();
     state_msg.gyro_angular_velocity.x = angular_velocity.x;
