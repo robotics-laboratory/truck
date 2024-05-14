@@ -29,8 +29,11 @@ struct WheelVelocity {
 };
 
 struct Twist {
-  double curvature;
-  double velocity;
+    double curvature;
+    double velocity;
+    double angularVelocity() const {
+        return curvature * velocity;  
+    }
 };
 
 class Model {
@@ -56,13 +59,37 @@ class Model {
     const Wheel& wheel() const;
     const Lidar& lidar() const;
 
-    Twist baseToRearTwist(Twist twist) const;
-    Twist rearToBaseTwist(Twist twist) const;
-    Steering rearTwistToSteering(Twist twist) const;
+    /**
+     * Truck scheme:
+     * 
+     * OY ↑
+     * 
+     * ---------------------------
+     * |                         |
+     * |                 A       |
+     * R            C            | OX →
+     * |                         |
+     * |                         |
+     * ---------------------------
+     * 
+     * @param rear_twist Twist of the R point.
+     * @param rear_to_point Vector RA.
+     *
+     * @return Twist of the A point.
+     * 
+     * C - the center of the base (and the center of the coordinate system).
+     * R - the center of the rear axle.
+     * A - the arbitrary point.
+     * rear_to_point - translation from the R point to the A point in the base coordinate system.
+     */
+    Twist rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) const;
+    Twist baseToRearTwist(Twist base_twist) const;
+    Twist rearToBaseTwist(Twist rear_twist) const;
+    Steering rearTwistToSteering(Twist rear_twist) const;
     Steering rearCurvatureToSteering(double curvature) const;
     double middleSteeringToRearCurvature(double steering) const;
     double baseToRearAcceleration(double acceleration, double base_curvature) const;
-    WheelVelocity rearTwistToWheelVelocity(Twist twist) const;
+    WheelVelocity rearTwistToWheelVelocity(Twist rear_twist) const;
     double linearVelocityToMotorRPS(double velocity) const;
     double motorRPStoLinearVelocity(double rps) const;
 

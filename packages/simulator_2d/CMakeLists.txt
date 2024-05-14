@@ -7,6 +7,7 @@ find_package(model REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(geom REQUIRED)
+find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
@@ -22,7 +23,8 @@ ament_target_dependencies(
     simulator_engine
     model
     geom
-    map)
+    map
+    tf2)
 
 target_include_directories(
     simulator_engine PUBLIC

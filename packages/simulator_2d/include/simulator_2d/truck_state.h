@@ -2,6 +2,7 @@
 #include "geom/angle.h"
 #include "geom/pose.h"
 #include "geom/vector.h"
+#include "geom/vector3.h"
 
 #include <vector>
 
@@ -19,6 +20,8 @@ class TruckState {
     const std::vector<float>& lidarRanges() const;
     double currentMotorRps() const;
     double targetMotorRps() const;
+    geom::Vec3 gyroAngularVelocity() const;
+    geom::Vec3 accelLinearAcceleration() const;
 
     TruckState& time(const rclcpp::Time& time);
     TruckState& odomBasePose(const geom::Pose& pose);
@@ -30,6 +33,8 @@ class TruckState {
     TruckState& lidarRanges(std::vector<float> lidar_ranges);
     TruckState& currentMotorRps(double current_rps);
     TruckState& targetMotorRps(double target_rps);
+    TruckState& gyroAngularVelocity(geom::Vec3 angular_velocity);
+    TruckState& accelLinearAcceleration(geom::Vec3 linear_acceleration);
 
   private:
     struct Cache {
@@ -43,6 +48,8 @@ class TruckState {
         std::vector<float> lidar_ranges;
         double current_motor_rps;
         double target_motor_rps;
+        geom::Vec3 gyro_angular_velocity;
+        geom::Vec3 accel_linear_acceleration;
     } cache_;
 };
 
