@@ -43,6 +43,8 @@ The simulator engine generates a dummy message for the current localization of t
 
 ## IMU calculations
 
+![This is an image](doc/svg/imu.svg)
+
 Rotation matrix – T
 
 Tangential acceleration – $\vec{t}$
@@ -54,8 +56,6 @@ Acceleration of free fall – $\vec{g}$
 Linear acceleration – $T \cdot (\vec{t} + \vec{c} + \vec{g})$
 
 Angular velocity – $T \cdot \vec{𝜔}$
-
-![This is an image](doc/svg/imu.svg)
 
 The IMU message consists of linear acceleration and angular velocity vectors for the sensor center.
 
