@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(geom)
 
+set(EIGEN3_DIR /usr/include/eigen3)
+
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -42,11 +44,11 @@ ament_target_dependencies(
   Eigen3
 )
 
-target_include_directories(
-  ${PROJECT_NAME}
-  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-)
+include_directories(${EIGEN3_DIR})
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
