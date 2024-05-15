@@ -50,9 +50,9 @@ void CameraTracker::Update(
         transforms_to_anchor[best_visible_idx] * from_marker_to_cam[best_visible_idx].Inverse();
 
     Pose new_pose;
-    new_pose.orientation = from_best_visible_to_anchor.GetRotation() *
-                           tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2) *
-                           tf2::Quaternion(tf2::Vector3(1, 0, 0), M_PI / 2);
+    new_pose.orientation = from_best_visible_to_anchor.GetRotation()
+                           * tf2::Quaternion(tf2::Vector3(0, 1, 0), -M_PI / 2)
+                           * tf2::Quaternion(tf2::Vector3(1, 0, 0), M_PI / 2);
     new_pose.point = from_best_visible_to_anchor({0, 0, 0});
 
     current_pose_ = new_pose;

@@ -197,8 +197,8 @@ std::optional<geom::Transform> PlannerNode::getLatestTranform(
 }
 
 void PlannerNode::doPlanningLoop() {
-    if (!checker_->initialized() || !state_.ego_pose.has_value() ||
-        !state_.finish_area.has_value()) {
+    if (!checker_->initialized() || !state_.ego_pose.has_value()
+        || !state_.finish_area.has_value()) {
         return;
     }
 

@@ -149,8 +149,8 @@ bool ControlProxyNode::checkButtonPressed(
     if (!state_.prev_joypad_command || !joypad_command) {
         return false;
     }
-    return state_.prev_joypad_command->buttons[joypad_button] == 0 &&
-           joypad_command->buttons[joypad_button] == 1;
+    return state_.prev_joypad_command->buttons[joypad_button] == 0
+           && joypad_command->buttons[joypad_button] == 1;
 }
 
 void ControlProxyNode::publishMode() {
@@ -201,8 +201,8 @@ void ControlProxyNode::watchdog() {
         return;
     }
 
-    if (state_.mode != Mode::Off &&
-        timeout_failed(state_.prev_joypad_command, params_.joypad_timeout)) {
+    if (state_.mode != Mode::Off
+        && timeout_failed(state_.prev_joypad_command, params_.joypad_timeout)) {
         RCLCPP_ERROR(this->get_logger(), "lost joypad, stop!");
         reset();
         return;

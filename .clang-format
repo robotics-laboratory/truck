@@ -6,6 +6,7 @@ AlignAfterOpenBracket: AlwaysBreak
 AllowShortFunctionsOnASingleLine: All
 BinPackArguments: false
 BreakBeforeBraces: Attach
+BreakBeforeBinaryOperators: NonAssignment
 BreakConstructorInitializers: BeforeComma
 ColumnLimit: 100
 CompactNamespaces: false

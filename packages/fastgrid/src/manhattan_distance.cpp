@@ -39,8 +39,8 @@ void manhattanDistance(
 
         if (0 < x) {
             const int left = cur_index - 1;
-            if (distance_transform.data[left] > eps &&
-                manhattan_distance.data[left] == unreachable) {
+            if (distance_transform.data[left] > eps
+                && manhattan_distance.data[left] == unreachable) {
                 manhattan_distance.data[left] = next_weight;
                 queue.push(left);
             }
@@ -48,8 +48,8 @@ void manhattanDistance(
 
         if (x < width - 1) {
             const int right = cur_index + 1;
-            if (distance_transform.data[right] > eps &&
-                manhattan_distance.data[right] == unreachable) {
+            if (distance_transform.data[right] > eps
+                && manhattan_distance.data[right] == unreachable) {
                 manhattan_distance.data[right] = next_weight;
                 queue.push(right);
             }
@@ -65,8 +65,8 @@ void manhattanDistance(
 
         if (y < height - 1) {
             const int down = cur_index + width;
-            if (down < manhattan_distance.size() && distance_transform.data[down] > eps &&
-                manhattan_distance.data[down] == unreachable) {
+            if (down < manhattan_distance.size() && distance_transform.data[down] > eps
+                && manhattan_distance.data[down] == unreachable) {
                 manhattan_distance.data[down] = next_weight;
                 queue.push(down);
             }

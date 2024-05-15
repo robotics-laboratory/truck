@@ -103,13 +103,13 @@ void Grid::calculateFinishAreaNodes() {
             finish_node_point.x + finish_area_.radius, finish_node_point.y + finish_area_.radius));
 
     node_cache_.indexed_point_rtree.query(
-        bg::index::intersects(rtree_finish_box) &&
-            bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
-                geom::Vec2 node_point(
-                    rtree_indexed_point.first.get<0>(), rtree_indexed_point.first.get<1>());
+        bg::index::intersects(rtree_finish_box)
+            && bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
+                   geom::Vec2 node_point(
+                       rtree_indexed_point.first.get<0>(), rtree_indexed_point.first.get<1>());
 
-                return (finish_node_point - node_point).lenSq() < squared(finish_area_.radius);
-            }),
+                   return (finish_node_point - node_point).lenSq() < squared(finish_area_.radius);
+               }),
         std::back_inserter(rtree_indexed_points));
 
     for (const auto& rtree_indexed_point : rtree_indexed_points) {

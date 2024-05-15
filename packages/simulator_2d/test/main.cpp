@@ -65,8 +65,8 @@ std::shared_ptr<rosbag2_storage::SerializedBagMessage> serializeMsg(
     serialization.serialize_message(&state_msg, &serialized_msg);
 
     auto bag_msg = std::make_shared<rosbag2_storage::SerializedBagMessage>();
-    bag_msg->time_stamp = RCUTILS_S_TO_NS(static_cast<int64_t>(state_msg.header.stamp.sec)) +
-                          state_msg.header.stamp.nanosec;
+    bag_msg->time_stamp = RCUTILS_S_TO_NS(static_cast<int64_t>(state_msg.header.stamp.sec))
+                          + state_msg.header.stamp.nanosec;
     bag_msg->topic_name = TEST_OUTPUT_TOPIC.name;
     bag_msg->serialized_data = std::shared_ptr<rcutils_uint8_array_t>(
         new rcutils_uint8_array_t, [](rcutils_uint8_array_t* msg) {

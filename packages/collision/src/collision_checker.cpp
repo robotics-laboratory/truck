@@ -29,8 +29,8 @@ double StaticCollisionChecker::distance(const geom::Vec2& point) const {
     const auto y = floor<int>(grid_point.y / state_->distance_transform.resolution);
 
     // check borders
-    if ((x < 0) || (y < 0) || (state_->distance_transform.size.height <= y) ||
-        (state_->distance_transform.size.width <= x)) {
+    if ((x < 0) || (y < 0) || (state_->distance_transform.size.height <= y)
+        || (state_->distance_transform.size.width <= x)) {
         return kMaxDistance;
     }
 

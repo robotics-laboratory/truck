@@ -40,8 +40,8 @@ TransformationParameters guessTransformation(
     const float dx = odometry->pose.pose.position.x - reference_odometry->pose.pose.position.x;
     const float dy = odometry->pose.pose.position.y - reference_odometry->pose.pose.position.y;
 
-    const geom::Angle dtheta = geom::toYawAngle(odometry->pose.pose.orientation) -
-                               geom::toYawAngle(reference_odometry->pose.pose.orientation);
+    const geom::Angle dtheta = geom::toYawAngle(odometry->pose.pose.orientation)
+                               - geom::toYawAngle(reference_odometry->pose.pose.orientation);
 
     // rotation
     t(0, 0) = cos(dtheta);

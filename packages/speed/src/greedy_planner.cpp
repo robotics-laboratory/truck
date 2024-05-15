@@ -122,8 +122,8 @@ It findBrakingBegin(double desired_deceleration, It begin, It end) {
     const auto last = end - 1;
 
     const auto it = std::find_if(begin, last, [&](const auto& state) {
-        return findAcceleration(last->distance - state.distance, state.velocity, 0) <=
-               desired_deceleration;
+        return findAcceleration(last->distance - state.distance, state.velocity, 0)
+               <= desired_deceleration;
     });
 
     return it == begin ? begin : it - 1;

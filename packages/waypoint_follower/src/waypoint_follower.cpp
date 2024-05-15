@@ -74,9 +74,9 @@ void WaypointFollower::reset() {
 }
 
 bool WaypointFollower::isReadyToFinish(const geom::Pose& ego_pose) const {
-    return state_.waypoints.size() == 1 && state_.path.size() >= 1 &&
-           geom::distanceSq(ego_pose.pos, state_.path.back().pose.pos) <
-               squared(params_.check_in_distance);
+    return state_.waypoints.size() == 1 && state_.path.size() >= 1
+           && geom::distanceSq(ego_pose.pos, state_.path.back().pose.pos)
+                  < squared(params_.check_in_distance);
 }
 
 void WaypointFollower::addEgoWaypoint(const geom::Pose& ego_pose) {

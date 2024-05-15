@@ -378,20 +378,20 @@ double SimulatorEngine::getCurrentAcceleration() const {
     if (action_sign == 1) {
         // Acceleration.
         current_acceleration =
-            acceleration_sign *
-            getOptionalValue(control_.acceleration, model_->baseMaxAcceleration());
+            acceleration_sign
+            * getOptionalValue(control_.acceleration, model_->baseMaxAcceleration());
     } else if (action_sign == -1) {
         // Deceleration.
         current_acceleration =
-            acceleration_sign *
-            getOptionalValue(control_.acceleration, model_->baseMaxDeceleration());
+            acceleration_sign
+            * getOptionalValue(control_.acceleration, model_->baseMaxDeceleration());
     }
 
     const double velocity_delta = current_acceleration * params_.integration_step;
     const double new_velocity = velocity + velocity_delta;
     const bool target_velocity_achieved =
-        (acceleration_sign > 0 && (new_velocity + params_.precision > target_velocity)) ||
-        (acceleration_sign < 0 && (new_velocity - params_.precision < target_velocity));
+        (acceleration_sign > 0 && (new_velocity + params_.precision > target_velocity))
+        || (acceleration_sign < 0 && (new_velocity - params_.precision < target_velocity));
 
     if (target_velocity_achieved) {
         current_acceleration = (target_velocity - velocity) * cache_.inverse_integration_step;
@@ -409,8 +409,8 @@ double SimulatorEngine::getCurrentSteeringVelocity() const {
     const double steering_delta = current_velocity * params_.integration_step;
     const double new_steering = steering + steering_delta;
     const bool target_steering_achieved =
-        (velocity_sign > 0 && (new_steering + params_.precision > target_steering)) ||
-        (velocity_sign < 0 && (new_steering - params_.precision < target_steering));
+        (velocity_sign > 0 && (new_steering + params_.precision > target_steering))
+        || (velocity_sign < 0 && (new_steering - params_.precision < target_steering));
 
     if (target_steering_achieved) {
         current_velocity = (target_steering - steering) * cache_.inverse_integration_step;

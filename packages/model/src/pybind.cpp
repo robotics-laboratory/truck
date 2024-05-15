@@ -27,8 +27,8 @@ std::string to_string<model::Steering>(const model::Steering& obj) {
 template<>
 std::string to_string<model::WheelVelocity>(const model::WheelVelocity& obj) {
     return boost::str(
-        boost::format("WheelVelocity(left=%s, right=%s)") % to_string(obj.left) %
-        to_string(obj.right));
+        boost::format("WheelVelocity(left=%s, right=%s)") % to_string(obj.left)
+        % to_string(obj.right));
 }
 
 template<>
@@ -40,8 +40,8 @@ std::string to_string<model::Twist>(const model::Twist& obj) {
 template<>
 std::string to_string<model::ServoAngles>(const model::ServoAngles& obj) {
     return boost::str(
-        boost::format("ServoAngles(left=%s, right=%s)") % to_string(obj.left) %
-        to_string(obj.right));
+        boost::format("ServoAngles(left=%s, right=%s)") % to_string(obj.left)
+        % to_string(obj.right));
 }
 
 template<typename T>
@@ -52,8 +52,8 @@ void bind_limits_class(py::module& m, const std::string& name) {
         .def_readonly("max", &Class::max)
         .def("__repr__", [name](const Class& obj) {
             return boost::str(
-                boost::format("%s(min=%s, max=%s)") % name % to_string<T>(obj.min) %
-                to_string<T>(obj.max));
+                boost::format("%s(min=%s, max=%s)") % name % to_string<T>(obj.min)
+                % to_string<T>(obj.max));
         });
 }
 

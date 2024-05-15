@@ -81,17 +81,17 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
     quat_vec.at<double>(2, 0) = rotation.z();
     quat_vec.at<double>(3, 0) = rotation.w();
 
-    quaternion_sum_ = quaternion_sum_ * transforms_count_ / (transforms_count_ + 1) +
-                      quat_vec * quat_vec.t() / (transforms_count_ + 1);
+    quaternion_sum_ = quaternion_sum_ * transforms_count_ / (transforms_count_ + 1)
+                      + quat_vec * quat_vec.t() / (transforms_count_ + 1);
 
-    average_translation_ = average_translation_ * transforms_count_ / (transforms_count_ + 1) +
-                           t.GetTranslation() / (transforms_count_ + 1);
+    average_translation_ = average_translation_ * transforms_count_ / (transforms_count_ + 1)
+                           + t.GetTranslation() / (transforms_count_ + 1);
 
     auto translation_square = ElementWiseMul(t.GetTranslation(), t.GetTranslation());
 
     average_translation_square_ =
-        average_translation_square_ * transforms_count_ / (transforms_count_ + 1) +
-        translation_square / (transforms_count_ + 1);
+        average_translation_square_ * transforms_count_ / (transforms_count_ + 1)
+        + translation_square / (transforms_count_ + 1);
 
     transforms_count_++;
 
