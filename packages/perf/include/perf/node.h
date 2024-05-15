@@ -11,16 +11,16 @@
 
 namespace truck::perf {
 
-class PerfStatNode: public rclcpp::Node {
-public:
+class PerfStatNode : public rclcpp::Node {
+  public:
     PerfStatNode();
 
     void OnTimer();
 
-private:
+  private:
     std::optional<Stat> stat_ = {};
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
     rclcpp::Publisher<truck_msgs::msg::PerfStat>::SharedPtr stat_signal_ = nullptr;
 };
 
-} // namespace truck::perf
+}  // namespace truck::perf

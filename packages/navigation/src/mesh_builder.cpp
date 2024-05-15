@@ -20,7 +20,7 @@ CGAL::Polygon_2<CGAL_K> toCGALPolygon(const geom::Polygon& polygon) {
     for (const geom::Vec2& point : polygon) {
         cgal_poly.push_back(CGAL_K::Point_2(point.x, point.y));
     }
-    
+
     return cgal_poly;
 }
 
@@ -34,7 +34,8 @@ CGAL::Polygon_with_holes_2<CGAL_K> toCGALPolygonWithHoles(const geom::ComplexPol
     return cgal_poly_with_holes;
 }
 
-void extractSegmentsFromCGALPolygon(geom::Segments& segments, const CGAL::Polygon_2<CGAL_K>& cgal_poly) {
+void extractSegmentsFromCGALPolygon(
+    geom::Segments& segments, const CGAL::Polygon_2<CGAL_K>& cgal_poly) {
     for (const auto& cgal_seg : cgal_poly.edges()) {
         segments.emplace_back(geom::Segment(
             geom::Vec2(cgal_seg.vertex(0).x(), cgal_seg.vertex(0).y()),
@@ -55,7 +56,7 @@ MeshBuild MeshBuilder::build(const geom::ComplexPolygons& polygons) const {
     buildSkeleton(mesh_build, polygon);
     buildLevelLines(mesh_build, polygon, params_.offset);
     buildMesh(mesh_build, params_.dist);
-    
+
     return mesh_build;
 }
 
@@ -65,16 +66,15 @@ void MeshBuilder::buildSkeleton(MeshBuild& mesh_build, const geom::ComplexPolygo
 
     for (const auto& cgal_edge_it : cgal_skeleton_ptr->halfedge_handles()) {
         mesh_build.skeleton.emplace_back(geom::Segment(
-            geom::Vec2(
-                cgal_edge_it->vertex()->point().x(),
-                cgal_edge_it->vertex()->point().y()),
+            geom::Vec2(cgal_edge_it->vertex()->point().x(), cgal_edge_it->vertex()->point().y()),
             geom::Vec2(
                 cgal_edge_it->opposite()->vertex()->point().x(),
                 cgal_edge_it->opposite()->vertex()->point().y())));
     }
 }
 
-void MeshBuilder::buildLevelLines(MeshBuild& mesh_build, const geom::ComplexPolygon& polygon, double offset) const {
+void MeshBuilder::buildLevelLines(
+    MeshBuild& mesh_build, const geom::ComplexPolygon& polygon, double offset) const {
     double cur_offset = offset;
 
     auto cgal_polys_with_holes = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(
@@ -82,7 +82,8 @@ void MeshBuilder::buildLevelLines(MeshBuild& mesh_build, const geom::ComplexPoly
 
     while (cgal_polys_with_holes.size() > 0) {
         for (const auto& cgal_poly_with_holes_ptr : cgal_polys_with_holes) {
-            extractSegmentsFromCGALPolygon(mesh_build.level_lines, cgal_poly_with_holes_ptr->outer_boundary());
+            extractSegmentsFromCGALPolygon(
+                mesh_build.level_lines, cgal_poly_with_holes_ptr->outer_boundary());
 
             for (const auto& cgal_poly_inner : cgal_poly_with_holes_ptr->holes()) {
                 extractSegmentsFromCGALPolygon(mesh_build.level_lines, cgal_poly_inner);

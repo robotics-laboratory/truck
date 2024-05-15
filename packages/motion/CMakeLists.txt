@@ -7,23 +7,15 @@ find_package(geom REQUIRED)
 find_package(model REQUIRED)
 find_package(truck_msgs REQUIRED)
 
-add_library(
-  ${PROJECT_NAME} SHARED
-  src/trajectory.cpp
-  src/primitive.cpp
-)
+add_library(${PROJECT_NAME} SHARED src/trajectory.cpp src/primitive.cpp)
 
-ament_target_dependencies(
-  ${PROJECT_NAME}
-  common
-  geom
-  model
-  truck_msgs)
+ament_target_dependencies(${PROJECT_NAME} common geom model truck_msgs)
 
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+  ${PROJECT_NAME}
+  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 ament_export_dependencies(common model truck_msgs)
@@ -36,9 +28,6 @@ install(
   RUNTIME DESTINATION bin
 )
 
-install(
-  DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
-)
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 ament_package()

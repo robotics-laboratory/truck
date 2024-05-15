@@ -1,10 +1,11 @@
 launch:
-- arg: {name: "world", default: "simple.world"}
+- arg: { name: "world", default: "simple.world" }
 
 - executable:
     name: "gzserver"
+    # yamllint disable-line rule:line-length
     cmd: "gzserver --verbose $(find-pkg-share truck_gazebo)/worlds/$(var world) -s libgazebo_ros_init.so --ros-args --params-file $(find-pkg-share truck_gazebo)/launch/params.yaml"
     output: "log"
     shell: True
-    env: 
-    - {name: 'GAZEBO_MODEL_PATH', value: "$(find-pkg-share truck_gazebo)/models"}
+    env:
+    - { name: "GAZEBO_MODEL_PATH", value: "$(find-pkg-share truck_gazebo)/models" }

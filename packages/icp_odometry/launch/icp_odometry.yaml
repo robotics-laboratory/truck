@@ -11,6 +11,6 @@ launch:
     name: "icp_odometry_node"
     output: "log"
     param:
-    - {name: "use_sim_time", value: "$(var simulation)"}
-    - {name: "qos", value: "$(var qos)"}
-    - {name: "icp_config", value: "$(find-pkg-share icp_odometry)/config/icp.yaml"}
+    - { name: "use_sim_time", value: "$(var simulation)" }
+    - { name: "qos", value: "$(var qos)" }
+    - { name: "icp_config", value: "$(find-pkg-share icp_odometry)/config/icp.yaml" }

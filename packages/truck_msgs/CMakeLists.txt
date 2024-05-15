@@ -9,7 +9,8 @@ find_package(visualization_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME} 
+rosidl_generate_interfaces(
+  ${PROJECT_NAME}
   msg/Control.msg
   msg/ControlMode.msg
   msg/CpuStat.msg

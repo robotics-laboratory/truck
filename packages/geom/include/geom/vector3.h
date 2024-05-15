@@ -73,28 +73,18 @@ struct Vec3 {
     double x, y, z;
 };
 
-constexpr Vec3 operator*(Vec3 v, double c) noexcept { 
-    return {v.x * c, v.y * c, v.z * c}; 
+constexpr Vec3 operator*(Vec3 v, double c) noexcept { return {v.x * c, v.y * c, v.z * c}; }
+
+constexpr Vec3 operator*(double c, Vec3 v) noexcept { return v * c; }
+
+constexpr Vec3 operator/(const Vec3& v, double c) noexcept { return {v.x / c, v.y / c, v.z / c}; }
+
+constexpr double dot(const Vec3& a, const Vec3& b) noexcept {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-constexpr Vec3 operator*(double c, Vec3 v) noexcept { 
-    return v * c; 
-}
-
-constexpr Vec3 operator/(const Vec3& v, double c) noexcept { 
-    return {v.x / c, v.y / c, v.z / c}; 
-}
-
-constexpr double dot(const Vec3& a, const Vec3& b) noexcept { 
-    return a.x * b.x + a.y * b.y + a.z * b.z; 
-}
-
-constexpr Vec3 cross(const Vec3& a, const Vec3& b) noexcept { 
-    return {
-        a.y * b.z - a.z * b.y, 
-        a.z * b.x - a.x * b.z, 
-        a.x * b.y - a.y * b.x
-    }; 
+constexpr Vec3 cross(const Vec3& a, const Vec3& b) noexcept {
+    return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
 }
 
 inline double lenSq(const Vec3& v) noexcept { return v.lenSq(); }

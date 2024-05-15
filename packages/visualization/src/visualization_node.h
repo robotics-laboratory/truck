@@ -54,7 +54,7 @@ class VisualizationNode : public rclcpp::Node {
     void publishNavigationMesh() const;
     void publishNavigationRoute() const;
 
-    std_msgs::msg::ColorRGBA velocityToColor(double speed, double alpha=1.0) const;
+    std_msgs::msg::ColorRGBA velocityToColor(double speed, double alpha = 1.0) const;
 
     struct Parameters {
         rclcpp::Duration ttl = rclcpp::Duration::from_seconds(1.0);
@@ -79,7 +79,7 @@ class VisualizationNode : public rclcpp::Node {
 
         std::string mesh_body = "";
         std::string mesh_wheel = "";
-      
+
         double map_z_lev = 0.0;
 
         double navigation_mesh_z_lev = 0.0;
@@ -89,26 +89,16 @@ class VisualizationNode : public rclcpp::Node {
         double navigation_route_width = 0.0;
     } params_{};
 
-    enum WheelIndex { 
-        kFrontLeft = 0, 
-        kFrontRight = 1, 
-        kRearLeft = 2,
-        kRearRight = 3 
-    };
+    enum WheelIndex { kFrontLeft = 0, kFrontRight = 1, kRearLeft = 2, kRearRight = 3 };
 
-    static constexpr std::array<int, 4> kAllWheels {
+    static constexpr std::array<int, 4> kAllWheels{
         WheelIndex::kFrontLeft,
         WheelIndex::kFrontRight,
         WheelIndex::kRearLeft,
-        WheelIndex::kRearRight
-    };
+        WheelIndex::kRearRight};
 
-    static constexpr std::array<const char*, 4> kWheelFrames {
-        "front_left_wheel",
-        "front_right_wheel",
-        "rear_left_wheel",
-        "rear_right_wheel"
-    };
+    static constexpr std::array<const char*, 4> kWheelFrames{
+        "front_left_wheel", "front_right_wheel", "rear_left_wheel", "rear_right_wheel"};
 
     struct Cache {
         tf2::Transform body_base_tf;
@@ -139,7 +129,8 @@ class VisualizationNode : public rclcpp::Node {
         // foxglove has twitching if publish ego pose in base frame, use odom for smoother result!
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom = nullptr;
         rclcpp::Subscription<truck_msgs::msg::NavigationMesh>::SharedPtr navigation_mesh = nullptr;
-        rclcpp::Subscription<truck_msgs::msg::NavigationRoute>::SharedPtr navigation_route = nullptr;
+        rclcpp::Subscription<truck_msgs::msg::NavigationRoute>::SharedPtr navigation_route =
+            nullptr;
     } slot_;
 
     struct Signals {

@@ -8,12 +8,7 @@
 namespace truck::collision {
 
 Map Map::emptyLikeThis() const {
-    return Map {
-        .origin = origin,
-        .resolution = resolution,
-        .size = size,
-        .data = cv::Mat()
-    };
+    return Map{.origin = origin, .resolution = resolution, .size = size, .data = cv::Mat()};
 }
 
 Map distanceTransform(const Map& map) {
@@ -35,20 +30,15 @@ Map Map::fromOccupancyGrid(const nav_msgs::msg::OccupancyGrid& map) {
         }
     }
 
-    return Map {
+    return Map{
         .origin = geom::toPose(map.info.origin),
         .resolution = map.info.resolution,
-        .size = {
-            static_cast<int>(map.info.width),
-            static_cast<int>(map.info.height)
-        },
-        .data = grid
-    };
+        .size = {static_cast<int>(map.info.width), static_cast<int>(map.info.height)},
+        .data = grid};
 }
 
 nav_msgs::msg::OccupancyGrid Map::makeCostMap(
-        const std_msgs::msg::Header& header,
-        double kMaxDist) const {
+    const std_msgs::msg::Header& header, double kMaxDist) const {
     nav_msgs::msg::OccupancyGrid msg;
 
     const double max = kMaxDist / resolution;
@@ -60,7 +50,6 @@ nav_msgs::msg::OccupancyGrid Map::makeCostMap(
     msg.info.origin = geom::msg::toPose(origin);
 
     msg.data = std::vector<int8_t>(size.width * size.height);
-
 
     for (int i = 0; i < size.height; i++) {
         for (int j = 0; j < size.width; j++) {

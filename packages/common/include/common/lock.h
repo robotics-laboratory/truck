@@ -40,15 +40,17 @@ class Lockable {
       private:
         friend class Lockable;
 
-        Lock(typename Storage::Ptr storage) : storage_(std::move(storage)) { storage_->mutex.lock(); }
+        Lock(typename Storage::Ptr storage) : storage_(std::move(storage)) {
+            storage_->mutex.lock();
+        }
 
         typename Storage::Ptr storage_ = nullptr;
     };
 
   public:
     template<typename... Args>
-    explicit Lockable(Args&&... args)
-        : storage_(std::make_shared<Storage>(std::forward<Args>(args)...)) {}
+    explicit Lockable(Args&&... args) :
+        storage_(std::make_shared<Storage>(std::forward<Args>(args)...)) {}
 
     auto lock() { return Lock(VERIFY(storage_)); }
 

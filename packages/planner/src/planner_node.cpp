@@ -18,7 +18,7 @@ std_msgs::msg::ColorRGBA toColorRGBA(const std::vector<double>& vector) {
     return color;
 }
 
-} // namespace
+}  // namespace
 
 PlannerNode::PlannerNode() : Node("planner") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
@@ -65,14 +65,14 @@ PlannerNode::PlannerNode() : Node("planner") {
             .z_lev = this->declare_parameter<double>("node/z-lev"),
             .scale = this->declare_parameter<double>("node/scale"),
 
-            .base_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/base/color_rgba")),
+            .base_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node/base/color_rgba")),
 
-            .ego_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/ego/color_rgba")),
+            .ego_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node/ego/color_rgba")),
 
-            .finish_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node/finish/color_rgba")),
+            .finish_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node/finish/color_rgba")),
 
             .finish_area_color = toColorRGBA(
                 this->declare_parameter<std::vector<double>>("node/finish_area/color_rgba")),
@@ -197,18 +197,17 @@ std::optional<geom::Transform> PlannerNode::getLatestTranform(
 }
 
 void PlannerNode::doPlanningLoop() {
-    if (!checker_->initialized() || !state_.ego_pose.has_value() ||
-        !state_.finish_area.has_value()) {
+    if (!checker_->initialized() || !state_.ego_pose.has_value()
+        || !state_.finish_area.has_value()) {
         return;
     }
 
     // initialize grid
-    state_.grid = std::make_shared<search::Grid>(
-        search::Grid(params_.grid, model_->shape())
-            .setEgoPose(state_.ego_pose.value())
-            .setFinishArea(state_.finish_area.value())
-            .setCollisionChecker(checker_)
-            .build());
+    state_.grid = std::make_shared<search::Grid>(search::Grid(params_.grid, model_->shape())
+                                                     .setEgoPose(state_.ego_pose.value())
+                                                     .setFinishArea(state_.finish_area.value())
+                                                     .setCollisionChecker(checker_)
+                                                     .build());
 
     // visualize grid
     publishGrid();

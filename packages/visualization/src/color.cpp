@@ -13,25 +13,15 @@ std_msgs::msg::ColorRGBA make(float r, float g, float b, float a) {
     return color;
 }
 
-std_msgs::msg::ColorRGBA white(float alpha) {
-    return make(1.0, 1.0, 1.0, alpha);
-}
+std_msgs::msg::ColorRGBA white(float alpha) { return make(1.0, 1.0, 1.0, alpha); }
 
-std_msgs::msg::ColorRGBA gray(float alpha) {
-    return make(0.5, 0.5, 0.5, alpha);
-}
+std_msgs::msg::ColorRGBA gray(float alpha) { return make(0.5, 0.5, 0.5, alpha); }
 
-std_msgs::msg::ColorRGBA red(float alpha) {
-    return make(1.0, 0.0, 0.0, alpha);
-}
+std_msgs::msg::ColorRGBA red(float alpha) { return make(1.0, 0.0, 0.0, alpha); }
 
-std_msgs::msg::ColorRGBA green(float alpha) {
-    return make(0.0, 1.0, 0.0, alpha);
-}
+std_msgs::msg::ColorRGBA green(float alpha) { return make(0.0, 1.0, 0.0, alpha); }
 
-std_msgs::msg::ColorRGBA blue(float alpha) {
-    return make(0.0, 0.0, 1.0, alpha);
-}
+std_msgs::msg::ColorRGBA blue(float alpha) { return make(0.0, 0.0, 1.0, alpha); }
 
 std_msgs::msg::ColorRGBA make(const truck_msgs::msg::ControlMode& mode) {
     switch (mode.mode) {
@@ -73,4 +63,4 @@ std_msgs::msg::ColorRGBA plasma(float x, float alpha) {
     return color;
 }
 
-} // namespace truck::visualization::color
+}  // namespace truck::visualization::color

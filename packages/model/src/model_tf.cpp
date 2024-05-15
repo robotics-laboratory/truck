@@ -14,7 +14,8 @@ class ModelTfNode : public rclcpp::Node {
 
         model_ = std::make_unique<model::Model>(model::load(this->get_logger(), model_path));
 
-        static_tf_signal_ = Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf_static", static_qos);
+        static_tf_signal_ =
+            Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf_static", static_qos);
 
         auto static_tf = model_->getTfStaticMsg();
 
@@ -33,7 +34,6 @@ class ModelTfNode : public rclcpp::Node {
     }
 
   private:
-
     std::unique_ptr<model::Model> model_ = nullptr;
 
     // output

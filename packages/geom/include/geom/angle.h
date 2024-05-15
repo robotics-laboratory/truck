@@ -15,9 +15,7 @@ class Angle {
 
     static constexpr Angle fromDegrees(double deg) noexcept { return Angle{(M_PI / 180) * deg}; }
 
-    static Angle fromVector(double x, double y) noexcept {
-        return Angle{std::atan2(y, x)};
-    }
+    static Angle fromVector(double x, double y) noexcept { return Angle{std::atan2(y, x)}; }
 
     constexpr double radians() const noexcept { return value_; }
 
@@ -55,9 +53,7 @@ class Angle {
 
     static constexpr Angle zero() noexcept { return Angle{0}; }
 
-    static double _0_2PI(double radians) noexcept {
-        return Angle(radians)._0_2PI().radians();
-    }
+    static double _0_2PI(double radians) noexcept { return Angle(radians)._0_2PI().radians(); }
 
     Angle _0_2PI() const noexcept {
         const double result = fmod(value_, 2 * M_PI);

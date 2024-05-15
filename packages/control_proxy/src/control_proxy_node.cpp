@@ -24,12 +24,12 @@ std::string toString(Mode mode) {
     }
 }
 
-ControlMap::ControlMap(const YAML::Node& node)
-    : velocity_axis(node["velocity_axis"].as<size_t>())
-    , curvature_axis(node["curvature_axis"].as<size_t>())
-    , off_button(node["off_button"].as<size_t>())
-    , remote_button(node["remote_button"].as<size_t>())
-    , auto_button(node["auto_button"].as<size_t>()) {}
+ControlMap::ControlMap(const YAML::Node& node) :
+    velocity_axis(node["velocity_axis"].as<size_t>()),
+    curvature_axis(node["curvature_axis"].as<size_t>()),
+    off_button(node["off_button"].as<size_t>()),
+    remote_button(node["remote_button"].as<size_t>()),
+    auto_button(node["auto_button"].as<size_t>()) {}
 
 ControlMap::ControlMap(const std::string& path) : ControlMap(YAML::LoadFile(path)) {}
 
@@ -57,12 +57,11 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
 
     RCLCPP_INFO(this->get_logger(), "curvature: %f", model_->baseMaxAbsCurvature());
 
-    params_ = Params {
+    params_ = Params{
         std::chrono::milliseconds(this->declare_parameter<long int>("watchdog_period", 20)),
         std::chrono::milliseconds(this->declare_parameter<long int>("mode_period", 200)),
         std::chrono::milliseconds(this->declare_parameter<long int>("joypad_timeout", 200)),
-        std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 150))
-    };
+        std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 150))};
 
     RCLCPP_INFO(this->get_logger(), "joypad timeout: %li ms", params_.joypad_timeout.count());
     RCLCPP_INFO(this->get_logger(), "control timeout: %li ms", params_.control_timeout.count());
@@ -76,8 +75,8 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
     slot_.joypad = Node::create_subscription<sensor_msgs::msg::Joy>(
         "/joy", 1, std::bind(&ControlProxyNode::handleJoypadCommand, this, _1));
 
-    timer_.watchdog =
-        this->create_wall_timer(params_.watchdog_period, std::bind(&ControlProxyNode::watchdog, this));
+    timer_.watchdog = this->create_wall_timer(
+        params_.watchdog_period, std::bind(&ControlProxyNode::watchdog, this));
 
     timer_.mode = this->create_wall_timer(
         params_.mode_period, std::bind(&ControlProxyNode::publishMode, this));
@@ -150,8 +149,8 @@ bool ControlProxyNode::checkButtonPressed(
     if (!state_.prev_joypad_command || !joypad_command) {
         return false;
     }
-    return state_.prev_joypad_command->buttons[joypad_button] == 0 &&
-           joypad_command->buttons[joypad_button] == 1;
+    return state_.prev_joypad_command->buttons[joypad_button] == 0
+           && joypad_command->buttons[joypad_button] == 1;
 }
 
 void ControlProxyNode::publishMode() {
@@ -202,7 +201,8 @@ void ControlProxyNode::watchdog() {
         return;
     }
 
-    if (state_.mode != Mode::Off && timeout_failed(state_.prev_joypad_command, params_.joypad_timeout)) {
+    if (state_.mode != Mode::Off
+        && timeout_failed(state_.prev_joypad_command, params_.joypad_timeout)) {
         RCLCPP_ERROR(this->get_logger(), "lost joypad, stop!");
         reset();
         return;
@@ -219,8 +219,7 @@ void ControlProxyNode::publishCommand(const truck_msgs::msg::Control& command) {
     signal_.command->publish(command);
 }
 
-void ControlProxyNode::forwardControlCommand(
-    truck_msgs::msg::Control::ConstSharedPtr command) {
+void ControlProxyNode::forwardControlCommand(truck_msgs::msg::Control::ConstSharedPtr command) {
     if (state_.mode == Mode::Auto) {
         publishCommand(*command);
         state_.prev_command = command;

@@ -15,29 +15,21 @@ find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(map REQUIRED)
 
-add_library(simulator_engine SHARED 
-    src/simulator_engine.cpp
-    src/truck_state.cpp)
+add_library(
+  simulator_engine SHARED src/simulator_engine.cpp src/truck_state.cpp
+)
 
-ament_target_dependencies(
-    simulator_engine
-    model
-    geom
-    map
-    tf2)
+ament_target_dependencies(simulator_engine model geom map tf2)
 
 target_include_directories(
-    simulator_engine PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+  simulator_engine
+  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 
 ament_export_targets(simulator_engine_targets HAS_LIBRARY_TARGET)
 
-ament_export_dependencies(
-    model
-    geom
-    nlohmann_json)
+ament_export_dependencies(model geom nlohmann_json)
 
 install(
   TARGETS simulator_engine
@@ -47,47 +39,34 @@ install(
   RUNTIME DESTINATION bin
 )
 
-install(
-  DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
-)
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
-add_executable(
-    ${PROJECT_NAME}_node
-    src/simulator_node.cpp
-    src/main.cpp)
+add_executable(${PROJECT_NAME}_node src/simulator_node.cpp src/main.cpp)
 
 ament_target_dependencies(
-    ${PROJECT_NAME}_node
-    rclcpp
-    model
-    nav_msgs
-    truck_msgs
-    geom
-    tf2_geometry_msgs
-    tf2_msgs
-    rosgraph_msgs
-    sensor_msgs
-    nlohmann_json)
+  ${PROJECT_NAME}_node
+  rclcpp
+  model
+  nav_msgs
+  truck_msgs
+  geom
+  tf2_geometry_msgs
+  tf2_msgs
+  rosgraph_msgs
+  sensor_msgs
+  nlohmann_json
+)
 
 target_link_libraries(${PROJECT_NAME}_node simulator_engine)
 
-install(
-    TARGETS ${PROJECT_NAME}_node
-    DESTINATION lib/${PROJECT_NAME})
+install(TARGETS ${PROJECT_NAME}_node DESTINATION lib/${PROJECT_NAME})
 
-install(
-  DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
-)
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
-install(
-    DIRECTORY config
-    DESTINATION share/${PROJECT_NAME}
-)
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
-    add_subdirectory("test")
+  add_subdirectory("test")
 endif()
 
 ament_package()

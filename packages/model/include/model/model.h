@@ -31,9 +31,7 @@ struct WheelVelocity {
 struct Twist {
     double curvature;
     double velocity;
-    double angularVelocity() const {
-        return curvature * velocity;  
-    }
+    double angularVelocity() const { return curvature * velocity; }
 };
 
 class Model {
@@ -61,9 +59,9 @@ class Model {
 
     /**
      * Truck scheme:
-     * 
+     *
      * OY ↑
-     * 
+     *
      * ---------------------------
      * |                         |
      * |                 A       |
@@ -71,12 +69,12 @@ class Model {
      * |                         |
      * |                         |
      * ---------------------------
-     * 
+     *
      * @param rear_twist Twist of the R point.
      * @param rear_to_point Vector RA.
      *
      * @return Twist of the A point.
-     * 
+     *
      * C - the center of the base (and the center of the coordinate system).
      * R - the center of the rear axle.
      * A - the arbitrary point.
@@ -94,8 +92,7 @@ class Model {
     double motorRPStoLinearVelocity(double rps) const;
 
     tf2_msgs::msg::TFMessage getTfStaticMsg() const;
-    tf2::Transform getLatestTranform(const std::string& source, 
-      const std::string& target) const;
+    tf2::Transform getLatestTranform(const std::string& source, const std::string& target) const;
 
   private:
     struct Cache {

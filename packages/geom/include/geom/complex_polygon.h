@@ -11,8 +11,8 @@ struct ComplexPolygon {
 
     ComplexPolygon(Polygon outer) : outer(std::move(outer)) {}
 
-    ComplexPolygon(Polygon outer, Polygons inners)
-        : outer(std::move(outer)), inners(std::move(inners)) {}
+    ComplexPolygon(Polygon outer, Polygons inners) :
+        outer(std::move(outer)), inners(std::move(inners)) {}
 
     std::vector<Triangle> triangles() const noexcept;
     Segments segments() const noexcept;

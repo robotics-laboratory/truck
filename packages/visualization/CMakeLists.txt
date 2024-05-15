@@ -11,26 +11,22 @@ find_package(visualization_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
 add_executable(
-    visualization_node
-    src/color.cpp
-    src/main.cpp
-    src/visualization_node.cpp)
+  visualization_node src/color.cpp src/main.cpp src/visualization_node.cpp
+)
 
 ament_target_dependencies(
-    visualization_node
-    rclcpp model
-    nav_msgs
-    truck_msgs
-    map
-    visualization_msgs
-    tf2_geometry_msgs)
+  visualization_node
+  rclcpp
+  model
+  nav_msgs
+  truck_msgs
+  map
+  visualization_msgs
+  tf2_geometry_msgs
+)
 
-install(
-    TARGETS visualization_node
-    DESTINATION lib/${PROJECT_NAME})
+install(TARGETS visualization_node DESTINATION lib/${PROJECT_NAME})
 
-install(
-    DIRECTORY launch
-    DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()

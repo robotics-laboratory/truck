@@ -39,7 +39,6 @@ Result PurePursuit::operator()(
         return Result(Command::stop());
     }
 
-
     const auto ego_state = trajectory.byProjection(localization.pose, params_.max_distance);
     if (!ego_state) {
         return Result(Error::kNoProjection);

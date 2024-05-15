@@ -17,7 +17,7 @@ struct ViewerParams {
 
     struct ColorRGB {
         std::vector<int> background = {0, 0, 0};
-        
+
         struct Polygon {
             std::vector<int> inner = {227, 227, 227};
             std::vector<int> outer = {252, 252, 252};

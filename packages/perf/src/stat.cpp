@@ -34,7 +34,7 @@ std::vector<CpuStat> CpuStat::read() {
     std::ifstream stat("/proc/stat");
     std::vector<CpuStat> result;
 
-    for (std::string line; std::getline(stat, line); ) {
+    for (std::string line; std::getline(stat, line);) {
         if (not line.starts_with("cpu")) {
             continue;
         }
@@ -42,8 +42,8 @@ std::vector<CpuStat> CpuStat::read() {
         CpuStat cpu;
         std::istringstream iss(line);
         std::string cpu_name;
-        iss >> cpu_name >> cpu.user >> cpu.nice >> cpu.system >> cpu.idle >> cpu.iowait >>
-            cpu.irq >> cpu.softirq >> cpu.steal >> cpu.guest >> cpu.guest_nice;
+        iss >> cpu_name >> cpu.user >> cpu.nice >> cpu.system >> cpu.idle >> cpu.iowait >> cpu.irq
+            >> cpu.softirq >> cpu.steal >> cpu.guest >> cpu.guest_nice;
 
         // string with cpu id means total cpu stat
         if (cpu_name != "cpu") {

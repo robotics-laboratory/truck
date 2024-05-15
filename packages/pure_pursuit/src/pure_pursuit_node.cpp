@@ -46,7 +46,7 @@ truck_msgs::msg::PurePursuitStatus toNoTrajectoryStatus(const std_msgs::msg::Hea
     return status;
 }
 
-} // namespace
+}  // namespace
 
 PurePursuitNode::PurePursuitNode() : Node("pure_pursuit") {
     const auto model =
@@ -113,11 +113,10 @@ void PurePursuitNode::publishCommand() {
         return msg;
     };
 
-
     const auto now = this->now();
 
-    const bool has_localization = state_.localization && state_.localization_msg &&
-                                  (now - state_.localization_msg->header.stamp) < timeout_;
+    const bool has_localization = state_.localization && state_.localization_msg
+                                  && (now - state_.localization_msg->header.stamp) < timeout_;
 
     if (!has_localization) {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "missing localization");
@@ -127,8 +126,8 @@ void PurePursuitNode::publishCommand() {
         return;
     }
 
-    const bool has_trajectory = state_.trajectory
-        && state_.trajectory_msg && (now - state_.trajectory_msg->header.stamp) < timeout_;
+    const bool has_trajectory = state_.trajectory && state_.trajectory_msg
+                                && (now - state_.trajectory_msg->header.stamp) < timeout_;
 
     if (!has_trajectory) {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "missing trajectory");
@@ -140,7 +139,7 @@ void PurePursuitNode::publishCommand() {
     Result result{Error::kUnknown};
     try {
         result = controller_->command(*state_.localization, *state_.trajectory);
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 5000, "%s", e.what());
     }
 

@@ -7,28 +7,28 @@ launch:
     output: "log"
 
     param:
-    - {name: "initial_reset", value: True}
-    - {name: "enable_sync", value: False}
-    - {name: "publish_tf", value: False}
+    - { name: "initial_reset", value: True }
+    - { name: "enable_sync", value: False }
+    - { name: "publish_tf", value: False }
 
-    - {name: "enable_color", value: False}
-    - {name: "rgb_camera.profile", value: "848x480x30"}
+    - { name: "enable_color", value: False }
+    - { name: "rgb_camera.profile", value: "848x480x30" }
 
-    - {name: "enable_depth", value: False}
-    - {name: "depth_module.profile", value: "424x240x15"}
+    - { name: "enable_depth", value: False }
+    - { name: "depth_module.profile", value: "424x240x15" }
 
-    - {name: "enable_accel", value: True}
-    - {name: "accel_fps", value: 200}
+    - { name: "enable_accel", value: True }
+    - { name: "accel_fps", value: 200 }
 
-    - {name: "enable_gyro", value: True}
-    - {name: "gyro_fps", value: 200}
+    - { name: "enable_gyro", value: True }
+    - { name: "gyro_fps", value: 200 }
 
-    - {name: "unite_imu_method", value: 1}
-    - {name: "hold_back_imu_for_frames", value: False}
+    - { name: "unite_imu_method", value: 1 }
+    - { name: "hold_back_imu_for_frames", value: False }
 
-    - {name: "enable_fisheye", value: False}
-    - {name: "enable_fisheye1", value: False}
-    - {name: "enable_fisheye2", value: False}
-    - {name: "enable_infra", value: False}
-    - {name: "enable_infra1", value: False}
-    - {name: "enable_infra2", value: False}
+    - { name: "enable_fisheye", value: False }
+    - { name: "enable_fisheye1", value: False }
+    - { name: "enable_fisheye2", value: False }
+    - { name: "enable_infra", value: False }
+    - { name: "enable_infra1", value: False }
+    - { name: "enable_infra2", value: False }

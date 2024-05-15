@@ -12,15 +12,15 @@ launch:
     output: "log"
     param:
     # use /clock topic time
-    - {name: "use_sim_time", value: "$(var simulation)"}
+    - { name: "use_sim_time", value: "$(var simulation)" }
     # path to truck model config
-    - {name: "model_config", value: "$(find-pkg-share model)/config/model.yaml"}
+    - { name: "model_config", value: "$(find-pkg-share model)/config/model.yaml" }
     # path to control config
-    - {name: "control_config", value: "$(find-pkg-share control_proxy)/config/$(var control_name).yaml"}
+    - { name: "control_config", value: "$(find-pkg-share control_proxy)/config/$(var control_name).yaml" }
     # timers period (milliseconds)
-    - {name: "mode_period", value: 200}
-    - {name: "watchdog_period", value: 20}
+    - { name: "mode_period", value: 200 }
+    - { name: "watchdog_period", value: 20 }
     # set mode to `off` if no commands from joypad during this time (milliseconds)
-    - {name: "joypad_timeout", value: 250}
+    - { name: "joypad_timeout", value: 250 }
     # set mode to `remote` if no commands from planner during this time (milliseconds)
-    - {name: "control_timeout", value: 200}
+    - { name: "control_timeout", value: 200 }

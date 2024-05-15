@@ -24,7 +24,7 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
     auto prev = std::vector<graph::NodeId>(nodes_count, nodes_count);
 
     std::set<std::pair<double, graph::NodeId>> queue;
-    
+
     auto extractPath = [&]() {
         Path path;
         graph::NodeId cur_id = to_id;

@@ -1,0 +1,17 @@
+rules:
+  line-length:
+    max: 120
+
+  quoted-strings:
+    quote-type: double
+    required: false
+
+  braces:
+    min-spaces-inside: 1
+    max-spaces-inside: 1
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+
+  brackets:
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0

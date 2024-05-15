@@ -24,9 +24,7 @@ class AngleVec2 {
 
     constexpr operator Vec2() const noexcept { return vec(); }
 
-    static AngleVec2 fromVectorUnsafe(Vec2 v) noexcept {
-        return {v, Angle::fromVector(v.x, v.y)};
-    }
+    static AngleVec2 fromVectorUnsafe(Vec2 v) noexcept { return {v, Angle::fromVector(v.x, v.y)}; }
 
     static AngleVec2 fromVectorUnsafe(double x, double y) noexcept {
         return fromVectorUnsafe({x, y});
@@ -34,9 +32,7 @@ class AngleVec2 {
 
     static AngleVec2 fromVector(Vec2 v) noexcept { return fromVectorUnsafe(v / v.len()); }
 
-    static AngleVec2 fromVector(double x, double y) noexcept {
-        return fromVector({x, y});
-    }
+    static AngleVec2 fromVector(double x, double y) noexcept { return fromVector({x, y}); }
 
     AngleVec2& operator+=(const AngleVec2& other) noexcept {
         vec_ = other.apply(vec_);

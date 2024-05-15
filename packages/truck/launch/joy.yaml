@@ -8,5 +8,5 @@ launch:
     name: "joy_node"
     output: "log"
     param:
-    - {name: "use_sim_time", value: "$(var simulation)"}
-    - {name: "coalesce_interval_ms", value: 20}
+    - { name: "use_sim_time", value: "$(var simulation)" }
+    - { name: "coalesce_interval_ms", value: 20 }

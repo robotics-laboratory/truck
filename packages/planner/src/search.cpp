@@ -20,7 +20,7 @@ Grid& Grid::setCollisionChecker(std::shared_ptr<const collision::StaticCollision
 }
 
 Grid& Grid::build() {
-    geom::Vec2 grid_origin_point =  \
+    geom::Vec2 grid_origin_point =
         snapPoint(ego_pose_) - geom::Vec2(params_.width, params_.height) * (params_.resolution / 2);
 
     for (size_t i = 0; i < params_.height; i++) {
@@ -71,7 +71,8 @@ void Grid::calculateEgoNode() {
     std::vector<RTreeIndexedPoint> rtree_indexed_points;
 
     node_cache_.indexed_point_rtree.query(
-        bg::index::nearest(RTreePoint(ego_pose_.pos.x, ego_pose_.pos.y), 1), std::back_inserter(rtree_indexed_points));
+        bg::index::nearest(RTreePoint(ego_pose_.pos.x, ego_pose_.pos.y), 1),
+        std::back_inserter(rtree_indexed_points));
 
     int node_index = rtree_indexed_points.back().second;
     node_cache_.nodes[node_index].ego = true;
@@ -82,7 +83,8 @@ void Grid::calculateFinishNode() {
     std::vector<RTreeIndexedPoint> rtree_indexed_points;
 
     node_cache_.indexed_point_rtree.query(
-        bg::index::nearest(RTreePoint(finish_area_.center.x, finish_area_.center.y), 1), std::back_inserter(rtree_indexed_points));
+        bg::index::nearest(RTreePoint(finish_area_.center.x, finish_area_.center.y), 1),
+        std::back_inserter(rtree_indexed_points));
 
     int node_index = rtree_indexed_points.back().second;
     node_cache_.nodes[node_index].finish = true;
@@ -96,22 +98,18 @@ void Grid::calculateFinishAreaNodes() {
 
     RTreeBox rtree_finish_box(
         RTreePoint(
-            finish_node_point.x - finish_area_.radius,
-            finish_node_point.y - finish_area_.radius),
+            finish_node_point.x - finish_area_.radius, finish_node_point.y - finish_area_.radius),
         RTreePoint(
-            finish_node_point.x + finish_area_.radius,
-            finish_node_point.y + finish_area_.radius));
+            finish_node_point.x + finish_area_.radius, finish_node_point.y + finish_area_.radius));
 
     node_cache_.indexed_point_rtree.query(
-        bg::index::intersects(rtree_finish_box) &&
-        bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
-            geom::Vec2 node_point(
-                rtree_indexed_point.first.get<0>(),
-                rtree_indexed_point.first.get<1>()
-            );
+        bg::index::intersects(rtree_finish_box)
+            && bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
+                   geom::Vec2 node_point(
+                       rtree_indexed_point.first.get<0>(), rtree_indexed_point.first.get<1>());
 
-            return (finish_node_point - node_point).lenSq() < squared(finish_area_.radius);
-        }),
+                   return (finish_node_point - node_point).lenSq() < squared(finish_area_.radius);
+               }),
         std::back_inserter(rtree_indexed_points));
 
     for (const auto& rtree_indexed_point : rtree_indexed_points) {

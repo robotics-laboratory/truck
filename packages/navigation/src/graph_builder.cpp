@@ -60,15 +60,14 @@ RTreeIndexedPoints getNodeNeighborsSearchRadius(
 
     RTreeBox rtree_box(
         RTreePoint(point.x - search_radius, point.y - search_radius),
-        RTreePoint(point.x + search_radius, point.y + search_radius)
-    );
+        RTreePoint(point.x + search_radius, point.y + search_radius));
 
     rtree.query(
-        bg::index::intersects(rtree_box) &&
-        bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
-            geom::Vec2 neighbor_point = toVec2(rtree_indexed_point.first);
-            return (point - neighbor_point).lenSq() < squared(search_radius);
-        }),
+        bg::index::intersects(rtree_box)
+            && bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
+                   geom::Vec2 neighbor_point = toVec2(rtree_indexed_point.first);
+                   return (point - neighbor_point).lenSq() < squared(search_radius);
+               }),
         std::back_inserter(rtree_indexed_points));
 
     return rtree_indexed_points;

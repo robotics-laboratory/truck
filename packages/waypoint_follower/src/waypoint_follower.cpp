@@ -11,8 +11,8 @@ namespace truck::waypoint_follower {
 
 Waypoint::Waypoint(uint32_t seq_id, const geom::Vec2& pos) : seq_id(seq_id), pos(pos) {}
 
-LinkedPose::LinkedPose(uint32_t wp_seq_id, const geom::Pose& pose)
-    : wp_seq_id(wp_seq_id), pose(pose) {}
+LinkedPose::LinkedPose(uint32_t wp_seq_id, const geom::Pose& pose) :
+    wp_seq_id(wp_seq_id), pose(pose) {}
 
 namespace {
 
@@ -74,9 +74,9 @@ void WaypointFollower::reset() {
 }
 
 bool WaypointFollower::isReadyToFinish(const geom::Pose& ego_pose) const {
-    return state_.waypoints.size() == 1 && state_.path.size() >= 1 &&
-           geom::distanceSq(ego_pose.pos, state_.path.back().pose.pos) <
-               squared(params_.check_in_distance);
+    return state_.waypoints.size() == 1 && state_.path.size() >= 1
+           && geom::distanceSq(ego_pose.pos, state_.path.back().pose.pos)
+                  < squared(params_.check_in_distance);
 }
 
 void WaypointFollower::addEgoWaypoint(const geom::Pose& ego_pose) {

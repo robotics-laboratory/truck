@@ -21,7 +21,7 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
-        std::bind(&SimulatorNode::makeSimulationTick, this));    
+        std::bind(&SimulatorNode::makeSimulationTick, this));
 }
 
 void SimulatorNode::initializeParameters() {
@@ -46,8 +46,8 @@ void SimulatorNode::initializeTopicHandlers() {
     signals_.hardware_odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
         "/hardware/odom", rclcpp::QoS(1).reliability(qos));
 
-    signals_.tf_publisher = Node::create_publisher<tf2_msgs::msg::TFMessage>(
-        "/tf", rclcpp::QoS(1).reliability(qos));
+    signals_.tf_publisher =
+        Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf", rclcpp::QoS(1).reliability(qos));
 
     signals_.telemetry = Node::create_publisher<truck_msgs::msg::HardwareTelemetry>(
         "/hardware/telemetry", rclcpp::QoS(1).reliability(qos));
@@ -66,7 +66,8 @@ void SimulatorNode::initializeCache(const std::unique_ptr<model::Model>& model) 
     cache_.lidar_config.tf = model->getLatestTranform("base", "lidar_link");
     cache_.lidar_config.angle_min = static_cast<float>(model->lidar().angle_min.radians());
     cache_.lidar_config.angle_max = static_cast<float>(model->lidar().angle_max.radians());
-    cache_.lidar_config.angle_increment = static_cast<float>(model->lidar().angle_increment.radians());
+    cache_.lidar_config.angle_increment =
+        static_cast<float>(model->lidar().angle_increment.radians());
     cache_.lidar_config.range_min = model->lidar().range_min;
     cache_.lidar_config.range_max = model->lidar().range_max;
 }
@@ -91,7 +92,7 @@ void SimulatorNode::initializeEngine() {
 
     engine_ = std::make_unique<SimulatorEngine>(
         std::move(model),
-        declare_parameter("integration_step", 0.001), 
+        declare_parameter("integration_step", 0.001),
         declare_parameter("calculations_precision", 1e-8));
     engine_->resetBase(pose, steering, velocity);
     engine_->resetMap(declare_parameter("map_config", ""));

@@ -36,8 +36,8 @@ bool intersect(const Segment& seg1, const Segment& seg2, const double eps) noexc
     // Given three collinear points p, q, r, the function checks if
     // point q lies on line segment 'pr'
     auto onSegment = [](const Vec2& p, const Vec2& q, const Vec2& r) {
-        if (q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) &&
-            q.y <= std::max(p.y, r.y) && q.y >= std::min(p.y, r.y)) {
+        if (q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) && q.y <= std::max(p.y, r.y)
+            && q.y >= std::min(p.y, r.y)) {
             return true;
         }
 
@@ -98,7 +98,6 @@ std::optional<Vec2> intersect(const Line& l1, const Line& l2, const double eps) 
 }
 
 std::optional<Vec2> intersect(const Ray& ray, const Segment& segment, double precision) noexcept {
-
     auto ray_dir = ray.dir.vec();
     auto segment_dir = static_cast<Vec2>(segment);
 

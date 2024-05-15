@@ -15,12 +15,12 @@ launch:
             - { name: "max_ego_dist", value: 2.0 }
             - { name: "postfix_len", value: 2.0 }
             - { name: "spline_step", value: 0.2 }
-        
+
         - name: "mesh"
           param:
             - { name: "dist", value: 2.8 }
             - { name: "offset", value: 1.2 }
-        
+
         - name: "graph"
           param:
             - { name: "k_nearest_mode", value: false }

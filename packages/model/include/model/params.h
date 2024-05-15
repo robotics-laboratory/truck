@@ -52,7 +52,7 @@ struct ServoAngles {
     ServoAngles(const YAML::Node& node);
 
     geom::Angle left;
-    geom::Angle right; 
+    geom::Angle right;
 };
 
 struct Wheel {

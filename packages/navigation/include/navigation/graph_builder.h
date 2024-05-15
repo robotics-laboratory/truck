@@ -5,10 +5,7 @@
 namespace truck::navigation::graph {
 
 struct GraphParams {
-    enum class Mode : uint8_t {
-        kNearest = 0,
-        searchRadius = 1
-    } mode;
+    enum class Mode : uint8_t { kNearest = 0, searchRadius = 1 } mode;
     size_t k_nearest = 6;
     double search_radius = 2;
 };

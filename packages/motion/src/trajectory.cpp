@@ -11,9 +11,7 @@
 
 namespace truck::motion {
 
-std::string toString(std::optional<double> v) {
-    return v ? std::to_string(*v) : "null";
-}
+std::string toString(std::optional<double> v) { return v ? std::to_string(*v) : "null"; }
 
 std::ostream& operator<<(std::ostream& out, const State& state) noexcept {
     return out << std::fixed << std::setprecision(2) << std::boolalpha << "{"
@@ -38,7 +36,7 @@ void Trajectory::fillDistance() {
     auto it = states.begin();
     it->distance = 0;
 
-    for (auto next = it + 1; next != states.end(); ) {
+    for (auto next = it + 1; next != states.end();) {
         next->distance = it->distance + geom::distance(it->pose.pos, next->pose.pos);
         it = next;
         ++next;
@@ -56,8 +54,10 @@ void throwIfVelocityViolated(const model::Model& model, const Trajectory& trajec
         VERIFY_FMT(
             limit.isMet(state.velocity),
             "Violates velocity: [%i]:%s not in [%f, %f]",
-            i, state.toString().c_str(),
-            limit.min, limit.max);
+            i,
+            state.toString().c_str(),
+            limit.min,
+            limit.max);
     }
 }
 
@@ -73,8 +73,10 @@ void throwIfAccelerationViolated(const model::Model& model, const Trajectory& tr
         VERIFY_FMT(
             limit.isMet(state.acceleration),
             "Violates acceleration: [%i]:%s not in [%f, %f]",
-            i, state.toString().c_str(),
-            limit.min, limit.max);
+            i,
+            state.toString().c_str(),
+            limit.min,
+            limit.max);
     }
 }
 
@@ -100,7 +102,9 @@ void throwIfInvalidDistance(const Trajectory& trajectory) {
         VERIFY_FMT(
             eq(distance, expected, 1e-3),
             "State has incorrect distance: [%i]:%s != %f",
-            i, state.toString().c_str(), expected);
+            i,
+            state.toString().c_str(),
+            expected);
     }
 }
 
@@ -119,10 +123,7 @@ void throwIfInvalidTime(const Trajectory& trajectory) {
     }
 
     if (front.reachable()) {
-        VERIFY_FMT(
-            front.getTime() == 0,
-            "Ego has non-zero time: [0]:%s",
-            front.toString().c_str());
+        VERIFY_FMT(front.getTime() == 0, "Ego has non-zero time: [0]:%s", front.toString().c_str());
     } else {
         VERIFY_FMT(
             eq(front.velocity, .0),
@@ -143,19 +144,22 @@ void throwIfInvalidTime(const Trajectory& trajectory) {
             VERIFY_FMT(
                 !state.reachable(),
                 "State has collision, but reachable [%i]:%s",
-                i, state.toString().c_str());
+                i,
+                state.toString().c_str());
         }
 
         if (!state.reachable()) {
             VERIFY_FMT(
                 state.velocity == .0,
                 "State is unreachable, but velocity [%i]:%s",
-                i, state.toString().c_str());
+                i,
+                state.toString().c_str());
 
             VERIFY_FMT(
                 state.acceleration == .0,
                 "State is unreachable, but acceleration [%i]:%f",
-                i, state.toString().c_str());
+                i,
+                state.toString().c_str());
 
             continue;
         }
@@ -165,8 +169,10 @@ void throwIfInvalidTime(const Trajectory& trajectory) {
         VERIFY_FMT(
             prev.getTime() < state.getTime(),
             "Non-increasing time: [%i]:%s -> [%i]:%s",
-            i - 1, prev.toString().c_str(),
-            i, state.toString().c_str());
+            i - 1,
+            prev.toString().c_str(),
+            i,
+            state.toString().c_str());
 
         const double dt = state.getTime() - prev.getTime();
         const double expected_velocity = prev.velocity + prev.acceleration * dt;
@@ -174,7 +180,9 @@ void throwIfInvalidTime(const Trajectory& trajectory) {
         VERIFY_FMT(
             eq(state.velocity, expected_velocity, 1e-3),
             "State [%i]:%s has incorrect velocity, expected %f",
-            i, state.toString().c_str(), expected_velocity);
+            i,
+            state.toString().c_str(),
+            expected_velocity);
 
         const double expected_distance = state.distance - prev.distance;
         const double distance = dt * prev.velocity + 0.5 * dt * dt * prev.acceleration;
@@ -182,7 +190,9 @@ void throwIfInvalidTime(const Trajectory& trajectory) {
         VERIFY_FMT(
             eq(distance, expected_distance, 1e-3),
             "State [%i]:%s has incorrect distance, expected %f",
-            i, state.toString().c_str(), expected_distance);
+            i,
+            state.toString().c_str(),
+            expected_distance);
     }
 }
 
@@ -397,7 +407,7 @@ std::optional<double> getTime(const truck_msgs::msg::TrajectoryState& msg) {
     return msg.reachable ? std::optional{msg.time} : std::nullopt;
 }
 
-} // namespace
+}  // namespace
 
 State toState(const truck_msgs::msg::TrajectoryState& msg) {
     return State{

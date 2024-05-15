@@ -20,7 +20,7 @@ TEST(fmt, test) {
 TEST(exception, constructor) {
     try {
         throw Exception("Hello, world!");
-    } catch (const Exception &e) {
+    } catch (const Exception& e) {
         const std::string what = e.what();
         ASSERT_EQ(what, "Hello, world!");
     }
@@ -29,7 +29,7 @@ TEST(exception, constructor) {
 TEST(exception, like_stream) {
     try {
         throw Exception() << "x = " << 42;
-    } catch (const Exception &e) {
+    } catch (const Exception& e) {
         const std::string what = e.what();
         ASSERT_EQ(what, "x = 42");
     }
@@ -41,7 +41,7 @@ TEST(verify, to_throw) { EXPECT_THROW(VERIFY(false), Exception); }
 
 TEST(verify, forward) {
     const int n = 42;
-    const int *p = &n;
+    const int* p = &n;
 
     EXPECT_EQ(VERIFY(p), p);
 }
@@ -49,7 +49,7 @@ TEST(verify, forward) {
 TEST(verify, stream) {
     try {
         VERIFY_STREAM(false, "x = " << 42);
-    } catch (const Exception &e) {
+    } catch (const Exception& e) {
         const std::string what = e.what();
         EXPECT_TRUE(what.ends_with("x = 42"));
         return;
@@ -61,7 +61,7 @@ TEST(verify, stream) {
 TEST(verify, fmt) {
     try {
         VERIFY_FMT(false, "%s = %d", "x", 42);
-    } catch (const Exception &e) {
+    } catch (const Exception& e) {
         const std::string what = e.what();
         ASSERT_TRUE(what.ends_with("x = 42"));
         return;
@@ -126,7 +126,7 @@ TEST(ArrayAsBinaryIndexedTree, LowerBound) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

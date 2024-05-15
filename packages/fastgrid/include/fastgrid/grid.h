@@ -50,8 +50,9 @@ struct Grid {
     Grid() = default;
 
     Grid(
-        const Size& size, double resolution, const std::optional<geom::Pose>& origin = std::nullopt)
-        : size(size), resolution(resolution) {
+        const Size& size, double resolution,
+        const std::optional<geom::Pose>& origin = std::nullopt) :
+        size(size), resolution(resolution) {
         if (origin) {
             this->origin = Origin(*origin);
         }

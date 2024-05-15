@@ -27,12 +27,11 @@
 
 namespace rosaruco {
 
-
 class ArucoLocalization : public rclcpp::Node {
-   public:
+  public:
     ArucoLocalization();
 
-   private:
+  private:
     void HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg);
     void UpdateCameraInfo(sensor_msgs::msg::CameraInfo::ConstSharedPtr msg);
 
@@ -51,4 +50,4 @@ class ArucoLocalization : public rclcpp::Node {
     CameraTracker coordinator_;
 };
 
-} // namespace rosaruco
+}  // namespace rosaruco

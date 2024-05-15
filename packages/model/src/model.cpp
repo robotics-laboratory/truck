@@ -61,7 +61,7 @@ double rearToArbitraryPointCurvature(double rear_curvature, const geom::Vec2& re
     return rear_curvature / ratio;
 }
 
-} // namespace
+}  // namespace
 
 Model::Model(const std::string& config_path) : params_(config_path) {
     cache_.width_half = params_.wheel_base.width / 2;
@@ -75,12 +75,11 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
         const geom::Vec2 rear_to_base(params_.wheel_base.base_to_rear, 0);
-        cache_.max_abs_curvature =
-            std::min(rearToArbitraryPointCurvature(max_abs_rear_curvature, rear_to_base), 
+        cache_.max_abs_curvature = std::min(
+            rearToArbitraryPointCurvature(max_abs_rear_curvature, rear_to_base),
             params_.limits.max_abs_curvature);
 
-        const double steering_limit 
-            = std::atan2(max_abs_rear_curvature, params_.wheel_base.length);
+        const double steering_limit = std::atan2(max_abs_rear_curvature, params_.wheel_base.length);
         cache_.middle_steering_limits = {-steering_limit, steering_limit};
 
         cache_.base_curvature_limits = {-cache_.max_abs_curvature, cache_.max_abs_curvature};
@@ -135,23 +134,19 @@ Limits<geom::Angle> Model::leftSteeringLimits() const {
 }
 
 Limits<geom::Angle> Model::rightSteeringLimits() const {
-
     return {-params_.limits.steering.outer, params_.limits.steering.inner};
 }
 
-Limits<double> Model::middleSteeringLimits() const {
-    return cache_.middle_steering_limits;
-}
+Limits<double> Model::middleSteeringLimits() const { return cache_.middle_steering_limits; }
 
 Steering Model::rearCurvatureToSteering(double curvature) const {
     const double first = curvature * params_.wheel_base.length;
     const double second = curvature * cache_.width_half;
 
-    return Steering {
+    return Steering{
         geom::Angle::fromRadians(std::atan2(first, 1)),
         geom::Angle::fromRadians(std::atan2(first, 1 - second)),
-        geom::Angle::fromRadians(std::atan2(first, 1 + second))
-    };
+        geom::Angle::fromRadians(std::atan2(first, 1 + second))};
 }
 
 double Model::middleSteeringToRearCurvature(double steering) const {
@@ -165,10 +160,9 @@ Steering Model::rearTwistToSteering(Twist rear_twist) const {
 WheelVelocity Model::rearTwistToWheelVelocity(Twist rear_twist) const {
     const double ratio = rear_twist.curvature * cache_.width_half;
 
-    return WheelVelocity {
+    return WheelVelocity{
         geom::Angle{(1 - ratio) * rear_twist.velocity / params_.wheel.radius},
-        geom::Angle{(1 + ratio) * rear_twist.velocity / params_.wheel.radius}
-    };
+        geom::Angle{(1 + ratio) * rear_twist.velocity / params_.wheel.radius}};
 }
 
 double Model::linearVelocityToMotorRPS(double velocity) const {
@@ -191,11 +185,11 @@ const Lidar& Model::lidar() const { return params_.lidar; }
 
 tf2_msgs::msg::TFMessage Model::getTfStaticMsg() const { return cache_.tf_static_msg; }
 
-tf2::Transform Model::getLatestTranform(const std::string& source, 
-    const std::string& target) const {
+tf2::Transform Model::getLatestTranform(
+    const std::string& source, const std::string& target) const {
     try {
-        const auto tf = cache_.tf_static_buffer->lookupTransform(
-            target, source, rclcpp::Time(0)).transform;
+        const auto tf =
+            cache_.tf_static_buffer->lookupTransform(target, source, rclcpp::Time(0)).transform;
         tf2::Transform transform;
         tf2::fromMsg(tf, transform);
         return transform;

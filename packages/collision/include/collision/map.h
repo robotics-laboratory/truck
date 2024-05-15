@@ -13,8 +13,7 @@ struct Map {
     Map emptyLikeThis() const;
 
     nav_msgs::msg::OccupancyGrid makeCostMap(
-        const std_msgs::msg::Header& header,
-        double kMaxDist) const;
+        const std_msgs::msg::Header& header, double kMaxDist) const;
 
     geom::Pose origin;
     double resolution;
