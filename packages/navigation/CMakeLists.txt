@@ -24,17 +24,20 @@ ament_target_dependencies(${PROJECT_NAME}_viewer common geom OpenCV)
 target_include_directories(
   ${PROJECT_NAME}_mesh
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 target_include_directories(
   ${PROJECT_NAME}_graph
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 target_include_directories(
   ${PROJECT_NAME}_viewer
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 ament_export_targets(${PROJECT_NAME}_targets HAS_LIBRARY_TARGET)
 
@@ -45,7 +48,8 @@ install(
   EXPORT ${PROJECT_NAME}_targets
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+)
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 

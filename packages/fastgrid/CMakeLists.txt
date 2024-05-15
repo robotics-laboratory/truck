@@ -6,15 +6,18 @@ find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(OpenCV REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED src/distance_transform.cpp src/grid.cpp
-                                   src/manhattan_distance.cpp src/draw.cpp)
+add_library(
+  ${PROJECT_NAME} SHARED src/distance_transform.cpp src/grid.cpp
+                         src/manhattan_distance.cpp src/draw.cpp
+)
 
 ament_target_dependencies(${PROJECT_NAME} common geom OpenCV)
 
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(common geom OpenCV)
@@ -24,7 +27,8 @@ install(
   EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+)
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 

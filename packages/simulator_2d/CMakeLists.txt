@@ -15,15 +15,17 @@ find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(map REQUIRED)
 
-add_library(simulator_engine SHARED src/simulator_engine.cpp
-                                    src/truck_state.cpp)
+add_library(
+  simulator_engine SHARED src/simulator_engine.cpp src/truck_state.cpp
+)
 
 ament_target_dependencies(simulator_engine model geom map tf2)
 
 target_include_directories(
   simulator_engine
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 ament_export_targets(simulator_engine_targets HAS_LIBRARY_TARGET)
 
@@ -34,7 +36,8 @@ install(
   EXPORT simulator_engine_targets
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+)
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
@@ -51,7 +54,8 @@ ament_target_dependencies(
   tf2_msgs
   rosgraph_msgs
   sensor_msgs
-  nlohmann_json)
+  nlohmann_json
+)
 
 target_link_libraries(${PROJECT_NAME}_node simulator_engine)
 

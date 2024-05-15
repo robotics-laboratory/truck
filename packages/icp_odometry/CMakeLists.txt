@@ -12,7 +12,8 @@ find_package(
              chrono
              timer
              serialization
-             REQUIRED)
+             REQUIRED
+)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(libpointmatcher REQUIRED)
@@ -20,8 +21,10 @@ find_package(sensor_msgs REQUIRED)
 find_package(truck_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 
-add_executable(${PROJECT_NAME}_node src/main.cpp src/icp_odometry_node.cpp
-                                    src/conversion.cpp)
+add_executable(
+  ${PROJECT_NAME}_node src/main.cpp src/icp_odometry_node.cpp
+                       src/conversion.cpp
+)
 
 ament_target_dependencies(
   ${PROJECT_NAME}_node
@@ -31,13 +34,15 @@ ament_target_dependencies(
   rclcpp
   sensor_msgs
   Boost
-  truck_msgs)
+  truck_msgs
+)
 
 target_include_directories(
   ${PROJECT_NAME}_node
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
          "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 install(TARGETS ${PROJECT_NAME}_node DESTINATION lib/${PROJECT_NAME})
 

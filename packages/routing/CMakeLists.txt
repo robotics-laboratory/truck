@@ -22,7 +22,8 @@ ament_target_dependencies(
   truck_msgs
   nav_msgs
   geometry_msgs
-  Boost)
+  Boost
+)
 
 install(TARGETS ${PROJECT_NAME}_node DESTINATION lib/${PROJECT_NAME})
 
@@ -30,14 +31,16 @@ target_include_directories(
   ${PROJECT_NAME}_node
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
          "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_cmake_clang_format REQUIRED)
-  ament_clang_format(CONFIG_FILE
-                     "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+  ament_clang_format(
+    CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format"
+  )
 endif()
 
 ament_package()

@@ -1,6 +1,7 @@
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+exclude = [".cmake-format.py"]
 
 [tool.ruff.lint]
 select = ["I", "F", "E"]

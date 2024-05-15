@@ -21,10 +21,12 @@ add_executable(
   src/transform.cpp
   src/visualization_helpers.cpp
   src/tf_graph.cpp
-  src/graph_algorithms.cpp)
+  src/graph_algorithms.cpp
+)
 
-target_include_directories(aruco_localization
-                           PRIVATE include/aruco_localization)
+target_include_directories(
+  aruco_localization PRIVATE include/aruco_localization
+)
 ament_target_dependencies(
   ${PROJECT_NAME}
   cv_bridge
@@ -35,7 +37,8 @@ ament_target_dependencies(
   tf2
   tf2_geometry_msgs
   tf2_msgs
-  visualization_msgs)
+  visualization_msgs
+)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION lib/${PROJECT_NAME})
 

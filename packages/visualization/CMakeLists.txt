@@ -10,8 +10,9 @@ find_package(map REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
-add_executable(visualization_node src/color.cpp src/main.cpp
-                                  src/visualization_node.cpp)
+add_executable(
+  visualization_node src/color.cpp src/main.cpp src/visualization_node.cpp
+)
 
 ament_target_dependencies(
   visualization_node
@@ -21,7 +22,8 @@ ament_target_dependencies(
   truck_msgs
   map
   visualization_msgs
-  tf2_geometry_msgs)
+  tf2_geometry_msgs
+)
 
 install(TARGETS visualization_node DESTINATION lib/${PROJECT_NAME})
 

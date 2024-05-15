@@ -20,7 +20,8 @@ ament_target_dependencies(
   sensor_msgs
   std_srvs
   truck_msgs
-  yaml_cpp_vendor)
+  yaml_cpp_vendor
+)
 
 install(TARGETS ${PROJECT_NAME}_node DESTINATION lib/${PROJECT_NAME})
 

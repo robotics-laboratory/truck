@@ -14,6 +14,7 @@ ament_target_dependencies(
   geom
   rclcpp
   rosbag2_cpp
-  rosbag2_storage)
+  rosbag2_storage
+)
 
 target_link_libraries(${PROJECT_NAME}_test simulator_engine)

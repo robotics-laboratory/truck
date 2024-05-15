@@ -33,7 +33,8 @@ rosidl_generate_interfaces(
   geometry_msgs
   nav_msgs
   visualization_msgs
-  ADD_LINTER_TESTS)
+  ADD_LINTER_TESTS
+)
 
 ament_export_dependencies(rosidl_default_runtime)
 

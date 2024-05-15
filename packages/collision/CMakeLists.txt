@@ -15,7 +15,8 @@ ament_target_dependencies(collision common geom model nav_msgs OpenCV)
 
 target_include_directories(
   collision PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+                   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 ament_export_targets(collision HAS_LIBRARY_TARGET)
 
@@ -26,7 +27,8 @@ install(
   EXPORT collision
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+)
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 

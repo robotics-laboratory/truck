@@ -27,13 +27,15 @@ ament_target_dependencies(
   rclcpp
   sensor_msgs
   std_msgs
-  tf2_geometry_msgs)
+  tf2_geometry_msgs
+)
 
 target_include_directories(
   ${PROJECT_NAME}_node
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
          "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 install(TARGETS occupancy_grid_node DESTINATION lib/${PROJECT_NAME})
 

@@ -18,7 +18,8 @@ target_link_libraries(${PROJECT_NAME} pugixml fmt)
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(common geom pugixml fmt)
@@ -28,14 +29,16 @@ install(
   EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+)
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_cmake_clang_format REQUIRED)
-  ament_clang_format(CONFIG_FILE
-                     "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+  ament_clang_format(
+    CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format"
+  )
 
   add_subdirectory("test")
 endif()
