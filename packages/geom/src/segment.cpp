@@ -5,7 +5,7 @@
 
 namespace truck::geom {
 
-Poses Segment::trace(double step) const noexcept { return bezier1(begin, end, step); }
+Poses Segment::trace(double step) const noexcept { return bezier1(begin, end, step).AsPoses(); }
 
 Vec2 Segment::pos(double t) const noexcept {
     t = clamp(t, 0.0, 1.0);
