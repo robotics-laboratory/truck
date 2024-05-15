@@ -61,7 +61,7 @@ double rearToArbitraryPointCurvature(double rear_curvature, const geom::Vec2& re
     return rear_curvature / ratio;
 }
 
-} // namespace
+}  // namespace
 
 Model::Model(const std::string& config_path) : params_(config_path) {
     cache_.width_half = params_.wheel_base.width / 2;
@@ -75,8 +75,8 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
         const geom::Vec2 rear_to_base(params_.wheel_base.base_to_rear, 0);
-        cache_.max_abs_curvature =
-            std::min(rearToArbitraryPointCurvature(max_abs_rear_curvature, rear_to_base), 
+        cache_.max_abs_curvature = std::min(
+            rearToArbitraryPointCurvature(max_abs_rear_curvature, rear_to_base),
             params_.limits.max_abs_curvature);
 
         const double steering_limit = std::atan2(max_abs_rear_curvature, params_.wheel_base.length);
@@ -160,10 +160,9 @@ Steering Model::rearTwistToSteering(Twist rear_twist) const {
 WheelVelocity Model::rearTwistToWheelVelocity(Twist rear_twist) const {
     const double ratio = rear_twist.curvature * cache_.width_half;
 
-    return WheelVelocity {
+    return WheelVelocity{
         geom::Angle{(1 - ratio) * rear_twist.velocity / params_.wheel.radius},
-        geom::Angle{(1 + ratio) * rear_twist.velocity / params_.wheel.radius}
-    };
+        geom::Angle{(1 + ratio) * rear_twist.velocity / params_.wheel.radius}};
 }
 
 double Model::linearVelocityToMotorRPS(double velocity) const {

@@ -42,8 +42,7 @@ class SimulatorEngine {
     void initializeLidarCache();
     void initializeImuCache();
 
-    void resetRear(double x, double y, double yaw,
-        double steering, double linear_velocity);
+    void resetRear(double x, double y, double yaw, double steering, double linear_velocity);
     void resetRear();
 
     geom::Pose getOdomBasePose() const;

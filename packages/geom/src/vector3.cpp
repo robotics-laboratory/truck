@@ -17,7 +17,8 @@ Vec3 interpolate(const Vec3& a, const Vec3& b, double t) noexcept {
 }
 
 std::ostream& operator<<(std::ostream& out, const Vec3& v) {
-    return out << std::fixed << std::setprecision(3) << "[" << v.x << ", " << v.y << ", " << v.z << "]";
+    return out << std::fixed << std::setprecision(3) << "[" << v.x << ", " << v.y << ", " << v.z
+               << "]";
 }
 
 }  // namespace truck::geom

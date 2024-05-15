@@ -21,11 +21,8 @@ using namespace truck::simulator;
 
 const std::string MODEL_CONFIG_PATH = "/truck/packages/model/config/model.yaml";
 const std::string TEST_OUTPUT_PATH = "/truck/packages/build/simulator_2d/Testing/test_output_";
-rosbag2_storage::TopicMetadata TEST_OUTPUT_TOPIC {
-    "/simulator/state",
-    "truck_msgs/msg/SimulationState",
-    "cdr",
-    ""};
+rosbag2_storage::TopicMetadata TEST_OUTPUT_TOPIC{
+    "/simulator/state", "truck_msgs/msg/SimulationState", "cdr", ""};
 constexpr double EPS = 1e-9;
 
 struct ScriptStep {
@@ -57,46 +54,43 @@ truck_msgs::msg::SimulationState convertStateToMsg(const TruckState& truck_state
     state_msg.accel_linear_acceleration.x = acceleration.x;
     state_msg.accel_linear_acceleration.y = acceleration.y;
     state_msg.accel_linear_acceleration.z = acceleration.z;
-    
+
     return state_msg;
 }
 
 std::shared_ptr<rosbag2_storage::SerializedBagMessage> serializeMsg(
     const truck_msgs::msg::SimulationState& state_msg) {
-
     rclcpp::SerializedMessage serialized_msg;
     rclcpp::Serialization<truck_msgs::msg::SimulationState> serialization;
     serialization.serialize_message(&state_msg, &serialized_msg);
 
     auto bag_msg = std::make_shared<rosbag2_storage::SerializedBagMessage>();
-    bag_msg->time_stamp = RCUTILS_S_TO_NS(static_cast<int64_t>(state_msg.header.stamp.sec))
-        + state_msg.header.stamp.nanosec;
+    bag_msg->time_stamp = RCUTILS_S_TO_NS(static_cast<int64_t>(state_msg.header.stamp.sec)) +
+                          state_msg.header.stamp.nanosec;
     bag_msg->topic_name = TEST_OUTPUT_TOPIC.name;
     bag_msg->serialized_data = std::shared_ptr<rcutils_uint8_array_t>(
-        new rcutils_uint8_array_t,
-        [](rcutils_uint8_array_t *msg) {
+        new rcutils_uint8_array_t, [](rcutils_uint8_array_t* msg) {
             auto fini_return = rcutils_uint8_array_fini(msg);
             delete msg;
             if (fini_return != RCUTILS_RET_OK) {
                 std::cerr << "Failed to destroy serialized message "
-                    << rcutils_get_error_string().str << '\n';
+                          << rcutils_get_error_string().str << '\n';
                 FAIL();
             }
-      });
+        });
     *bag_msg->serialized_data = serialized_msg.release_rcl_serialized_message();
 
     return bag_msg;
 }
 
-void recordTruckState(const TruckState& truck_state,
-    rosbag2_cpp::writers::SequentialWriter &writer) {
-
+void recordTruckState(
+    const TruckState& truck_state, rosbag2_cpp::writers::SequentialWriter& writer) {
     const auto state_msg = convertStateToMsg(truck_state);
     auto bag_msg = serializeMsg(state_msg);
     writer.write(bag_msg);
 }
 
-TruckState processTestCase(const Script& script, double update_period, const std::string &suffix) {
+TruckState processTestCase(const Script& script, double update_period, const std::string& suffix) {
     auto model = std::make_unique<truck::model::Model>(MODEL_CONFIG_PATH);
     auto engine = SimulatorEngine(std::move(model));
 
@@ -132,9 +126,9 @@ TruckState processTestCase(const Script& script, double update_period, const std
 
 TEST(SimulatorEngine, straight) {
     // Arrange.
-    Script script {{500, 0.8, 0, std::nullopt}};
+    Script script{{500, 0.8, 0, std::nullopt}};
     const double update_period = 0.01;
-    
+
     // Act.
     const auto state = processTestCase(script, update_period, "straight");
 
@@ -157,12 +151,11 @@ TEST(SimulatorEngine, straight) {
 
 TEST(SimulatorEngine, straightBackward) {
     // Arrange.
-    Script script {
-        {100, 0.8, 0., std::nullopt}, 
-        {200, -0.8, 0., std::nullopt}, 
-        {300, 0.8, 0., std::nullopt}, 
-        {200, 0., 0., std::nullopt}
-    };
+    Script script{
+        {100, 0.8, 0., std::nullopt},
+        {200, -0.8, 0., std::nullopt},
+        {300, 0.8, 0., std::nullopt},
+        {200, 0., 0., std::nullopt}};
     const double update_period = 0.01;
 
     // Act.
@@ -187,7 +180,7 @@ TEST(SimulatorEngine, straightBackward) {
 
 TEST(SimulatorEngine, circle) {
     // Arrange.
-    Script script {{500, 0.8, 2.0, std::nullopt}};
+    Script script{{500, 0.8, 2.0, std::nullopt}};
     const double update_period = 0.01;
 
     // Act.

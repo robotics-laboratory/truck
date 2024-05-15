@@ -16,11 +16,10 @@
 
 namespace truck::simulator {
 
-const double FREE_FALL_ACCELERATION = 9.81; // m/s^2
+const double FREE_FALL_ACCELERATION = 9.81;  // m/s^2
 
-SimulatorEngine::SimulatorEngine(std::unique_ptr<model::Model> model,
-    double integration_step, double precision) {
-        
+SimulatorEngine::SimulatorEngine(
+    std::unique_ptr<model::Model> model, double integration_step, double precision) {
     model_ = std::move(model);
     initializeParameters(integration_step, precision);
     initializeMathCache(integration_step);
@@ -100,15 +99,13 @@ void SimulatorEngine::eraseMap() { obstacles_.clear(); }
 
 namespace {
 
-geom::Pose getArbitraryPointPose(const geom::Vec2& rear_to_point,
-    double rear_x, double rear_y, double yaw) {
-
+geom::Pose getArbitraryPointPose(
+    const geom::Vec2& rear_to_point, double rear_x, double rear_y, double yaw) {
     geom::Pose pose;
     pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
     pose.pos = {
         rear_x + rear_to_point.x * pose.dir.x() - rear_to_point.y * pose.dir.y(),
-        rear_y + rear_to_point.x * pose.dir.y() + rear_to_point.y * pose.dir.x()
-    };
+        rear_y + rear_to_point.x * pose.dir.y() + rear_to_point.y * pose.dir.x()};
     return pose;
 }
 
@@ -231,7 +228,7 @@ geom::Vec3 applyRotation(const tf2::Transform& rotation, const geom::Vec3& vecto
     return geom::Vec3(v.getX(), v.getY(), v.getZ());
 }
 
-} // namespace
+}  // namespace
 
 geom::Vec3 SimulatorEngine::getImuAngularVelocity(double angular_velocity) const {
     const geom::Vec3 w(0, 0, angular_velocity);
@@ -239,14 +236,15 @@ geom::Vec3 SimulatorEngine::getImuAngularVelocity(double angular_velocity) const
 }
 
 geom::Vec3 SimulatorEngine::getImuLinearAcceleration(const model::Twist& rear_twist) const {
-    const auto twist = model_->rearToArbitraryPointTwist(rear_twist, cache_.rear_to_imu_translation);
+    const auto twist =
+        model_->rearToArbitraryPointTwist(rear_twist, cache_.rear_to_imu_translation);
     const auto acceleration = getCurrentAcceleration();
 
     const auto tan_a = geom::Vec2(acceleration, 0);
-    
+
     const auto rotation = geom::Vec2(0, 1 / rear_twist.curvature);
-    const auto imu_pose = getArbitraryPointPose(cache_.rear_to_imu_translation,
-        -model_->wheelBase().base_to_rear, 0, 0);
+    const auto imu_pose = getArbitraryPointPose(
+        cache_.rear_to_imu_translation, -model_->wheelBase().base_to_rear, 0, 0);
     const auto imu_to_rotation = rotation - imu_pose.pos;
     const auto centr_a = imu_to_rotation.unit() * squared(twist.velocity) * twist.curvature;
 
@@ -261,7 +259,8 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto rear_curvature = model_->middleSteeringToRearCurvature(steering);
     const auto current_steering = model_->rearCurvatureToSteering(rear_curvature);
     const auto target_steering = getTargetSteering();
-    const auto rear_twist = model::Twist{rear_curvature, rear_ax_state_[StateIndex::kLinearVelocity]};
+    const auto rear_twist =
+        model::Twist{rear_curvature, rear_ax_state_[StateIndex::kLinearVelocity]};
     const auto twist = model_->rearToBaseTwist(rear_twist);
     const auto linear_velocity = pose.dir * twist.velocity;
     const auto angular_velocity = twist.angularVelocity();
@@ -270,7 +269,7 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
     const auto gyro_angular_velocity = getImuAngularVelocity(angular_velocity);
     const auto accel_linear_acceleration = getImuLinearAcceleration(rear_twist);
-    
+
     return TruckState()
         .time(time_)
         .odomBasePose(pose)
