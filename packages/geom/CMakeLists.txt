@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(geom)
 
+set(EIGEN3_DIR /usr/include/eigen3)
+
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -32,6 +34,8 @@ add_library(
 )
 
 ament_target_dependencies(${PROJECT_NAME} common geometry_msgs nav_msgs tf2 CGAL Boost Eigen3)
+
+include_directories(${EIGEN3_DIR})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
