@@ -46,9 +46,11 @@ ament_target_dependencies(
 
 include_directories(${EIGEN3_DIR})
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+target_include_directories(
+  ${PROJECT_NAME}
+  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
