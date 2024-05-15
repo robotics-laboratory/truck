@@ -60,11 +60,12 @@ launch:
             False, False, False,   # pos
             False, False, False,   # rot
             True, False, False,    # pos`
-            False, False, False,    # rot`
+            False, False, False,   # rot`
             False, False, False,   # pos``
         ]
     }
 
+    # yamllint disable rule:line-length
     - { name: "process_noise_covariance", value: [
             0.001, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
             0.0,    0.001, 0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
@@ -86,3 +87,4 @@ launch:
             0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0001
         ]
     }
+    # yamllint enable rule:line-length

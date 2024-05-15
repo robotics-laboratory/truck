@@ -1,6 +1,6 @@
 rules:
   line-length:
-    max: 180
+    max: 120
 
   quoted-strings:
     quote-type: double
