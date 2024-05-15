@@ -39,7 +39,7 @@ TEST(Model, rearToArbitraryPointTwist) {
     ASSERT_GEOM_EQUAL(target_twist.velocity, expected_velocity, eps);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

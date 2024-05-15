@@ -13,7 +13,7 @@ CameraTracker::CameraTracker(int markers_count_) : graph_(markers_count_) {
 }
 
 void CameraTracker::Update(
-    const std::vector<int> &ids, const std::vector<Transform> &from_marker_to_cam) {
+    const std::vector<int>& ids, const std::vector<Transform>& from_marker_to_cam) {
     if (ids.empty()) {
         return;
     }
@@ -69,7 +69,7 @@ void CameraTracker::Update(
     }
 }
 
-const std::optional<Transform> &CameraTracker::GetTransformToAnchor(int from_id) const {
+const std::optional<Transform>& CameraTracker::GetTransformToAnchor(int from_id) const {
     return to_anchor_[from_id];
 }
 

@@ -11,21 +11,21 @@ class Transform {
     tf2::Vector3 translation_;
 
   public:
-    Transform(const tf2::Quaternion &rotation, const tf2::Vector3 &translation);
+    Transform(const tf2::Quaternion& rotation, const tf2::Vector3& translation);
 
-    tf2::Vector3 Apply(const tf2::Vector3 &v) const;
+    tf2::Vector3 Apply(const tf2::Vector3& v) const;
 
-    tf2::Vector3 operator()(const tf2::Vector3 &v) const;
+    tf2::Vector3 operator()(const tf2::Vector3& v) const;
 
-    const tf2::Quaternion &GetRotation() const;
+    const tf2::Quaternion& GetRotation() const;
 
-    const tf2::Vector3 &GetTranslation() const;
+    const tf2::Vector3& GetTranslation() const;
 
-    void SetRotation(const tf2::Quaternion &r);
+    void SetRotation(const tf2::Quaternion& r);
 
-    void SetTranslation(const tf2::Vector3 &t);
+    void SetTranslation(const tf2::Vector3& t);
 
-    Transform operator*(const Transform &other) const;
+    Transform operator*(const Transform& other) const;
 
     Transform Inverse() const;
 };

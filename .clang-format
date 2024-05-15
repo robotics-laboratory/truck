@@ -11,6 +11,7 @@ ColumnLimit: 100
 CompactNamespaces: false
 IndentWidth: 4
 NamespaceIndentation: None
+DerivePointerAlignment: false
 PointerAlignment: Left
 SortIncludes: false
 SpaceAfterTemplateKeyword: false
