@@ -10,15 +10,6 @@ double getBaseToRearRatio(double base_curvature, double base_to_rear) {
     return std::sqrt(1 - squared(base_curvature * base_to_rear));
 }
 
-double getRearToBaseRatio(double rear_curvature, double base_to_rear) {
-    return std::sqrt(1 + squared(rear_curvature * base_to_rear));
-}
-
-double rearToBaseCurvature(double rear_curvature, double base_to_rear) {
-    const double ratio = getRearToBaseRatio(rear_curvature, base_to_rear);
-    return rear_curvature / ratio;
-}
-
 geometry_msgs::msg::Vector3 toVector3(const YAML::Node& v) {
     geometry_msgs::msg::Vector3 msg;
 
@@ -59,7 +50,18 @@ tf2_msgs::msg::TFMessage loadTf(const std::string& path) {
     return result;
 }
 
-}  // namespace
+double rearToArbitraryPointRatio(double rear_curvature, const geom::Vec2& rear_to_point) {
+    const double a = 1 - rear_curvature * rear_to_point.y;
+    const double b = rear_curvature * rear_to_point.x;
+    return std::sqrt(squared(a) + squared(b));
+}
+
+double rearToArbitraryPointCurvature(double rear_curvature, const geom::Vec2& rear_to_point) {
+    const double ratio = rearToArbitraryPointRatio(rear_curvature, rear_to_point);
+    return rear_curvature / ratio;
+}
+
+} // namespace
 
 Model::Model(const std::string& config_path) : params_(config_path) {
     cache_.width_half = params_.wheel_base.width / 2;
@@ -72,8 +74,9 @@ Model::Model(const std::string& config_path) : params_(config_path) {
             tan_inner / (params_.wheel_base.length - cache_.width_half * tan_inner),
             tan_outer / (params_.wheel_base.length + cache_.width_half * tan_outer));
 
-        cache_.max_abs_curvature = std::min(
-            rearToBaseCurvature(max_abs_rear_curvature, params_.wheel_base.base_to_rear),
+        const geom::Vec2 rear_to_base(params_.wheel_base.base_to_rear, 0);
+        cache_.max_abs_curvature =
+            std::min(rearToArbitraryPointCurvature(max_abs_rear_curvature, rear_to_base), 
             params_.limits.max_abs_curvature);
 
         const double steering_limit = std::atan2(max_abs_rear_curvature, params_.wheel_base.length);
@@ -91,14 +94,20 @@ Model::Model(const std::string& config_path) : params_(config_path) {
     }
 }
 
-Twist Model::baseToRearTwist(Twist twist) const {
-    const double ratio = getBaseToRearRatio(twist.curvature, params_.wheel_base.base_to_rear);
-    return {twist.curvature / ratio, twist.velocity * ratio};
+Twist Model::rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) const {
+    const double ratio = rearToArbitraryPointRatio(rear_twist.curvature, rear_to_point);
+    return {rear_twist.curvature / ratio, rear_twist.velocity * ratio};
 }
 
-Twist Model::rearToBaseTwist(Twist twist) const {
-    const double ratio = getRearToBaseRatio(twist.curvature, params_.wheel_base.base_to_rear);
-    return {twist.curvature / ratio, twist.velocity * ratio};
+Twist Model::baseToRearTwist(Twist base_twist) const {
+    const double ratio = getBaseToRearRatio(base_twist.curvature, params_.wheel_base.base_to_rear);
+    return {base_twist.curvature / ratio, base_twist.velocity * ratio};
+}
+
+Twist Model::rearToBaseTwist(Twist rear_twist) const {
+    const geom::Vec2 rear_to_base(params_.wheel_base.base_to_rear, 0);
+    const double ratio = rearToArbitraryPointRatio(rear_twist.curvature, rear_to_base);
+    return {rear_twist.curvature / ratio, rear_twist.velocity * ratio};
 }
 
 double Model::baseToRearAcceleration(double acceleration, double base_curvature) const {
@@ -144,16 +153,17 @@ double Model::middleSteeringToRearCurvature(double steering) const {
     return tan(steering) / params_.wheel_base.length;
 }
 
-Steering Model::rearTwistToSteering(Twist twist) const {
-    return rearCurvatureToSteering(twist.curvature);
+Steering Model::rearTwistToSteering(Twist rear_twist) const {
+    return rearCurvatureToSteering(rear_twist.curvature);
 }
 
-WheelVelocity Model::rearTwistToWheelVelocity(Twist twist) const {
-    const double ratio = twist.curvature * cache_.width_half;
+WheelVelocity Model::rearTwistToWheelVelocity(Twist rear_twist) const {
+    const double ratio = rear_twist.curvature * cache_.width_half;
 
-    return WheelVelocity{
-        geom::Angle{(1 - ratio) * twist.velocity / params_.wheel.radius},
-        geom::Angle{(1 + ratio) * twist.velocity / params_.wheel.radius}};
+    return WheelVelocity {
+        geom::Angle{(1 - ratio) * rear_twist.velocity / params_.wheel.radius},
+        geom::Angle{(1 + ratio) * rear_twist.velocity / params_.wheel.radius}
+    };
 }
 
 double Model::linearVelocityToMotorRPS(double velocity) const {

@@ -57,6 +57,9 @@ void SimulatorNode::initializeTopicHandlers() {
 
     signals_.scan = Node::create_publisher<sensor_msgs::msg::LaserScan>(
         "/lidar/scan", rclcpp::QoS(1).reliability(qos));
+
+    signals_.imu = Node::create_publisher<sensor_msgs::msg::Imu>(
+        "/camera/imu", rclcpp::QoS(1).reliability(qos));
 }
 
 void SimulatorNode::initializeCache(const std::unique_ptr<model::Model>& model) {
@@ -120,9 +123,7 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
 
     // Set the pose.
     const auto pose = truck_state.odomBasePose();
-    odom_msg.pose.pose.position.x = pose.pos.x;
-    odom_msg.pose.pose.position.y = pose.pos.y;
-    odom_msg.pose.pose.orientation = truck::geom::msg::toQuaternion(pose.dir);
+    odom_msg.pose.pose = truck::geom::msg::toPose(pose);
 
     // Set the twist.
     const auto linear_velocity = truck_state.odomBaseLinearVelocity();
@@ -174,8 +175,23 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
     truck_msgs::msg::SimulationState state_msg;
     state_msg.header.frame_id = "base";
     state_msg.header.stamp = truck_state.time();
+
     state_msg.speed = truck_state.baseTwist().velocity;
     state_msg.steering = truck_state.currentSteering().middle.radians();
+
+    const auto pose = truck_state.odomBasePose();
+    state_msg.pose = truck::geom::msg::toPose(pose);
+
+    const auto angular_velocity = truck_state.gyroAngularVelocity();
+    state_msg.gyro_angular_velocity.x = angular_velocity.x;
+    state_msg.gyro_angular_velocity.y = angular_velocity.y;
+    state_msg.gyro_angular_velocity.z = angular_velocity.z;
+
+    const auto acceleration = truck_state.accelLinearAcceleration();
+    state_msg.accel_linear_acceleration.x = acceleration.x;
+    state_msg.accel_linear_acceleration.y = acceleration.y;
+    state_msg.accel_linear_acceleration.z = acceleration.z;
+
     signals_.state->publish(state_msg);
 }
 
@@ -193,6 +209,29 @@ void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
     signals_.scan->publish(scan_msg);
 }
 
+void SimulatorNode::publishImuMessage(const TruckState& truck_state) {
+    sensor_msgs::msg::Imu imu_msg;
+    imu_msg.header.frame_id = "camera_imu_optical_frame";
+    imu_msg.header.stamp = truck_state.time();
+
+    // Set the sensor orientation.
+    imu_msg.orientation_covariance[0] = -1;
+
+    // Set the gyroscope.
+    const auto angular_velocity = truck_state.gyroAngularVelocity();
+    imu_msg.angular_velocity.x = angular_velocity.x;
+    imu_msg.angular_velocity.y = angular_velocity.y;
+    imu_msg.angular_velocity.z = angular_velocity.z;
+
+    // Set the accelerometer.
+    const auto acceleration = truck_state.accelLinearAcceleration();
+    imu_msg.linear_acceleration.x = acceleration.x;
+    imu_msg.linear_acceleration.y = acceleration.y;
+    imu_msg.linear_acceleration.z = acceleration.z;
+
+    signals_.imu->publish(imu_msg);
+}
+
 void SimulatorNode::publishSimulationState() {
     const auto truck_state = engine_->getTruckState();
     publishTime(truck_state);
@@ -201,6 +240,7 @@ void SimulatorNode::publishSimulationState() {
     publishTelemetryMessage(truck_state);
     publishSimulationStateMessage(truck_state);
     publishLaserScanMessage(truck_state);
+    publishImuMessage(truck_state);
 }
 
 void SimulatorNode::makeSimulationTick() {

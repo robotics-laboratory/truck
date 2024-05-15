@@ -6,6 +6,7 @@
 #include "geom/pose.h"
 #include "geom/segment.h"
 #include "geom/vector.h"
+#include "geom/vector3.h"
 
 #include <Eigen/Dense>
 
@@ -36,16 +37,20 @@ class SimulatorEngine {
 
     using State = Eigen::Matrix<double, 5, 1>;
 
-    void resetRear(double x, double y, double yaw, double steering, double linear_velocity);
+    void initializeParameters(double integration_step, double precision);
+    void initializeMathCache(double integration_step);
+    void initializeLidarCache();
+    void initializeImuCache();
+
+    void resetRear(double x, double y, double yaw,
+        double steering, double linear_velocity);
     void resetRear();
 
     geom::Pose getOdomBasePose() const;
-    model::Steering getCurrentSteering(double rear_curvature) const;
     model::Steering getTargetSteering() const;
-    model::Twist rearToOdomBaseTwist(double rear_curvature) const;
-    geom::Vec2 rearToOdomBaseLinearVelocity(truck::geom::AngleVec2 dir, double base_velocity) const;
-    double rearToBaseAngularVelocity(double base_velocity, double rear_curvature) const;
     std::vector<float> getLidarRanges(const geom::Pose& odom_base_pose) const;
+    geom::Vec3 getImuAngularVelocity(double angular_velocity) const;
+    geom::Vec3 getImuLinearAcceleration(const model::Twist& rear_twist) const;
 
     double getCurrentAcceleration() const;
     double getCurrentSteeringVelocity() const;
@@ -67,6 +72,8 @@ class SimulatorEngine {
         int lidar_rays_number;
         geom::AngleVec2 lidar_angle_min;
         geom::Angle lidar_angle_increment;
+        geom::Vec2 rear_to_imu_translation;
+        tf2::Transform base_to_hyro_rotation;
     } cache_;
 
     // The value is set in setControl and should not change in other methods.
