@@ -49,8 +49,8 @@ struct Parameters {
 
 class PurePursuit {
   public:
-    PurePursuit(const Parameters& params, const model::Model& model)
-        : params_{params}, model_(model) {}
+    PurePursuit(const Parameters& params, const model::Model& model) :
+        params_{params}, model_(model) {}
 
     Result operator()(const geom::Localization& localization, const motion::Trajectory& trajectory);
 

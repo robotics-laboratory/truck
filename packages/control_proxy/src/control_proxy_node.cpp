@@ -24,12 +24,12 @@ std::string toString(Mode mode) {
     }
 }
 
-ControlMap::ControlMap(const YAML::Node& node)
-    : velocity_axis(node["velocity_axis"].as<size_t>())
-    , curvature_axis(node["curvature_axis"].as<size_t>())
-    , off_button(node["off_button"].as<size_t>())
-    , remote_button(node["remote_button"].as<size_t>())
-    , auto_button(node["auto_button"].as<size_t>()) {}
+ControlMap::ControlMap(const YAML::Node& node) :
+    velocity_axis(node["velocity_axis"].as<size_t>()),
+    curvature_axis(node["curvature_axis"].as<size_t>()),
+    off_button(node["off_button"].as<size_t>()),
+    remote_button(node["remote_button"].as<size_t>()),
+    auto_button(node["auto_button"].as<size_t>()) {}
 
 ControlMap::ControlMap(const std::string& path) : ControlMap(YAML::LoadFile(path)) {}
 

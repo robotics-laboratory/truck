@@ -15,30 +15,30 @@ class UniformStepper {
 
     UniformStepper() = delete;
 
-    UniformStepper(const Container* container) noexcept
-        : container_(container)
-        , step_length_(1.0)
-        , dist_from_milestone_(0.0)
-        , milestone_(container_->begin()) {}
+    UniformStepper(const Container* container) noexcept :
+        container_(container),
+        step_length_(1.0),
+        dist_from_milestone_(0.0),
+        milestone_(container_->begin()) {}
 
-    UniformStepper(const Container* container, double step_length) noexcept
-        : container_(container)
-        , step_length_(step_length)
-        , dist_from_milestone_(0.0)
-        , milestone_(container_->begin()) {}
+    UniformStepper(const Container* container, double step_length) noexcept :
+        container_(container),
+        step_length_(step_length),
+        dist_from_milestone_(0.0),
+        milestone_(container_->begin()) {}
 
-    UniformStepper(const Container* container, ContainerIterator milestone) noexcept
-        : container_(container)
-        , step_length_(1.0)
-        , dist_from_milestone_(0.0)
-        , milestone_(milestone) {}
+    UniformStepper(const Container* container, ContainerIterator milestone) noexcept :
+        container_(container),
+        step_length_(1.0),
+        dist_from_milestone_(0.0),
+        milestone_(milestone) {}
 
     UniformStepper(
-        const Container* container, double step_length, ContainerIterator milestone) noexcept
-        : container_(container)
-        , step_length_(step_length)
-        , dist_from_milestone_(0.0)
-        , milestone_(milestone) {}
+        const Container* container, double step_length, ContainerIterator milestone) noexcept :
+        container_(container),
+        step_length_(step_length),
+        dist_from_milestone_(0.0),
+        milestone_(milestone) {}
 
     UniformStepper& SetStepLength(double step_length) noexcept {
         step_length_ = step_length;

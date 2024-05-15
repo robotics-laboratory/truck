@@ -16,8 +16,8 @@ geom::Angle toAngle(const tf2::Quaternion& q) {
     return geom::Angle::fromRadians(std::copysign(2 * std::acos(q.w()), q.z()));
 }
 
-Transform::Transform(const tf2::Transform& tf)
-    : translation_(toVector(tf.getOrigin())), rotation_(toAngle(tf.getRotation())) {}
+Transform::Transform(const tf2::Transform& tf) :
+    translation_(toVector(tf.getOrigin())), rotation_(toAngle(tf.getRotation())) {}
 
 Vec2 Transform::apply(Vec2 v) const { return translation_ + rotation_.apply(v); }
 

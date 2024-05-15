@@ -12,8 +12,8 @@
 namespace truck::geom {
 
 struct Arc {
-    Arc(const Vec2& center, double radius, const Vec2 begin, Angle delta)
-        : center(center), radius(radius), begin(begin), delta(delta) {
+    Arc(const Vec2& center, double radius, const Vec2 begin, Angle delta) :
+        center(center), radius(radius), begin(begin), delta(delta) {
         VERIFY(radius > 0);
     }
 

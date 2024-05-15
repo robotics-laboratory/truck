@@ -83,8 +83,8 @@ std::string ToString(const truck::geom::ComplexPolygon& value) {
 
 namespace truck::sdd {
 
-SDD::SDD(const std::string& input_path, const std::string& output_path)
-    : output_path_(output_path) {
+SDD::SDD(const std::string& input_path, const std::string& output_path) :
+    output_path_(output_path) {
     std::ifstream file(input_path, std::ios::in);
     VERIFY(file.is_open());
 

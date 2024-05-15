@@ -56,11 +56,11 @@ void TfGraph::GetBestTransformFromStartNode(
     }
 }
 
-TfGraph::Edge::Edge()
-    : average_translation_({0, 0, 0})
-    , transforms_count_(0)
-    , average_transform_({0, 0, 0, 0}, {0, 0, 0})
-    , error_(kDefaultEdgeError) {
+TfGraph::Edge::Edge() :
+    average_translation_({0, 0, 0}),
+    transforms_count_(0),
+    average_transform_({0, 0, 0, 0}, {0, 0, 0}),
+    error_(kDefaultEdgeError) {
     quaternion_sum_ = cv::Mat::zeros(4, 4, CV_64F);
 }
 

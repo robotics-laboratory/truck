@@ -49,8 +49,8 @@ class Lockable {
 
   public:
     template<typename... Args>
-    explicit Lockable(Args&&... args)
-        : storage_(std::make_shared<Storage>(std::forward<Args>(args)...)) {}
+    explicit Lockable(Args&&... args) :
+        storage_(std::make_shared<Storage>(std::forward<Args>(args)...)) {}
 
     auto lock() { return Lock(VERIFY(storage_)); }
 

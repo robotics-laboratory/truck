@@ -29,8 +29,8 @@ struct GridHolder {
         std::swap(this->ptr, ptr);
     }
 
-    GridHolder(GridHolder&& other) noexcept
-        : GridHolder(std::move(other.grid), std::move(other.ptr)) {}
+    GridHolder(GridHolder&& other) noexcept :
+        GridHolder(std::move(other.grid), std::move(other.ptr)) {}
 
     GridHolder(const GridHolder& other) = delete;
 

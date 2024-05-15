@@ -11,8 +11,8 @@ namespace truck::waypoint_follower {
 
 Waypoint::Waypoint(uint32_t seq_id, const geom::Vec2& pos) : seq_id(seq_id), pos(pos) {}
 
-LinkedPose::LinkedPose(uint32_t wp_seq_id, const geom::Pose& pose)
-    : wp_seq_id(wp_seq_id), pose(pose) {}
+LinkedPose::LinkedPose(uint32_t wp_seq_id, const geom::Pose& pose) :
+    wp_seq_id(wp_seq_id), pose(pose) {}
 
 namespace {
 

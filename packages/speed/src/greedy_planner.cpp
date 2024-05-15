@@ -174,8 +174,8 @@ void fillAfterEnd(It begin, It end) {
 
 }  // namespace
 
-GreedyPlanner::GreedyPlanner(const Params& params, const model::Model& model)
-    : params_(params), model_(model) {}
+GreedyPlanner::GreedyPlanner(const Params& params, const model::Model& model) :
+    params_(params), model_(model) {}
 
 void GreedyPlanner::fill(motion::Trajectory& trajectory) const {
     auto& states = trajectory.states;

@@ -7,7 +7,7 @@ AllowShortFunctionsOnASingleLine: All
 BinPackArguments: false
 BreakBeforeBraces: Attach
 BreakBeforeBinaryOperators: NonAssignment
-BreakConstructorInitializers: BeforeComma
+BreakConstructorInitializers: AfterColon
 ColumnLimit: 100
 CompactNamespaces: false
 IndentWidth: 4

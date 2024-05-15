@@ -32,14 +32,14 @@ const static int kMarkerCount = 250;
 
 namespace rosaruco {
 
-ArucoLocalization::ArucoLocalization()
-    : rclcpp::Node(kArucoLocalizationNodeName)
-    , camera_matrix_(kCameraMatrixSize, kCameraMatrixSize, CV_64F)
-    , dist_coeffs_(1, kDistCoeffsCount, CV_64F)
-    , detector_parameters_(cv::makePtr<cv::aruco::DetectorParameters>())
-    , marker_dictionary_(cv::makePtr<cv::aruco::Dictionary>(
-          cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250)))
-    , coordinator_(kMarkerCount) {
+ArucoLocalization::ArucoLocalization() :
+    rclcpp::Node(kArucoLocalizationNodeName),
+    camera_matrix_(kCameraMatrixSize, kCameraMatrixSize, CV_64F),
+    dist_coeffs_(1, kDistCoeffsCount, CV_64F),
+    detector_parameters_(cv::makePtr<cv::aruco::DetectorParameters>()),
+    marker_dictionary_(cv::makePtr<cv::aruco::Dictionary>(
+        cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250))),
+    coordinator_(kMarkerCount) {
     rclcpp::QoS qos(1);
     qos.reliable();
     qos.durability_volatile();
