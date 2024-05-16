@@ -8,12 +8,12 @@ The calculations are based on the [Ackeramnn model](../../doc/ackermann_vehicle.
 | Name | Description | Arguments | Return type |
 | --- | --- | --- | --- |
 | **resetBase** | Sets the model center state | const geom::Pose& pose, double middle_steering, double linear_velocity | void |
-| **resetMap** | Sets the model center state | const std::string& path | void |
-| **eraseMap** | Sets the model center state |  | void |
-| **getTruckState** | Sets the model center state |  | TruckState |
-| **setBaseControl** | Sets the model center state | double velocity, double acceleration, double curvature | void |
-| **setBaseControl** | Sets the model center state | double velocity, double curvature | void |
-| **advance** | Sets the model center state | double seconds = 1.0 | void |
+| **resetMap** | Sets the obstacle map, resets the simulation state | const std::string& path | void |
+| **eraseMap** | Clears the obstacle map, resets the simulation state |  | void |
+| **getTruckState** | Returns the simulation state |  | TruckState |
+| **setBaseControl** | Sets the control command | double velocity, double acceleration, double curvature | void |
+| **setBaseControl** | Sets the control command and selects the acceleration | double velocity, double curvature | void |
+| **advance** | Advances the simulation for a given time | double seconds = 1.0 | void |
 
 ## Truck State API
 
