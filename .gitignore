@@ -1,7 +1,6 @@
 *.DS_Store
-packages/build
-packages/install
-packages/log
+**/build
+**/install
 .vscode
 .dvc
 __pycache__/
