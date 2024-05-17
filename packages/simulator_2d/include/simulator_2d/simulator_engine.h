@@ -1,3 +1,5 @@
+#include "simulator_2d/simulation_map.h"
+#include "simulator_2d/status_code.h"
 #include "simulator_2d/truck_state.h"
 
 #include "model/model.h"
@@ -33,7 +35,13 @@ class SimulatorEngine {
     void advance(double seconds = 1.0);
 
   private:
-    enum StateIndex { kX = 0, kY = 1, kYaw = 2, kSteering = 3, kLinearVelocity = 4 };
+    enum StateIndex {
+        kX = 0,
+        kY = 1,
+        kYaw = 2,
+        kSteering = 3,
+        kLinearVelocity = 4 
+    };
 
     using State = Eigen::Matrix<double, 5, 1>;
 
@@ -44,6 +52,8 @@ class SimulatorEngine {
 
     void resetRear(double x, double y, double yaw, double steering, double linear_velocity);
     void resetRear();
+
+    void checkForCollisions();
 
     geom::Pose getOdomBasePose() const;
     model::Steering getTargetSteering() const;
@@ -67,10 +77,7 @@ class SimulatorEngine {
         double integration_step_6;
         double inverse_integration_step;
         double inverse_wheelbase_length;
-        geom::Vec2 base_to_lidar;
-        int lidar_rays_number;
-        geom::AngleVec2 lidar_angle_min;
-        geom::Angle lidar_angle_increment;
+        geom::Vec2 rear_to_lidar;
         geom::Vec2 rear_to_imu_translation;
         tf2::Transform base_to_hyro_rotation;
     } cache_;
@@ -84,11 +91,13 @@ class SimulatorEngine {
 
     rclcpp::Time time_;
 
+    StatusCode status_;
+
     State rear_ax_state_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
 
-    geom::Segments obstacles_;
+    SimulationMap map_;
 };
 
 }  // namespace truck::simulator
