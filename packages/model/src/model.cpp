@@ -173,6 +173,27 @@ double Model::motorRPStoLinearVelocity(double rps) const {
     return rps * params_.wheel.radius * M_PI * params_.gear_ratio * 2;
 }
 
+geom::Polygon Model::rearPoseToShapePolygon(const geom::Pose rear_pose) const {
+    const auto x = rear_pose.pos.x;
+    const auto y = rear_pose.pos.y;
+    const auto yaw = rear_pose.dir.vec();
+
+    const auto dir = params_.shape.length * yaw;
+    const auto norm = params_.shape.width / 2 * yaw;
+    const geom::Vec2 a(x - norm.y, y + norm.x);
+    const geom::Vec2 b(x + norm.y, y - norm.x);
+    return {a, a + dir, b + dir, b};
+}
+
+geom::Polygon Model::basePoseToShapePolygon(const geom::Pose base_pose) const {
+    const geom::Pose rear_pose = {
+        base_pose.pos - params_.wheel_base.base_to_rear * base_pose.dir,
+        base_pose.dir
+    };
+
+    return rearPoseToShapePolygon(rear_pose);
+}
+
 double Model::gearRatio() const { return params_.gear_ratio; }
 
 const Shape& Model::shape() const { return params_.shape; }

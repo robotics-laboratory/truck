@@ -2,6 +2,7 @@
 
 #include "common/math.h"
 #include "geom/angle.h"
+#include "geom/polygon.h"
 #include "model/params.h"
 
 #include <tf2_ros/buffer.h>
@@ -90,6 +91,8 @@ class Model {
     WheelVelocity rearTwistToWheelVelocity(Twist rear_twist) const;
     double linearVelocityToMotorRPS(double velocity) const;
     double motorRPStoLinearVelocity(double rps) const;
+    geom::Polygon rearPoseToShapePolygon(const geom::Pose rear_pose) const;
+    geom::Polygon basePoseToShapePolygon(const geom::Pose base_pose) const;
 
     tf2_msgs::msg::TFMessage getTfStaticMsg() const;
     tf2::Transform getLatestTranform(const std::string& source, const std::string& target) const;
