@@ -43,8 +43,8 @@ tf_static:
     translation: { x: 0.25, y: 0.05, z: -0.04 }
     rotation: { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
 
-  - frame_id: "rear_axle"
-    child_frame_id: "base"
+  - frame_id: "base"
+    child_frame_id: "rear_axle"
     translation: { x: 0.2025, y: 0.0, z: 0.0 }
     rotation: { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
 
