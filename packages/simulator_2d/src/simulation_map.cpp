@@ -49,6 +49,10 @@ void SimulationMap::eraseMap() {
 
 bool SimulationMap::checkForCollisions(const geom::Polygon& shape_polygon) const {
     const auto bounding_box = shape_polygon.minBoundingBox();
+    const RTreeBox rtree_box = {
+        RTreePoint(bounding_box.min.x, bounding_box.min.y),
+        RTreePoint(bounding_box.max.x, bounding_box.max.y)
+    };
 
     std::vector<RTreeIndexedSegment> result;
     rtree_.query(bgi::intersects(bounding_box), std::back_inserter(result));
