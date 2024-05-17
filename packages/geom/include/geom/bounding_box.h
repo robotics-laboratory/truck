@@ -4,7 +4,7 @@
 
 namespace truck::geom {
 
-struct Rectangle {
+struct BoundingBox {
     Vec2 min;
     Vec2 max;
 };

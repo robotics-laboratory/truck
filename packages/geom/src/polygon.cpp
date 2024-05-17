@@ -148,9 +148,12 @@ Segments Polygon::segments() const noexcept {
     return segments;
 }
 
-Rectangle Polygon::minBoundingBox() const noexcept {
+BoundingBox Polygon::minBoundingBox() const noexcept {
+    const auto points = *this;
+
     geom::Vec2 min = points[0];
     geom::Vec2 max = points[0];
+
     for (auto i = 1; i < points.size(); ++i) {
         if (points[i].x < min.x) {
             min.x = points[i].x;
