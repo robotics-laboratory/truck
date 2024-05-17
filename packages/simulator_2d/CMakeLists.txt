@@ -20,7 +20,7 @@ add_library(
   simulator_engine SHARED
     src/simulator_engine.cpp
     src/truck_state.cpp
-    src/simulator_map.cpp
+    src/simulation_map.cpp
 )
 
 ament_target_dependencies(
