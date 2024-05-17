@@ -43,6 +43,11 @@ tf_static:
     translation: { x: 0.25, y: 0.05, z: -0.04 }
     rotation: { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
 
+  - frame_id: "rear_axle"
+    child_frame_id: "base"
+    translation: { x: 0.2025, y: 0.0, z: 0.0 }
+    rotation: { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
+
   - frame_id: "camera_link"
     child_frame_id: "camera_gyro_frame"
     translation: { x: -0.01602, y: -0.03022, z: 0.0074 }
