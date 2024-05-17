@@ -167,7 +167,7 @@ BoundingBox Polygon::minBoundingBox() const noexcept {
             max.x = points[i].x;
         }
 
-         if (points[i].y > max.y) {
+        if (points[i].y > max.y) {
             max.y = points[i].y;
         }
     }

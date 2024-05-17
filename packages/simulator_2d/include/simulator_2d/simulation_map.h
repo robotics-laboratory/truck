@@ -27,7 +27,8 @@ class SimulationMap {
     void resetMap(const std::string& path);
     void eraseMap();
     bool checkForCollisions(const geom::Polygon& shape_polygon) const;
-    std::vector<float> getLidarRanges(const geom::Pose& lidar_pose, const model::Lidar& lidar) const;
+    std::vector<float> getLidarRanges(
+        const geom::Pose& lidar_pose, const model::Lidar& lidar) const;
 
   private:
     void initializeRTree();

@@ -12,9 +12,7 @@
 
 namespace truck::simulator {
 
-SimulationMap::SimulationMap(double precision) {
-    params_.precision = precision;
-}
+SimulationMap::SimulationMap(double precision) { params_.precision = precision; }
 
 void SimulationMap::initializeRTree() {
     RTreeIndexedSegments segments;
@@ -32,9 +30,10 @@ void SimulationMap::resetMap(const std::string& path) {
     obstacles_.clear();
     const auto map = map::Map::fromGeoJson(path);
     const auto polygons = map.polygons();
-    for (const auto &polygon: polygons) {
+    for (const auto& polygon: polygons) {
         auto segments = polygon.segments();
-        obstacles_.insert(obstacles_.end(), 
+        obstacles_.insert(
+            obstacles_.end(), 
             std::make_move_iterator(segments.begin()), 
             std::make_move_iterator(segments.end()));
     }
@@ -51,22 +50,15 @@ bool SimulationMap::checkForCollisions(const geom::Polygon& shape_polygon) const
     const auto bounding_box = shape_polygon.minBoundingBox();
     const RTreeBox rtree_box = {
         RTreePoint(bounding_box.min.x, bounding_box.min.y),
-        RTreePoint(bounding_box.max.x, bounding_box.max.y)
-    };
+        RTreePoint(bounding_box.max.x, bounding_box.max.y)};
 
     std::vector<RTreeIndexedSegment> result;
     rtree_.query(bgi::intersects(rtree_box), std::back_inserter(result));
 
     for (const auto& rtreeSegment : result) {
         const geom::Segment segment(
-            {
-                bg::get<0, 0>(rtreeSegment.first),
-                bg::get<0, 1>(rtreeSegment.first)
-            }, 
-            {
-                bg::get<1, 0>(rtreeSegment.first),
-                bg::get<1, 1>(rtreeSegment.first)
-            });
+            {bg::get<0, 0>(rtreeSegment.first), bg::get<0, 1>(rtreeSegment.first)}, 
+            {bg::get<1, 0>(rtreeSegment.first), bg::get<1, 1>(rtreeSegment.first)});
 
         if (geom::intersect(shape_polygon, segment, params_.precision)) {
             return true;
@@ -87,11 +79,7 @@ double ceilWithPrecision(double number, double precision) {
     return std::ceil(number / precision) * precision;
 }
 
-geom::AngleVec2 getRayDir(
-    const geom::AngleVec2& zero_dir,
-    const geom::Angle increment,
-    const int index) {
-
+geom::AngleVec2 getRayDir(const geom::AngleVec2& zero_dir, const geom::Angle increment, const int index) {
     const auto mult_increment = geom::AngleVec2(index * increment);
     return zero_dir + mult_increment;
 }
@@ -107,15 +95,12 @@ float getIntersectionDistance(
     return static_cast<float>(distance);
 }
 
-int mod(int number, int divider) {
-    return (number % divider + divider) % divider;
-}
+int mod(int number, int divider) { return (number % divider + divider) % divider; }
 
-} // namespace
+}  // namespace
 
 std::vector<float> SimulationMap::getLidarRanges(
-    const geom::Pose& lidar_pose,
-    const model::Lidar& lidar) const {
+    const geom::Pose& lidar_pose, const model::Lidar& lidar) const {
 
     const double angle_min_rad = lidar.angle_min.radians();
     const double angle_max_rad = lidar.angle_max.radians();
@@ -144,8 +129,8 @@ std::vector<float> SimulationMap::getLidarRanges(
             end_index = end_oriented_angle.radians() / increment_rad;
         } else {
             begin_index = begin_oriented_angle.radians() / increment_rad;
-            end_index = ceilWithPrecision(
-                end_oriented_angle.radians() / increment_rad, params_.precision);
+            end_index =
+                ceilWithPrecision(end_oriented_angle.radians() / increment_rad, params_.precision);
         }
 
         if (begin_index >= lidar_rays_number && end_index >= lidar_rays_number) {
@@ -170,4 +155,4 @@ std::vector<float> SimulationMap::getLidarRanges(
     return ranges;
 }
 
-} // namespace truck::simulator
+}  // namespace truck::simulator

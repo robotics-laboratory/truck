@@ -187,9 +187,7 @@ geom::Polygon Model::rearPoseToShapePolygon(const geom::Pose rear_pose) const {
 
 geom::Polygon Model::basePoseToShapePolygon(const geom::Pose base_pose) const {
     const geom::Pose rear_pose = {
-        base_pose.pos - params_.wheel_base.base_to_rear * base_pose.dir,
-        base_pose.dir
-    };
+        base_pose.pos - params_.wheel_base.base_to_rear * base_pose.dir, base_pose.dir};
 
     return rearPoseToShapePolygon(rear_pose);
 }

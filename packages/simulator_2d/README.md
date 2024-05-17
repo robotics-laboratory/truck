@@ -7,7 +7,7 @@ The calculations are based on the [Ackeramnn model](../../doc/ackermann_vehicle.
 
 | Name | Description | Arguments | Return type |
 | --- | --- | --- | --- |
-| **resetBase** | Sets the model center state | const geom::Pose& pose, double middle_steering, double linear_velocity | void |
+| **resetBase** | Sets the model center state, resets the simulation state | const geom::Pose& pose, double middle_steering, double linear_velocity | void |
 | **resetMap** | Sets the obstacle map, resets the simulation state | const std::string& path | void |
 | **eraseMap** | Clears the obstacle map, resets the simulation state |  | void |
 | **getTruckState** | Returns the simulation state |  | TruckState |
