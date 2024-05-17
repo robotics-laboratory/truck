@@ -30,11 +30,11 @@ void SimulationMap::resetMap(const std::string& path) {
     obstacles_.clear();
     const auto map = map::Map::fromGeoJson(path);
     const auto polygons = map.polygons();
-    for (const auto& polygon: polygons) {
+    for (const auto& polygon : polygons) {
         auto segments = polygon.segments();
         obstacles_.insert(
-            obstacles_.end(), 
-            std::make_move_iterator(segments.begin()), 
+            obstacles_.end(),
+            std::make_move_iterator(segments.begin()),
             std::make_move_iterator(segments.end()));
     }
 
@@ -57,7 +57,7 @@ bool SimulationMap::checkForCollisions(const geom::Polygon& shape_polygon) const
 
     for (const auto& rtreeSegment : result) {
         const geom::Segment segment(
-            {bg::get<0, 0>(rtreeSegment.first), bg::get<0, 1>(rtreeSegment.first)}, 
+            {bg::get<0, 0>(rtreeSegment.first), bg::get<0, 1>(rtreeSegment.first)},
             {bg::get<1, 0>(rtreeSegment.first), bg::get<1, 1>(rtreeSegment.first)});
 
         if (geom::intersect(shape_polygon, segment, params_.precision)) {
@@ -79,7 +79,8 @@ double ceilWithPrecision(double number, double precision) {
     return std::ceil(number / precision) * precision;
 }
 
-geom::AngleVec2 getRayDir(const geom::AngleVec2& zero_dir, const geom::Angle increment, const int index) {
+geom::AngleVec2 getRayDir(
+    const geom::AngleVec2& zero_dir, const geom::Angle increment, const int index) {
     const auto mult_increment = geom::AngleVec2(index * increment);
     return zero_dir + mult_increment;
 }
@@ -101,7 +102,6 @@ int mod(int number, int divider) { return (number % divider + divider) % divider
 
 std::vector<float> SimulationMap::getLidarRanges(
     const geom::Pose& lidar_pose, const model::Lidar& lidar) const {
-
     const double angle_min_rad = lidar.angle_min.radians();
     const double angle_max_rad = lidar.angle_max.radians();
     const auto lidar_angle_increment = lidar.angle_increment;

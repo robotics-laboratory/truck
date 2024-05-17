@@ -19,8 +19,8 @@ namespace truck::simulator {
 const double FREE_FALL_ACCELERATION = 9.81;  // m/s^2
 
 SimulatorEngine::SimulatorEngine(
-    std::unique_ptr<model::Model> model, double integration_step, double precision) : map_(precision) {
-
+    std::unique_ptr<model::Model> model, double integration_step, double precision) :
+    map_(precision) {
     model_ = std::move(model);
     initializeParameters(integration_step, precision);
     initializeMathCache(integration_step);
@@ -83,7 +83,7 @@ void SimulatorEngine::resetMap(const std::string& path) {
     checkForCollisions();
 }
 
-void SimulatorEngine::eraseMap() { 
+void SimulatorEngine::eraseMap() {
     map_.eraseMap();
     status_ = StatusCode::IN_PROGRESS;
 }
@@ -395,7 +395,7 @@ void SimulatorEngine::advance(double seconds) {
         const double current_steering_velocity = getCurrentSteeringVelocity();
         rear_ax_state_ += calculateRK4(current_acceleration, current_steering_velocity);
     }
-    
+
     checkForCollisions();
 }
 
