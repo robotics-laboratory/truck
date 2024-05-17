@@ -1,5 +1,7 @@
 #include "simulator_node.h"
 
+#include "simulator_2d/status_code.h"
+
 #include "common/math.h"
 #include "geom/msg.h"
 
@@ -178,6 +180,7 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
 
     state_msg.speed = truck_state.baseTwist().velocity;
     state_msg.steering = truck_state.currentSteering().middle.radians();
+    state_msg.collision = truck_state.status() == StatusCode::COLLISION;
 
     const auto pose = truck_state.odomBasePose();
     state_msg.pose = truck::geom::msg::toPose(pose);
