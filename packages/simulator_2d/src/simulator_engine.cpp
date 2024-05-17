@@ -26,6 +26,7 @@ SimulatorEngine::SimulatorEngine(
     model_ = std::move(model);
     initializeParameters(integration_step, precision);
     initializeMathCache(integration_step);
+    initializeLidarCache();
     initializeImuCache();
     resetRear();
 }
@@ -46,10 +47,6 @@ void SimulatorEngine::initializeLidarCache() {
     const auto lidar_translation = model_->getLatestTranform("rear_axle", "lidar_link").getOrigin();
     cache_.rear_to_lidar.x = lidar_translation.x();
     cache_.rear_to_lidar.y = lidar_translation.y();
-
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("simulator_engine"), 
-        "rear_to_lidar x = " + std::to_string(cache_.rear_to_lidar.x) 
-        + " y = " + std::to_string(cache_.rear_to_lidar.y));
 }
 
 void SimulatorEngine::initializeImuCache() {
@@ -196,6 +193,7 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto accel_linear_acceleration = getImuLinearAcceleration(rear_twist);
 
     return TruckState()
+        .status(status_)
         .time(time_)
         .odomBasePose(pose)
         .currentSteering(current_steering)
