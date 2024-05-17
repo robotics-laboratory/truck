@@ -55,7 +55,7 @@ bool SimulationMap::checkForCollisions(const geom::Polygon& shape_polygon) const
     };
 
     std::vector<RTreeIndexedSegment> result;
-    rtree_.query(bgi::intersects(bounding_box), std::back_inserter(result));
+    rtree_.query(bgi::intersects(rtree_box), std::back_inserter(result));
 
     for (const auto& rtreeSegment : result) {
         const geom::Segment segment(
