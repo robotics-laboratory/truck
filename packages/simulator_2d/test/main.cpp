@@ -20,7 +20,7 @@
 using namespace truck::simulator;
 
 const std::string MODEL_CONFIG_PATH = "/truck/packages/model/config/model.yaml";
-const std::string TEST_OUTPUT_PATH = "/truck/packages/build/simulator_2d/Testing/test_output_";
+const std::string TEST_OUTPUT_PATH = "/truck/packages/simulator_2d/test/data/test_output_";
 rosbag2_storage::TopicMetadata TEST_OUTPUT_TOPIC{
     "/simulator/state", "truck_msgs/msg/SimulationState", "cdr", ""};
 constexpr double EPS = 1e-9;

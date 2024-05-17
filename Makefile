@@ -33,6 +33,7 @@ test:
 	source ${ROS_ROOT}/setup.sh
 	source install/setup.sh
 	colcon --log-base /dev/null test \
+		--base-paths packages \
 		--executor parallel \
 		--parallel-workers $$(nproc) \
 		--event-handlers console_cohesion+ \
@@ -43,6 +44,7 @@ test-all:
 	source ${ROS_ROOT}/setup.sh
 	source install/setup.sh
 	colcon --log-base /dev/null test \
+		--base-paths packages \
 		--executor parallel \
 		--parallel-workers $$(nproc) \
 		--event-handlers console_cohesion+
