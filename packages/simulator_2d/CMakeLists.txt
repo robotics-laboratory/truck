@@ -14,12 +14,23 @@ find_package(rosgraph_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(map REQUIRED)
+find_package(Boost REQUIRED)
 
 add_library(
-  simulator_engine SHARED src/simulator_engine.cpp src/truck_state.cpp
+  simulator_engine SHARED
+    src/simulator_engine.cpp
+    src/truck_state.cpp
+    src/simulator_map.cpp
 )
 
-ament_target_dependencies(simulator_engine model geom map tf2)
+ament_target_dependencies(
+  simulator_engine
+  model
+  geom
+  map
+  tf2
+  Boost
+)
 
 target_include_directories(
   simulator_engine
@@ -29,7 +40,11 @@ target_include_directories(
 
 ament_export_targets(simulator_engine_targets HAS_LIBRARY_TARGET)
 
-ament_export_dependencies(model geom nlohmann_json)
+ament_export_dependencies(
+  model
+  geom
+  nlohmann_json
+)
 
 install(
   TARGETS simulator_engine
@@ -41,7 +56,11 @@ install(
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
-add_executable(${PROJECT_NAME}_node src/simulator_node.cpp src/main.cpp)
+add_executable(
+  ${PROJECT_NAME}_node
+  src/simulator_node.cpp
+  src/main.cpp
+)
 
 ament_target_dependencies(
   ${PROJECT_NAME}_node
