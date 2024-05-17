@@ -139,13 +139,37 @@ Segments Polygon::segments() const noexcept {
     segments[0].begin = {points.back().x, points.back().y};
     segments[0].end = {points[0].x, points[0].y};
 
-    for (size_t i = 1; i < points.size(); ++i) {
+    for (auto i = 1; i < points.size(); ++i) {
         Vec2 begin = {points[i - 1].x, points[i - 1].y};
         Vec2 end = {points[i].x, points[i].y};
         segments.emplace_back(begin, end);
     }
 
     return segments;
+}
+
+Rectangle Polygon::minBoundingBox() const noexcept {
+    geom::Vec2 min = points[0];
+    geom::Vec2 max = points[0];
+    for (auto i = 1; i < points.size(); ++i) {
+        if (points[i].x < min.x) {
+            min.x = points[i].x;
+        }
+
+        if (points[i].y < min.y) {
+            min.y = points[i].y;
+        }
+
+        if (points[i].x > max.x) {
+            max.x = points[i].x;
+        }
+
+         if (points[i].y > max.y) {
+            max.y = points[i].y;
+        }
+    }
+
+    return {min, max};
 }
 
 }  // namespace truck::geom

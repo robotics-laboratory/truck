@@ -1,8 +1,9 @@
 #pragma once
 
-#include "geom/vector.h"
-#include "geom/triangle.h"
+#include "geom/rectangle.h"
 #include "geom/segment.h"
+#include "geom/triangle.h"
+#include "geom/vector.h"
 
 #include <vector>
 
@@ -28,6 +29,7 @@ struct Polygon : public std::vector<Vec2> {
     bool isConvex() const noexcept;
     Orientation orientation() const noexcept;
     Segments segments() const noexcept;
+    Rectangle minBoundingBox() const noexcept;
 };
 
 using Polygons = std::vector<Polygon>;
