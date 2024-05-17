@@ -5,6 +5,8 @@
 
 namespace truck::simulator {
 
+StatusCode TruckState::status() const { return cache_.status; }
+
 rclcpp::Time TruckState::time() const { return cache_.time; }
 
 geom::Pose TruckState::odomBasePose() const { return cache_.base_odom_pose; }
@@ -28,6 +30,11 @@ double TruckState::targetMotorRps() const { return cache_.target_motor_rps; }
 geom::Vec3 TruckState::gyroAngularVelocity() const { return cache_.gyro_angular_velocity; }
 
 geom::Vec3 TruckState::accelLinearAcceleration() const { return cache_.accel_linear_acceleration; }
+
+TruckState& TruckState::status(StatusCode status) {
+    cache_.status = status;
+    return *this;
+}
 
 TruckState& TruckState::time(const rclcpp::Time& time) {
     cache_.time = time;
