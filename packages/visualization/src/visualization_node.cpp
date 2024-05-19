@@ -267,10 +267,8 @@ visualization_msgs::msg::Marker makeMeshMarker(
 void VisualizationNode::updateWheelsSpin() {
     const auto now_seconds = now().seconds();
     const auto time = now_seconds - cache_.last_ego_update_second;
-    const auto rear_twist = model::Twist {
-        state_.telemetry->rear_curvature,
-        state_.telemetry->rear_velocity
-    };
+    const auto rear_twist =
+        model::Twist{state_.telemetry->rear_curvature, state_.telemetry->rear_velocity};
     const auto velocities = model_->rearTwistToWheelVelocity(rear_twist);
     for (auto wheel : kAllWheels) {
         const double velocity = [&]() {
@@ -331,7 +329,7 @@ void VisualizationNode::publishEgo() const {
 
         auto rotation = tf2::Quaternion::getIdentity();
         rotation.setRPY(0, y_angle, z_angle);
-        const auto wheel_tf = 
+        const auto wheel_tf =
             base_to_odom * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
 
         auto wheel_msg = makeMeshMarker(wheel + 1, state_.odom->header, params_.mesh_wheel, color);

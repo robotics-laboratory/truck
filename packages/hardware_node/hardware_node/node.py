@@ -200,10 +200,10 @@ class HardwareNode(Node):
             target_rps=self._axis.controller.input_vel,
             battery_voltage=self._odrive.vbus_voltage,
             battery_current=self._odrive.ibus,
-            current_left_steering = steering.left.radians,
-            current_right_steering = steering.right.radians,
+            current_left_steering=steering.left.radians,
+            current_right_steering=steering.right.radians,
             rear_curvature=twist.curvature,
-            rear_velocity=twist.velocity
+            rear_velocity=twist.velocity,
         )
 
         self._telemetry_pub.publish(telemetry)

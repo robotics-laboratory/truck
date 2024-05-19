@@ -28,11 +28,8 @@ template<>
 std::string to_string<model::WheelVelocity>(const model::WheelVelocity& obj) {
     return boost::str(
         boost::format("WheelVelocity(rear_left=%s, rear_right=%s, front_left=%s, front_right=%s)")
-        % to_string(obj.rear_left)
-        % to_string(obj.rear_right)
-        % to_string(obj.front_left)
-        % to_string(obj.front_right)
-    );
+        % to_string(obj.rear_left) % to_string(obj.rear_right) % to_string(obj.front_left)
+        % to_string(obj.front_right));
 }
 
 template<>
