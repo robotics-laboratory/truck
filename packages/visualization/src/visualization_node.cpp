@@ -267,12 +267,11 @@ visualization_msgs::msg::Marker makeMeshMarker(
 void VisualizationNode::updateWheelsSpin() {
     const auto now_seconds = now().seconds();
     const auto time = now_seconds - cache_.last_ego_update_second;
-
-    const model::WheelVelocity wheel_velocity;
-    wheel_velocity.rear_left = geom::Angle(state_.telemetry->rear_left_wheel_velocity);
-    wheel_velocity.rear_right = geom::Angle(state_.telemetry->rear_right_wheel_velocity);
-    wheel_velocity.front_left = geom::Angle(state_.telemetry->front_left_wheel_velocity);
-    wheel_velocity.front_right = geom::Angle(state_.telemetry->front_right_wheel_velocity);
+    const model::WheelVelocity wheel_velocity = {
+        geom::Angle(state_.telemetry->rear_left_wheel_velocity),
+        geom::Angle(state_.telemetry->rear_right_wheel_velocity),
+        geom::Angle(state_.telemetry->front_left_wheel_velocity),
+        geom::Angle(state_.telemetry->front_right_wheel_velocity)};
 
     for (auto wheel : kAllWheels) {
         const double velocity = [&]() {
