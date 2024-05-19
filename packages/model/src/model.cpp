@@ -159,26 +159,21 @@ Steering Model::rearTwistToSteering(Twist rear_twist) const {
     return rearCurvatureToSteering(rear_twist.curvature);
 }
 
-WheelVelocity Model::rearSpinToWheelVelocity(
-    double rear_curvature, double rear_spin_velocity) const {
-    const double rear_curvature_squared = squared(rear_curvature);
+WheelVelocity Model::rearTwistToWheelVelocity(Twist rear_twist) const {
+    const double rear_spin_velocity = rear_twist.velocity / params_.wheel.radius;
+    const double rear_curvature_squared = squared(rear_twist.curvature);
 
-    const double rear_ratio = rear_curvature * cache_.width_half;
-    const double front_left_ratio_squared = 1 + rear_curvature_squared * cache_.width_half_squared
-                                            - rear_curvature * params_.wheel_base.width
-                                            + cache_.length_squared;
-    const double front_right_ratio_squared = 1 + rear_curvature_squared * cache_.length_squared;
+    const double rear_ratio = rear_twist.curvature * cache_.width_half;
+    const double front_left_ratio = sqrt(
+        1 + rear_curvature_squared * cache_.width_half_squared
+        - rear_twist.curvature * params_.wheel_base.width + cache_.length_squared);
+    const double front_right_ratio = sqrt(1 + rear_curvature_squared * cache_.length_squared);
 
     return WheelVelocity{
         geom::Angle{(1 - rear_ratio) * rear_spin_velocity},
         geom::Angle{(1 + rear_ratio) * rear_spin_velocity},
-        geom::Angle{sqrt(front_left_ratio_squared) * rear_spin_velocity},
-        geom::Angle{sqrt(front_right_ratio_squared) * rear_spin_velocity}};
-}
-
-WheelVelocity Model::rearTwistToWheelVelocity(Twist rear_twist) const {
-    return rearSpinToWheelVelocity(
-        rear_twist.curvature, rear_twist.velocity / params_.wheel.radius);
+        geom::Angle{front_left_ratio * rear_spin_velocity},
+        geom::Angle{front_right_ratio * rear_spin_velocity}};
 }
 
 double Model::linearVelocityToMotorRPS(double velocity) const {

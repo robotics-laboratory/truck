@@ -63,7 +63,6 @@ TruckState& TruckState::baseTwist(const model::Twist& twist) {
     return *this;
 }
 
-
 TruckState& TruckState::odomBaseLinearVelocity(const geom::Vec2& linear_velocity) {
     cache_.base_odom_linear_velocity = linear_velocity;
     return *this;

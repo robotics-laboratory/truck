@@ -208,7 +208,7 @@ class HardwareNode(Node):
             rear_left_wheel_velocity=wheel_velocity.rear_left,
             rear_right_wheel_velocity=wheel_velocity.rear_right,
             front_left_wheel_velocity=wheel_velocity.front_left,
-            front_right_wheel_velocity=wheel_velocity.front_right
+            front_right_wheel_velocity=wheel_velocity.front_right,
         )
 
         self._telemetry_pub.publish(telemetry)
