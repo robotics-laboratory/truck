@@ -17,8 +17,6 @@ model::Steering TruckState::targetSteering() const { return cache_.target_steeri
 
 model::Twist TruckState::baseTwist() const { return cache_.base_odom_twist; }
 
-model::Twist TruckState::rearTwist() const { return cache_.rear_twist; }
-
 geom::Vec2 TruckState::odomBaseLinearVelocity() const { return cache_.base_odom_linear_velocity; }
 
 double TruckState::baseAngularVelocity() const { return cache_.base_odom_angular_velocity; }
@@ -28,6 +26,8 @@ const std::vector<float>& TruckState::lidarRanges() const { return cache_.lidar_
 double TruckState::currentMotorRps() const { return cache_.current_motor_rps; }
 
 double TruckState::targetMotorRps() const { return cache_.target_motor_rps; }
+
+model::WheelVelocity TruckState::wheelVelocity() const { return cache_.wheel_velocity; }
 
 geom::Vec3 TruckState::gyroAngularVelocity() const { return cache_.gyro_angular_velocity; }
 
@@ -63,10 +63,6 @@ TruckState& TruckState::baseTwist(const model::Twist& twist) {
     return *this;
 }
 
-TruckState& TruckState::rearTwist(const model::Twist& twist) {
-    cache_.rear_twist = twist;
-    return *this;
-}
 
 TruckState& TruckState::odomBaseLinearVelocity(const geom::Vec2& linear_velocity) {
     cache_.base_odom_linear_velocity = linear_velocity;
@@ -90,6 +86,11 @@ TruckState& TruckState::currentMotorRps(double current_rps) {
 
 TruckState& TruckState::targetMotorRps(double target_rps) {
     cache_.target_motor_rps = target_rps;
+    return *this;
+}
+
+TruckState& TruckState::wheelVelocity(model::WheelVelocity wheel_velocity) {
+    cache_.wheel_velocity = wheel_velocity;
     return *this;
 }
 

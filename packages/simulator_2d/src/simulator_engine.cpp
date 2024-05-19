@@ -187,6 +187,7 @@ TruckState SimulatorEngine::getTruckState() const {
     auto lidar_ranges = getLidarRanges(map_, lidar_pose, model_->lidar(), params_.precision);
     const auto current_rps = model_->linearVelocityToMotorRPS(twist.velocity);
     const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
+    const auto wheel_velocity = model_->rearTwistToWheelVelocity(rear_twist);
     const auto gyro_angular_velocity = getImuAngularVelocity(angular_velocity);
     const auto accel_linear_acceleration = getImuLinearAcceleration(rear_twist);
 
@@ -197,12 +198,12 @@ TruckState SimulatorEngine::getTruckState() const {
         .currentSteering(current_steering)
         .targetSteering(target_steering)
         .baseTwist(twist)
-        .rearTwist(rear_twist)
         .odomBaseLinearVelocity(linear_velocity)
         .baseAngularVelocity(angular_velocity)
         .lidarRanges(std::move(lidar_ranges))
         .currentMotorRps(current_rps)
         .targetMotorRps(target_rps)
+        .wheelVelocity(wheel_velocity)
         .gyroAngularVelocity(gyro_angular_velocity)
         .accelLinearAcceleration(accel_linear_acceleration);
 }

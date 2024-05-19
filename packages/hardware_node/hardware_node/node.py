@@ -24,7 +24,7 @@ class HardwareNode(Node):
         self._init_odrive()
         self._prev_mode = ControlMode.OFF
         self._log.info("Hardware node initialized")
-        self._cache = {}
+        self._target_curvature = 0.0
 
     def _init_ros_params(self):
         self.declare_parameter("model_config", "")
@@ -145,7 +145,7 @@ class HardwareNode(Node):
         self._log.debug(f"Center curvature: {msg.curvature:.2f}")
         self._log.debug(f"Rear curvature: {twist.curvature:.2f}")
         self._teensy.push(steering.left.radians, steering.right.radians)
-        self._cache.target_curvature = msg.curvature
+        self._target_curvature = msg.curvature
 
     def _push_status(self):
         armed = self._axis.current_state != odrive.enums.AXIS_STATE_IDLE
@@ -189,10 +189,11 @@ class HardwareNode(Node):
 
         rps = self._axis.encoder.vel_estimate
         vel = self._model.motor_rps_to_linear_velocity(rps)
-        curv = self._cache.target_curvature
+        curv = self._target_curvature
         twist = pymodel.Twist(vel, curv)
         twist = self._model.base_to_rear_twist(twist)
         steering = self._model.rear_twist_to_steering(twist)
+        wheel_velocity = self._model.rear_twist_to_wheel_velocity(twist)
 
         telemetry = HardwareTelemetry(
             header=header,
@@ -200,10 +201,14 @@ class HardwareNode(Node):
             target_rps=self._axis.controller.input_vel,
             battery_voltage=self._odrive.vbus_voltage,
             battery_current=self._odrive.ibus,
+            target_left_steering=steering.left.radians,
             current_left_steering=steering.left.radians,
+            target_right_steering=steering.right.radians,
             current_right_steering=steering.right.radians,
-            rear_curvature=twist.curvature,
-            rear_velocity=twist.velocity,
+            rear_left_wheel_velocity=wheel_velocity.rear_left,
+            rear_right_wheel_velocity=wheel_velocity.rear_right,
+            front_left_wheel_velocity=wheel_velocity.front_left,
+            front_right_wheel_velocity=wheel_velocity.front_right
         )
 
         self._telemetry_pub.publish(telemetry)

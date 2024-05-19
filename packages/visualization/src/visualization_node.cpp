@@ -267,21 +267,25 @@ visualization_msgs::msg::Marker makeMeshMarker(
 void VisualizationNode::updateWheelsSpin() {
     const auto now_seconds = now().seconds();
     const auto time = now_seconds - cache_.last_ego_update_second;
-    const auto rear_twist =
-        model::Twist{state_.telemetry->rear_curvature, state_.telemetry->rear_velocity};
-    const auto velocities = model_->rearTwistToWheelVelocity(rear_twist);
+
+    const model::WheelVelocity wheel_velocity;
+    wheel_velocity.rear_left = geom::Angle(state_.telemetry->rear_left_wheel_velocity);
+    wheel_velocity.rear_right = geom::Angle(state_.telemetry->rear_right_wheel_velocity);
+    wheel_velocity.front_left = geom::Angle(state_.telemetry->front_left_wheel_velocity);
+    wheel_velocity.front_right = geom::Angle(state_.telemetry->front_right_wheel_velocity);
+
     for (auto wheel : kAllWheels) {
         const double velocity = [&]() {
             switch (wheel) {
                 case WheelIndex::kFrontLeft:
-                    return velocities.front_left.radians();
+                    return wheel_velocity.front_left.radians();
                 case WheelIndex::kFrontRight:
-                    return -velocities.front_right.radians();
+                    return -wheel_velocity.front_right.radians();
                 case WheelIndex::kRearLeft:
-                    return velocities.rear_left.radians();
+                    return wheel_velocity.rear_left.radians();
                 case WheelIndex::kRearRight:
                 default:
-                    return -velocities.rear_right.radians();
+                    return -wheel_velocity.rear_right.radians();
             }
         }();
 
