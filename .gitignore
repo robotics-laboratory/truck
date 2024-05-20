@@ -1,6 +1,9 @@
 *.DS_Store
-**/build
-**/install
+build
+install
+log
+packages/simulator_2d/test/data
+packages/svg_debug_drawer/test/data/im*_out.svg
 .vscode
 .dvc
 __pycache__/

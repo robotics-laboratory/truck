@@ -34,6 +34,7 @@ test:
 	source install/setup.sh
 	colcon --log-base /dev/null test \
 		--base-paths packages \
+		--return-code-on-test-failure \
 		--executor parallel \
 		--parallel-workers $$(nproc) \
 		--event-handlers console_cohesion+ \
@@ -45,6 +46,7 @@ test-all:
 	source install/setup.sh
 	colcon --log-base /dev/null test \
 		--base-paths packages \
+		--return-code-on-test-failure \
 		--executor parallel \
 		--parallel-workers $$(nproc) \
 		--event-handlers console_cohesion+
