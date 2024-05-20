@@ -1,17 +1,3 @@
-//#include "icp_odometry/icp_odometry_node.h"
-//#include "icp_odometry/visualization.h"
-//#include "rclcpp/rclcpp.hpp"
-//
-//#include <memory>
-//
-//int main(int argc, char* argv[]) {
-//	std::cout << "Node to start!\n";
-//    rclcpp::init(argc, argv);
-//    rclcpp::spin(std::make_shared<truck::icp_odometry::IcpVisualizationNode>());
-//    rclcpp::shutdown();
-//    return 0;
-//}
-
 #include "icp_odometry/config.h"
 #include "icp_odometry/dvc.h"
 #include "icp_odometry/g2o.h"

@@ -2,10 +2,10 @@
 verbose: true
 
 # path to bag with icp and odometry messages
-bag_path: "/truck/packages/icp_odometry/bags/atrium_final_3_0.db3"
+bag_path: "/truck/packages/icp_odometry/bags/file_1_atrium.db3"
 
 # step distance for picking icp and odometry in bag
-reference_points_distance_threshold: "0.5"
+reference_points_distance_threshold: 0.5
 
 # maximum distance between points between which the icp edge will be created in g2o
 icp_edge_max_distance: 0.6
@@ -30,4 +30,4 @@ enable_debug_icp_matches: false
 voxel_filter_size: 0.025
 
 # path to result map
-result_path: "./result"
+result_path: "./icp_odometry/map_result"
