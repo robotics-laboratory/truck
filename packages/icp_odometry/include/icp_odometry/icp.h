@@ -1,6 +1,7 @@
 #pragma once
 
 #include "icp_odometry/common.h"
+#include "icp_odometry/import_bag.h"
 
 
 namespace truck::icp_odometry {
@@ -15,7 +16,7 @@ namespace truck::icp_odometry {
 		Student,
 	};
 
-	extern std::map <RobustFct, std::string> RobustFctMap;
+	extern std::map<RobustFct, std::string> RobustFctMap;
 
 	enum CustomOutlierFilter {
 		TrimmedDistOutlierFilter,
@@ -24,7 +25,7 @@ namespace truck::icp_odometry {
 		SurfaceNormalOutlierFilter,
 	};
 
-	extern std::map <CustomOutlierFilter, std::string> CustomOutlierFilterMap;
+	extern std::map<CustomOutlierFilter, std::string> CustomOutlierFilterMap;
 
 	enum DistType {
 		Point2Point,
@@ -37,5 +38,9 @@ namespace truck::icp_odometry {
 
 	Matcher::ICP getICPWithCustomOutlierFilter(const DistType, const CustomOutlierFilter);
 
-	std::vector <TransformationParameters> mapToTransformations(Matcher::ICP, const std::vector <DataPoints> &);
+	std::vector<TransformationParameters> mapToTransformations(Matcher::ICP &, const std::vector<ICPOdometryData> &);
+
+	DataPoints filterPointsWithNeighbors(const std::vector<DataPoints>& clouds, int k, float distance_threshold);
+
+	DataPoints decreaseDensityRegions(const DataPoints);
 }

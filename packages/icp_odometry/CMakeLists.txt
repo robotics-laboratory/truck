@@ -3,6 +3,9 @@ project(icp_odometry)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+
 find_package(ament_cmake REQUIRED)
 find_package(Boost COMPONENTS thread filesystem system program_options date_time chrono timer serialization REQUIRED)
 find_package(common REQUIRED)
@@ -15,6 +18,8 @@ find_package(rosbag2_cpp REQUIRED)
 find_package(rosbag2_storage REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(g2o REQUIRED) # G2O FIND PACKAGE
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 set(OpenGL_GL_PREFERENCE LEGACY)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules)
@@ -42,6 +47,8 @@ add_executable(
   src/import_bag.cpp
   src/icp_odometry_node.cpp
   src/conversion.cpp
+  src/visualization.cpp
+  src/config.cpp
 )
 
 ament_target_dependencies(
@@ -57,6 +64,8 @@ ament_target_dependencies(
     rosbag2_storage
     visualization_msgs
     g2o
+    tf2_geometry_msgs
+    yaml-cpp
 )
 
 target_link_libraries(
@@ -74,7 +83,7 @@ install(
     DESTINATION lib/${PROJECT_NAME})
 
 install(
-    DIRECTORY launch config
+    DIRECTORY launch config bags
     DESTINATION share/${PROJECT_NAME})
 
 #if(BUILD_TESTING) // Я сдаюсь, я не понимаю как эти три строчки заставить работать

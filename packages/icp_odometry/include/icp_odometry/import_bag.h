@@ -5,10 +5,16 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rosbag2_cpp/reader.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 
 namespace truck::icp_odometry {
-    std::optional <DataPoints> readNextDataPoints(rosbag2_cpp::Reader, rclcpp::Serialization <sensor_msgs::msg::LaserScan>);
+	struct ICPOdometryData {
+		DataPoints icpDataPoints;
+		nav_msgs::msg::Odometry odometry;
+		nav_msgs::msg::Odometry optimizedOdometry;
+	};
 
-    std::vector <DataPoints> readAllDataPoints(std::string);
+	std::vector<ICPOdometryData> readAllICPOdometryData(std::string, size_t = -1);
+	std::vector<DataPoints> readAllDataPoints(std::string);
 }

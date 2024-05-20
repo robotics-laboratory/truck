@@ -21,7 +21,7 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
 
     DataPoints result(feature_labels, descriptor_labels, point_count);
 
-    for (size_t i = 0; i < scan.ranges.size(); ++i) {
+    for (size_t i = 0, j = 0; i < scan.ranges.size(); ++i) {
         const double range = scan.ranges[i];
         if (!std::isfinite(range)) {
             continue;
@@ -29,9 +29,10 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
 
         const double angle = scan.angle_min + i * scan.angle_increment;
 
-        result.features(0, i) = range * std::cos(angle);
-        result.features(1, i) = range * std::sin(angle);
-        result.features(2, i) = 1.0f;
+        result.features(0, j) = range * std::cos(angle);
+        result.features(1, j) = range * std::sin(angle);
+        result.features(2, j) = 1.0f;
+		j++;
     }
 
     return result;

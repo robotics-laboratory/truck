@@ -1,9 +1,9 @@
 #include "icp_odometry/dvc.h"
 
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <filesystem>
 
 
 namespace truck::icp_odometry {
@@ -17,7 +17,7 @@ namespace truck::icp_odometry {
 		return result;
 	}
 
-	std::string serializeTransformations(std::vector <TransformationParameters> transformations) {
+	std::string serializeTransformations(std::vector <Eigen::Matrix3d> transformations) {
 		std::stringstream ss;
 
 		for (auto &transformation: transformations) {
@@ -74,7 +74,7 @@ namespace truck::icp_odometry {
 		std::ifstream file(path);
 		if (file.is_open()) {
 			std::stringstream strStream;
-			strStream << file.rdbuf(); //read the file
+			strStream << file.rdbuf();
 			result = strStream.str();
 		}
 		return result;

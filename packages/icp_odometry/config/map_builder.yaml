@@ -1,0 +1,33 @@
+# verbose output of script
+verbose: true
+
+# path to bag with icp and odometry messages
+bag_path: "/truck/packages/icp_odometry/bags/atrium_final_3_0.db3"
+
+# step distance for picking icp and odometry in bag
+reference_points_distance_threshold: "0.5"
+
+# maximum distance between points between which the icp edge will be created in g2o
+icp_edge_max_distance: 0.6
+
+# odometry edge weight in g2o
+odometry_edge_weight: 1
+
+# icp edge weight in g2o
+icp_edge_weight: 3
+
+# number of scans to confirm common point on the map
+# in other words for specific point to be in result, it has to be neighbors_filter_knn other scans with at least one point nearby
+neighbors_filter_knn: 6
+
+# area on which neighboring points on other scans will be searched
+neighbors_filter_distance_threshold: 0.001
+
+# if true icp matches will be saved in directory as mcap files with matching clouds
+enable_debug_icp_matches: false
+
+# size of voxel cell in voxel filter
+voxel_filter_size: 0.025
+
+# path to result map
+result_path: "./result"
