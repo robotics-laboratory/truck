@@ -9,17 +9,34 @@
 using namespace truck;
 using namespace truck::navigation;
 
-const std::string ROOT = "/truck/packages";
+const std::string ROOT_LOCAL = "/truck";
+const std::string ROOT_VM = "/__w/truck/truck";
 
 TEST(Navigation, map) {
+    std::string ROOT;
     const std::string MAP = "map_6";
     const std::string FILE_NAME = MAP;
 
-    geom::ComplexPolygons polygons =
-        map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
+    geom::ComplexPolygons polygons;
+
+    try {
+        polygons =
+            map::Map::fromGeoJson(ROOT_LOCAL + "/packages/map/data/" + MAP + ".geojson").polygons();
+        ROOT = ROOT_LOCAL;
+    } catch (const std::exception& e) {
+    }
+
+    try {
+        polygons =
+            map::Map::fromGeoJson(ROOT_VM + "/packages/map/data/" + MAP + ".geojson").polygons();
+        ROOT = ROOT_VM;
+    } catch (const std::exception& e) {
+    }
 
     viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png", .color_rgb = {}, .thickness = {}};
+        .path = ROOT + "/packages/navigation/data/" + FILE_NAME + ".png",
+        .color_rgb = {},
+        .thickness = {}};
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
@@ -30,18 +47,34 @@ TEST(Navigation, map) {
 }
 
 TEST(Navigation, map_mesh) {
+    std::string ROOT;
     const std::string MAP = "map_6";
     const std::string FILE_NAME = MAP + "_mesh";
 
-    geom::ComplexPolygons polygons =
-        map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
+    geom::ComplexPolygons polygons;
 
-    viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png", .color_rgb = {}, .thickness = {}};
+    try {
+        polygons =
+            map::Map::fromGeoJson(ROOT_LOCAL + "/packages/map/data/" + MAP + ".geojson").polygons();
+        ROOT = ROOT_LOCAL;
+    } catch (const std::exception& e) {
+    }
+
+    try {
+        polygons =
+            map::Map::fromGeoJson(ROOT_VM + "/packages/map/data/" + MAP + ".geojson").polygons();
+        ROOT = ROOT_VM;
+    } catch (const std::exception& e) {
+    }
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
     mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
+
+    viewer::ViewerParams viewer_params{
+        .path = ROOT + "/packages/navigation/data/" + FILE_NAME + ".png",
+        .color_rgb = {},
+        .thickness = {}};
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
@@ -53,14 +86,25 @@ TEST(Navigation, map_mesh) {
 }
 
 TEST(Navigation, map_graph) {
+    std::string ROOT;
     const std::string MAP = "map_6";
     const std::string FILE_NAME = MAP + "_graph";
 
-    geom::ComplexPolygons polygons =
-        map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
+    geom::ComplexPolygons polygons;
 
-    viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png", .color_rgb = {}, .thickness = {}};
+    try {
+        polygons =
+            map::Map::fromGeoJson(ROOT_LOCAL + "/packages/map/data/" + MAP + ".geojson").polygons();
+        ROOT = ROOT_LOCAL;
+    } catch (const std::exception& e) {
+    }
+
+    try {
+        polygons =
+            map::Map::fromGeoJson(ROOT_VM + "/packages/map/data/" + MAP + ".geojson").polygons();
+        ROOT = ROOT_VM;
+    } catch (const std::exception& e) {
+    }
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
@@ -72,6 +116,11 @@ TEST(Navigation, map_graph) {
     graph::Graph graph = graph_builder.build(mesh_build.mesh, polygons);
 
     geom::Polyline path = search::toPolyline(graph, search::findShortestPath(graph, 28, 306));
+
+    viewer::ViewerParams viewer_params{
+        .path = ROOT + "/packages/navigation/data/" + FILE_NAME + ".png",
+        .color_rgb = {},
+        .thickness = {}};
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
