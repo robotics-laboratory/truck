@@ -19,3 +19,42 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.10" }
       - uses: pre-commit/action@v3.0.1
+
+  extract-image:
+    name: Get image version
+    runs-on: ubuntu-latest
+    outputs:
+      image-url: ${{ steps.extractor.outputs.image_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.10" }
+
+      - name: Install dependencies
+        run: |
+          sudo pip install yq
+          sudo apt-get install -y jq
+
+      - name: Extract image URL
+        id: extractor
+        run: |
+          IMAGE_URL=$(cat docker-compose.yaml | yq ".services.${{ github.event.repository.name }}.image")
+          echo "image_url=$IMAGE_URL" | tee -a $GITHUB_OUTPUT
+
+  build-and-check:
+    name: Build, test
+    needs: extract-image
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.extract-image.outputs.image-url }}
+    defaults:
+      run: { shell: bash }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ROS2 packages
+        run: make build-all
+
+      - name: Test ROS2 packages
+        run: make test-all
