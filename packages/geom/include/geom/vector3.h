@@ -1,5 +1,7 @@
 #pragma once
 
+#include "geom/vector.h"
+
 #include <cmath>
 #include <cmath>
 #include <ostream>

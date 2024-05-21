@@ -1,6 +1,5 @@
 #pragma once
 
-#include "geom/bounding_box.h"
 #include "geom/segment.h"
 #include "geom/triangle.h"
 #include "geom/vector.h"
@@ -29,7 +28,6 @@ struct Polygon : public std::vector<Vec2> {
     bool isConvex() const noexcept;
     Orientation orientation() const noexcept;
     Segments segments() const noexcept;
-    BoundingBox minBoundingBox() const noexcept;
 };
 
 using Polygons = std::vector<Polygon>;

@@ -1,6 +1,7 @@
 #include "simulator_2d/simulation_map.h"
 
 #include "map/map.h"
+#include "geom/bounding_box.h"
 #include "geom/distance.h"
 #include "geom/intersection.h"
 #include "geom/ray.h"
@@ -47,7 +48,7 @@ void SimulationMap::eraseMap() {
 }
 
 bool SimulationMap::checkForCollisions(const geom::Polygon& shape_polygon) const {
-    const auto bounding_box = shape_polygon.minBoundingBox();
+    const auto bounding_box = geom::makeBoundingBox(shape_polygon);
     const RTreeBox rtree_box = {
         RTreePoint(bounding_box.min.x, bounding_box.min.y),
         RTreePoint(bounding_box.max.x, bounding_box.max.y)};

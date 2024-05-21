@@ -148,20 +148,4 @@ Segments Polygon::segments() const noexcept {
     return segments;
 }
 
-BoundingBox Polygon::minBoundingBox() const noexcept {
-    VERIFY(!this->empty());
-
-    geom::Vec2 min = this->at(0);
-    geom::Vec2 max = this->at(0);
-
-    for (auto i = 1; i < this->size(); ++i) {
-        min.x = std::min(min.x, this->at(i).x);
-        min.y = std::min(min.y, this->at(i).y);
-        max.x = std::max(max.x, this->at(i).x);
-        max.y = std::max(max.y, this->at(i).y);
-    }
-
-    return {min, max};
-}
-
 }  // namespace truck::geom
