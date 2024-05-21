@@ -12,6 +12,7 @@
 #include <CGAL/mark_domain_in_triangulation.h>
 #include <CGAL/Polygon_2.h>
 
+#include <algorithm>
 #include <unordered_map>
 #include <boost/property_map/property_map.hpp>
 
@@ -132,16 +133,15 @@ Polygon clip(
 }
 
 Segments Polygon::segments() const noexcept {
-    const auto points = *this;
     Segments segments;
-    segments.reserve(points.size());
+    segments.reserve(this->size());
 
-    segments[0].begin = {points.back().x, points.back().y};
-    segments[0].end = {points[0].x, points[0].y};
+    segments[0].begin = {this->back().x, this->back().y};
+    segments[0].end = {this->at(0).x, this->at(0).y};
 
-    for (auto i = 1; i < points.size(); ++i) {
-        Vec2 begin = {points[i - 1].x, points[i - 1].y};
-        Vec2 end = {points[i].x, points[i].y};
+    for (auto i = 1; i < this->size(); ++i) {
+        Vec2 begin = {this->at(i - 1).x, this->at(i - 1).y};
+        Vec2 end = {this->at(i).x, this->at(i).y};
         segments.emplace_back(begin, end);
     }
 
@@ -149,27 +149,16 @@ Segments Polygon::segments() const noexcept {
 }
 
 BoundingBox Polygon::minBoundingBox() const noexcept {
-    const auto points = *this;
+    VERIFY(!this->empty());
 
-    geom::Vec2 min = points[0];
-    geom::Vec2 max = points[0];
+    geom::Vec2 min = this->at(0);
+    geom::Vec2 max = this->at(0);
 
-    for (auto i = 1; i < points.size(); ++i) {
-        if (points[i].x < min.x) {
-            min.x = points[i].x;
-        }
-
-        if (points[i].y < min.y) {
-            min.y = points[i].y;
-        }
-
-        if (points[i].x > max.x) {
-            max.x = points[i].x;
-        }
-
-        if (points[i].y > max.y) {
-            max.y = points[i].y;
-        }
+    for (auto i = 1; i < this->size(); ++i) {
+        min.x = std::min(min.x, this->at(i).x);
+        min.y = std::min(min.y, this->at(i).y);
+        max.x = std::max(max.x, this->at(i).x);
+        max.y = std::max(max.y, this->at(i).y);
     }
 
     return {min, max};
