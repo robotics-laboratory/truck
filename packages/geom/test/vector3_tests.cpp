@@ -37,8 +37,10 @@ TEST(Vector3, len) {
     const Vec3 c = {-1, 1, 0};
     const Vec3 d = {2, 5, 7};
 
-    ASSERT_GEOM_EQUAL(a.len(), std::sqrt(3), 1e-9);
-    ASSERT_GEOM_EQUAL(b.len(), std::sqrt(3), 1e-9);
-    ASSERT_GEOM_EQUAL(c.len(), std::sqrt(2), 1e-9);
-    ASSERT_GEOM_EQUAL(d.len(), std::sqrt(78), 1e-9);
+    constexpr double eps = 1e-9;
+
+    ASSERT_GEOM_EQUAL(a.len(), std::sqrt(3), eps);
+    ASSERT_GEOM_EQUAL(b.len(), std::sqrt(3), eps);
+    ASSERT_GEOM_EQUAL(c.len(), std::sqrt(2), eps);
+    ASSERT_GEOM_EQUAL(d.len(), std::sqrt(78), eps);
 }

@@ -44,7 +44,7 @@ TEST(Vector3, extend) {
     const auto v1 = Vec2{7, 4};
     const auto v2 = Vec2{-1, -8};
     const auto margin = 4;
-    
+
     // Act.
     bb1.extend(v1);
     bb1.extend(v2);
