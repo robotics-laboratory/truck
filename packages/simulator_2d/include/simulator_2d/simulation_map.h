@@ -36,6 +36,7 @@ class SimulationMap {
 
 bool hasCollision(const SimulationMap& map, const geom::Polygon& shape_polygon, double precision);
 std::vector<float> getLidarRanges(
-  const SimulationMap& map, const geom::Pose& lidar_pose, const model::Lidar& lidar, double precision);
+    const SimulationMap& map, const geom::Pose& lidar_pose, const model::Lidar& lidar,
+    double precision);
 
 }  // namespace truck::simulator

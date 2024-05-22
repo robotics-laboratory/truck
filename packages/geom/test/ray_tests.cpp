@@ -7,8 +7,6 @@
 using namespace truck::geom;
 
 TEST(Ray, segment_intersections) {
-    using namespace truck::geom;
-
     constexpr double precision = 1e-4;
 
     {

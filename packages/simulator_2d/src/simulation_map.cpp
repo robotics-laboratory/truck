@@ -100,7 +100,8 @@ int mod(int number, int divider) { return (number % divider + divider) % divider
 }  // namespace
 
 std::vector<float> getLidarRanges(
-    const SimulationMap& map, const geom::Pose& lidar_pose, const model::Lidar& lidar, double precision) {
+    const SimulationMap& map, const geom::Pose& lidar_pose, const model::Lidar& lidar,
+    double precision) {
     const double angle_min_rad = lidar.angle_min.radians();
     const double angle_max_rad = lidar.angle_max.radians();
     const auto lidar_angle_increment = lidar.angle_increment;
@@ -123,13 +124,12 @@ std::vector<float> getLidarRanges(
         int begin_index, end_index;
 
         if (sign > 0) {
-            begin_index = ceilWithPrecision(
-                begin_oriented_angle.radians() / increment_rad, precision);
+            begin_index =
+                ceilWithPrecision(begin_oriented_angle.radians() / increment_rad, precision);
             end_index = end_oriented_angle.radians() / increment_rad;
         } else {
             begin_index = begin_oriented_angle.radians() / increment_rad;
-            end_index =
-                ceilWithPrecision(end_oriented_angle.radians() / increment_rad, precision);
+            end_index = ceilWithPrecision(end_oriented_angle.radians() / increment_rad, precision);
         }
 
         if (begin_index >= lidar_rays_number && end_index >= lidar_rays_number) {
