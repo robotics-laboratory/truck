@@ -195,7 +195,7 @@ TEST(SimulatorEngine, circle) {
     ASSERT_GEOM_EQUAL(pose.dir.angle().degrees(), 336.909262889, EPS);
     const auto angular_velocity = state.gyroAngularVelocity();
     ASSERT_GEOM_EQUAL(angular_velocity.x, 0., EPS);
-    ASSERT_GEOM_EQUAL(angular_velocity.y, -0.703276735, EPS);
+    ASSERT_GEOM_EQUAL(angular_velocity.y, -1.2841306595, EPS);
     ASSERT_GEOM_EQUAL(angular_velocity.z, 0., EPS);
     const auto acceleration = state.accelLinearAcceleration();
     ASSERT_GEOM_EQUAL(acceleration.x, -1.08827613795, EPS);

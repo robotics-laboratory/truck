@@ -11,7 +11,7 @@ TEST(SimulationMap, hasCollision) {
         // Arrange.
         SimulationMap map;
         map.resetMap("/truck/packages/map/data/map_6.geojson");
-        const auto shape = truck::geom::Polygon{{1, 3}, {5, 4}, {7, 5}, {3, 1}};
+        const auto shape = truck::geom::Polygon{{20, 38}, {19, 38}, {20, 37}, {19, 37}};
 
         // Act.
         const auto result = hasCollision(map, shape, precision);
