@@ -19,7 +19,7 @@ struct Shape {
     double radius() const;
     std::vector<geom::Vec2> getCircleDecomposition(const geom::Pose& ego_pose) const;
     geom::Polygon rearPoseToShapePolygon(const geom::Pose rear_pose) const;
-    geom::Polygon basePoseToShapePolygon(const geom::Pose base_pose, double base_to_rear) const;
+    geom::Polygon basePoseToShapePolygon(const geom::Pose base_pose) const;
 };
 
 }  // namespace truck::model

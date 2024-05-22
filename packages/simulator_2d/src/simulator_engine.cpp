@@ -97,7 +97,7 @@ void SimulatorEngine::checkForCollisions() {
     rear_pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
     rear_pose.pos = {x, y};
 
-    const auto shape_polygon = model_->rearPoseToShapePolygon(rear_pose);
+    const auto shape_polygon = model_->shape().rearPoseToShapePolygon(rear_pose);
     if (map_.checkForCollisions(shape_polygon)) {
         status_ = StatusCode::COLLISION;
     }
