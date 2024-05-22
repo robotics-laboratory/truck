@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(svg_debug_drawer)
 
+get_filename_component(
+  PARENT_PROJECT_SOURCE_DIR ${PROJECT_SOURCE_DIR} DIRECTORY
+)
+
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 find_package(ament_cmake REQUIRED)
@@ -35,7 +39,14 @@ install(
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
-  add_subdirectory("test")
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(
+    ${PROJECT_NAME}_tests test/main.cpp WORKING_DIRECTORY
+    ${PARENT_PROJECT_SOURCE_DIR}
+  )
+
+  target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 endif()
 
 ament_package()

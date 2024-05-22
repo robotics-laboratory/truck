@@ -9,17 +9,11 @@
 using namespace truck;
 using namespace truck::navigation;
 
-const std::string ROOT = "/truck/packages";
-
-TEST(Navigation, map) {
-    const std::string MAP = "map_6";
-    const std::string FILE_NAME = MAP;
-
-    geom::ComplexPolygons polygons =
-        map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
+TEST(Navigation, poly) {
+    geom::ComplexPolygons polygons = map::Map::fromGeoJson("map/data/map_6.geojson").polygons();
 
     viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png", .color_rgb = {}, .thickness = {}};
+        .path = "navigation/test/data/poly.png", .color_rgb = {}, .thickness = {}};
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
@@ -29,15 +23,11 @@ TEST(Navigation, map) {
     viewer.draw();
 }
 
-TEST(Navigation, map_mesh) {
-    const std::string MAP = "map_6";
-    const std::string FILE_NAME = MAP + "_mesh";
-
-    geom::ComplexPolygons polygons =
-        map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
+TEST(Navigation, mesh) {
+    geom::ComplexPolygons polygons = map::Map::fromGeoJson("map/data/map_6.geojson").polygons();
 
     viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png", .color_rgb = {}, .thickness = {}};
+        .path = "navigation/test/data/mesh.png", .color_rgb = {}, .thickness = {}};
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
@@ -52,15 +42,11 @@ TEST(Navigation, map_mesh) {
     viewer.draw();
 }
 
-TEST(Navigation, map_graph) {
-    const std::string MAP = "map_6";
-    const std::string FILE_NAME = MAP + "_graph";
-
-    geom::ComplexPolygons polygons =
-        map::Map::fromGeoJson(ROOT + "/map/data/" + MAP + ".geojson").polygons();
+TEST(Navigation, graph) {
+    geom::ComplexPolygons polygons = map::Map::fromGeoJson("map/data/map_6.geojson").polygons();
 
     viewer::ViewerParams viewer_params{
-        .path = ROOT + "/navigation/data/" + FILE_NAME + ".png", .color_rgb = {}, .thickness = {}};
+        .path = "navigation/test/data/graph.png", .color_rgb = {}, .thickness = {}};
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);

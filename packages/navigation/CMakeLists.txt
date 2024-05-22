@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(navigation)
 
+get_filename_component(
+  PARENT_PROJECT_SOURCE_DIR ${PROJECT_SOURCE_DIR} DIRECTORY
+)
+
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
@@ -55,7 +59,16 @@ install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
-  add_subdirectory("test")
+
+  ament_add_gtest(
+    ${PROJECT_NAME}_tests test/main.cpp WORKING_DIRECTORY
+    ${PARENT_PROJECT_SOURCE_DIR}
+  )
+
+  target_link_libraries(
+    ${PROJECT_NAME}_tests ${PROJECT_NAME}_mesh ${PROJECT_NAME}_graph
+    ${PROJECT_NAME}_viewer
+  )
 endif()
 
 ament_package()

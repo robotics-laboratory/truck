@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(simulator_2d)
 
+get_filename_component(
+  PARENT_PROJECT_SOURCE_DIR ${PROJECT_SOURCE_DIR} DIRECTORY
+)
+
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(model REQUIRED)
@@ -14,6 +18,8 @@ find_package(rosgraph_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(map REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
+find_package(rosbag2_storage REQUIRED)
 
 add_library(
   simulator_engine SHARED src/simulator_engine.cpp src/truck_state.cpp
@@ -66,7 +72,23 @@ install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
-  add_subdirectory("test")
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(
+    ${PROJECT_NAME}_tests test/main.cpp WORKING_DIRECTORY
+    ${PARENT_PROJECT_SOURCE_DIR}
+  )
+
+  ament_target_dependencies(
+    ${PROJECT_NAME}_tests
+    model
+    truck_msgs
+    geom
+    rclcpp
+    rosbag2_cpp
+    rosbag2_storage
+  )
+  target_link_libraries(${PROJECT_NAME}_tests simulator_engine)
 endif()
 
 ament_package()
