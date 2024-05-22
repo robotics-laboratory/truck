@@ -13,8 +13,6 @@
 
 namespace truck::simulator {
 
-SimulationMap::SimulationMap(double precision) { params_.precision = precision; }
-
 void SimulationMap::initializeRTree() {
     RTreeIndexedSegments segments;
     segments.reserve(obstacles_.size());
@@ -28,7 +26,7 @@ void SimulationMap::initializeRTree() {
 }
 
 void SimulationMap::resetMap(const std::string& path) {
-    obstacles_.clear();
+    eraseMap();
     const auto map = map::Map::fromGeoJson(path);
     const auto polygons = map.polygons();
     for (const auto& polygon : polygons) {
@@ -47,21 +45,21 @@ void SimulationMap::eraseMap() {
     rtree_.clear();
 }
 
-bool SimulationMap::checkForCollisions(const geom::Polygon& shape_polygon) const {
+bool hasCollision(const SimulationMap& map, const geom::Polygon& shape_polygon, double precision) {
     const auto bounding_box = geom::makeBoundingBox(shape_polygon);
     const RTreeBox rtree_box = {
         RTreePoint(bounding_box.min.x, bounding_box.min.y),
         RTreePoint(bounding_box.max.x, bounding_box.max.y)};
 
     std::vector<RTreeIndexedSegment> result;
-    rtree_.query(bgi::intersects(rtree_box), std::back_inserter(result));
+    map.rtree().query(bgi::intersects(rtree_box), std::back_inserter(result));
 
     for (const auto& rtreeSegment : result) {
         const geom::Segment segment(
             {bg::get<0, 0>(rtreeSegment.first), bg::get<0, 1>(rtreeSegment.first)},
             {bg::get<1, 0>(rtreeSegment.first), bg::get<1, 1>(rtreeSegment.first)});
 
-        if (geom::intersect(shape_polygon, segment, params_.precision)) {
+        if (geom::intersect(shape_polygon, segment, precision)) {
             return true;
         }
     }
@@ -101,8 +99,8 @@ int mod(int number, int divider) { return (number % divider + divider) % divider
 
 }  // namespace
 
-std::vector<float> SimulationMap::getLidarRanges(
-    const geom::Pose& lidar_pose, const model::Lidar& lidar) const {
+std::vector<float> getLidarRanges(
+    const SimulationMap& map, const geom::Pose& lidar_pose, const model::Lidar& lidar, double precision) {
     const double angle_min_rad = lidar.angle_min.radians();
     const double angle_max_rad = lidar.angle_max.radians();
     const auto lidar_angle_increment = lidar.angle_increment;
@@ -114,7 +112,7 @@ std::vector<float> SimulationMap::getLidarRanges(
 
     std::vector<float> ranges(lidar_rays_number, std::numeric_limits<float>::max());
 
-    for (const auto& segment : obstacles_) {
+    for (const auto& segment : map.obstacles()) {
         const auto origin_begin = segment.begin - lidar_pose;
         const auto origin_end = segment.end - lidar_pose;
 
@@ -126,12 +124,12 @@ std::vector<float> SimulationMap::getLidarRanges(
 
         if (sign > 0) {
             begin_index = ceilWithPrecision(
-                begin_oriented_angle.radians() / increment_rad, params_.precision);
+                begin_oriented_angle.radians() / increment_rad, precision);
             end_index = end_oriented_angle.radians() / increment_rad;
         } else {
             begin_index = begin_oriented_angle.radians() / increment_rad;
             end_index =
-                ceilWithPrecision(end_oriented_angle.radians() / increment_rad, params_.precision);
+                ceilWithPrecision(end_oriented_angle.radians() / increment_rad, precision);
         }
 
         if (begin_index >= lidar_rays_number && end_index >= lidar_rays_number) {
@@ -147,7 +145,7 @@ std::vector<float> SimulationMap::getLidarRanges(
 
         do {
             index = mod(index + sign, lidar_rays_number);
-            const auto distance = getIntersectionDistance(current_ray, segment, params_.precision);
+            const auto distance = getIntersectionDistance(current_ray, segment, precision);
             ranges[index] = std::min(ranges[index], distance);
             current_ray.dir += increment;
         } while (index != end_index);

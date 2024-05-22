@@ -22,23 +22,20 @@ using RTree = bgi::rtree<RTreeIndexedSegment, bgi::rstar<16>>;
 
 class SimulationMap {
   public:
-    SimulationMap(double precision = 1e-8);
-
     void resetMap(const std::string& path);
     void eraseMap();
-    bool checkForCollisions(const geom::Polygon& shape_polygon) const;
-    std::vector<float> getLidarRanges(
-        const geom::Pose& lidar_pose, const model::Lidar& lidar) const;
+    constexpr const geom::Segments& obstacles() const noexcept { return obstacles_; }
+    constexpr const RTree& rtree() const noexcept { return rtree_; }
 
   private:
     void initializeRTree();
 
-    struct Parameters {
-        double precision;
-    } params_;
-
     geom::Segments obstacles_;
     RTree rtree_;
 };
+
+bool hasCollision(const SimulationMap& map, const geom::Polygon& shape_polygon, double precision);
+std::vector<float> getLidarRanges(
+  const SimulationMap& map, const geom::Pose& lidar_pose, const model::Lidar& lidar, double precision);
 
 }  // namespace truck::simulator

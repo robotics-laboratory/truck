@@ -19,8 +19,7 @@ namespace truck::simulator {
 const double FREE_FALL_ACCELERATION = 9.81;  // m/s^2
 
 SimulatorEngine::SimulatorEngine(
-    std::unique_ptr<model::Model> model, double integration_step, double precision) :
-    map_(precision) {
+    std::unique_ptr<model::Model> model, double integration_step, double precision) {
     model_ = std::move(model);
     initializeParameters(integration_step, precision);
     initializeMathCache(integration_step);
@@ -98,7 +97,7 @@ void SimulatorEngine::checkForCollisions() {
     rear_pose.pos = {x, y};
 
     const auto shape_polygon = model_->shape().rearPoseToShapePolygon(rear_pose);
-    if (map_.checkForCollisions(shape_polygon)) {
+    if (hasCollision(map_, shape_polygon, params_.precision)) {
         status_ = StatusCode::COLLISION;
     }
 }
@@ -185,7 +184,7 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto linear_velocity = pose.dir * twist.velocity;
     const auto angular_velocity = twist.angularVelocity();
     const auto lidar_pose = getArbitraryPointPose(cache_.rear_to_lidar, x, y, yaw);
-    auto lidar_ranges = map_.getLidarRanges(lidar_pose, model_->lidar());
+    auto lidar_ranges = getLidarRanges(map_, lidar_pose, model_->lidar(), params_.precision);
     const auto current_rps = model_->linearVelocityToMotorRPS(twist.velocity);
     const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
     const auto gyro_angular_velocity = getImuAngularVelocity(angular_velocity);
