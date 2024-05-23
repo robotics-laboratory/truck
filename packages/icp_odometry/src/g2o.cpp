@@ -203,18 +203,6 @@ namespace truck::icp_odometry {
 					edge->setVertex(0, vertices[i]);
 					edge->setVertex(1, vertices[j]);
 
-//					auto msgQuat1 = icpOdometryData[i].odometry.pose.pose.orientation;
-//					auto msgPosition1 = icpOdometryData[i].odometry.pose.pose.position;
-//					Eigen::Quaterniond odomQuat1(msgQuat1.w, msgQuat1.x, msgQuat1.y, msgQuat1.z);
-//					Eigen::Matrix3d odomRotation1 = odomQuat1.toRotationMatrix();
-//					double rotationAngle1 = extractRotationAngle(odomRotation1);
-//
-//					auto msgQuat2 = icpOdometryData[i].odometry.pose.pose.orientation;
-//					auto msgPosition2 = icpOdometryData[i].odometry.pose.pose.position;
-//					Eigen::Quaterniond odomQuat2(msgQuat2.w, msgQuat2.x, msgQuat2.y, msgQuat2.z);
-//					Eigen::Matrix3d odomRotation2 = odomQuat2.toRotationMatrix();
-//					double rotationAngle2 = extractRotationAngle(odomRotation2);
-
 					Eigen::Matrix3d odomTransform = computeRelativeTransformation(icpOdometryData[i].odometry, icpOdometryData[j].odometry);
 
 					TransformationParameters odometryTP = odomTransform.cast<float>();
