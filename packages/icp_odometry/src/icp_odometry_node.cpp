@@ -43,11 +43,13 @@ TransformationParameters guessTransformation(
     const geom::Angle dtheta = geom::toYawAngle(odometry->pose.pose.orientation) -
                                 geom::toYawAngle(reference_odometry->pose.pose.orientation);
 
+	// rotation
     t(0, 0) = cos(dtheta);
     t(0, 1) = -sin(dtheta);
     t(1, 0) = sin(dtheta);
     t(1, 1) = cos(dtheta);
 
+	// transform
     t(0, 2) = dx;
     t(1, 2) = dy;
 
