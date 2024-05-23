@@ -3,7 +3,6 @@
 #include "icp_odometry/common.h"
 #include "icp_odometry/config.h"
 #include "icp_odometry/icp.h"
-#include "icp_odometry/dvc.h"
 #include "icp_odometry/visualization.h"
 
 #include <g2o/core/block_solver.h>

@@ -41,7 +41,6 @@ include_directories(
 add_executable(
   ${PROJECT_NAME}_node
   src/main.cpp
-  src/dvc.cpp
   src/g2o.cpp
   src/icp.cpp
   src/import_bag.cpp
@@ -85,9 +84,5 @@ install(
 install(
     DIRECTORY launch config bags
     DESTINATION share/${PROJECT_NAME})
-
-#if(BUILD_TESTING) // Я сдаюсь, я не понимаю как эти три строчки заставить работать
-#    add_subdirectory("tests")
-#endif()
 
 ament_package()
