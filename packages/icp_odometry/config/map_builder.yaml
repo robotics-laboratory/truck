@@ -2,7 +2,7 @@
 verbose: true
 
 # path to bag with icp and odometry messages
-bag_path: "/truck/packages/icp_odometry/bags/file_1_atrium.db3"
+bag_path: "/truck/packages/icp_odometry/bags/atrium_final_3_0.db3"
 
 # step distance for picking icp and odometry in bag
 reference_points_distance_threshold: 0.5

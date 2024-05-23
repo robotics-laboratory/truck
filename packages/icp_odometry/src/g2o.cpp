@@ -123,20 +123,14 @@ namespace truck::icp_odometry {
 		return T;
 	}
 
-	double getYawFromQuaternion(const geometry_msgs::msg::Quaternion& q) {
-		double sin = 2 * (q.w * q.z + q.x * q.y);
-		double cos = 1 - 2 * (q.y * q.y + q.z * q.z);
-		return std::atan2(sin, cos);
-	}
-
 	Eigen::Matrix3d computeRelativeTransformation(const nav_msgs::msg::Odometry &odom1, const nav_msgs::msg::Odometry &odom2) {
 		double x1 = odom1.pose.pose.position.x;
 		double y1 = odom1.pose.pose.position.y;
-		double theta1 = getYawFromQuaternion(odom1.pose.pose.orientation);
+		double theta1 = quaternionToTheta(odom1.pose.pose.orientation);
 
 		double x2 = odom2.pose.pose.position.x;
 		double y2 = odom2.pose.pose.position.y;
-		double theta2 = getYawFromQuaternion(odom2.pose.pose.orientation);
+		double theta2 = quaternionToTheta(odom2.pose.pose.orientation);
 
 		double dx = x2 - x1;
 		double dy = y2 - y1;
