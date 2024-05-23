@@ -147,34 +147,32 @@ namespace truck::icp_odometry {
 		this->declare_parameter("bag_path", "/some/example/path");
 		std::string bagPath = this->get_parameter("bag_path").as_string();
 
-		std::cout << "BAGPATH: " << bagPath << " ";
-
 		ColorProvider colorProvider = ColorProvider();
 
 		auto REFERENCE_COLOR = colorProvider.getColor();
 		auto DATA_BEFORE_COLOR = colorProvider.getColor();
 
 		std::vector <ICPView> ICPViews = {
-//				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::Welsch),                                colorProvider.getColor(), "welsch_p2point"},
-//				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::Welsch),                                colorProvider.getColor(), "welsch_p2plane"},
-//
-//				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::SwitchableConstaint),                                          colorProvider.getColor(), "switchable_constaint_p2point"},
-//				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::SwitchableConstaint),                                          colorProvider.getColor(), "switchable_constaint_p2plane"},
-//
-//				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::GemanMcClure),                          colorProvider.getColor(), "geman_mc_clure_p2point"},
-//				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::GemanMcClure),                          colorProvider.getColor(), "geman_mc_clure_p2plane"},
-//
-//				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::Tukey),                                 colorProvider.getColor(), "tukey_p2point"},
-//				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::Tukey),                                 colorProvider.getColor(), "tukey_p2plane"},
+				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::Welsch),                                colorProvider.getColor(), "welsch_p2point"},
+				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::Welsch),                                colorProvider.getColor(), "welsch_p2plane"},
+
+				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::SwitchableConstaint),                                          colorProvider.getColor(), "switchable_constaint_p2point"},
+				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::SwitchableConstaint),                                          colorProvider.getColor(), "switchable_constaint_p2plane"},
+
+				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::GemanMcClure),                          colorProvider.getColor(), "geman_mc_clure_p2point"},
+				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::GemanMcClure),                          colorProvider.getColor(), "geman_mc_clure_p2plane"},
+
+				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::Tukey),                                 colorProvider.getColor(), "tukey_p2point"},
+				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::Tukey),                                 colorProvider.getColor(), "tukey_p2plane"},
 
 				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::Huber), colorProvider.getColor(), "huber_p2point"},
 				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::Huber), colorProvider.getColor(), "huber_p2plane"},
 
-//				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::L1),                                    colorProvider.getColor(), "l1_p2point"},
-//				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::L1),                                    colorProvider.getColor(), "l1_p2plane"},
-//
-//				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::Student),                               colorProvider.getColor(), "student_p2point"},
-//				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::Student),                               colorProvider.getColor(), "student_p2plane"},
+				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::L1),                                    colorProvider.getColor(), "l1_p2point"},
+				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::L1),                                    colorProvider.getColor(), "l1_p2plane"},
+
+				{getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::Student),                               colorProvider.getColor(), "student_p2point"},
+				{getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::Student),                               colorProvider.getColor(), "student_p2plane"},
 		};
 
 		publisher_icp_transformation_reference = this->create_publisher<visualization_msgs::msg::Marker>("/icp_transformation/reference", 10);
@@ -191,23 +189,7 @@ namespace truck::icp_odometry {
 
 		std::optional <DataPoints> ref, data;
 
-		std::cout << "icpView: " << ICPViews.size() << "\n" << std::flush;
-
-		std::cout << "bagPath: " << bagPath << "\n";
-
-//		std::vector<DataPoints> dataPoints = readAllDataPoints(bagPath);
-
-		std::cout << "ReadICPOdometry: " << "\n" << std::flush;
-
 		auto icpOdometryData = readAllICPOdometryData("/truck/packages/icp_odometry/bags/atrium_final_3_0.db3", 100);
-
-		std::cout << "JOPA! " << icpOdometryData.size() << "\n" << std::flush;
-
-//		std::cout << "ReadDataPoints: " << std::flush;
-//
-//		std::vector<DataPoints> dataPoints = readAllDataPoints("/truck/packages/icp_odometry/bags/atrium_final_3_0.db3");
-
-//		std::cout << "\n\nJOPA!!! dataPoints read: " << f.size() << std::flush;
 
 		for (int i = 1; i < icpOdometryData.size(); i++) {
 			std::cout << "i: " << i << "\n" << std::flush;
@@ -223,20 +205,9 @@ namespace truck::icp_odometry {
 			publisher_icp_transformation_data_before->publish(data_marker);
 
 			for (size_t i = 0; i < ICPViews.size(); i++) {
-				std::cout << "IcpView: " << i << " ";
-
 				auto icpView = ICPViews[i];
 				auto points_publisher = this->publishers_icp_transformation_data_before[i];
 				auto segments_publisher = this->publishers_icp_transformation_data_before_segments[i];
-
-				std::cout << "DATA POINTS SIZE: " << data->features.size() << " ";
-
-//				auto icp = getICPWithRobustOutlierFilter(DistType::Point2Plane, RobustFct::Huber);
-//				auto icp = getICPWithRobustOutlierFilter(DistType::Point2Point, RobustFct::Welsch);
-
-//				Matcher::TransformationParameters T = icp(*data, *ref);
-//				DataPoints data_out(*data);
-//				icp.transformations.apply(data_out, T);
 
 				Matcher::TransformationParameters T = icpView.icp(*data, *ref);
 				DataPoints data_out(*data);
@@ -245,12 +216,12 @@ namespace truck::icp_odometry {
 				visualization_msgs::msg::Marker marker = dataPointsToMarker(data_out, FRAME_ID, icpView.color, stamp);
 				points_publisher->publish(marker);
 
-//				 icpView.icp.referenceDataPointsFilters.apply(*ref); // for fix normals to calc error a bit later
-//				icpView.icp.matcher->init(*ref);
-//				Matcher::Matches matches = icpView.icp.matcher->findClosests(data_out);
-//				Matcher::OutlierWeights outlierWeights = icpView.icp.outlierFilters.compute(data_out, *ref, matches);
-//
-//				segments_publisher->publish(matchesToSegmentMarker(matches, FRAME_ID, *ref, *data, outlierWeights, stamp));
+				icpView.icp.referenceDataPointsFilters.apply(*ref); // for fix normals to calc error a bit later
+				icpView.icp.matcher->init(*ref);
+				Matcher::Matches matches = icpView.icp.matcher->findClosests(data_out);
+				Matcher::OutlierWeights outlierWeights = icpView.icp.outlierFilters.compute(data_out, *ref, matches);
+
+				segments_publisher->publish(matchesToSegmentMarker(matches, FRAME_ID, *ref, *data, outlierWeights, stamp));
 			}
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(500));
