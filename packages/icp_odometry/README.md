@@ -4,7 +4,6 @@
 
 ```c++
 #include "icp_odometry/config.h"
-#include "icp_odometry/dvc.h"
 #include "icp_odometry/g2o.h"
 #include "icp_odometry/icp.h"
 #include "icp_odometry/icp_odometry_node.h"
