@@ -9,12 +9,13 @@
 
 
 namespace truck::icp_odometry {
-	struct ICPOdometryData {
-		DataPoints icpDataPoints;
-		nav_msgs::msg::Odometry odometry;
-		nav_msgs::msg::Odometry optimizedOdometry;
-	};
+    struct ICPOdometryData {
+        DataPoints icpDataPoints;
+        nav_msgs::msg::Odometry odometry;
+        nav_msgs::msg::Odometry optimizedOdometry;
+    };
 
-	std::vector<ICPOdometryData> readAllICPOdometryData(std::string, size_t = -1);
-	std::vector<DataPoints> readAllDataPoints(std::string);
+    std::vector <ICPOdometryData> readAllICPOdometryData(std::string, size_t = -1);
+
+    std::vector <DataPoints> readAllDataPoints(std::string);
 }

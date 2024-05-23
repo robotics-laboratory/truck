@@ -6,9 +6,9 @@
 #include <vector>
 
 namespace truck::icp_odometry {
-	void optimizePoses(Matcher::ICP &, std::vector<ICPOdometryData> &, double);
+    void optimizePoses(Matcher::ICP &, std::vector <ICPOdometryData> &, double);
 
-	DataPoints getMergedDataPoints(std::vector<ICPOdometryData>&);
+    DataPoints getMergedDataPoints(std::vector <ICPOdometryData> &);
 
-	std::vector<DataPoints> getTransformedDataPoints(std::vector <ICPOdometryData>&);
+    std::vector <DataPoints> getTransformedDataPoints(std::vector <ICPOdometryData> &);
 }
