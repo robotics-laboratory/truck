@@ -12,9 +12,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(Boost REQUIRED)
 
-add_executable(
-  ${PROJECT_NAME}_node src/main.cpp src/planner_node.cpp src/search.cpp
-)
+add_executable(src/main.cpp src/planner_node.cpp src/search.cpp)
 
 ament_target_dependencies(
   ${PROJECT_NAME}_node
