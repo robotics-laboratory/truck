@@ -72,11 +72,11 @@ test-all:
 .PHONY: lint
 # packages="first_pkg_name second_pkg_name third_pkg_name"
 lint:
-	run-clang-tidy-16 -p=build $(packages)
+	run-clang-tidy-${CLANG_VERSION} -p=build $(packages)
 
 .PHONY: lint-all
 lint-all:
-	run-clang-tidy-16 -p=build ${FILES_TO_LINT}
+	run-clang-tidy-${CLANG_VERSION} -p=build ${FILES_TO_LINT}
 
 .PHONY: clean
 clean:
