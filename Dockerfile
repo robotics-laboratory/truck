@@ -599,6 +599,8 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export TRUCK_CONTROL=ipega\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
 
+RUN source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash
+
 ### SETUP ENTRYPOINT
 
 WORKDIR /truck
