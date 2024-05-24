@@ -58,3 +58,6 @@ jobs:
 
       - name: Test ROS2 packages
         run: make test-all
+
+      - name: Run Clang-Tidy (dummy example)
+        run: make lint packages="navigation"

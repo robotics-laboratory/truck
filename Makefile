@@ -1,7 +1,23 @@
 .SILENT:
 .ONESHELL:
 
-SHELL := /bin/bash
+SHELL = /bin/bash
+
+CMAKE_BUILD_TYPE ?= Release
+
+CMAKE_TOOLS_ADDRESS_SANITIZER ?= OFF
+
+CXXFLAGS := \
+    ${CXXFLAGS} \
+    $(shell if [ "${CMAKE_TOOLS_ADDRESS_SANITIZER}" = "ON" ]; then echo "-fsanitize=address"; fi)
+
+CMAKE_ARGS ?= \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+    -DCMAKE_CXX_FLAGS="${CXXFLAGS}"
+
+FILES_TO_LINT := $(shell find . \( -name "*.h" -or -name "*.cpp" -or -name "*.cc" \) \
+                    -not -path "*/build/*" -not -path "*/install/*" -not -path "*/log/*")
 
 .PHONY: all
 all:
@@ -16,6 +32,7 @@ build:
 		--executor parallel \
 		--parallel-workers $$(nproc) \
 		--symlink-install \
+		--cmake-args ${CMAKE_ARGS} \
 		--packages-up-to $(packages)
 
 .PHONY: build-all
@@ -25,10 +42,11 @@ build-all:
 		--base-paths packages \
 		--executor parallel \
 		--parallel-workers $$(nproc) \
-		--symlink-install
+		--symlink-install \
+		--cmake-args ${CMAKE_ARGS}
 
 .PHONY: test
-# packages="first_pkg second_pkg third_pkg..."
+# packages="first_pkg_name second_pkg_name third_pkg_name"
 test:
 	source ${ROS_ROOT}/setup.sh
 	source install/setup.sh
@@ -50,6 +68,15 @@ test-all:
 		--executor parallel \
 		--parallel-workers $$(nproc) \
 		--event-handlers console_cohesion+
+
+.PHONY: lint
+# packages="first_pkg_name second_pkg_name third_pkg_name"
+lint:
+	run-clang-tidy-16 -p=build $(packages)
+
+.PHONY: lint-all
+lint-all:
+	run-clang-tidy-16 -p=build ${FILES_TO_LINT}
 
 .PHONY: clean
 clean:
