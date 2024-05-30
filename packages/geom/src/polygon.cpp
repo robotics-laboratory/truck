@@ -133,15 +133,16 @@ Polygon clip(
 }
 
 Segments Polygon::segments() const noexcept {
+    const auto& points = *this;
     Segments segments;
-    segments.reserve(this->size());
+    segments.reserve(points.size());
 
-    segments[0].begin = {this->back().x, this->back().y};
-    segments[0].end = {this->at(0).x, this->at(0).y};
+    segments[0].begin = {points.back().x, points.back().y};
+    segments[0].end = {points[0].x, points[0].y};
 
-    for (auto i = 1; i < this->size(); ++i) {
-        Vec2 begin = {this->at(i - 1).x, this->at(i - 1).y};
-        Vec2 end = {this->at(i).x, this->at(i).y};
+    for (size_t i = 1; i < points.size(); ++i) {
+        Vec2 begin = {points[i - 1].x, points[i - 1].y};
+        Vec2 end = {points[i].x, points[i].y};
         segments.emplace_back(begin, end);
     }
 

@@ -5,10 +5,7 @@ find_package(rosbag2_storage REQUIRED)
 find_package(model REQUIRED)
 find_package(truck_msgs REQUIRED)
 
-ament_add_gtest(
-  ${PROJECT_NAME}_test simulation_map_tests.cpp
-  main.cpp
-)
+ament_add_gtest(${PROJECT_NAME}_test simulation_map_tests.cpp main.cpp)
 
 ament_target_dependencies(
   ${PROJECT_NAME}_test

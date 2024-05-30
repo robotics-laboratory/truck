@@ -20,10 +20,6 @@ BoundingBox& BoundingBox::extend(double margin) noexcept {
     return *this;
 }
 
-inline BoundingBox extend(BoundingBox& box, const geom::Vec2& v) noexcept { return box.extend(v); }
-
-inline BoundingBox extend(BoundingBox& box, double margin) noexcept { return box.extend(margin); }
-
 BoundingBox makeBoundingBox(const Polygon& polygon) noexcept {
     VERIFY(!polygon.empty());
 

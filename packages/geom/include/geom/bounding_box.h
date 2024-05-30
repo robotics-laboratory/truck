@@ -26,8 +26,12 @@ struct BoundingBox {
     Vec2 min, max;
 };
 
-inline BoundingBox extend(const BoundingBox& box, const geom::Vec2& v) noexcept;
-inline BoundingBox extend(const BoundingBox& box, double margin) noexcept;
+inline BoundingBox extend(const BoundingBox& box, const geom::Vec2& v) noexcept {
+    return box.extend(v);
+}
+inline BoundingBox extend(const BoundingBox& box, double margin) noexcept {
+    return box.extend(margin);
+}
 BoundingBox makeBoundingBox(const Polygon& polygon) noexcept;
 
 }  // namespace truck::geom

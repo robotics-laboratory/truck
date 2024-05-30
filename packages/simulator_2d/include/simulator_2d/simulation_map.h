@@ -24,8 +24,8 @@ class SimulationMap {
   public:
     void resetMap(const std::string& path);
     void eraseMap();
-    constexpr const geom::Segments& obstacles() const noexcept { return obstacles_; }
-    constexpr const RTree& rtree() const noexcept { return rtree_; }
+    const geom::Segments& obstacles() const noexcept { return obstacles_; }
+    const RTree& rtree() const noexcept { return rtree_; }
 
   private:
     void initializeRTree();
