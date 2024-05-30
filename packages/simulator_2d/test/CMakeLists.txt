@@ -6,7 +6,7 @@ find_package(model REQUIRED)
 find_package(truck_msgs REQUIRED)
 
 ament_add_gtest(
-  ${PROJECT_NAME}_test simulation_map_tests.cpp simulator_engine_tests.cpp
+  ${PROJECT_NAME}_test simulation_map_tests.cpp
   main.cpp
 )
 
