@@ -164,10 +164,13 @@ WheelVelocity Model::rearTwistToWheelVelocity(Twist rear_twist) const {
     const double rear_curvature_squared = squared(rear_twist.curvature);
 
     const double rear_ratio = rear_twist.curvature * cache_.width_half;
-    const double front_left_ratio = sqrt(
+    const double front_ratio_base_squared =
         1 + rear_curvature_squared * cache_.width_half_squared
-        - rear_twist.curvature * params_.wheel_base.width + cache_.length_squared);
-    const double front_right_ratio = sqrt(1 + rear_curvature_squared * cache_.length_squared);
+        + rear_curvature_squared * cache_.length_squared;
+    const double front_left_ratio = sqrt(front_ratio_base_squared
+        - rear_twist.curvature * params_.wheel_base.width);
+    const double front_right_ratio = sqrt(front_ratio_base_squared
+        + rear_twist.curvature * params_.wheel_base.width);
 
     return WheelVelocity{
         geom::Angle{(1 - rear_ratio) * rear_spin_velocity},
