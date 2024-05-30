@@ -10,12 +10,12 @@ std::string to_string(const T& obj);
 
 template<>
 std::string to_string<double>(const double& obj) {
-    return boost::str(boost::format("%.5d") % obj);
+    return boost::str(boost::format("%.5f") % obj);
 }
 
 template<>
 std::string to_string<geom::Angle>(const geom::Angle& obj) {
-    return boost::str(boost::format("Angle(%.1d deg)") % obj.degrees());
+    return boost::str(boost::format("Angle(%.5f deg)") % obj.degrees());
 }
 
 template<>
@@ -35,7 +35,7 @@ std::string to_string<model::WheelVelocity>(const model::WheelVelocity& obj) {
 template<>
 std::string to_string<model::Twist>(const model::Twist& obj) {
     return boost::str(
-        boost::format("Twist(curvature=%.5d, velocity=%.5d)") % obj.curvature % obj.velocity);
+        boost::format("Twist(curvature=%.5f, velocity=%.5f)") % obj.curvature % obj.velocity);
 }
 
 template<>

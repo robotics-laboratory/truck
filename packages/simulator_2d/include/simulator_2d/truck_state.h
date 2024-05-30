@@ -23,7 +23,7 @@ class TruckState {
     const std::vector<float>& lidarRanges() const;
     double currentMotorRps() const;
     double targetMotorRps() const;
-    model::WheelVelocity wheelVelocity() const;
+    const& model::WheelVelocity wheelVelocity() const;
     geom::Vec3 gyroAngularVelocity() const;
     geom::Vec3 accelLinearAcceleration() const;
 
@@ -38,9 +38,9 @@ class TruckState {
     TruckState& lidarRanges(std::vector<float> lidar_ranges);
     TruckState& currentMotorRps(double current_rps);
     TruckState& targetMotorRps(double target_rps);
-    TruckState& wheelVelocity(model::WheelVelocity wheel_velocity);
-    TruckState& gyroAngularVelocity(geom::Vec3 angular_velocity);
-    TruckState& accelLinearAcceleration(geom::Vec3 linear_acceleration);
+    TruckState& wheelVelocity(const model::WheelVelocity& wheel_velocity);
+    TruckState& gyroAngularVelocity(const geom::Vec3& angular_velocity);
+    TruckState& accelLinearAcceleration(const geom::Vec3& linear_acceleration);
 
   private:
     struct Cache {

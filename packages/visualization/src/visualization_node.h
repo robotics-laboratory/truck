@@ -22,6 +22,7 @@
 #include <rclcpp/time.hpp>
 
 #include <string>
+#include <optional>
 
 namespace truck::visualization {
 
@@ -107,8 +108,6 @@ class VisualizationNode : public rclcpp::Node {
     struct Cache {
         tf2::Transform body_base_tf;
         std::array<tf2::Transform, 4> wheel_base_tfs;
-        double wheel_spin_angles[4] = {0.0};
-        double last_ego_update_second;
     } cache_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
@@ -124,6 +123,8 @@ class VisualizationNode : public rclcpp::Node {
         truck_msgs::msg::Waypoints::ConstSharedPtr waypoints = nullptr;
         truck_msgs::msg::NavigationMesh::ConstSharedPtr navigation_mesh = nullptr;
         truck_msgs::msg::NavigationRoute::ConstSharedPtr navigation_route = nullptr;
+        double wheel_spin_angles[4] = {0.0};
+        std::optional<double> last_ego_update_seconds = nullptr;
     } state_;
 
     struct Slots {

@@ -159,7 +159,6 @@ void VisualizationNode::initializeCacheWheelBaseTfs() {
 void VisualizationNode::initializeCache() {
     initializeCacheBodyBaseTf();
     initializeCacheWheelBaseTfs();
-    cache_.last_ego_update_second = now().seconds();
 }
 
 void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg) {
@@ -266,7 +265,9 @@ visualization_msgs::msg::Marker makeMeshMarker(
 
 void VisualizationNode::updateWheelsSpin() {
     const auto now_seconds = now().seconds();
-    const auto time = now_seconds - cache_.last_ego_update_second;
+    const auto before = state_.last_ego_update_second.value_or(now_seconds);
+    const auto time = now_seconds - before;
+
     const model::WheelVelocity wheel_velocity = {
         geom::Angle(state_.telemetry->rear_left_wheel_velocity),
         geom::Angle(state_.telemetry->rear_right_wheel_velocity),
@@ -288,11 +289,11 @@ void VisualizationNode::updateWheelsSpin() {
             }
         }();
 
-        const double angle = cache_.wheel_spin_angles[wheel] + velocity * time;
-        cache_.wheel_spin_angles[wheel] = std::fmod(angle, M_2PI);
+        const double angle = state_.wheel_spin_angles[wheel] + velocity * time;
+        state_.wheel_spin_angles[wheel] = std::fmod(angle, M_2PI);
     }
 
-    cache_.last_ego_update_second = now_seconds;
+    state_.last_ego_update_seconds = now_seconds;
 }
 
 void VisualizationNode::updateEgo() {
@@ -318,7 +319,7 @@ void VisualizationNode::publishEgo() const {
     msg_array.markers.push_back(body_msg);
 
     for (auto wheel : kAllWheels) {
-        const double y_angle = cache_.wheel_spin_angles[wheel];
+        const double y_angle = state_.wheel_spin_angles[wheel];
         const double z_angle = [&]() {
             switch (wheel) {
                 case WheelIndex::kFrontLeft:
