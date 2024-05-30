@@ -1,3 +1,5 @@
+#include "simulator_2d/status_code.h"
+
 #include "model/model.h"
 #include "geom/angle.h"
 #include "geom/pose.h"
@@ -10,6 +12,7 @@ namespace truck::simulator {
 
 class TruckState {
   public:
+    StatusCode status() const;
     rclcpp::Time time() const;
     geom::Pose odomBasePose() const;
     model::Steering currentSteering() const;
@@ -23,6 +26,7 @@ class TruckState {
     geom::Vec3 gyroAngularVelocity() const;
     geom::Vec3 accelLinearAcceleration() const;
 
+    TruckState& status(StatusCode status);
     TruckState& time(const rclcpp::Time& time);
     TruckState& odomBasePose(const geom::Pose& pose);
     TruckState& currentSteering(const model::Steering& current_steering);
@@ -38,6 +42,7 @@ class TruckState {
 
   private:
     struct Cache {
+        StatusCode status;
         rclcpp::Time time;
         geom::Pose base_odom_pose;
         model::Steering current_steering;

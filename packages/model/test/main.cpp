@@ -5,11 +5,67 @@
 #include "geom/vector.h"
 #include "geom/test/equal_assert.h"
 
+#include <cmath>
+
 using namespace truck::model;
 
 TEST(Params, yaml_params) {
     // check config
     Params params("config/model.yaml");
+}
+
+TEST(Shape, rearPoseToShapePolygon) {
+    Shape shape;
+    shape.width = 1.5;
+    shape.length = 3;
+    const truck::geom::Vec2 rear_center{2, 2};
+    const truck::geom::AngleVec2 dir(truck::geom::Angle::fromDegrees(45));
+    const truck::geom::Pose rear_pose{rear_center, dir};
+
+    const auto polygon = shape.rearPoseToShapePolygon(rear_pose);
+
+    constexpr double eps = 1e-9;
+
+    EXPECT_EQ(polygon.size(), 4);
+    const double d = 3 * std::sqrt(2) / 2;
+    const double ax = 2 - d / 4;
+    const double ay = 2 + d / 4;
+    ASSERT_GEOM_EQUAL(polygon[0].x, ax, eps);
+    ASSERT_GEOM_EQUAL(polygon[0].y, ay, eps);
+    ASSERT_GEOM_EQUAL(polygon[1].x, ax + d, eps);
+    ASSERT_GEOM_EQUAL(polygon[1].y, ay + d, eps);
+    ASSERT_GEOM_EQUAL(polygon[2].x, ay + d, eps);
+    ASSERT_GEOM_EQUAL(polygon[2].y, ax + d, eps);
+    ASSERT_GEOM_EQUAL(polygon[3].x, ay, eps);
+    ASSERT_GEOM_EQUAL(polygon[3].y, ax, eps);
+}
+
+TEST(Shape, basePoseToShapePolygon) {
+    Shape shape;
+    shape.width = 1.5;
+    shape.length = 3;
+    shape.base_to_rear = 1.5;
+    const double offset = 1.5 * std::cos(45 * M_PI / 180);
+    const truck::geom::Vec2 base_center{2 + offset, 2 + offset};
+    const truck::geom::AngleVec2 dir(truck::geom::Angle::fromDegrees(45));
+    const truck::geom::Pose base_pose{base_center, dir};
+
+    const auto polygon = shape.basePoseToShapePolygon(base_pose);
+
+    constexpr double eps = 1e-9;
+
+    EXPECT_EQ(polygon.size(), 4);
+    const double d = 3 * std::sqrt(2) / 2;
+    const double ax = 2 - d / 4;
+    const double ay = 2 + d / 4;
+    ASSERT_GEOM_EQUAL(polygon[0].x, ax, eps);
+    ASSERT_GEOM_EQUAL(polygon[0].y, ay, eps);
+    ASSERT_GEOM_EQUAL(polygon[1].x, ax + d, eps);
+    ASSERT_GEOM_EQUAL(polygon[1].y, ay + d, eps);
+    ASSERT_GEOM_EQUAL(polygon[2].x, ay + d, eps);
+    ASSERT_GEOM_EQUAL(polygon[2].y, ax + d, eps);
+    ASSERT_GEOM_EQUAL(polygon[3].x, ay, eps);
+    ASSERT_GEOM_EQUAL(polygon[3].y, ax, eps);
 }
 
 TEST(Twist, angularVelocity) {
