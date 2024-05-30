@@ -35,7 +35,7 @@ std::vector<geom::Vec2> Shape::getCircleDecomposition(const geom::Pose& ego_pose
     return points;
 }
 
-geom::Polygon Shape::rearPoseToShapePolygon(const geom::Pose rear_pose) const {
+geom::Polygon Shape::rearPoseToShapePolygon(const geom::Pose& rear_pose) const {
     const auto x = rear_pose.pos.x;
     const auto y = rear_pose.pos.y;
     const auto yaw = rear_pose.dir.vec();
@@ -47,7 +47,7 @@ geom::Polygon Shape::rearPoseToShapePolygon(const geom::Pose rear_pose) const {
     return {a, a + dir, b + dir, b};
 }
 
-geom::Polygon Shape::basePoseToShapePolygon(const geom::Pose base_pose) const {
+geom::Polygon Shape::basePoseToShapePolygon(const geom::Pose& base_pose) const {
     const geom::Pose rear_pose = {base_pose.pos - base_to_rear * base_pose.dir, base_pose.dir};
     return rearPoseToShapePolygon(rear_pose);
 }
