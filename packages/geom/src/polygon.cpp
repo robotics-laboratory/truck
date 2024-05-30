@@ -87,6 +87,23 @@ Orientation Polygon::orientation() const noexcept {
     return (orientation_sign > 0 ? Orientation::COUNTERCLOCKWISE : Orientation::CLOCKWISE);
 }
 
+Segments Polygon::segments() const noexcept {
+    const auto& points = *this;
+    Segments segments;
+    segments.reserve(points.size());
+
+    segments[0].begin = {points.back().x, points.back().y};
+    segments[0].end = {points[0].x, points[0].y};
+
+    for (size_t i = 1; i < points.size(); ++i) {
+        Vec2 begin = {points[i - 1].x, points[i - 1].y};
+        Vec2 end = {points[i].x, points[i].y};
+        segments.emplace_back(begin, end);
+    }
+
+    return segments;
+}
+
 /** Implementation of Sutherland–Hodgman algorithm
  *
  * See https://en.wikipedia.org/wiki/Sutherland–Hodgman_algorithm
@@ -109,13 +126,13 @@ Polygon clip(
             return orientation_sign * cross(clip_edge, point - clip_vertex_2) >= eps;
         };
 
-        geom::Polygon current_polygon = std::move(clipped_polygon);
+        Polygon current_polygon = std::move(clipped_polygon);
         clipped_polygon.clear();
         auto current_vertex_1 = current_polygon.back();
         for (const auto& current_vertex_2 : current_polygon) {
-            auto intersection_point = geom::intersect(
-                geom::Line::fromTwoPoints(current_vertex_1, current_vertex_2),
-                geom::Line::fromTwoPoints(clip_vertex_1, clip_vertex_2));
+            auto intersection_point = intersect(
+                Line::fromTwoPoints(current_vertex_1, current_vertex_2),
+                Line::fromTwoPoints(clip_vertex_1, clip_vertex_2));
             if (is_inside_clip_edge(current_vertex_2)) {
                 if (!is_inside_clip_edge(current_vertex_1)) {
                     clipped_polygon.push_back(*intersection_point);
@@ -132,21 +149,15 @@ Polygon clip(
     return clipped_polygon;
 }
 
-Segments Polygon::segments() const noexcept {
-    const auto& points = *this;
-    Segments segments;
-    segments.reserve(points.size());
+BoundingBox makeBoundingBox(const Polygon& polygon) noexcept {
+    VERIFY(!polygon.empty());
 
-    segments[0].begin = {points.back().x, points.back().y};
-    segments[0].end = {points[0].x, points[0].y};
-
-    for (size_t i = 1; i < points.size(); ++i) {
-        Vec2 begin = {points[i - 1].x, points[i - 1].y};
-        Vec2 end = {points[i].x, points[i].y};
-        segments.emplace_back(begin, end);
+    BoundingBox box(polygon[0]);
+    for (auto i = 1; i < polygon.size(); ++i) {
+        box.extend(polygon[i]);
     }
 
-    return segments;
+    return box;
 }
 
 }  // namespace truck::geom

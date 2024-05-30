@@ -1,10 +1,8 @@
 #include "geom/bounding_box.h"
 
-#include "common/exception.h"
-
 namespace truck::geom {
 
-BoundingBox& BoundingBox::extend(const geom::Vec2& v) noexcept {
+BoundingBox& BoundingBox::extend(const Vec2& v) noexcept {
     min.x = std::min(min.x, v.x);
     min.y = std::min(min.y, v.y);
     max.x = std::max(max.x, v.x);
@@ -18,17 +16,6 @@ BoundingBox& BoundingBox::extend(double margin) noexcept {
     max.x += margin;
     max.y += margin;
     return *this;
-}
-
-BoundingBox makeBoundingBox(const Polygon& polygon) noexcept {
-    VERIFY(!polygon.empty());
-
-    geom::BoundingBox box(polygon[0]);
-    for (auto i = 1; i < polygon.size(); ++i) {
-        box.extend(polygon[i]);
-    }
-
-    return box;
 }
 
 }  // namespace truck::geom

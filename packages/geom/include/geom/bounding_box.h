@@ -1,6 +1,5 @@
 #pragma once
 
-#include "geom/polygon.h"
 #include "geom/vector.h"
 
 #include <algorithm>
@@ -20,18 +19,18 @@ struct BoundingBox {
         max.y = std::max(a.y, b.y);
     }
 
-    BoundingBox& extend(const geom::Vec2& v) noexcept;
+    BoundingBox& extend(const Vec2& v) noexcept;
     BoundingBox& extend(double margin) noexcept;
 
     Vec2 min, max;
 };
 
-inline BoundingBox extend(const BoundingBox& box, const geom::Vec2& v) noexcept {
+inline BoundingBox extend(BoundingBox& box, const Vec2& v) noexcept {
     return box.extend(v);
 }
-inline BoundingBox extend(const BoundingBox& box, double margin) noexcept {
+
+inline BoundingBox extend(BoundingBox& box, double margin) noexcept {
     return box.extend(margin);
 }
-BoundingBox makeBoundingBox(const Polygon& polygon) noexcept;
 
 }  // namespace truck::geom
