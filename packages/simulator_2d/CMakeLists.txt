@@ -15,6 +15,9 @@ find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(map REQUIRED)
 find_package(Boost REQUIRED)
+find_package(pybind11 REQUIRED)
+
+set(CMAKE_CXX_STANDARD 20)
 
 add_library(
   simulator_engine SHARED src/simulator_engine.cpp src/truck_state.cpp
@@ -70,5 +73,11 @@ install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 if(BUILD_TESTING)
   add_subdirectory("test")
 endif()
+
+set(PYBIND11_PYTHON_VERSION "3.8")
+pybind11_add_module(pymodel ${CMAKE_SOURCE_DIR}/src/pybind.cpp)
+target_link_libraries(pymodel PRIVATE simulator_engine)
+
+install(TARGETS pymodel LIBRARY DESTINATION lib/python3.8/site-packages)
 
 ament_package()
