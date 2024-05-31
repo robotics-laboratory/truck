@@ -22,6 +22,7 @@
 #include <rclcpp/time.hpp>
 
 #include <string>
+#include <optional>
 
 namespace truck::visualization {
 
@@ -35,6 +36,7 @@ class VisualizationNode : public rclcpp::Node {
     void initializeTopicHandlers();
     void initializeCacheBodyBaseTf();
     void initializeCacheWheelBaseTfs();
+    void initializeCache();
 
     void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr trajectory);
     void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
@@ -44,6 +46,9 @@ class VisualizationNode : public rclcpp::Node {
     void handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg);
     void handleNavigationMesh(truck_msgs::msg::NavigationMesh::ConstSharedPtr msg);
     void handleNavigationRoute(truck_msgs::msg::NavigationRoute::ConstSharedPtr msg);
+
+    void updateWheelsSpin();
+    void updateEgo();
 
     void publishTrajectory() const;
     void publishEgo() const;
@@ -118,6 +123,8 @@ class VisualizationNode : public rclcpp::Node {
         truck_msgs::msg::Waypoints::ConstSharedPtr waypoints = nullptr;
         truck_msgs::msg::NavigationMesh::ConstSharedPtr navigation_mesh = nullptr;
         truck_msgs::msg::NavigationRoute::ConstSharedPtr navigation_route = nullptr;
+        double wheel_spin_angles[4] = {0.0};
+        std::optional<double> last_ego_update_seconds;
     } state_;
 
     struct Slots {
