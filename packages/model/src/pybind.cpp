@@ -1,6 +1,7 @@
-#include <pybind11/pybind11.h>
 #include "model/model.h"
+
 #include <boost/format.hpp>
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 using namespace truck;
@@ -79,6 +80,7 @@ PYBIND11_MODULE(pymodel, m) {
         .def(py::init<double, double>())
         .def_readonly("curvature", &model::Twist::curvature)
         .def_readonly("velocity", &model::Twist::velocity)
+        .def("angular_velocity", &model::Twist::angularVelocity)
         .def("__repr__", &to_string<model::Twist>);
     py::class_<model::ServoAngles>(m, "ServoAngles")
         .def_readonly("left", &model::ServoAngles::left)
