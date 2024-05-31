@@ -265,7 +265,7 @@ visualization_msgs::msg::Marker makeMeshMarker(
 
 void VisualizationNode::updateWheelsSpin() {
     const auto now_seconds = now().seconds();
-    const auto before = state_.last_ego_update_second.value_or(now_seconds);
+    const auto before = state_.last_ego_update_seconds.value_or(now_seconds);
     const auto time = now_seconds - before;
 
     const model::WheelVelocity wheel_velocity = {

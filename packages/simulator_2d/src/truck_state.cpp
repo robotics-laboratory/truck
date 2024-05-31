@@ -27,7 +27,7 @@ double TruckState::currentMotorRps() const { return cache_.current_motor_rps; }
 
 double TruckState::targetMotorRps() const { return cache_.target_motor_rps; }
 
-const& model::WheelVelocity TruckState::wheelVelocity() const { return cache_.wheel_velocity; }
+const model::WheelVelocity& TruckState::wheelVelocity() const { return cache_.wheel_velocity; }
 
 geom::Vec3 TruckState::gyroAngularVelocity() const { return cache_.gyro_angular_velocity; }
 

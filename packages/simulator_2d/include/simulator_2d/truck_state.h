@@ -23,7 +23,7 @@ class TruckState {
     const std::vector<float>& lidarRanges() const;
     double currentMotorRps() const;
     double targetMotorRps() const;
-    const& model::WheelVelocity wheelVelocity() const;
+    const model::WheelVelocity& wheelVelocity() const;
     geom::Vec3 gyroAngularVelocity() const;
     geom::Vec3 accelLinearAcceleration() const;
 

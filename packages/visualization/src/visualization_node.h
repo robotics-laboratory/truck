@@ -124,7 +124,7 @@ class VisualizationNode : public rclcpp::Node {
         truck_msgs::msg::NavigationMesh::ConstSharedPtr navigation_mesh = nullptr;
         truck_msgs::msg::NavigationRoute::ConstSharedPtr navigation_route = nullptr;
         double wheel_spin_angles[4] = {0.0};
-        std::optional<double> last_ego_update_seconds = nullptr;
+        std::optional<double> last_ego_update_seconds;
     } state_;
 
     struct Slots {
