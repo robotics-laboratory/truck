@@ -6,14 +6,20 @@
 #include "navigation/graph_builder.h"
 #include "navigation/search.h"
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
+
 using namespace truck;
 using namespace truck::navigation;
 
+const std::string MAP_PKG_PATH = ament_index_cpp::get_package_share_directory("map");
+
 TEST(Navigation, poly) {
-    geom::ComplexPolygons polygons = map::Map::fromGeoJson("map/data/map_6.geojson").polygons();
+    const std::string file_path = MAP_PKG_PATH + "/data/map_6.geojson";
+
+    geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
     viewer::ViewerParams viewer_params{
-        .path = "navigation/test/data/poly.png", .color_rgb = {}, .thickness = {}};
+        .path = "test/data/poly.png", .color_rgb = {}, .thickness = {}};
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
@@ -24,10 +30,12 @@ TEST(Navigation, poly) {
 }
 
 TEST(Navigation, mesh) {
-    geom::ComplexPolygons polygons = map::Map::fromGeoJson("map/data/map_6.geojson").polygons();
+    const std::string file_path = MAP_PKG_PATH + "/data/map_6.geojson";
+
+    geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
     viewer::ViewerParams viewer_params{
-        .path = "navigation/test/data/mesh.png", .color_rgb = {}, .thickness = {}};
+        .path = "test/data/mesh.png", .color_rgb = {}, .thickness = {}};
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
@@ -43,10 +51,12 @@ TEST(Navigation, mesh) {
 }
 
 TEST(Navigation, graph) {
-    geom::ComplexPolygons polygons = map::Map::fromGeoJson("map/data/map_6.geojson").polygons();
+    const std::string file_path = MAP_PKG_PATH + "/data/map_6.geojson";
+
+    geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
     viewer::ViewerParams viewer_params{
-        .path = "navigation/test/data/graph.png", .color_rgb = {}, .thickness = {}};
+        .path = "test/data/graph.png", .color_rgb = {}, .thickness = {}};
 
     mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);

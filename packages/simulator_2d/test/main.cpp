@@ -17,10 +17,13 @@
 #include <string>
 #include <limits>
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
+
 using namespace truck::simulator;
 
-const std::string MODEL_CONFIG_PATH = "model/config/model.yaml";
-const std::string TEST_OUTPUT_PATH = "simulator_2d/test/data/test_output_";
+const std::string MODEL_PKG_PATH = ament_index_cpp::get_package_share_directory("model");
+const std::string MODEL_CONFIG_PATH = MODEL_PKG_PATH + "/config/model.yaml";
+const std::string TEST_OUTPUT_PATH = "test/data/test_output_";
 rosbag2_storage::TopicMetadata TEST_OUTPUT_TOPIC{
     "/simulator/state", "truck_msgs/msg/SimulationState", "cdr", ""};
 constexpr double EPS = 1e-9;
