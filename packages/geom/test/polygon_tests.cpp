@@ -113,3 +113,26 @@ TEST(Polygon, intersect) {
         ASSERT_EQ(intersect(poly, seg), true);
     }
 }
+
+TEST(Polygon, makeBoundingBox) {
+    // Arrange.
+    const auto p1 = Polygon{{0, 0}, {0, 1}, {1, 0}};
+    const auto p2 = Polygon{{-1, -7}, {-2, 8}, {14, 6}, {5, -1}};
+
+    // Act.
+    const auto bb1 = makeBoundingBox(p1);
+    const auto bb2 = makeBoundingBox(p2);
+
+    // Assert.
+    constexpr double eps = 1e-9;
+
+    ASSERT_GEOM_EQUAL(bb1.min.x, 0., eps);
+    ASSERT_GEOM_EQUAL(bb1.min.y, 0., eps);
+    ASSERT_GEOM_EQUAL(bb1.max.x, 1., eps);
+    ASSERT_GEOM_EQUAL(bb1.max.y, 1., eps);
+
+    ASSERT_GEOM_EQUAL(bb2.min.x, -2., eps);
+    ASSERT_GEOM_EQUAL(bb2.min.y, -7., eps);
+    ASSERT_GEOM_EQUAL(bb2.max.x, 14., eps);
+    ASSERT_GEOM_EQUAL(bb2.max.y, 8., eps);
+}
