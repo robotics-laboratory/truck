@@ -18,6 +18,7 @@ add_library(
   src/angle_vector.cpp
   src/arc.cpp
   src/bezier.cpp
+  src/bounding_box.cpp
   src/circle.cpp
   src/complex_polygon.cpp
   src/distance.cpp
@@ -27,10 +28,10 @@ add_library(
   src/polygon.cpp
   src/polyline.cpp
   src/pose.cpp
-  src/intersection.cpp
   src/segment.cpp
   src/transform.cpp
   src/vector.cpp
+  src/vector3.cpp
 )
 
 ament_target_dependencies(

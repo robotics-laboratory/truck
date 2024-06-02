@@ -1,8 +1,9 @@
 #pragma once
 
-#include "geom/vector.h"
-#include "geom/triangle.h"
+#include "geom/bounding_box.h"
 #include "geom/segment.h"
+#include "geom/triangle.h"
+#include "geom/vector.h"
 
 #include <vector>
 
@@ -35,5 +36,7 @@ using Polygons = std::vector<Polygon>;
 Polygon clip(
     const Polygon& boundary_polygon, const Polygon& clipped_polygon,
     const double eps = 1e-4) noexcept;
+
+BoundingBox makeBoundingBox(const Polygon& polygon) noexcept;
 
 }  // namespace truck::geom

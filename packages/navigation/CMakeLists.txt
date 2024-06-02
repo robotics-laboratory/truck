@@ -61,9 +61,11 @@ if(BUILD_TESTING)
     ${PROJECT_NAME}_tests test/main.cpp WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
+  ament_target_dependencies(${PROJECT_NAME}_tests ament_index_cpp)
+
   target_link_libraries(
     ${PROJECT_NAME}_tests ${PROJECT_NAME}_mesh ${PROJECT_NAME}_graph
-    ${PROJECT_NAME}_viewer ament_index_cpp::ament_index_cpp
+    ${PROJECT_NAME}_viewer
   )
 endif()
 

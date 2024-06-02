@@ -5,6 +5,8 @@
 
 namespace truck::simulator {
 
+StatusCode TruckState::status() const { return cache_.status; }
+
 rclcpp::Time TruckState::time() const { return cache_.time; }
 
 geom::Pose TruckState::odomBasePose() const { return cache_.base_odom_pose; }
@@ -25,9 +27,16 @@ double TruckState::currentMotorRps() const { return cache_.current_motor_rps; }
 
 double TruckState::targetMotorRps() const { return cache_.target_motor_rps; }
 
+const model::WheelVelocity& TruckState::wheelVelocity() const { return cache_.wheel_velocity; }
+
 geom::Vec3 TruckState::gyroAngularVelocity() const { return cache_.gyro_angular_velocity; }
 
 geom::Vec3 TruckState::accelLinearAcceleration() const { return cache_.accel_linear_acceleration; }
+
+TruckState& TruckState::status(StatusCode status) {
+    cache_.status = status;
+    return *this;
+}
 
 TruckState& TruckState::time(const rclcpp::Time& time) {
     cache_.time = time;
@@ -79,12 +88,17 @@ TruckState& TruckState::targetMotorRps(double target_rps) {
     return *this;
 }
 
-TruckState& TruckState::gyroAngularVelocity(geom::Vec3 angular_velocity) {
+TruckState& TruckState::wheelVelocity(const model::WheelVelocity& wheel_velocity) {
+    cache_.wheel_velocity = wheel_velocity;
+    return *this;
+}
+
+TruckState& TruckState::gyroAngularVelocity(const geom::Vec3& angular_velocity) {
     cache_.gyro_angular_velocity = angular_velocity;
     return *this;
 }
 
-TruckState& TruckState::accelLinearAcceleration(geom::Vec3 linear_acceleration) {
+TruckState& TruckState::accelLinearAcceleration(const geom::Vec3& linear_acceleration) {
     cache_.accel_linear_acceleration = linear_acceleration;
     return *this;
 }

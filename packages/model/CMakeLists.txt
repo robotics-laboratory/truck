@@ -15,7 +15,7 @@ find_package(Boost REQUIRED)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(model SHARED src/params.cpp src/model.cpp)
+add_library(model SHARED src/params.cpp src/shape.cpp src/model.cpp)
 ament_target_dependencies(
   model
   common

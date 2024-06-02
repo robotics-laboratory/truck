@@ -14,15 +14,17 @@ find_package(rosgraph_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(map REQUIRED)
+find_package(Boost REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 find_package(rosbag2_storage REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 
 add_library(
   simulator_engine SHARED src/simulator_engine.cpp src/truck_state.cpp
+                          src/simulation_map.cpp
 )
 
-ament_target_dependencies(simulator_engine model geom map tf2)
+ament_target_dependencies(simulator_engine model geom map tf2 Boost)
 
 target_include_directories(
   simulator_engine
@@ -72,7 +74,8 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
 
   ament_add_gtest(
-    ${PROJECT_NAME}_tests test/main.cpp WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    ${PROJECT_NAME}_tests test/main.cpp test/simulation_map_tests.cpp
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
   ament_target_dependencies(
@@ -83,10 +86,10 @@ if(BUILD_TESTING)
     rclcpp
     rosbag2_cpp
     rosbag2_storage
+    ament_index_cpp
   )
-  target_link_libraries(
-    ${PROJECT_NAME}_tests simulator_engine ament_index_cpp::ament_index_cpp
-  )
+
+  target_link_libraries(${PROJECT_NAME}_tests simulator_engine)
 endif()
 
 ament_package()

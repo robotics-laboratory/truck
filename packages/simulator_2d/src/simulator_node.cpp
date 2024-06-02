@@ -1,5 +1,7 @@
 #include "simulator_node.h"
 
+#include "simulator_2d/status_code.h"
+
 #include "common/math.h"
 #include "geom/msg.h"
 
@@ -168,6 +170,12 @@ void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
     telemetry_msg.current_rps = truck_state.currentMotorRps();
     telemetry_msg.target_rps = truck_state.targetMotorRps();
 
+    const auto wheel_velocity = truck_state.wheelVelocity();
+    telemetry_msg.rear_left_wheel_velocity = wheel_velocity.rear_left.radians();
+    telemetry_msg.rear_right_wheel_velocity = wheel_velocity.rear_right.radians();
+    telemetry_msg.front_left_wheel_velocity = wheel_velocity.front_left.radians();
+    telemetry_msg.front_right_wheel_velocity = wheel_velocity.front_right.radians();
+
     signals_.telemetry->publish(telemetry_msg);
 }
 
@@ -178,6 +186,7 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
 
     state_msg.speed = truck_state.baseTwist().velocity;
     state_msg.steering = truck_state.currentSteering().middle.radians();
+    state_msg.collision = truck_state.status() == StatusCode::COLLISION;
 
     const auto pose = truck_state.odomBasePose();
     state_msg.pose = truck::geom::msg::toPose(pose);

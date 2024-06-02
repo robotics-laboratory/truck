@@ -23,12 +23,13 @@ using namespace std::chrono_literals;
 
 using namespace geom::literals;
 
+const double M_2PI = M_PI * 2;
+
 VisualizationNode::VisualizationNode() : Node("visualization") {
     initializePtrFields();
     initializeParams();
     initializeTopicHandlers();
-    initializeCacheBodyBaseTf();
-    initializeCacheWheelBaseTfs();
+    initializeCache();
 }
 
 void VisualizationNode::initializePtrFields() {
@@ -155,6 +156,11 @@ void VisualizationNode::initializeCacheWheelBaseTfs() {
     }
 }
 
+void VisualizationNode::initializeCache() {
+    initializeCacheBodyBaseTf();
+    initializeCacheWheelBaseTfs();
+}
+
 void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg) {
     state_.telemetry = msg;
 }
@@ -163,7 +169,7 @@ void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr o
     state_.odom = std::move(odom);
     ++state_.odom_seq_id;
 
-    publishEgo();
+    updateEgo();
     publishEgoTrack();
     publishArc();
 }
@@ -229,7 +235,7 @@ void VisualizationNode::publishTrajectory() const {
 
 void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg) {
     state_.mode = std::move(msg);
-    publishEgo();
+    updateEgo();
 }
 
 namespace {
@@ -257,11 +263,49 @@ visualization_msgs::msg::Marker makeMeshMarker(
 
 }  // namespace
 
-void VisualizationNode::publishEgo() const {
+void VisualizationNode::updateWheelsSpin() {
+    const auto now_seconds = now().seconds();
+    const auto before = state_.last_ego_update_seconds.value_or(now_seconds);
+    const auto time = now_seconds - before;
+
+    const model::WheelVelocity wheel_velocity = {
+        geom::Angle(state_.telemetry->rear_left_wheel_velocity),
+        geom::Angle(state_.telemetry->rear_right_wheel_velocity),
+        geom::Angle(state_.telemetry->front_left_wheel_velocity),
+        geom::Angle(state_.telemetry->front_right_wheel_velocity)};
+
+    for (auto wheel : kAllWheels) {
+        const double velocity = [&]() {
+            switch (wheel) {
+                case WheelIndex::kFrontLeft:
+                    return wheel_velocity.front_left.radians();
+                case WheelIndex::kFrontRight:
+                    return -wheel_velocity.front_right.radians();
+                case WheelIndex::kRearLeft:
+                    return wheel_velocity.rear_left.radians();
+                case WheelIndex::kRearRight:
+                default:
+                    return -wheel_velocity.rear_right.radians();
+            }
+        }();
+
+        const double angle = state_.wheel_spin_angles[wheel] + velocity * time;
+        state_.wheel_spin_angles[wheel] = std::fmod(angle, M_2PI);
+    }
+
+    state_.last_ego_update_seconds = now_seconds;
+}
+
+void VisualizationNode::updateEgo() {
     if (!state_.odom || !state_.mode || !state_.telemetry) {
         return;
     }
 
+    updateWheelsSpin();
+    publishEgo();
+}
+
+void VisualizationNode::publishEgo() const {
     tf2::Transform base_to_odom;
     tf2::fromMsg(state_.odom->pose.pose, base_to_odom);
 
@@ -275,6 +319,7 @@ void VisualizationNode::publishEgo() const {
     msg_array.markers.push_back(body_msg);
 
     for (auto wheel : kAllWheels) {
+        const double y_angle = state_.wheel_spin_angles[wheel];
         const double z_angle = [&]() {
             switch (wheel) {
                 case WheelIndex::kFrontLeft:
@@ -287,7 +332,7 @@ void VisualizationNode::publishEgo() const {
         }();
 
         auto rotation = tf2::Quaternion::getIdentity();
-        rotation.setRPY(0, 0, z_angle);
+        rotation.setRPY(0, y_angle, z_angle);
         const auto wheel_tf =
             base_to_odom * cache_.wheel_base_tfs[wheel] * tf2::Transform(rotation);
 

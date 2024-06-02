@@ -114,11 +114,11 @@ void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
         }
 
         const double velocity_left_force =
-            velocity_left_pd_.Update(velocity_left - wheel_velocity.left.radians(), delta);
+            velocity_left_pd_.Update(velocity_left - wheel_velocity.rear_left.radians(), delta);
         rear_left_joint_->SetForce(0, velocity_left_force);
 
         const double velocity_right_force =
-            velocity_right_pd_.Update(velocity_right - wheel_velocity.right.radians(), delta);
+            velocity_right_pd_.Update(velocity_right - wheel_velocity.rear_right.radians(), delta);
         rear_right_joint_->SetForce(0, velocity_right_force);
     };
 
