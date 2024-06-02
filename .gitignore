@@ -1,9 +1,16 @@
 *.DS_Store
-packages/build
-packages/install
-packages/log
 .vscode
 .dvc
 __pycache__/
 *.py[cod]
 *$py.class
+
+# ROS2 builds
+build
+install
+log
+
+# Test data
+packages/navigation/test/data
+packages/simulator_2d/test/data
+packages/svg_debug_drawer/test/data/im*_out.svg

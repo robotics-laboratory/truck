@@ -15,6 +15,9 @@ find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(map REQUIRED)
 find_package(Boost REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
+find_package(rosbag2_storage REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 
 add_library(
   simulator_engine SHARED src/simulator_engine.cpp src/truck_state.cpp
@@ -68,7 +71,25 @@ install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
-  add_subdirectory("test")
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(
+    ${PROJECT_NAME}_tests test/main.cpp test/simulation_map_tests.cpp
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  )
+
+  ament_target_dependencies(
+    ${PROJECT_NAME}_tests
+    model
+    truck_msgs
+    geom
+    rclcpp
+    rosbag2_cpp
+    rosbag2_storage
+    ament_index_cpp
+  )
+
+  target_link_libraries(${PROJECT_NAME}_tests simulator_engine)
 endif()
 
 ament_package()

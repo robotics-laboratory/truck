@@ -35,12 +35,13 @@ install(
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_clang_format REQUIRED)
-  ament_clang_format(
-    CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format"
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(
+    ${PROJECT_NAME}_tests test/main.cpp WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
-  add_subdirectory("test")
+  target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 endif()
 
 ament_package()

@@ -2,7 +2,11 @@
 
 #include <gtest/gtest.h>
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
+
 using namespace truck::simulator;
+
+const std::string MAP_PKG_PATH = ament_index_cpp::get_package_share_directory("map");
 
 TEST(SimulationMap, hasCollision) {
     constexpr double precision = 1e-9;
@@ -10,7 +14,7 @@ TEST(SimulationMap, hasCollision) {
     {
         // Arrange.
         SimulationMap map;
-        map.resetMap("/truck/packages/map/data/map_6.geojson");
+        map.resetMap(MAP_PKG_PATH + "/data/map_6.geojson");
         const auto shape = truck::geom::Polygon{{20, 38}, {19, 38}, {20, 37}, {19, 37}};
 
         // Act.
@@ -23,7 +27,7 @@ TEST(SimulationMap, hasCollision) {
     {
         // Arrange.
         SimulationMap map;
-        map.resetMap("/truck/packages/map/data/map_6.geojson");
+        map.resetMap(MAP_PKG_PATH + "/data/map_6.geojson");
         const auto shape = truck::geom::Polygon{{25, 32}, {27, 32}, {27, 29}, {25, 29}};
 
         // Act.
@@ -36,7 +40,7 @@ TEST(SimulationMap, hasCollision) {
     {
         // Arrange.
         SimulationMap map;
-        map.resetMap("/truck/packages/map/data/map_6.geojson");
+        map.resetMap(MAP_PKG_PATH + "/data/map_6.geojson");
         const auto shape = truck::geom::Polygon{
             {22.133002182962517, 31.000984165385418}, {22, 30}, {21, 31}, {21, 30}};
 

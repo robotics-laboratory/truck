@@ -23,8 +23,6 @@
   <depend>sensor_msgs</depend>
   <depend>Boost</depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>rosbag2_cpp</test_depend>
   <test_depend>rosbag2_storage</test_depend>

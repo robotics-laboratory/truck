@@ -11,13 +11,13 @@ using namespace truck;
 
 TEST(SDD, Constructor) {
     {
-        const std::string input_path = "/truck/packages/svg_debug_drawer/test/data/im1_in.svg";
-        const std::string output_path = "/truck/packages/svg_debug_drawer/test/data/im1_out.svg";
+        const std::string input_path = "test/data/im1_in.svg";
+        const std::string output_path = "test/data/im1_out.svg";
 
         sdd::SDD(input_path, output_path);
     }
     {
-        const std::string output_path = "/truck/packages/svg_debug_drawer/test/data/im2_out.svg";
+        const std::string output_path = "test/data/im2_out.svg";
 
         sdd::SDD(sdd::Size{.width = 512, .height = 512}, output_path);
     }
@@ -25,7 +25,7 @@ TEST(SDD, Constructor) {
 
 TEST(SDD, DrawMarker) {
     {
-        const std::string output_path = "/truck/packages/svg_debug_drawer/test/data/im3_out.svg";
+        const std::string output_path = "test/data/im3_out.svg";
 
         auto img = sdd::SDD(sdd::Size{.width = 512, .height = 512}, output_path);
         img.Add({.point = geom::Vec2(128, 128),
@@ -50,7 +50,7 @@ TEST(SDD, DrawMarker) {
 
 TEST(SDD, DrawPose) {
     {
-        const std::string output_path = "/truck/packages/svg_debug_drawer/test/data/im4_out.svg";
+        const std::string output_path = "test/data/im4_out.svg";
 
         auto img = sdd::SDD(sdd::Size{.width = 512, .height = 512}, output_path);
         img.Add({.pose = geom::Pose(geom::Vec2(128, 128), geom::AngleVec2::fromVector(1, 0)),
@@ -76,7 +76,7 @@ TEST(SDD, DrawPose) {
 
 TEST(SDD, DrawPolyline) {
     {
-        const std::string output_path = "/truck/packages/svg_debug_drawer/test/data/im5_out.svg";
+        const std::string output_path = "test/data/im5_out.svg";
 
         auto img = sdd::SDD(sdd::Size{.width = 512, .height = 512}, output_path);
         img.Add({.polyline = {geom::Vec2(10, 10), geom::Vec2(100, 100), geom::Vec2(200, 250)},
@@ -94,7 +94,7 @@ TEST(SDD, DrawPolyline) {
 
 TEST(SDD, DrawPolygon) {
     {
-        const std::string output_path = "/truck/packages/svg_debug_drawer/test/data/im6_out.svg";
+        const std::string output_path = "test/data/im6_out.svg";
 
         auto img = sdd::SDD(sdd::Size{.width = 512, .height = 512}, output_path);
         img.Add({.polygon =
@@ -137,7 +137,7 @@ TEST(SDD, DrawPolygon) {
 
 TEST(SDD, DrawComplexPolygon) {
     {
-        const std::string output_path = "/truck/packages/svg_debug_drawer/test/data/im7_out.svg";
+        const std::string output_path = "test/data/im7_out.svg";
 
         auto img = sdd::SDD(sdd::Size{.width = 512, .height = 512}, output_path);
         img.Add({.complex_polygon =

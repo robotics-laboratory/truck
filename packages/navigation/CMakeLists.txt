@@ -8,6 +8,7 @@ find_package(map REQUIRED)
 find_package(CGAL REQUIRED)
 find_package(Boost REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 
 add_library(${PROJECT_NAME}_mesh SHARED src/mesh_builder.cpp)
 
@@ -55,7 +56,17 @@ install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
-  add_subdirectory("test")
+
+  ament_add_gtest(
+    ${PROJECT_NAME}_tests test/main.cpp WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  )
+
+  ament_target_dependencies(${PROJECT_NAME}_tests ament_index_cpp)
+
+  target_link_libraries(
+    ${PROJECT_NAME}_tests ${PROJECT_NAME}_mesh ${PROJECT_NAME}_graph
+    ${PROJECT_NAME}_viewer
+  )
 endif()
 
 ament_package()
