@@ -1,18 +1,19 @@
 #include <waypoint_follower/waypoint_follower.h>
 
-#include "common/math.h"
 #include "common/exception.h"
+#include "common/math.h"
 #include "geom/distance.h"
 #include "motion/primitive.h"
 
 #include <algorithm>
+#include <utility>
 
 namespace truck::waypoint_follower {
 
 Waypoint::Waypoint(uint32_t seq_id, const geom::Vec2& pos) : seq_id(seq_id), pos(pos) {}
 
-LinkedPose::LinkedPose(uint32_t wp_seq_id, const geom::Pose& pose) :
-    wp_seq_id(wp_seq_id), pose(pose) {}
+LinkedPose::LinkedPose(uint32_t wp_seq_id, geom::Pose pose) :
+    wp_seq_id(wp_seq_id), pose(std::move(pose)) {}
 
 namespace {
 
@@ -74,7 +75,7 @@ void WaypointFollower::reset() {
 }
 
 bool WaypointFollower::isReadyToFinish(const geom::Pose& ego_pose) const {
-    return state_.waypoints.size() == 1 && state_.path.size() >= 1
+    return state_.waypoints.size() == 1 && !state_.path.empty()
            && geom::distanceSq(ego_pose.pos, state_.path.back().pose.pos)
                   < squared(params_.check_in_distance);
 }

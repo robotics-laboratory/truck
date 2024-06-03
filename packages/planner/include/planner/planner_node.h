@@ -23,10 +23,10 @@ class PlannerNode : public rclcpp::Node {
     PlannerNode();
 
   private:
-    void onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-    void onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg);
-    void onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg);
-    void onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
+    void onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr& msg);
+    void onOdometry(const nav_msgs::msg::Odometry::SharedPtr& msg);
+    void onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr& msg);
+    void onTf(const tf2_msgs::msg::TFMessage::SharedPtr& msg, bool is_static);
 
     std_msgs::msg::ColorRGBA getNodeColor(size_t node_index) const;
 

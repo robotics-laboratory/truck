@@ -8,7 +8,7 @@ namespace {
 
 cv::Scalar toCVScalar(const std::vector<int>& color_rgb) {
     VERIFY(color_rgb.size() == 3);
-    return cv::Scalar(color_rgb[2], color_rgb[1], color_rgb[0]);
+    return {color_rgb[2], color_rgb[1], color_rgb[0]};
 }
 
 cv::Point toCVPoint(const geom::Vec2& origin, double res, const geom::Vec2& point) {
@@ -19,6 +19,7 @@ std::vector<cv::Point> toCVPoints(
     const geom::Vec2& origin, double res, const std::vector<geom::Vec2>& points) {
     std::vector<cv::Point> cv_points;
 
+    cv_points.reserve(points.size());
     for (const geom::Vec2& point : points) {
         cv_points.emplace_back(toCVPoint(origin, res, point));
     }
@@ -112,7 +113,7 @@ void drawNodes(
 void drawPath(
     const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
     const geom::Polyline& path) {
-    if (path.size() == 0) {
+    if (path.empty()) {
         return;
     }
 

@@ -20,7 +20,7 @@ class StaticCollisionChecker {
     StaticCollisionChecker(const model::Shape& shape);
 
     bool initialized() const;
-    void reset(Map distance_transform);
+    void reset(Map disntace_transform);
 
     double distance(const geom::Pose& ego_pose) const;
     double distance(const geom::Vec2& point) const;

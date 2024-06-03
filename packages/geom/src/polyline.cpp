@@ -1,7 +1,7 @@
 #include "geom/polyline.h"
 
-#include "geom/distance.h"
 #include "common/exception.h"
+#include "geom/distance.h"
 
 #include <Eigen/Dense>
 #include <unsupported/Eigen/Splines>
@@ -10,14 +10,14 @@ namespace truck::geom {
 
 namespace {
 
-Vec2 toVec2(const Eigen::Vector2d& eigen_point) { return Vec2(eigen_point.x(), eigen_point.y()); }
+Vec2 toVec2(const Eigen::Vector2d& eigen_point) { return {eigen_point.x(), eigen_point.y()}; }
 
 Eigen::Vector2d toEigenVector2d(const Vec2& point) { return Eigen::Vector2d(point.x, point.y); }
 
 Eigen::MatrixXd toEigenMatrixXd(const std::vector<Vec2>& points) {
-    VERIFY(points.size() > 0);
+    VERIFY(!points.empty());
 
-    size_t points_count = points.size();
+    size_t const points_count = points.size();
     Eigen::MatrixXd eigen_mat(2, points_count);
 
     for (size_t i = 0; i < points_count; i++) {
@@ -29,15 +29,13 @@ Eigen::MatrixXd toEigenMatrixXd(const std::vector<Vec2>& points) {
 
 }  // namespace
 
-UniformStepper<Polyline> Polyline::ubegin() const noexcept { return UniformStepper(this); }
+UniformStepper<Polyline> Polyline::ubegin() const noexcept { return {this}; }
 
 UniformStepper<Polyline> Polyline::ubegin(double step_length) const noexcept {
-    return UniformStepper(this, step_length);
+    return {this, step_length};
 }
 
-UniformStepper<Polyline> Polyline::uend() const noexcept {
-    return UniformStepper(this, this->end() - 1);
-}
+UniformStepper<Polyline> Polyline::uend() const noexcept { return {this, this->end() - 1}; }
 
 double Polyline::len() const noexcept {
     VERIFY(this->size() > 1);
@@ -56,8 +54,9 @@ Polyline toSpline(const Polyline& polyline, double step, size_t degree) noexcept
     VERIFY(degree > 0);
     VERIFY(polyline.size() > degree);
 
-    Eigen::Spline<double, 2> spline = Eigen::SplineFitting<Eigen::Spline<double, 2>>::Interpolate(
-        toEigenMatrixXd(polyline), degree);
+    Eigen::Spline<double, 2> const spline =
+        Eigen::SplineFitting<Eigen::Spline<double, 2>>::Interpolate(
+            toEigenMatrixXd(polyline), degree);
 
     size_t spline_points = std::ceil<size_t>(polyline.len() / step);
     spline_points = (spline_points < 2) ? 2 : spline_points;
@@ -65,7 +64,7 @@ Polyline toSpline(const Polyline& polyline, double step, size_t degree) noexcept
     Polyline polyline_smoothed;
 
     for (size_t i = 0; i < spline_points; i++) {
-        double t = static_cast<double>(i) / (spline_points - 1);
+        double const t = static_cast<double>(i) / (spline_points - 1);
         polyline_smoothed.emplace_back(toVec2(spline(t)));
     }
 

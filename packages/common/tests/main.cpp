@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "common/format.h"
-#include "common/exception.h"
-#include "common/lock.h"
 #include "common/array_as_bit.h"
+#include "common/exception.h"
+#include "common/format.h"
+#include "common/lock.h"
 
 #include <numeric>
 #include <vector>

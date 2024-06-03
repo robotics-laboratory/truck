@@ -3,7 +3,7 @@
 namespace rosaruco {
 
 tf2::Quaternion RotationVectorToQuaternion(const cv::Vec3d& rot_vec) {
-    double angle = cv::norm(rot_vec);
+    double const angle = cv::norm(rot_vec);
     auto axis = cv::normalize(rot_vec);
     return tf2::Quaternion(tf2::Vector3(axis[0], axis[1], axis[2]), angle);
 }

@@ -1,7 +1,7 @@
 #include "routing/routing_node.h"
 
-#include "geom/msg.h"
 #include "geom/distance.h"
+#include "geom/msg.h"
 
 namespace truck::routing {
 
@@ -47,9 +47,9 @@ size_t findNearestIndex(const RTree& rtree, const geom::Vec2& point) {
 
 }  // namespace
 
-Route::Route() {}
+Route::Route() = default;
 
-Route::Route(const geom::Polyline& polyline) : polyline(polyline), rtree(toRTree(polyline)) {}
+Route::Route(const geom::Polyline& polyline) : rtree(toRTree(polyline)), polyline(polyline) {}
 
 double Route::distance(const geom::Vec2& point) const {
     return geom::distance(point, polyline[findNearestIndex(rtree, point)]);
@@ -67,13 +67,13 @@ size_t Route::postfixIndex(const geom::Vec2& point, double postfix) const {
     return index;
 }
 
-Cache::Cache() {}
+Cache::Cache() = default;
 
-Cache::Cache(const navigation::graph::Graph& graph) : graph(graph), rtree(toRTree(graph.nodes)) {}
+Cache::Cache(const navigation::graph::Graph& graph) : rtree(toRTree(graph.nodes)), graph(graph) {}
 
 geom::Polyline Cache::findPath(const geom::Vec2& from, const geom::Vec2& to) const {
-    navigation::graph::NodeId from_id = findNearestIndex(rtree, from);
-    navigation::graph::NodeId to_id = findNearestIndex(rtree, to);
+    navigation::graph::NodeId const from_id = findNearestIndex(rtree, from);
+    navigation::graph::NodeId const to_id = findNearestIndex(rtree, to);
 
     return navigation::search::toPolyline(
         graph, navigation::search::findShortestPath(graph, from_id, to_id));
@@ -104,9 +104,9 @@ void RoutingNode::initializeParams() {
         .offset = this->declare_parameter<double>("mesh.offset"),
         .filter = {}};
 
-    bool k_nearest_mode = this->declare_parameter<bool>("graph.k_nearest_mode");
-    auto mode = (k_nearest_mode == true) ? navigation::graph::GraphParams::Mode::kNearest
-                                         : navigation::graph::GraphParams::Mode::searchRadius;
+    bool const k_nearest_mode = this->declare_parameter<bool>("graph.k_nearest_mode");
+    auto mode = (k_nearest_mode) ? navigation::graph::GraphParams::Mode::kNearest
+                                 : navigation::graph::GraphParams::Mode::searchRadius;
 
     params_.graph = {
         .mode = mode,
@@ -120,7 +120,7 @@ void RoutingNode::initializeParams() {
     RCLCPP_INFO(this->get_logger(), "mesh dist: %.2f m", params_.mesh.dist);
     RCLCPP_INFO(this->get_logger(), "mesh offset: %.2f m", params_.mesh.offset);
 
-    if (k_nearest_mode == true) {
+    if (k_nearest_mode) {
         RCLCPP_INFO(this->get_logger(), "graph k_nearest: %li", params_.graph.k_nearest);
     } else {
         RCLCPP_INFO(this->get_logger(), "graph search_radius: %.2f m", params_.graph.search_radius);
@@ -151,11 +151,11 @@ void RoutingNode::initializeTopicHandlers() {
     timers_.route = this->create_wall_timer(250ms, std::bind(&RoutingNode::makeRouteTick, this));
 }
 
-void RoutingNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
+void RoutingNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr& msg) {
     state_.ego = geom::toVec2(*msg);
 }
 
-void RoutingNode::onFinish(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
+void RoutingNode::onFinish(const geometry_msgs::msg::PointStamped::SharedPtr& msg) {
     state_.finish = geom::toVec2(*msg);
 
     if (state_.ego.has_value()) {
@@ -165,8 +165,8 @@ void RoutingNode::onFinish(const geometry_msgs::msg::PointStamped::SharedPtr msg
 }
 
 void RoutingNode::updateRoute() {
-    geom::Polyline polyline = cache_.findPath(state_.ego.value(), state_.finish.value());
-    size_t polyline_points = polyline.size();
+    geom::Polyline const polyline = cache_.findPath(state_.ego.value(), state_.finish.value());
+    size_t const polyline_points = polyline.size();
 
     geom::Polyline polyline_smoothed;
 

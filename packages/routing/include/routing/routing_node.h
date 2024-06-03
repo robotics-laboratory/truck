@@ -52,8 +52,8 @@ class RoutingNode : public rclcpp::Node {
     void initializeParams();
     void initializeTopicHandlers();
 
-    void onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg);
-    void onFinish(const geometry_msgs::msg::PointStamped::SharedPtr msg);
+    void onOdometry(const nav_msgs::msg::Odometry::SharedPtr& msg);
+    void onFinish(const geometry_msgs::msg::PointStamped::SharedPtr& msg);
 
     void updateRoute();
 

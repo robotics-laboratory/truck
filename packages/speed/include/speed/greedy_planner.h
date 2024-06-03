@@ -13,7 +13,7 @@ class GreedyPlanner {
         double distance_to_obstacle = 0.7;
     };
 
-    GreedyPlanner(const Params& params, const model::Model& model);
+    GreedyPlanner(const Params& params, model::Model model);
 
     GreedyPlanner& setScheduledVelocity(double scheduled_velocity) {
         const Limits<double> limit{.0, model_.baseVelocityLimits().max};

@@ -16,8 +16,7 @@ TfGraph::TfGraph(int nodes_count) : nodes_count_(nodes_count) {
 void TfGraph::AddTransform(int x, int y, const Transform& t) { edges_[x][y].AddTransform(t); }
 
 std::function<double(int, int)> TfGraph::GetWeights() {
-    return std::function<double(int, int)>(
-        [this](int x, int y) { return edges_[x][y].GetError(); });
+    return {[this](int x, int y) { return edges_[x][y].GetError(); }};
 }
 
 const Transform& TfGraph::GetTransform(int x, int y) { return edges_[x][y].GetAverage(); }
@@ -104,7 +103,9 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
         translation_error_square_ += dispersion[i];
     }
 
-    cv::Mat w, u, vt;
+    cv::Mat w;
+    cv::Mat u;
+    cv::Mat vt;
     cv::SVD::compute(quaternion_sum_, w, u, vt);
 
     average_transform_.SetRotation(tf2::Quaternion(

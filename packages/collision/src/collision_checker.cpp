@@ -39,7 +39,7 @@ double StaticCollisionChecker::distance(const geom::Vec2& point) const {
 
 double StaticCollisionChecker::distance(const geom::Pose& ego_pose) const {
     double min_dist = kMaxDistance;
-    std::vector<geom::Vec2> points = shape_.getCircleDecomposition(ego_pose);
+    std::vector<geom::Vec2> const points = shape_.getCircleDecomposition(ego_pose);
 
     for (const geom::Vec2& point : points) {
         min_dist = std::min(min_dist, std::max(distance(point) - shape_.radius(), 0.0));

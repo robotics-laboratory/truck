@@ -36,7 +36,7 @@ void CameraTracker::Update(
 
     graph_.GetBestTransformFromStartNode(anchor_id_, ids, transforms_to_anchor, errors);
 
-    size_t best_visible_idx = std::min_element(errors.begin(), errors.end()) - errors.begin();
+    size_t const best_visible_idx = std::min_element(errors.begin(), errors.end()) - errors.begin();
 
     if (std::isinf(errors[best_visible_idx])) {
         RCLCPP_ERROR(

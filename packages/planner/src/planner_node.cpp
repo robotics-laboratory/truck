@@ -39,8 +39,8 @@ PlannerNode::PlannerNode() : Node("planner") {
 
     using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
 
-    TfCallback tf_call = std::bind(&PlannerNode::onTf, this, _1, false);
-    TfCallback static_tf_callback = std::bind(&PlannerNode::onTf, this, _1, true);
+    TfCallback const tf_call = std::bind(&PlannerNode::onTf, this, _1, false);
+    TfCallback const static_tf_callback = std::bind(&PlannerNode::onTf, this, _1, true);
 
     slot_.tf = this->create_subscription<tf2_msgs::msg::TFMessage>(
         "/tf", tf2_ros::DynamicListenerQoS(100), tf_call);
@@ -50,7 +50,7 @@ PlannerNode::PlannerNode() : Node("planner") {
 
     signal_.graph = this->create_publisher<visualization_msgs::msg::Marker>("/graph", 10);
 
-    search::GridParams grid_params = search::GridParams{
+    search::GridParams const grid_params = search::GridParams{
         .width = static_cast<size_t>(this->declare_parameter<int>("grid/nodes/width", 40)),
         .height = static_cast<size_t>(this->declare_parameter<int>("grid/nodes/height", 40)),
         .resolution = this->declare_parameter<double>("grid/resolution"),
@@ -92,7 +92,7 @@ PlannerNode::PlannerNode() : Node("planner") {
     timer_ = this->create_wall_timer(200ms, bind(&PlannerNode::doPlanningLoop, this));
 }
 
-void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
+void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr& msg) {
     if (!state_.odom) {
         return;
     }
@@ -122,18 +122,18 @@ void PlannerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     checker_->reset(*state_.distance_transform);
 }
 
-void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg) {
+void PlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr& msg) {
     state_.odom = msg;
     state_.ego_pose = geom::toPose(*msg);
 }
 
-void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
+void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPtr& msg) {
     state_.finish_area =
         geom::Circle{.center = geom::toVec2(*msg), .radius = params_.grid.finish_area_radius};
 }
 
-void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
-    static const std::string authority = "";
+void PlannerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr& msg, bool is_static) {
+    static const std::string authority;
     for (const auto& transform : msg->transforms) {
         tf_buffer_->setTransform(transform, authority, is_static);
     }

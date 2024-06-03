@@ -1,13 +1,13 @@
 #include "simulator_2d/simulator_engine.h"
 
-#include "map/map.h"
 #include "geom/distance.h"
-#include "geom/swap.h"
 #include "geom/intersection.h"
+#include "geom/swap.h"
+#include "map/map.h"
 
 #include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Vector3.h>
 #include <tf2/LinearMath/Transform.h>
+#include <tf2/LinearMath/Vector3.h>
 
 #include <algorithm>
 #include <cmath>
@@ -16,7 +16,7 @@
 
 namespace truck::simulator {
 
-const double FREE_FALL_ACCELERATION = 9.81;  // m/s^2
+const double kFreeFallAcceleration = 9.81;  // m/s^2
 
 SimulatorEngine::SimulatorEngine(
     std::unique_ptr<model::Model> model, double integration_step, double precision) {
@@ -129,7 +129,7 @@ int softSign(double number, double precision) {
 geom::Vec3 applyRotation(const tf2::Transform& rotation, const geom::Vec3& vector) {
     tf2::Vector3 v(vector.x, vector.y, vector.z);
     v = rotation * v;
-    return geom::Vec3(v.getX(), v.getY(), v.getZ());
+    return {v.getX(), v.getY(), v.getZ()};
 }
 
 }  // namespace
@@ -164,7 +164,7 @@ geom::Vec3 SimulatorEngine::getImuLinearAcceleration(const model::Twist& rear_tw
     const auto imu_to_rotation = rotation - imu_pose.pos;
     const auto centr_a = imu_to_rotation.unit() * squared(twist.velocity) * twist.curvature;
 
-    const auto la = geom::Vec3(tan_a + centr_a, FREE_FALL_ACCELERATION);
+    const auto la = geom::Vec3(tan_a + centr_a, kFreeFallAcceleration);
     return applyRotation(cache_.base_to_hyro_rotation, la);
 }
 
@@ -375,9 +375,9 @@ SimulatorEngine::State SimulatorEngine::calculateRK4(
 namespace {
 
 rclcpp::Duration convertFromSecondsToDuration(double seconds) {
-    auto int_seconds = int(seconds);
+    auto int_seconds = static_cast<int>(seconds);
     auto nanoseconds = (seconds - int_seconds) * 1e9;
-    return rclcpp::Duration(int_seconds, int(nanoseconds));
+    return {int_seconds, static_cast<int>(nanoseconds)};
 }
 
 }  // namespace

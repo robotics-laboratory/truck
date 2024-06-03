@@ -17,8 +17,8 @@ T GetParam(sdf::ElementPtr sdf, const std::string& name) {
     return value;
 }
 
-sdf::ElementPtr GetElement(sdf::ElementPtr sdf, const std::string& name);
+sdf::ElementPtr GetElement(const sdf::ElementPtr& sdf, const std::string& name);
 
-physics::JointPtr GetJoint(gazebo::physics::ModelPtr model, const std::string& name);
+physics::JointPtr GetJoint(const gazebo::physics::ModelPtr& model, const std::string& name);
 
 }  // namespace gazebo

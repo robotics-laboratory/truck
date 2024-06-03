@@ -1,8 +1,8 @@
 #include "geom/arc.h"
 #include "geom/common.h"
 
-#include "common/math.h"
 #include "common/exception.h"
+#include "common/math.h"
 
 #include <iostream>
 

@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstdint>
 #include <functional>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -84,7 +85,7 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
 }
 
 void OccupancyGridNode::handleCameraInfo(sensor_msgs::msg::CameraInfo::SharedPtr info) {
-    state_.camera_info = info;
+    state_.camera_info = std::move(info);
 }
 
 std::optional<tf2::Transform> OccupancyGridNode::getLatestTranform(
@@ -100,7 +101,7 @@ std::optional<tf2::Transform> OccupancyGridNode::getLatestTranform(
     }
 }
 
-void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstSharedPtr scan) {
+void OccupancyGridNode::handleLaserScan(const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan) {
     if (!params_.enable_lidar_grid) {
         return;
     }
@@ -120,7 +121,7 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
         return;
     }
 
-    geom::Transform tf(*tf_opt);
+    geom::Transform const tf(*tf_opt);
 
     auto odom_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
 
@@ -145,7 +146,7 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
     sensor_msgs::PointCloud2Iterator<float> y(*odom_cloud, "y");
     // it's also possible to add z coordinate for visualization
 
-    Limits limit{scan->range_min, scan->range_max};
+    Limits const limit{scan->range_min, scan->range_max};
 
     size_t point_n = 0;
     for (size_t k = 0; k < scan->ranges.size(); ++k) {
@@ -175,7 +176,7 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
     publishOccupancyGrid();
 }
 
-void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPtr image) {
+void OccupancyGridNode::handleCameraDepth(const sensor_msgs::msg::Image::ConstSharedPtr& image) {
     if (!params_.enable_camera_grid) {
         return;
     }
@@ -272,7 +273,8 @@ builtin_interfaces::msg::Time max(
     builtin_interfaces::msg::Time lhs, builtin_interfaces::msg::Time rhs) {
     if (lhs.sec > rhs.sec) {
         return lhs;
-    } else if (lhs.sec < rhs.sec) {
+    }
+    if (lhs.sec < rhs.sec) {
         return rhs;
     }
 
@@ -286,7 +288,8 @@ std_msgs::msg::Header mergeHeader(
 
     if (!lhs) {
         return rhs->header;
-    } else if (!rhs) {
+    }
+    if (!rhs) {
         return lhs->header;
     }
 

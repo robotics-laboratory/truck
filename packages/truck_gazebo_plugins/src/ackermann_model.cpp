@@ -56,7 +56,7 @@ void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
 
     command_slot_ = node_->create_subscription<truck_msgs::msg::Control>(
         "/control/command", 1, [this](truck_msgs::msg::Control::ConstSharedPtr command) {
-            std::lock_guard lock(mutex_);
+            std::lock_guard const lock(mutex_);
             command_ = std::move(command);
         });
 
@@ -65,7 +65,7 @@ void AckermannModelPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
 }
 
 void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
-    std::lock_guard lock(mutex_);
+    std::lock_guard const lock(mutex_);
 
     auto set_target = [this, &info](double velocity, double curvature) {
         const truck::model::Twist base_twist{
@@ -133,7 +133,7 @@ void AckermannModelPlugin::OnUpdate(const common::UpdateInfo& info) {
         const auto now = gazebo_ros::Convert<rclcpp::Time>(info.realTime);
         const auto latency = now - command_->header.stamp;
 
-        if (false && latency > timeout_) {
+        if (false) {
             RCLCPP_ERROR(node_->get_logger(), "Lose control for %fs!", latency.seconds());
             set_target(0, 0);
             emergency_stop_ = true;

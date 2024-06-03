@@ -6,12 +6,14 @@
 
 #include <fstream>
 #include <string>
+#include <utility>
 
 namespace truck::icp_odometry {
 
 namespace {
 
-std::unique_ptr<Matcher::ICP> makeICP(rclcpp::Logger logger, const std::string& config_path) {
+std::unique_ptr<Matcher::ICP> makeICP(
+    const rclcpp::Logger& logger, const std::string& config_path) {
     std::ifstream yaml(config_path);
 
     auto icp = std::make_unique<Matcher::ICP>();
@@ -59,7 +61,7 @@ TransformationParameters guessTransformation(
 }  // namespace
 
 void IcpOdometryNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odometry) {
-    state_.odometry = odometry;
+    state_.odometry = std::move(odometry);
 }
 
 IcpOdometryNode::IcpOdometryNode() : Node("icp_odometry") {

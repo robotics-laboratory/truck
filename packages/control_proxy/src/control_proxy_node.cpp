@@ -35,7 +35,7 @@ ControlMap::ControlMap(const std::string& path) : ControlMap(YAML::LoadFile(path
 
 namespace {
 
-auto loadControlMap(rclcpp::Logger logger, const std::string& path) {
+auto loadControlMap(const rclcpp::Logger& logger, const std::string& path) {
     RCLCPP_INFO(logger, "load control map: %s", path.c_str());
     return ControlMap(path);
 }
@@ -145,7 +145,7 @@ void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr
 }
 
 bool ControlProxyNode::checkButtonPressed(
-    sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button) {
+    const sensor_msgs::msg::Joy::ConstSharedPtr& joypad_command, size_t joypad_button) {
     if (!state_.prev_joypad_command || !joypad_command) {
         return false;
     }
@@ -164,7 +164,7 @@ void ControlProxyNode::publishMode() {
 }
 
 void ControlProxyNode::publishStop() {
-    static const auto stop = [this] {
+    static const auto kStop = [this] {
         truck_msgs::msg::Control result;
 
         result.header.stamp = now();
@@ -176,7 +176,7 @@ void ControlProxyNode::publishStop() {
         return result;
     }();
 
-    publishCommand(stop);
+    publishCommand(kStop);
 }
 
 void ControlProxyNode::reset() {
@@ -219,7 +219,8 @@ void ControlProxyNode::publishCommand(const truck_msgs::msg::Control& command) {
     signal_.command->publish(command);
 }
 
-void ControlProxyNode::forwardControlCommand(truck_msgs::msg::Control::ConstSharedPtr command) {
+void ControlProxyNode::forwardControlCommand(
+    const truck_msgs::msg::Control::ConstSharedPtr& command) {
     if (state_.mode == Mode::Auto) {
         publishCommand(*command);
         state_.prev_command = command;
@@ -227,8 +228,8 @@ void ControlProxyNode::forwardControlCommand(truck_msgs::msg::Control::ConstShar
 }
 
 void ControlProxyNode::onReset(
-    const std::shared_ptr<std_srvs::srv::Empty::Request>,
-    std::shared_ptr<std_srvs::srv::Empty::Response>) {
+    const std::shared_ptr<std_srvs::srv::Empty::Request> /*unused*/&,
+    const std::shared_ptr<std_srvs::srv::Empty::Response> /*unused*/&) {
     RCLCPP_WARN(this->get_logger(), "Reset!");
     reset();
 }

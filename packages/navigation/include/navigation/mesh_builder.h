@@ -28,9 +28,9 @@ class MeshBuilder {
     MeshBuild build(const geom::ComplexPolygons& polygons) const;
 
   private:
-    void buildSkeleton(MeshBuild& mesh_build, const geom::ComplexPolygon& polygon) const;
-    void buildLevelLines(
-        MeshBuild& mesh_build, const geom::ComplexPolygon& polygon, double offset) const;
+    static void buildSkeleton(MeshBuild& mesh_build, const geom::ComplexPolygon& polygon);
+    static void buildLevelLines(
+        MeshBuild& mesh_build, const geom::ComplexPolygon& polygon, double offset);
     void buildMesh(MeshBuild& mesh_build, double dist) const;
 
     void gridFilter() const;

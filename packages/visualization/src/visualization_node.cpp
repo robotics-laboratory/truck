@@ -23,7 +23,7 @@ using namespace std::chrono_literals;
 
 using namespace geom::literals;
 
-const double M_2PI = M_PI * 2;
+const double kM2Pi = M_PI * 2;
 
 VisualizationNode::VisualizationNode() : Node("visualization") {
     initializePtrFields();
@@ -162,7 +162,7 @@ void VisualizationNode::initializeCache() {
 }
 
 void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg) {
-    state_.telemetry = msg;
+    state_.telemetry = std::move(msg);
 }
 
 void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom) {
@@ -241,7 +241,7 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
 namespace {
 
 visualization_msgs::msg::Marker makeMeshMarker(
-    int id, const std_msgs::msg::Header& header, const std::string mesh,
+    int id, const std_msgs::msg::Header& header, const std::string& mesh,
     const std_msgs::msg::ColorRGBA& color) {
     visualization_msgs::msg::Marker msg;
     msg.id = id;
@@ -290,7 +290,7 @@ void VisualizationNode::updateWheelsSpin() {
         }();
 
         const double angle = state_.wheel_spin_angles[wheel] + velocity * time;
-        state_.wheel_spin_angles[wheel] = std::fmod(angle, M_2PI);
+        state_.wheel_spin_angles[wheel] = std::fmod(angle, kM2Pi);
     }
 
     state_.last_ego_update_seconds = now_seconds;

@@ -11,8 +11,8 @@
 #include <tf2_ros/qos.hpp>
 
 #include <functional>
-#include <optional>
 #include <memory>
+#include <optional>
 
 namespace truck::waypoint_follower {
 
@@ -71,8 +71,8 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
 
     using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
 
-    TfCallback tf_call = std::bind(&WaypointFollowerNode::onTf, this, _1, false);
-    TfCallback static_tf_callback = std::bind(&WaypointFollowerNode::onTf, this, _1, true);
+    TfCallback const tf_call = std::bind(&WaypointFollowerNode::onTf, this, _1, false);
+    TfCallback const static_tf_callback = std::bind(&WaypointFollowerNode::onTf, this, _1, true);
 
     slot_.tf = this->create_subscription<tf2_msgs::msg::TFMessage>(
         "/tf", tf2_ros::DynamicListenerQoS(100), tf_call);
@@ -104,8 +104,8 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
 }
 
 void WaypointFollowerNode::onReset(
-    const std::shared_ptr<std_srvs::srv::Empty::Request>,
-    std::shared_ptr<std_srvs::srv::Empty::Response>) {
+    const std::shared_ptr<std_srvs::srv::Empty::Request> /*unused*/&,
+    const std::shared_ptr<std_srvs::srv::Empty::Response> /*unused*/&) {
     RCLCPP_INFO(this->get_logger(), "Reset path!");
     follower_->reset();
     publishFullState();
@@ -138,7 +138,7 @@ motion::Trajectory makeTrajectory(const std::deque<LinkedPose>& path) {
     motion::Trajectory trajectory;
 
     for (const auto& lp : path) {
-        motion::State state{lp.pose};
+        motion::State const state{lp.pose};
         trajectory.states.push_back(state);
     }
 
@@ -158,8 +158,8 @@ void WaypointFollowerNode::publishGridCostMap() {
         return;
     }
 
-    constexpr double kMaxDistance = 10.0;
-    const auto msg = state_.distance_transform->makeCostMap(state_.grid->header, kMaxDistance);
+    constexpr double k_max_distance = 10.0;
+    const auto msg = state_.distance_transform->makeCostMap(state_.grid->header, k_max_distance);
     signal_.distance_transform->publish(msg);
 }
 
@@ -221,7 +221,7 @@ void WaypointFollowerNode::publishFullState() {
     publishGridCostMap();
 }
 
-void WaypointFollowerNode::onOdometry(nav_msgs::msg::Odometry::SharedPtr odometry) {
+void WaypointFollowerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr& odometry) {
     state_.localization = geom::toLocalization(*odometry);
     state_.odometry = odometry;
 }
@@ -235,7 +235,7 @@ std::optional<geom::Transform> WaypointFollowerNode::getLatestTranform(
     }
 }
 
-void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPtr msg) {
+void WaypointFollowerNode::onWaypoint(const geometry_msgs::msg::PointStamped::SharedPtr& msg) {
     if (!state_.odometry) {
         RCLCPP_WARN(this->get_logger(), "Has no odometry, ignore waypoint!");
         return;
@@ -270,7 +270,7 @@ void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPt
     publishFullState();
 }
 
-void WaypointFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
+void WaypointFollowerNode::onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr& msg) {
     if (!state_.odometry) {
         return;
     }
@@ -299,8 +299,8 @@ void WaypointFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     state_.grid = msg;
 }
 
-void WaypointFollowerNode::onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
-    static const std::string authority = "";
+void WaypointFollowerNode::onTf(const tf2_msgs::msg::TFMessage::SharedPtr& msg, bool is_static) {
+    static const std::string authority;
     for (const auto& transform : msg->transforms) {
         tf_buffer_->setTransform(transform, authority, is_static);
     }

@@ -107,7 +107,7 @@ inline double len(const Vec2& v) noexcept { return v.len(); }
 
 bool equal(const Vec2& a, const Vec2& b, double eps = 0) noexcept;
 
-Angle angleBetween(const Vec2& from, const Vec2& to) noexcept;
+Angle angleBetween(const Vec2& a, const Vec2& b) noexcept;
 
 Vec2 interpolate(const Vec2& a, const Vec2& b, double t) noexcept;
 

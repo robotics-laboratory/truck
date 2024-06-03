@@ -30,9 +30,9 @@ class OccupancyGridNode : public rclcpp::Node {
     OccupancyGridNode();
 
   private:
-    void handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPtr image);
+    void handleCameraDepth(const sensor_msgs::msg::Image::ConstSharedPtr& image);
 
-    void handleLaserScan(sensor_msgs::msg::LaserScan::ConstSharedPtr scan);
+    void handleLaserScan(const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan);
 
     void handleCameraInfo(sensor_msgs::msg::CameraInfo::SharedPtr info);
 

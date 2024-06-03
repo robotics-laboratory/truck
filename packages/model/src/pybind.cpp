@@ -1,12 +1,12 @@
-#include <pybind11/pybind11.h>
 #include "model/model.h"
 #include <boost/format.hpp>
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 using namespace truck;
 
 template<typename T>
-std::string to_string(const T& obj);
+std::string toString(const T& obj);
 
 template<>
 std::string to_string<double>(const double& obj) {
@@ -46,7 +46,7 @@ std::string to_string<model::ServoAngles>(const model::ServoAngles& obj) {
 }
 
 template<typename T>
-void bind_limits_class(py::module& m, const std::string& name) {
+void bindLimitsClass(py::module& m, const std::string& name) {
     using Class = Limits<T>;
     py::class_<Class>(m, name.c_str())
         .def_readonly("min", &Class::min)
@@ -84,8 +84,8 @@ PYBIND11_MODULE(pymodel, m) {
         .def_readonly("left", &model::ServoAngles::left)
         .def_readonly("right", &model::ServoAngles::right)
         .def("__repr__", &to_string<model::ServoAngles>);
-    bind_limits_class<double>(m, "FloatLimits");
-    bind_limits_class<geom::Angle>(m, "AngleLimits");
+    bindLimitsClass<double>(m, "FloatLimits");
+    bindLimitsClass<geom::Angle>(m, "AngleLimits");
     py::class_<model::Model>(m, "Model")
         .def(py::init<const std::string&>())
         .def_property_readonly("base_max_abs_curvature", &model::Model::baseMaxAbsCurvature)

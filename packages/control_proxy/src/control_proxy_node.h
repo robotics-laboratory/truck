@@ -48,16 +48,16 @@ class ControlProxyNode : public rclcpp::Node {
 
     geometry_msgs::msg::Twist transformToTwist(const truck_msgs::msg::Control& command) const;
 
-    void forwardControlCommand(truck_msgs::msg::Control::ConstSharedPtr command);
+    void forwardControlCommand(const truck_msgs::msg::Control::ConstSharedPtr& command);
 
     void handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command);
 
     bool checkButtonPressed(
-        sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button);
+        const sensor_msgs::msg::Joy::ConstSharedPtr& joypad_command, size_t joypad_button);
 
     void onReset(
-        const std::shared_ptr<std_srvs::srv::Empty::Request>,
-        std::shared_ptr<std_srvs::srv::Empty::Response>);
+        const std::shared_ptr<std_srvs::srv::Empty::Request>&,
+        const std::shared_ptr<std_srvs::srv::Empty::Response>&);
 
     void watchdog();
     void reset();

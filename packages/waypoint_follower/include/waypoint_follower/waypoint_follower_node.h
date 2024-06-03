@@ -31,13 +31,14 @@ class WaypointFollowerNode : public rclcpp::Node {
     WaypointFollowerNode();
 
   private:
-    void onWaypoint(geometry_msgs::msg::PointStamped::SharedPtr msg);
-    void onOdometry(nav_msgs::msg::Odometry::SharedPtr msg);
-    void onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-    void onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
+    void onWaypoint(const geometry_msgs::msg::PointStamped::SharedPtr& msg);
+    void onOdometry(const nav_msgs::msg::Odometry::SharedPtr& odometry);
+    void onGrid(const nav_msgs::msg::OccupancyGrid::SharedPtr& msg);
+    void onTf(const tf2_msgs::msg::TFMessage::SharedPtr& msg, bool is_static);
 
     void onReset(
-        const std_srvs::srv::Empty::Request::SharedPtr, std_srvs::srv::Empty::Response::SharedPtr);
+        const std_srvs::srv::Empty::Request::SharedPtr&,
+        const std_srvs::srv::Empty::Response::SharedPtr&);
 
     void publishTrajectory();
     void publishGridCostMap();

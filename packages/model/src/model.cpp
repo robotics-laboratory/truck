@@ -96,7 +96,7 @@ Model::Model(const std::string& config_path) : params_(config_path) {
     }
 }
 
-Twist Model::rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) const {
+Twist Model::rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) {
     const double ratio = rearToArbitraryPointRatio(rear_twist.curvature, rear_to_point);
     return {rear_twist.curvature / ratio, rear_twist.velocity * ratio};
 }

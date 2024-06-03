@@ -9,9 +9,9 @@
 #include <opencv2/calib3d.hpp>
 #include <thread>
 
-#include "visualization_helpers.hpp"
 #include "math_helpers.hpp"
 #include "msgs_helpers.hpp"
+#include "visualization_helpers.hpp"
 
 using std::placeholders::_1;
 
@@ -27,7 +27,7 @@ const static std::string kCameraFrameId = "camera";
 
 const static int kCameraMatrixSize = 3;
 const static int kDistCoeffsCount = 5;
-const static int kCV_64FSize = 8;
+const static int kCv64FSize = 8;
 const static int kMarkerCount = 250;
 
 namespace rosaruco {
@@ -57,12 +57,13 @@ ArucoLocalization::ArucoLocalization() :
         this->create_publisher<tf2_msgs::msg::TFMessage>(kArucoTransformsTopic, qos);
 }
 
-void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg) {
+void ArucoLocalization::HandleImage(const sensor_msgs::msg::Image::ConstSharedPtr& msg) {
     RCLCPP_INFO(this->get_logger(), "HandleImage got message");
     auto cv_image = cv_bridge::toCvShare(msg);
 
     std::vector<int> marker_ids;
-    std::vector<std::vector<cv::Point2f>> marker_corners, rejected_candidates;
+    std::vector<std::vector<cv::Point2f>> marker_corners;
+    std::vector<std::vector<cv::Point2f>> rejected_candidates;
 
     cv::aruco::detectMarkers(
         cv_image->image,
@@ -74,7 +75,8 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
 
     RCLCPP_INFO(this->get_logger(), "HandleImage detected %ld markers", marker_ids.size());
 
-    std::vector<cv::Vec3d> rvecs, tvecs;
+    std::vector<cv::Vec3d> rvecs;
+    std::vector<cv::Vec3d> tvecs;
 
     cv::aruco::estimatePoseSingleMarkers(
         marker_corners, 1, camera_matrix_, dist_coeffs_, rvecs, tvecs);
@@ -132,7 +134,7 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     if (publisher_marker_array_->get_subscription_count()) {
         visualization_msgs::msg::MarkerArray marker_array;
 
-        std::unordered_set<int> visible_markers(marker_ids.begin(), marker_ids.end());
+        std::unordered_set<int> const visible_markers(marker_ids.begin(), marker_ids.end());
 
         for (size_t i = 0; i < kMarkerCount; i++) {
             auto to_anchor = coordinator_.GetTransformToAnchor(i);
@@ -150,18 +152,18 @@ void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
     }
 }
 
-void ArucoLocalization::UpdateCameraInfo(sensor_msgs::msg::CameraInfo::ConstSharedPtr msg) {
+void ArucoLocalization::UpdateCameraInfo(const sensor_msgs::msg::CameraInfo::ConstSharedPtr& msg) {
     RCLCPP_INFO(this->get_logger(), "UpdateCameraInfo got message");
 
     static_assert(
         std::tuple_size<decltype(msg->k)>::value == kCameraMatrixSize * kCameraMatrixSize);
-    static_assert(sizeof(decltype(msg->k)::value_type) == kCV_64FSize);
+    static_assert(sizeof(decltype(msg->k)::value_type) == kCv64FSize);
     std::memcpy(
-        camera_matrix_.data, msg->k.data(), kCameraMatrixSize * kCameraMatrixSize * kCV_64FSize);
+        camera_matrix_.data, msg->k.data(), kCameraMatrixSize * kCameraMatrixSize * kCv64FSize);
 
-    static_assert(sizeof(decltype(msg->d)::value_type) == kCV_64FSize);
+    static_assert(sizeof(decltype(msg->d)::value_type) == kCv64FSize);
     assert(msg->d.size() == kDistCoeffsCount);
-    std::memcpy(dist_coeffs_.data, msg->d.data(), kDistCoeffsCount * kCV_64FSize);
+    std::memcpy(dist_coeffs_.data, msg->d.data(), kDistCoeffsCount * kCv64FSize);
 }
 
 }  // namespace rosaruco

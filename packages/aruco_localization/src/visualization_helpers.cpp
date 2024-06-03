@@ -4,12 +4,12 @@
 
 #include <geometry_msgs/msg/point.hpp>
 
-#include "visualization_helpers.hpp"
 #include "msgs_helpers.hpp"
+#include "visualization_helpers.hpp"
 
 namespace rosaruco {
 
-visualization_msgs::msg::Marker GetMarker(
+visualization_msgs::msg::Marker getMarker(
     const Transform& t, int id, double size, bool is_visible) {
     std::vector<tf2::Vector3> points = {
         {0, 0, 0},
@@ -67,7 +67,7 @@ visualization_msgs::msg::Marker GetLabel(int id, const tf2::Vector3& p, double s
 void AddLabeledMarker(
     std::vector<visualization_msgs::msg::Marker>& markers, const Transform& t, int id, double size,
     bool is_visible) {
-    markers.push_back(GetMarker(t, id, size, is_visible));
+    markers.push_back(getMarker(t, id, size, is_visible));
     markers.push_back(GetLabel(id, t(tf2::Vector3(size / 2, size / 2, 0)), size / 5));
 }
 

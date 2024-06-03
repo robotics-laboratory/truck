@@ -92,11 +92,11 @@ class SDD {
   public:
     SDD() = delete;
 
-    SDD(const std::string& input_path, const std::string& output_path);
+    SDD(const std::string& input_path, std::string output_path);
 
     SDD(const std::string& path);
 
-    SDD(const Size& size, const std::string& output_path);
+    SDD(const Size& size, std::string output_path);
 
     SDD& Add(const Marker& marker) noexcept;
 

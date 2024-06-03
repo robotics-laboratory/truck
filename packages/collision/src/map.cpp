@@ -25,7 +25,7 @@ Map Map::fromOccupancyGrid(const nav_msgs::msg::OccupancyGrid& map) {
     // fill binary grid matrix with values based on occupancy grid values
     for (uint32_t i = 0; i < map.info.height; i++) {
         for (uint32_t j = 0; j < map.info.width; j++) {
-            int8_t grid_cell = map.data.at(i * map.info.width + j);
+            int8_t const grid_cell = map.data.at(i * map.info.width + j);
             grid.at<uchar>(i, j) = grid_cell == 0 ? 1 : 0;
         }
     }

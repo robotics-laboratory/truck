@@ -1,11 +1,11 @@
 #include "simulator_2d/simulation_map.h"
 
-#include "map/map.h"
 #include "geom/bounding_box.h"
 #include "geom/distance.h"
 #include "geom/intersection.h"
 #include "geom/ray.h"
 #include "geom/vector.h"
+#include "map/map.h"
 
 #include <algorithm>
 #include <cmath>
@@ -19,7 +19,7 @@ void SimulationMap::initializeRTree() {
     for (auto i = 0; i < obstacles_.size(); ++i) {
         const auto first = RTreePoint(obstacles_[i].begin.x, obstacles_[i].begin.y);
         const auto second = RTreePoint(obstacles_[i].end.x, obstacles_[i].end.y);
-        segments.push_back({RTreeSegment(first, second), i});
+        segments.emplace_back(RTreeSegment(first, second), i);
     }
 
     rtree_ = RTree(segments.begin(), segments.end());
@@ -28,7 +28,7 @@ void SimulationMap::initializeRTree() {
 void SimulationMap::resetMap(const std::string& path) {
     eraseMap();
     const auto map = map::Map::fromGeoJson(path);
-    const auto polygons = map.polygons();
+    const auto& polygons = map.polygons();
     for (const auto& polygon : polygons) {
         auto segments = polygon.segments();
         obstacles_.insert(
@@ -54,10 +54,10 @@ bool hasCollision(const SimulationMap& map, const geom::Polygon& shape_polygon, 
     std::vector<RTreeIndexedSegment> result;
     map.rtree().query(bgi::intersects(rtree_box), std::back_inserter(result));
 
-    for (const auto& rtreeSegment : result) {
+    for (const auto& rtree_segment : result) {
         const geom::Segment segment(
-            {bg::get<0, 0>(rtreeSegment.first), bg::get<0, 1>(rtreeSegment.first)},
-            {bg::get<1, 0>(rtreeSegment.first), bg::get<1, 1>(rtreeSegment.first)});
+            {bg::get<0, 0>(rtree_segment.first), bg::get<0, 1>(rtree_segment.first)},
+            {bg::get<1, 0>(rtree_segment.first), bg::get<1, 1>(rtree_segment.first)});
 
         if (geom::intersect(shape_polygon, segment, precision)) {
             return true;
@@ -121,7 +121,8 @@ std::vector<float> getLidarRanges(
         auto end_oriented_angle = getOrientedAngle(origin_end, dir_vector);
 
         const int sign = geom::angleBetween(origin_begin, origin_end).radians() > 0 ? 1 : -1;
-        int begin_index, end_index;
+        int begin_index;
+        int end_index;
 
         if (sign > 0) {
             begin_index =

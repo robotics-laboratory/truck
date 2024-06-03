@@ -15,20 +15,20 @@ struct Step {
     int32_t hv, dg, ldg;
 };
 
-constexpr Step step3 = {95, 137, 0};
-constexpr Step step5 = {10, 14, 22};
+constexpr Step kStep3 = {95, 137, 0};
+constexpr Step kStep5 = {10, 14, 22};
 
 ALWAYS_INLINE void intDistToFloat(
     const int32_t* data, int size, float scale, float* out_it) noexcept {
-    for (auto it = data; it != data + size; ++it, ++out_it) {
+    for (const auto* it = data; it != data + size; ++it, ++out_it) {
         *out_it = scale * (*it);
     }
 }
 
-template<Step step>
+template<Step Step>
 ALWAYS_INLINE int32_t corner3(const int32_t* lane, int32_t side) noexcept {
-    const int32_t result = std::min(side, lane[1]) + step.hv;
-    const int32_t tmp = std::min(lane[0], lane[2]) + step.dg;
+    const int32_t result = std::min(side, lane[1]) + Step.hv;
+    const int32_t tmp = std::min(lane[0], lane[2]) + Step.dg;
 
     if (tmp < result) {
         return tmp;
@@ -37,16 +37,16 @@ ALWAYS_INLINE int32_t corner3(const int32_t* lane, int32_t side) noexcept {
     return result;
 }
 
-template<Step step>
+template<Step Step>
 ALWAYS_INLINE int32_t corner5(const int32_t* first, const int32_t* second, int32_t side) noexcept {
-    int32_t result = std::min(side, first[2]) + step.hv;
-    int32_t tmp = std::min(first[1], first[3]) + step.dg;
+    int32_t result = std::min(side, first[2]) + Step.hv;
+    int32_t tmp = std::min(first[1], first[3]) + Step.dg;
 
     if (tmp < result) {
         result = tmp;
     }
 
-    tmp = step.ldg + std::min(std::min(first[0], first[4]), std::min(second[1], second[3]));
+    tmp = Step.ldg + std::min(std::min(first[0], first[4]), std::min(second[1], second[3]));
 
     if (tmp < result) {
         return tmp;
@@ -55,53 +55,53 @@ ALWAYS_INLINE int32_t corner5(const int32_t* first, const int32_t* second, int32
     return result;
 }
 
-template<int border, Step step>
+template<int Border, Step Step>
 ALWAYS_INLINE int32_t topLeftCorner(const int32_t* buf_it, const Size& buf_size) noexcept {
-    static_assert(border == 1 || border == 2, "Unexpected border!");
+    static_assert(Border == 1 || Border == 2, "Unexpected border!");
 
-    if constexpr (border == 1) {
-        const int32_t* lane = buf_it - buf_size.width - border;
-        return corner3<step>(lane, *(buf_it - 1));
+    if constexpr (Border == 1) {
+        const int32_t* lane = buf_it - buf_size.width - Border;
+        return corner3<Step>(lane, *(buf_it - 1));
     }
 
-    if constexpr (border == 2) {
-        const int32_t* first = buf_it - buf_size.width - border;
+    if constexpr (Border == 2) {
+        const int32_t* first = buf_it - buf_size.width - Border;
         const int32_t* second = first - buf_size.width;
-        return corner5<step>(first, second, *(buf_it - 1));
+        return corner5<Step>(first, second, *(buf_it - 1));
     }
 
     return {};
 }
 
-template<int border, Step step>
+template<int Border, Step Step>
 ALWAYS_INLINE int32_t bottomRightCorner(const int32_t* buf_it, const Size& buf_size) noexcept {
-    static_assert(border == 1 || border == 2, "Unexpected border!");
+    static_assert(Border == 1 || Border == 2, "Unexpected border!");
 
-    if constexpr (border == 1) {
-        const int32_t* lane = buf_it + buf_size.width - border;
-        return corner3<step>(lane, *(buf_it + 1));
+    if constexpr (Border == 1) {
+        const int32_t* lane = buf_it + buf_size.width - Border;
+        return corner3<Step>(lane, *(buf_it + 1));
     }
 
-    if constexpr (border == 2) {
-        const int32_t* first = buf_it + buf_size.width - border;
+    if constexpr (Border == 2) {
+        const int32_t* first = buf_it + buf_size.width - Border;
         const int32_t* second = first + buf_size.width;
-        return corner5<step>(first, second, *(buf_it + 1));
+        return corner5<Step>(first, second, *(buf_it + 1));
     }
 
     return {};
 }
 
-template<int border, Step step>
+template<int Border, Step Step>
 ALWAYS_INLINE void distanceTransformApprox(
     const U8Grid& input, S32Grid& buf, F32Grid& out) noexcept {
-    VERIFY(buf.size == input.size.extend(2 * border));
+    VERIFY(buf.size == input.size.extend(2 * Border));
     VERIFY(out.size == input.size);
 
-    const auto scale = static_cast<float>(input.resolution) / step.hv;
-    const auto default_value = step.dg * input.size.max() / 6;
+    const auto scale = static_cast<float>(input.resolution) / Step.hv;
+    const auto default_value = Step.dg * input.size.max() / 6;
 
     // fill top and bottom rows
-    for (int i = 0; i < border; ++i) {
+    for (int i = 0; i < Border; ++i) {
         auto* top = buf.data + i * buf.size.width;
         setTo(top, buf.size.width, default_value);
 
@@ -111,15 +111,15 @@ ALWAYS_INLINE void distanceTransformApprox(
 
     // forward scan
     for (int i = 0; i < input.size.height; ++i) {
-        auto* buf_it = buf.data + (border + i) * buf.size.width + border;
+        auto* buf_it = buf.data + (Border + i) * buf.size.width + Border;
 
         // fill left side
-        for (int j = 1; j <= border; ++j) {
+        for (int j = 1; j <= Border; ++j) {
             buf_it[-j] = default_value;
         }
 
         // fill right side
-        for (int j = 0; j < border; ++j) {
+        for (int j = 0; j < Border; ++j) {
             buf_it[out.size.width + j] = default_value;
         }
 
@@ -132,21 +132,21 @@ ALWAYS_INLINE void distanceTransformApprox(
                 continue;
             }
 
-            *buf_it = topLeftCorner<border, step>(buf_it, buf.size);
+            *buf_it = topLeftCorner<Border, Step>(buf_it, buf.size);
         }
     }
 
     // backward scan
     for (int i = out.size.height - 1; i >= 0; --i) {
-        auto* buf_row = buf.data + (i + border) * buf.size.width + border;
+        auto* buf_row = buf.data + (i + Border) * buf.size.width + Border;
 
         auto* end = buf_row - 1;
-        for (auto it = end + out.size.width; it != end; --it) {
-            if (*it <= step.hv) {
+        for (auto* it = end + out.size.width; it != end; --it) {
+            if (*it <= Step.hv) {
                 continue;
             }
 
-            *it = std::min(*it, bottomRightCorner<border, step>(it, buf.size));
+            *it = std::min(*it, bottomRightCorner<Border, Step>(it, buf.size));
         }
 
         float* out_it = out.data + i * out.size.width;
@@ -157,18 +157,18 @@ ALWAYS_INLINE void distanceTransformApprox(
     out.origin = input.origin;
 }
 
-template<int border, Step step>
+template<int Border, Step Step>
 ALWAYS_INLINE void distanceTransformApprox(const U8Grid& input, F32Grid& out) noexcept {
-    auto buf = makeGrid<int32_t>(input.size.extend(2 * border), input.resolution);
-    distanceTransformApprox<border, step>(input, *buf, out);
+    auto buf = makeGrid<int32_t>(input.size.extend(2 * Border), input.resolution);
+    distanceTransformApprox<Border, Step>(input, *buf, out);
 }
 
-template<int border, Step step>
+template<int Border, Step Step>
 ALWAYS_INLINE F32GridHolder distanceTransformApprox(const U8Grid& input) noexcept {
-    auto buf = makeGrid<int32_t>(input.size.extend(2 * border), input.resolution);
+    auto buf = makeGrid<int32_t>(input.size.extend(2 * Border), input.resolution);
     auto out = makeGridLike<float>(input);
 
-    distanceTransformApprox<border, step>(input, *buf, *out);
+    distanceTransformApprox<Border, Step>(input, *buf, *out);
     return out;
 }
 
@@ -177,29 +177,29 @@ ALWAYS_INLINE F32GridHolder distanceTransformApprox(const U8Grid& input) noexcep
 /* DistanceTransformApprox3 */
 
 void distanceTransformApprox3(const U8Grid& input, S32Grid& buf, F32Grid& out) noexcept {
-    impl::distanceTransformApprox<1, impl::step3>(input, buf, out);
+    impl::distanceTransformApprox<1, impl::kStep3>(input, buf, out);
 }
 
 void distanceTransformApprox3(const U8Grid& input, F32Grid& out) noexcept {
-    impl::distanceTransformApprox<1, impl::step3>(input, out);
+    impl::distanceTransformApprox<1, impl::kStep3>(input, out);
 }
 
 F32GridHolder distanceTransformApprox3(const U8Grid& input) noexcept {
-    return impl::distanceTransformApprox<1, impl::step3>(input);
+    return impl::distanceTransformApprox<1, impl::kStep3>(input);
 }
 
 /* DistanceTransformApprox5 */
 
 void distanceTransformApprox5(const U8Grid& input, S32Grid& buf, F32Grid& out) noexcept {
-    impl::distanceTransformApprox<2, impl::step5>(input, buf, out);
+    impl::distanceTransformApprox<2, impl::kStep5>(input, buf, out);
 }
 
 void distanceTransformApprox5(const U8Grid& input, F32Grid& out) noexcept {
-    impl::distanceTransformApprox<2, impl::step5>(input, out);
+    impl::distanceTransformApprox<2, impl::kStep5>(input, out);
 }
 
 F32GridHolder distanceTransformApprox5(const U8Grid& input) noexcept {
-    return impl::distanceTransformApprox<2, impl::step5>(input);
+    return impl::distanceTransformApprox<2, impl::kStep5>(input);
 }
 
 }  // namespace truck::fastgrid

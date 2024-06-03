@@ -82,7 +82,7 @@ class Model {
      * A - the arbitrary point.
      * rear_to_point - translation from the R point to the A point in the base coordinate system.
      */
-    Twist rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point) const;
+    static Twist rearToArbitraryPointTwist(Twist rear_twist, const geom::Vec2& rear_to_point);
     Twist baseToRearTwist(Twist base_twist) const;
     Twist rearToBaseTwist(Twist rear_twist) const;
     Steering rearTwistToSteering(Twist rear_twist) const;

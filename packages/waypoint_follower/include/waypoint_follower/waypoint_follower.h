@@ -19,7 +19,7 @@ struct Waypoint {
 };
 
 struct LinkedPose {
-    LinkedPose(uint32_t wp_seq_id, const geom::Pose& pose);
+    LinkedPose(uint32_t wp_seq_id, geom::Pose pose);
 
     uint32_t wp_seq_id;
     geom::Pose pose;

@@ -9,7 +9,7 @@
 namespace truck::collision {
 
 struct Map {
-    static Map fromOccupancyGrid(const nav_msgs::msg::OccupancyGrid& grid);
+    static Map fromOccupancyGrid(const nav_msgs::msg::OccupancyGrid& map);
     Map emptyLikeThis() const;
 
     nav_msgs::msg::OccupancyGrid makeCostMap(
