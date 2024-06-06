@@ -20,8 +20,8 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
 
     DataPoints::Labels descriptor_labels;
 
-    const size_t point_count = std::count_if(
-        scan.ranges.begin(), scan.ranges.end(), [&](float range) {
+    const size_t point_count =
+        std::count_if(scan.ranges.begin(), scan.ranges.end(), [&](float range) {
             return std::isnormal(range) && range_limit.isMet(range);
         });
 
@@ -40,7 +40,7 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
         result.features(0, j) = range * std::cos(angle);
         result.features(1, j) = range * std::sin(angle);
         result.features(2, j) = 1.0f;
-		j++;
+        j++;
     }
 
     return result;
