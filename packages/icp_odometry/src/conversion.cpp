@@ -1,5 +1,7 @@
 #include <icp_odometry/conversion.h>
 
+#include "common/math.h"
+
 namespace truck::icp_odometry {
 
 namespace {
@@ -9,6 +11,8 @@ constexpr bool isBigendian() { return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__; }
 }  // namespace
 
 DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
+    Limits range_limit{scan.range_min, scan.range_max};
+
     DataPoints::Labels feature_labels;
     feature_labels.push_back(DataPoints::Label("x", 1));
     feature_labels.push_back(DataPoints::Label("y", 1));
@@ -17,21 +21,26 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
     DataPoints::Labels descriptor_labels;
 
     const size_t point_count = std::count_if(
-        scan.ranges.begin(), scan.ranges.end(), [](float range) { return std::isfinite(range); });
+        scan.ranges.begin(), scan.ranges.end(), [&](float range) {
+            return std::isnormal(range) && range_limit.isMet(range);
+        });
 
     DataPoints result(feature_labels, descriptor_labels, point_count);
 
-    for (size_t i = 0; i < scan.ranges.size(); ++i) {
+    for (size_t i = 0, j = 0; i < scan.ranges.size(); ++i) {
         const double range = scan.ranges[i];
-        if (!std::isfinite(range)) {
+        const bool valid = std::isnormal(range) && range_limit.isMet(range);
+
+        if (!valid) {
             continue;
         }
 
         const double angle = scan.angle_min + i * scan.angle_increment;
 
-        result.features(0, i) = range * std::cos(angle);
-        result.features(1, i) = range * std::sin(angle);
-        result.features(2, i) = 1.0f;
+        result.features(0, j) = range * std::cos(angle);
+        result.features(1, j) = range * std::sin(angle);
+        result.features(2, j) = 1.0f;
+		j++;
     }
 
     return result;
