@@ -121,6 +121,10 @@ g2o::SE2 toTransformationVector(const Eigen::Matrix3f& tf_matrix) {
 
 Builder::Builder(const BuilderParams& params, const ICP& icp) : params_(params), icp_(icp) {}
 
+/**
+ * Returns a subset of given 'poses' and 'clouds' via removing too close poses
+ * Next pose will be added, if it's far enough from a previous one 
+ */
 std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
     const geom::Poses& poses, const Clouds& clouds) {
     VERIFY(poses.size() > 0);
@@ -143,6 +147,12 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
     return std::make_pair(filtered_poses, filtered_clouds);
 }
 
+/**
+ * Input: set of 'poses' and corresponding 'clouds'
+ * Points coordinates of given cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
+ * 
+ * Output: set of clouds, whose point coordinates are in the world frame
+ */
 Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds, bool concatenate) {
     VERIFY(poses.size() > 0);
     VERIFY(poses.size() == clouds.size());
@@ -155,6 +165,8 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds, 
 
         Cloud tf_cloud = Cloud(clouds[i]);
 
+        // Applying 'rotation_matrix' and 'translation_vector'
+        // to each (x,y,z) point 'tf_cloud.features.col(j)' of curernt cloud 
         for (size_t j = 0; j < tf_cloud.features.cols(); j++) {
             tf_cloud.features.col(j) =
                 rotation_matrix * tf_cloud.features.col(j) + translation_vector;
@@ -176,6 +188,12 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds, 
     return tf_clouds;
 }
 
+/**
+ * Input: set of 'poses' and corresponding 'clouds'
+ * Points coordinates of given cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
+ * 
+ * Output: set of updated poses for given 'clouds' 
+ */
 geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& clouds) {
     g2o::SparseOptimizer optimizer;
 
