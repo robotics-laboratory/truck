@@ -10,7 +10,7 @@ namespace truck::map {
 
 Map Map::fromGeoJson(const std::string& path) {
     geom::ComplexPolygons polygons;
-    nlohmann::json geojson_features = nlohmann::json::parse(std::ifstream(path))["features"];
+    const nlohmann::json geojson_features = nlohmann::json::parse(std::ifstream(path))["features"];
 
     // iterate through every complex polygon
     for (const auto& elem : geojson_features) {
@@ -41,7 +41,7 @@ Map Map::fromGeoJson(const std::string& path) {
         polygons.push_back(geom::ComplexPolygon(std::move(outer), std::move(inners)));
     }
 
-    return Map(std::move(polygons));
+    return {std::move(polygons)};
 }
 
 Map::Map(geom::ComplexPolygons polygons) : polygons_(std::move(polygons)) {}
