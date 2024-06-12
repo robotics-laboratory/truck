@@ -50,7 +50,7 @@ namespace msg {
 
 geometry_msgs::msg::Quaternion toQuaternion(const Angle& a);
 
-geometry_msgs::msg::Quaternion toQuaternion(const AngleVec2& a);
+geometry_msgs::msg::Quaternion toQuaternion(const AngleVec2& v);
 
 geometry_msgs::msg::Point toPoint(const Vec2& v);
 

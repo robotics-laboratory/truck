@@ -1,13 +1,13 @@
 #include <gtest/gtest.h>
 
-#include "geom/test/equal_assert.h"
 #include "geom/intersection.h"
 #include "geom/line.h"
+#include "geom/test/equal_assert.h"
 
 using namespace truck::geom;
 
 TEST(Line, make) {
-    Line l(1, 1, -2);
+    const Line l(1, 1, -2);
 
     auto l1 = Line::fromTwoPoints({0, 2}, {1, 1});
     auto l2 = Line::fromPointAndNormal({-1, 3}, {1, 1});

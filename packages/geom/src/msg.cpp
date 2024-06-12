@@ -24,10 +24,10 @@ Pose toPose(const geometry_msgs::msg::Pose& p) { return Pose{toVec2(p), toYawDir
 
 Pose toPose(const nav_msgs::msg::Odometry& odom) { return toPose(odom.pose.pose); }
 
-Vec2 toVec2(const geometry_msgs::msg::Vector3& v) { return Vec2(v.x, v.y); }
+Vec2 toVec2(const geometry_msgs::msg::Vector3& v) { return {v.x, v.y}; }
 
 Transform toTransform(const geometry_msgs::msg::Transform& t) {
-    return Transform(toVec2(t.translation), toAngle(t.rotation));
+    return {toVec2(t.translation), toAngle(t.rotation)};
 }
 
 Transform toTransform(const geometry_msgs::msg::TransformStamped& t) {

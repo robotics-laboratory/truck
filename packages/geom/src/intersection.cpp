@@ -20,7 +20,7 @@ enum class Mode : int8_t { Colinear = 0, Clockwise = 1, Counterclockwise = -1 };
 bool intersect(const Segment& seg1, const Segment& seg2, const double eps) noexcept {
     // Find orientation of ordered triplet (p, q, r)
     auto orientation = [&](const Vec2& p, const Vec2& q, const Vec2& r) {
-        double val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+        const double val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
         if (std::abs(val) < eps) {
             return Mode::Colinear;
@@ -36,12 +36,8 @@ bool intersect(const Segment& seg1, const Segment& seg2, const double eps) noexc
     // Given three collinear points p, q, r, the function checks if
     // point q lies on line segment 'pr'
     auto onSegment = [](const Vec2& p, const Vec2& q, const Vec2& r) {
-        if (q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) && q.y <= std::max(p.y, r.y)
-            && q.y >= std::min(p.y, r.y)) {
-            return true;
-        }
-
-        return false;
+        return q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) && q.y <= std::max(p.y, r.y)
+               && q.y >= std::min(p.y, r.y);
     };
 
     const Vec2& p1 = seg1.begin;
@@ -88,7 +84,7 @@ bool intersect(const Polygon& polygon, const Segment& seg, const double eps) noe
 }
 
 std::optional<Vec2> intersect(const Line& l1, const Line& l2, const double eps) noexcept {
-    double det = cross(Vec2(l1.a, l1.b), Vec2(l2.a, l2.b));
+    const double det = cross(Vec2(l1.a, l1.b), Vec2(l2.a, l2.b));
     if (std::abs(det) < eps) {
         return std::nullopt;
     }
@@ -106,10 +102,10 @@ std::optional<Vec2> intersect(const Ray& ray, const Segment& segment, double pre
         return {};
     }
 
-    auto rayOriginToSegmentBegin = segment.begin - ray.origin;
+    auto ray_origin_to_segment_begin = segment.begin - ray.origin;
 
-    auto t = cross(segment_dir, rayOriginToSegmentBegin) / det;
-    auto u = cross(ray_dir, rayOriginToSegmentBegin) / det;
+    auto t = cross(segment_dir, ray_origin_to_segment_begin) / det;
+    auto u = cross(ray_dir, ray_origin_to_segment_begin) / det;
 
     if (t >= -precision && u >= -precision && u <= 1 + precision) {
         return ray.origin + t * ray_dir;

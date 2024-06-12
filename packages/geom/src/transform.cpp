@@ -8,7 +8,7 @@ Transform::Transform(Vec2 t, AngleVec2 r) : translation_(t), rotation_(r) {}
 
 namespace {
 
-geom::Vec2 toVector(const tf2::Vector3& v) { return geom::Vec2(v.x(), v.y()); }
+geom::Vec2 toVector(const tf2::Vector3& v) { return {v.x(), v.y()}; }
 
 }  // namespace
 
@@ -29,7 +29,7 @@ Pose Transform::operator()(Pose p) const { return apply(p); }
 
 Transform Transform::inv() const {
     auto r_inv = rotation_.inv();
-    return Transform(r_inv.apply(-translation_), r_inv);
+    return {r_inv.apply(-translation_), r_inv};
 }
 
 std::ostream& operator<<(std::ostream& out, const Transform& transform) noexcept {

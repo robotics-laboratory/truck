@@ -3,18 +3,18 @@
 #include "common/exception.h"
 #include "common/math.h"
 
-#include "geom/line.h"
 #include "geom/intersection.h"
+#include "geom/line.h"
 
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polygon_2.h>
 #include <CGAL/draw_triangulation_2.h>
 #include <CGAL/mark_domain_in_triangulation.h>
-#include <CGAL/Polygon_2.h>
 
 #include <algorithm>
-#include <unordered_map>
 #include <boost/property_map/property_map.hpp>
+#include <unordered_map>
 
 namespace truck::geom {
 
@@ -82,7 +82,7 @@ Orientation Polygon::orientation() const noexcept {
     auto next_it = (it + 1 == this->cend() ? this->cbegin() : it + 1);
     auto side_1 = *it - *prev_it;
     auto side_2 = *next_it - *it;
-    int orientation_sign = sign(cross(side_1, side_2));
+    const int orientation_sign = sign(cross(side_1, side_2));
     VERIFY(orientation_sign != 0);
     return (orientation_sign > 0 ? Orientation::COUNTERCLOCKWISE : Orientation::CLOCKWISE);
 }
@@ -96,8 +96,8 @@ Segments Polygon::segments() const noexcept {
     segments[0].end = {points[0].x, points[0].y};
 
     for (size_t i = 1; i < points.size(); ++i) {
-        Vec2 begin = {points[i - 1].x, points[i - 1].y};
-        Vec2 end = {points[i].x, points[i].y};
+        const Vec2 begin = {points[i - 1].x, points[i - 1].y};
+        const Vec2 end = {points[i].x, points[i].y};
         segments.emplace_back(begin, end);
     }
 
