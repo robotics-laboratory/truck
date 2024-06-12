@@ -47,7 +47,7 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
     };
 
     dist[from_id] = 0.0;
-    queue.emplace(std::make_pair(dist[from_id], from_id));
+    queue.emplace(dist[from_id], from_id);
 
     while (!queue.empty()) {
         const auto [cur_dist, cur_id] = *queue.begin();
@@ -70,7 +70,7 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
                 dist[neighbor_id] = alt_dist;
                 prev[neighbor_id] = cur_id;
 
-                queue.emplace(std::make_pair(dist[neighbor_id], neighbor_id));
+                queue.emplace(dist[neighbor_id], neighbor_id);
             }
         }
     }

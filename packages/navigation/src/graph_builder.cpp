@@ -1,9 +1,9 @@
 #include "navigation/graph_builder.h"
 
+#include "common/exception.h"
+#include "common/math.h"
 #include "geom/distance.h"
 #include "geom/intersection.h"
-#include "common/math.h"
-#include "common/exception.h"
 
 #include <boost/geometry.hpp>
 
@@ -24,7 +24,7 @@ using EdgesMap = std::unordered_map<NodeId, std::unordered_map<NodeId, EdgeId>>;
 namespace {
 
 geom::Vec2 toVec2(const RTreePoint& rtree_point) {
-    return geom::Vec2(rtree_point.get<0>(), rtree_point.get<1>());
+    return {rtree_point.get<0>(), rtree_point.get<1>()};
 }
 
 RTreePoint toRTreePoint(const geom::Vec2& point) { return RTreePoint(point.x, point.y); }
@@ -58,14 +58,14 @@ RTreeIndexedPoints getNodeNeighborsSearchRadius(
     const geom::Vec2& point, const RTree& rtree, double search_radius) {
     RTreeIndexedPoints rtree_indexed_points;
 
-    RTreeBox rtree_box(
+    const RTreeBox rtree_box(
         RTreePoint(point.x - search_radius, point.y - search_radius),
         RTreePoint(point.x + search_radius, point.y + search_radius));
 
     rtree.query(
         bg::index::intersects(rtree_box)
             && bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
-                   geom::Vec2 neighbor_point = toVec2(rtree_indexed_point.first);
+                   const geom::Vec2 neighbor_point = toVec2(rtree_indexed_point.first);
                    return (point - neighbor_point).lenSq() < squared(search_radius);
                }),
         std::back_inserter(rtree_indexed_points));
@@ -110,10 +110,10 @@ std::vector<NodeId> getNodeNeighbors(
     std::vector<NodeId> neighbor_nodes_ids;
 
     for (const RTreeIndexedPoint& rtree_indexed_point : rtree_indexed_points) {
-        NodeId neighbor_node_id = rtree_indexed_point.second;
-        geom::Vec2 neighbor_node_point = toVec2(rtree_indexed_point.first);
+        const NodeId neighbor_node_id = rtree_indexed_point.second;
+        const geom::Vec2 neighbor_node_point = toVec2(rtree_indexed_point.first);
 
-        geom::Segment edge(node.point, neighbor_node_point);
+        const geom::Segment edge(node.point, neighbor_node_point);
 
         if (node.id != neighbor_node_id && isCollisionFree(edge, polygons)) {
             neighbor_nodes_ids.emplace_back(neighbor_node_id);
@@ -144,7 +144,7 @@ void updateEdgesInfo(Graph& graph, EdgesMap& nodes_to_edges, NodeId from, NodeId
 
     if (!edge_id.has_value()) {
         // edge doesn't exist, need to create one
-        Edge edge{
+        const Edge edge{
             .from = from,
             .to = to,
             .weight = geom::distance(graph.nodes[from].point, graph.nodes[to].point)};
@@ -171,12 +171,13 @@ Graph GraphBuilder::build(
         graph.nodes.emplace_back(Node{.id = i, .point = mesh[i], .edges = {}});
     }
 
-    RTree rtree_nodes = toRTree(graph.nodes);
+    const RTree rtree_nodes = toRTree(graph.nodes);
 
     EdgesMap nodes_to_edges;
 
-    for (Node& cur_node : graph.nodes) {
-        for (NodeId neighbor_node_id : getNodeNeighbors(cur_node, rtree_nodes, polygons, params_)) {
+    for (const Node& cur_node : graph.nodes) {
+        for (const NodeId neighbor_node_id :
+             getNodeNeighbors(cur_node, rtree_nodes, polygons, params_)) {
             updateEdgesInfo(graph, nodes_to_edges, cur_node.id, neighbor_node_id);
             updateEdgesInfo(graph, nodes_to_edges, neighbor_node_id, cur_node.id);
         }

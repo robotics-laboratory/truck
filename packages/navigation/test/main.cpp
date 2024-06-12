@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
 #include "map/map.h"
-#include "navigation/viewer.h"
-#include "navigation/mesh_builder.h"
 #include "navigation/graph_builder.h"
+#include "navigation/mesh_builder.h"
 #include "navigation/search.h"
+#include "navigation/viewer.h"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
@@ -16,9 +16,9 @@ const std::string MAP_PKG_PATH = ament_index_cpp::get_package_share_directory("m
 TEST(Navigation, poly) {
     const std::string file_path = MAP_PKG_PATH + "/data/map_6.geojson";
 
-    geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
+    const geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
-    viewer::ViewerParams viewer_params{
+    const viewer::ViewerParams viewer_params{
         .path = "test/data/poly.png", .color_rgb = {}, .thickness = {}};
 
     VERIFY(polygons.size() == 1);
@@ -32,14 +32,14 @@ TEST(Navigation, poly) {
 TEST(Navigation, mesh) {
     const std::string file_path = MAP_PKG_PATH + "/data/map_6.geojson";
 
-    geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
+    const geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
-    viewer::ViewerParams viewer_params{
+    const viewer::ViewerParams viewer_params{
         .path = "test/data/mesh.png", .color_rgb = {}, .thickness = {}};
 
-    mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
+    const mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
-    mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
+    const mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
@@ -53,21 +53,21 @@ TEST(Navigation, mesh) {
 TEST(Navigation, graph) {
     const std::string file_path = MAP_PKG_PATH + "/data/map_6.geojson";
 
-    geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
+    const geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
-    viewer::ViewerParams viewer_params{
+    const viewer::ViewerParams viewer_params{
         .path = "test/data/graph.png", .color_rgb = {}, .thickness = {}};
 
-    mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
+    const mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
     mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
-    mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
+    const mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
-    graph::GraphParams graph_params{
+    const graph::GraphParams graph_params{
         .mode = graph::GraphParams::Mode::searchRadius, .search_radius = 3.6};
     graph::GraphBuilder graph_builder = graph::GraphBuilder(graph_params);
-    graph::Graph graph = graph_builder.build(mesh_build.mesh, polygons);
+    const graph::Graph graph = graph_builder.build(mesh_build.mesh, polygons);
 
-    geom::Polyline path = search::toPolyline(graph, search::findShortestPath(graph, 28, 306));
+    const geom::Polyline path = search::toPolyline(graph, search::findShortestPath(graph, 28, 306));
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];

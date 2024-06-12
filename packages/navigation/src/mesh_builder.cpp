@@ -1,12 +1,12 @@
 #include "navigation/mesh_builder.h"
 
-#include "common/math.h"
 #include "common/exception.h"
+#include "common/math.h"
 
-#include <boost/shared_ptr.hpp>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
 #include <CGAL/create_offset_polygons_from_polygon_with_holes_2.h>
+#include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
+#include <boost/shared_ptr.hpp>
 
 namespace truck::navigation::mesh {
 
@@ -61,7 +61,7 @@ MeshBuild MeshBuilder::build(const geom::ComplexPolygons& polygons) const {
 }
 
 void MeshBuilder::buildSkeleton(MeshBuild& mesh_build, const geom::ComplexPolygon& polygon) const {
-    boost::shared_ptr<CGAL::Straight_skeleton_2<CGAL_K>> cgal_skeleton_ptr =
+    const boost::shared_ptr<CGAL::Straight_skeleton_2<CGAL_K>> cgal_skeleton_ptr =
         CGAL::create_interior_straight_skeleton_2(toCGALPolygonWithHoles(polygon));
 
     for (const auto& cgal_edge_it : cgal_skeleton_ptr->halfedge_handles()) {
@@ -80,7 +80,7 @@ void MeshBuilder::buildLevelLines(
     auto cgal_polys_with_holes = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(
         cur_offset, toCGALPolygonWithHoles(polygon));
 
-    while (cgal_polys_with_holes.size() > 0) {
+    while (!cgal_polys_with_holes.empty()) {
         for (const auto& cgal_poly_with_holes_ptr : cgal_polys_with_holes) {
             extractSegmentsFromCGALPolygon(
                 mesh_build.level_lines, cgal_poly_with_holes_ptr->outer_boundary());

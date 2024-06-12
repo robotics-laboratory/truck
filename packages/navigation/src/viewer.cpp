@@ -112,7 +112,7 @@ void drawNodes(
 void drawPath(
     const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
     const geom::Polyline& path) {
-    if (path.size() == 0) {
+    if (path.empty()) {
         return;
     }
 
