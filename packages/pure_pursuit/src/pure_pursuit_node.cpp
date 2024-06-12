@@ -27,7 +27,7 @@ truck_msgs::msg::PurePursuitStatus toErrorStatus(const std_msgs::msg::Header& he
     return status;
 }
 
-truck_msgs::msg::PurePursuitStatus toNoLocalizationStatus(const rclcpp::Time t) {
+truck_msgs::msg::PurePursuitStatus toNoLocalizationStatus(const rclcpp::Time& t) {
     truck_msgs::msg::PurePursuitStatus status;
 
     status.header.stamp = t;
