@@ -8,8 +8,8 @@ namespace rosaruco {
 
 const static std::string kLoggerName = "CameraTracker";
 
-CameraTracker::CameraTracker(int markers_count_) : graph_(markers_count_) {
-    to_anchor_.resize(markers_count_);
+CameraTracker::CameraTracker(int marker_count) : graph_(marker_count) {
+    to_anchor_.resize(marker_count);
 }
 
 void CameraTracker::Update(
@@ -36,7 +36,7 @@ void CameraTracker::Update(
 
     graph_.GetBestTransformFromStartNode(anchor_id_, ids, transforms_to_anchor, errors);
 
-    size_t best_visible_idx = std::min_element(errors.begin(), errors.end()) - errors.begin();
+    const size_t best_visible_idx = std::min_element(errors.begin(), errors.end()) - errors.begin();
 
     if (std::isinf(errors[best_visible_idx])) {
         RCLCPP_ERROR(

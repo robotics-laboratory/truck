@@ -17,7 +17,7 @@ void Dijkstra(
         q;
 
     distance[start_node] = 0;
-    q.push({distance[start_node], start_node});
+    q.emplace(distance[start_node], start_node);
 
     while (!q.empty()) {
         auto [current_distance, node] = q.top();
@@ -28,11 +28,11 @@ void Dijkstra(
         }
 
         for (int to = 0; to < nodes_count; to++) {
-            double new_distance = distance[node] + get_weight(node, to);
+            const double new_distance = distance[node] + get_weight(node, to);
             if (distance[to] > new_distance) {
                 distance[to] = new_distance;
                 prev_node[to] = node;
-                q.push({distance[to], to});
+                q.emplace(distance[to], to);
             }
         }
     }

@@ -15,7 +15,7 @@ edge
 @param last_node last node in shortest path from start_node
 */
 void Dijkstra(
-    int nodes_count, int start_node, std::vector<double>& distance, std::vector<int>& last_node,
+    int nodes_count, int start_node, std::vector<double>& distance, std::vector<int>& prev_node,
     const std::function<double(int, int)>& get_weight);
 
 }  // namespace rosaruco

@@ -16,7 +16,7 @@ class CameraTracker {
   public:
     CameraTracker(int marker_count);
 
-    void Update(const std::vector<int>& ids, const std::vector<Transform>& transforms);
+    void Update(const std::vector<int>& ids, const std::vector<Transform>& from_marker_to_cam);
 
     const std::optional<Transform>& GetTransformToAnchor(int from_id) const;
 

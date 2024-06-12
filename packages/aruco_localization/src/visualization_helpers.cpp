@@ -4,8 +4,8 @@
 
 #include <geometry_msgs/msg/point.hpp>
 
-#include "visualization_helpers.hpp"
 #include "msgs_helpers.hpp"
+#include "visualization_helpers.hpp"
 
 namespace rosaruco {
 
