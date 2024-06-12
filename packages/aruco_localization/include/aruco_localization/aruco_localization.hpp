@@ -32,8 +32,8 @@ class ArucoLocalization : public rclcpp::Node {
     ArucoLocalization();
 
   private:
-    void HandleImage(const sensor_msgs::msg::Image::ConstSharedPtr& msg);
-    void UpdateCameraInfo(const sensor_msgs::msg::CameraInfo::ConstSharedPtr& msg);
+    void HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg);
+    void UpdateCameraInfo(sensor_msgs::msg::CameraInfo::ConstSharedPtr msg);
 
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_image_raw_;
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr subscription_camera_info_;

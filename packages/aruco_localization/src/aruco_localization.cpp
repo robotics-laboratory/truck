@@ -57,7 +57,7 @@ ArucoLocalization::ArucoLocalization() :
         this->create_publisher<tf2_msgs::msg::TFMessage>(kArucoTransformsTopic, qos);
 }
 
-void ArucoLocalization::HandleImage(const sensor_msgs::msg::Image::ConstSharedPtr& msg) {
+void ArucoLocalization::HandleImage(sensor_msgs::msg::Image::ConstSharedPtr msg) {
     RCLCPP_INFO(this->get_logger(), "HandleImage got message");
     auto cv_image = cv_bridge::toCvShare(msg);
 
@@ -152,7 +152,7 @@ void ArucoLocalization::HandleImage(const sensor_msgs::msg::Image::ConstSharedPt
     }
 }
 
-void ArucoLocalization::UpdateCameraInfo(const sensor_msgs::msg::CameraInfo::ConstSharedPtr& msg) {
+void ArucoLocalization::UpdateCameraInfo(sensor_msgs::msg::CameraInfo::ConstSharedPtr msg) {
     RCLCPP_INFO(this->get_logger(), "UpdateCameraInfo got message");
 
     static_assert(
