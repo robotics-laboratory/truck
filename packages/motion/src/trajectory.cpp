@@ -219,7 +219,7 @@ void throwIfInvalid(
 }  // namespace
 
 void Trajectory::throwIfInvalid(
-    const TrajectoryValidations& validations, const model::Model& model) {
+    const TrajectoryValidations& validations, const model::Model& model) const {
     motion::throwIfInvalid(validations, model, *this);
 }
 
