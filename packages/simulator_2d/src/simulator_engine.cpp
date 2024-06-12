@@ -1,13 +1,13 @@
 #include "simulator_2d/simulator_engine.h"
 
-#include "map/map.h"
 #include "geom/distance.h"
-#include "geom/swap.h"
 #include "geom/intersection.h"
+#include "geom/swap.h"
+#include "map/map.h"
 
 #include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Vector3.h>
 #include <tf2/LinearMath/Transform.h>
+#include <tf2/LinearMath/Vector3.h>
 
 #include <algorithm>
 #include <cmath>
@@ -129,7 +129,7 @@ int softSign(double number, double precision) {
 geom::Vec3 applyRotation(const tf2::Transform& rotation, const geom::Vec3& vector) {
     tf2::Vector3 v(vector.x, vector.y, vector.z);
     v = rotation * v;
-    return geom::Vec3(v.getX(), v.getY(), v.getZ());
+    return {v.getX(), v.getY(), v.getZ()};
 }
 
 }  // namespace
