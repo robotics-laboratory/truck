@@ -38,8 +38,8 @@ class VisualizationNode : public rclcpp::Node {
     void initializeCacheWheelBaseTfs();
     void initializeCache();
 
-    void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr trajectory);
-    void handleControl(truck_msgs::msg::Control::ConstSharedPtr control);
+    void handleTrajectory(truck_msgs::msg::Trajectory::ConstSharedPtr msg);
+    void handleControl(truck_msgs::msg::Control::ConstSharedPtr msg);
     void handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr msg);
     void handleWaypoints(truck_msgs::msg::Waypoints::ConstSharedPtr msg);
     void handleTelemetry(truck_msgs::msg::HardwareTelemetry::ConstSharedPtr msg);
@@ -59,7 +59,7 @@ class VisualizationNode : public rclcpp::Node {
     void publishNavigationMesh() const;
     void publishNavigationRoute() const;
 
-    std_msgs::msg::ColorRGBA velocityToColor(double speed, double alpha = 1.0) const;
+    std_msgs::msg::ColorRGBA velocityToColor(double velocity, double alpha = 1.0) const;
 
     struct Parameters {
         rclcpp::Duration ttl = rclcpp::Duration::from_seconds(1.0);

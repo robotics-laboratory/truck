@@ -165,8 +165,8 @@ void VisualizationNode::handleTelemetry(truck_msgs::msg::HardwareTelemetry::Cons
     state_.telemetry = msg;
 }
 
-void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr odom) {
-    state_.odom = std::move(odom);
+void VisualizationNode::handleOdometry(nav_msgs::msg::Odometry::ConstSharedPtr msg) {
+    state_.odom = std::move(msg);
     ++state_.odom_seq_id;
 
     updateEgo();
@@ -241,7 +241,7 @@ void VisualizationNode::handleMode(truck_msgs::msg::ControlMode::ConstSharedPtr 
 namespace {
 
 visualization_msgs::msg::Marker makeMeshMarker(
-    int id, const std_msgs::msg::Header& header, const std::string mesh,
+    int id, const std_msgs::msg::Header& header, const std::string& mesh,
     const std_msgs::msg::ColorRGBA& color) {
     visualization_msgs::msg::Marker msg;
     msg.id = id;
@@ -434,8 +434,8 @@ void VisualizationNode::publishArc() const {
     signal_.arc->publish(msg);
 }
 
-void VisualizationNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr control) {
-    if (control->header.frame_id != "base") {
+void VisualizationNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr msg) {
+    if (msg->header.frame_id != "base") {
         RCLCPP_WARN(
             get_logger(),
             "Expected 'base' frame for cotrol, but got %s. Ignore message!",
@@ -444,7 +444,7 @@ void VisualizationNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr c
     }
 
     // publish control only for odometry update
-    state_.control = std::move(control);
+    state_.control = std::move(msg);
 }
 
 void VisualizationNode::publishWaypoints() const {
