@@ -35,7 +35,7 @@ ControlMap::ControlMap(const std::string& path) : ControlMap(YAML::LoadFile(path
 
 namespace {
 
-auto loadControlMap(rclcpp::Logger logger, const std::string& path) {
+auto loadControlMap(const rclcpp::Logger& logger, const std::string& path) {
     RCLCPP_INFO(logger, "load control map: %s", path.c_str());
     return ControlMap(path);
 }
@@ -228,7 +228,7 @@ void ControlProxyNode::forwardControlCommand(truck_msgs::msg::Control::ConstShar
 
 void ControlProxyNode::onReset(
     const std::shared_ptr<std_srvs::srv::Empty::Request>,
-    std::shared_ptr<std_srvs::srv::Empty::Response>) {
+    const std::shared_ptr<std_srvs::srv::Empty::Response>) {
     RCLCPP_WARN(this->get_logger(), "Reset!");
     reset();
 }
