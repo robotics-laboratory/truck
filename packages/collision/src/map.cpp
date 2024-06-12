@@ -19,22 +19,22 @@ Map distanceTransform(const Map& map) {
     return result;
 }
 
-Map Map::fromOccupancyGrid(const nav_msgs::msg::OccupancyGrid& map) {
-    cv::Mat grid = cv::Mat(map.info.height, map.info.width, CV_8UC1);
+Map Map::fromOccupancyGrid(const nav_msgs::msg::OccupancyGrid& grid) {
+    cv::Mat data = cv::Mat(grid.info.height, grid.info.width, CV_8UC1);
 
     // fill binary grid matrix with values based on occupancy grid values
-    for (uint32_t i = 0; i < map.info.height; i++) {
-        for (uint32_t j = 0; j < map.info.width; j++) {
-            int8_t grid_cell = map.data.at(i * map.info.width + j);
-            grid.at<uchar>(i, j) = grid_cell == 0 ? 1 : 0;
+    for (uint32_t i = 0; i < grid.info.height; i++) {
+        for (uint32_t j = 0; j < grid.info.width; j++) {
+            const int8_t grid_cell = grid.data.at(i * grid.info.width + j);
+            data.at<uchar>(i, j) = grid_cell == 0 ? 1 : 0;
         }
     }
 
     return Map{
-        .origin = geom::toPose(map.info.origin),
-        .resolution = map.info.resolution,
-        .size = {static_cast<int>(map.info.width), static_cast<int>(map.info.height)},
-        .data = grid};
+        .origin = geom::toPose(grid.info.origin),
+        .resolution = grid.info.resolution,
+        .size = {static_cast<int>(grid.info.width), static_cast<int>(grid.info.height)},
+        .data = data};
 }
 
 nav_msgs::msg::OccupancyGrid Map::makeCostMap(
