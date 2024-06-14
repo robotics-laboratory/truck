@@ -319,9 +319,7 @@ CheckOptions:
     value:           UPPER_CASE
 
   - key:             readability-identifier-naming.ScopedEnumConstantCase
-    value:           CamelCase
-  - key:             readability-identifier-naming.ScopedEnumConstantPrefix
-    value:           'k'
+    value:           UPPER_CASE
 
   - key:             readability-identifier-naming.StaticConstantCase
     value:           CamelCase
