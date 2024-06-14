@@ -48,7 +48,8 @@ ArucoLocalization::ArucoLocalization() :
         IMAGE_RAW_TOPIC, qos, std::bind(&ArucoLocalization::handleImage, this, _1));
     subscription_camera_info_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
         CAMERA_INFO_TOPIC, qos, std::bind(&ArucoLocalization::updateCameraInfo, this, _1));
-    publisher_odometry_ = this->create_publisher<nav_msgs::msg::Odometry>(ARUCO_ODOMETRY_TOPIC, qos);
+    publisher_odometry_ =
+        this->create_publisher<nav_msgs::msg::Odometry>(ARUCO_ODOMETRY_TOPIC, qos);
     publisher_pose_stamped_ =
         this->create_publisher<geometry_msgs::msg::PoseStamped>(ARUCO_POSE_TOPIC, qos);
     publisher_marker_array_ =
