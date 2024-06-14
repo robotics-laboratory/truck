@@ -9,18 +9,18 @@ namespace truck::speed {
 
 namespace {
 
-constexpr double eps = 1e-6;
+constexpr double EPS = 1e-6;
 
 double findTime(double dist, double v, double a) {
     VERIFY(dist >= 0);
     VERIFY(v >= 0);
 
-    if (std::abs(a) < eps) {
+    if (std::abs(a) < EPS) {
         return dist / v;
     }
 
     double d = v * v + 2 * a * dist;
-    if (-eps <= d && d <= 0) {
+    if (-EPS <= d && d <= 0) {
         d = 0.0;
     }
 
@@ -56,7 +56,7 @@ It fillAcceleration(
     It end) {
     VERIFY(begin != end);
 
-    if (scheduled_velocity + eps > model.baseVelocityLimits().max) {
+    if (scheduled_velocity + EPS > model.baseVelocityLimits().max) {
         begin->time = 0;
         begin->velocity = model.baseVelocityLimits().max;
         begin->acceleration = 0;
@@ -79,11 +79,11 @@ It fillAcceleration(
         next->time = it->getTime() + dt;
 
         // reach max velocity
-        if (next->velocity + eps > model.baseVelocityLimits().max) {
+        if (next->velocity + EPS > model.baseVelocityLimits().max) {
             next->velocity = model.baseVelocityLimits().max;
             it->acceleration = findAcceleration(distance, it->velocity, next->velocity);
 
-            dt = abs(it->acceleration) > eps ? (next->velocity - it->velocity) / it->acceleration
+            dt = abs(it->acceleration) > EPS ? (next->velocity - it->velocity) / it->acceleration
                                              : distance / it->velocity;
 
             next->time = it->getTime() + dt;
@@ -146,7 +146,7 @@ bool fillBraking(const model::Model& model, It begin, It end) {
         VERIFY(it->reachable());
 
         const double distance = next->distance - it->distance;
-        double dt = findTime(distance, it->velocity, a);
+        const double dt = findTime(distance, it->velocity, a);
 
         it->acceleration = a;
         next->velocity = it->velocity + a * dt;

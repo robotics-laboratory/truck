@@ -11,8 +11,8 @@
 #include <tf2_ros/qos.hpp>
 
 #include <functional>
-#include <optional>
 #include <memory>
+#include <optional>
 
 namespace truck::waypoint_follower {
 
@@ -138,7 +138,7 @@ motion::Trajectory makeTrajectory(const std::deque<LinkedPose>& path) {
     motion::Trajectory trajectory;
 
     for (const auto& lp : path) {
-        motion::State state{lp.pose};
+        const motion::State state{lp.pose};
         trajectory.states.push_back(state);
     }
 
@@ -158,8 +158,8 @@ void WaypointFollowerNode::publishGridCostMap() {
         return;
     }
 
-    constexpr double kMaxDistance = 10.0;
-    const auto msg = state_.distance_transform->makeCostMap(state_.grid->header, kMaxDistance);
+    constexpr double k_max_distance = 10.0;
+    const auto msg = state_.distance_transform->makeCostMap(state_.grid->header, k_max_distance);
     signal_.distance_transform->publish(msg);
 }
 

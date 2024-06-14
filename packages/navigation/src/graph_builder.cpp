@@ -64,7 +64,7 @@ RTreeIndexedPoints getNodeNeighborsSearchRadius(
 
     rtree.query(
         bg::index::intersects(rtree_box)
-            && bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
+            && bg::index::satisfies([&](const RTreeIndexedPoint& rtree_indexed_point) {
                    const geom::Vec2 neighbor_point = toVec2(rtree_indexed_point.first);
                    return (point - neighbor_point).lenSq() < squared(search_radius);
                }),

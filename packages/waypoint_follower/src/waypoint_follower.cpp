@@ -1,7 +1,7 @@
 #include <waypoint_follower/waypoint_follower.h>
 
-#include "common/math.h"
 #include "common/exception.h"
+#include "common/math.h"
 #include "geom/distance.h"
 #include "motion/primitive.h"
 
@@ -16,12 +16,12 @@ LinkedPose::LinkedPose(uint32_t wp_seq_id, const geom::Pose& pose) :
 
 namespace {
 
-constexpr size_t kNoIdx = -1;
+constexpr size_t K_NO_IDX = -1;
 
 size_t getEgoSegmentIdx(
     const std::deque<LinkedPose>& points, const geom::Pose& ego_pose, double max_distance) {
     double min_distnace_sq = squared(max_distance);
-    size_t ego_segment_idx = kNoIdx;
+    size_t ego_segment_idx = K_NO_IDX;
 
     for (size_t end = 1; end < points.size(); ++end) {
         const size_t begin = end - 1;
@@ -29,7 +29,7 @@ size_t getEgoSegmentIdx(
         const double distance_sq = geom::distanceSq(ego_pose.pos, segment);
         // get closest segment
         if (distance_sq >= min_distnace_sq) {
-            if (ego_segment_idx == kNoIdx) {
+            if (ego_segment_idx == K_NO_IDX) {
                 continue;
             }
 
@@ -50,7 +50,7 @@ uint32_t cutByEgoPose(std::deque<LinkedPose>& points, const geom::Pose& ego_pose
     }
 
     const size_t ego_segment_idx = getEgoSegmentIdx(points, ego_pose, distance);
-    if (ego_segment_idx == kNoIdx) {
+    if (ego_segment_idx == K_NO_IDX) {
         return Waypoint::kNoSeqId;
     }
 
@@ -74,7 +74,7 @@ void WaypointFollower::reset() {
 }
 
 bool WaypointFollower::isReadyToFinish(const geom::Pose& ego_pose) const {
-    return state_.waypoints.size() == 1 && state_.path.size() >= 1
+    return state_.waypoints.size() == 1 && !state_.path.empty()
            && geom::distanceSq(ego_pose.pos, state_.path.back().pose.pos)
                   < squared(params_.check_in_distance);
 }

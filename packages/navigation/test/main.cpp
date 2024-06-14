@@ -38,7 +38,7 @@ TEST(Navigation, mesh) {
         .path = "test/data/mesh.png", .color_rgb = {}, .thickness = {}};
 
     const mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
-    mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
+    const mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
     const mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
     VERIFY(polygons.size() == 1);
@@ -59,12 +59,12 @@ TEST(Navigation, graph) {
         .path = "test/data/graph.png", .color_rgb = {}, .thickness = {}};
 
     const mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
-    mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
+    const mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
     const mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
     const graph::GraphParams graph_params{
         .mode = graph::GraphParams::Mode::searchRadius, .search_radius = 3.6};
-    graph::GraphBuilder graph_builder = graph::GraphBuilder(graph_params);
+    const graph::GraphBuilder graph_builder = graph::GraphBuilder(graph_params);
     const graph::Graph graph = graph_builder.build(mesh_build.mesh, polygons);
 
     const geom::Polyline path = search::toPolyline(graph, search::findShortestPath(graph, 28, 306));
