@@ -14,6 +14,7 @@ IndentWidth: 4
 NamespaceIndentation: None
 DerivePointerAlignment: false
 PointerAlignment: Left
+QualifierAlignment: Left
 SortIncludes: false
 SpaceAfterTemplateKeyword: false
 SpaceInEmptyParentheses: false
