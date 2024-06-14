@@ -2,7 +2,7 @@
 
 namespace rosaruco {
 
-void Dijkstra(
+void dijkstra(
     int nodes_count, int start_node, std::vector<double>& distance, std::vector<int>& prev_node,
     const std::function<double(int, int)>& get_weight) {
     distance.resize(nodes_count);

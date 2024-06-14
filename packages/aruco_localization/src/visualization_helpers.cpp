@@ -9,7 +9,7 @@
 
 namespace rosaruco {
 
-visualization_msgs::msg::Marker GetMarker(
+visualization_msgs::msg::Marker getMarker(
     const Transform& t, int id, double size, bool is_visible) {
     std::vector<tf2::Vector3> points = {
         {0, 0, 0},
@@ -47,14 +47,14 @@ visualization_msgs::msg::Marker GetMarker(
     return marker;
 }
 
-visualization_msgs::msg::Marker GetLabel(int id, const tf2::Vector3& p, double size) {
+visualization_msgs::msg::Marker getLabel(int id, const tf2::Vector3& p, double size) {
     visualization_msgs::msg::Marker marker;
     marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
     marker.action = visualization_msgs::msg::Marker::ADD;
     marker.text = "id: " + std::to_string(id);
     marker.id = (id + 1) << 10;
 
-    SetPoint(p, marker.pose.position);
+    setPoint(p, marker.pose.position);
 
     marker.color.a = 1.0;
     marker.color.g = 1.0;
@@ -64,11 +64,11 @@ visualization_msgs::msg::Marker GetLabel(int id, const tf2::Vector3& p, double s
     return marker;
 }
 
-void AddLabeledMarker(
+void addLabeledMarker(
     std::vector<visualization_msgs::msg::Marker>& markers, const Transform& t, int id, double size,
     bool is_visible) {
-    markers.push_back(GetMarker(t, id, size, is_visible));
-    markers.push_back(GetLabel(id, t(tf2::Vector3(size / 2, size / 2, 0)), size / 5));
+    markers.push_back(getMarker(t, id, size, is_visible));
+    markers.push_back(getLabel(id, t(tf2::Vector3(size / 2, size / 2, 0)), size / 5));
 }
 
 }  // namespace rosaruco

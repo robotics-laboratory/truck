@@ -19,7 +19,7 @@ CMAKE_ARGS ?= \
 FILES_TO_LINT := $(shell find . \( -name "*.h" -or -name "*.cpp" -or -name "*.cc" \) \
                     -not -path "*/build/*" -not -path "*/install/*" -not -path "*/log/*")
 
-CLANG_TIDY_FIX_FILES ?= OFF
+CLANG_TIDY_FIX_FILES ?= ON
 CLANG_TIDY_FLAGS := \
 	$(shell if [ "${CLANG_TIDY_FIX_FILES}" = "ON" ]; then echo "-fix"; fi)
 

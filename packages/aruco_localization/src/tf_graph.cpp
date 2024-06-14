@@ -4,7 +4,7 @@
 
 namespace rosaruco {
 
-const static double kDefaultEdgeError = 1e9;
+const static double DEFAULT_EDGE_ERROR = 1e9;
 
 TfGraph::TfGraph(int nodes_count) : nodes_count_(nodes_count) {
     edges_.resize(nodes_count);
@@ -13,21 +13,21 @@ TfGraph::TfGraph(int nodes_count) : nodes_count_(nodes_count) {
     }
 }
 
-void TfGraph::AddTransform(int x, int y, const Transform& t) { edges_[x][y].AddTransform(t); }
+void TfGraph::addTransform(int x, int y, const Transform& t) { edges_[x][y].addTransform(t); }
 
-std::function<double(int, int)> TfGraph::GetWeights() {
-    return {[this](int x, int y) { return edges_[x][y].GetError(); }};
+std::function<double(int, int)> TfGraph::getWeights() {
+    return {[this](int x, int y) { return edges_[x][y].getError(); }};
 }
 
-const Transform& TfGraph::GetTransform(int x, int y) { return edges_[x][y].GetAverage(); }
+const Transform& TfGraph::getTransform(int x, int y) { return edges_[x][y].getAverage(); }
 
-void TfGraph::GetBestTransformFromStartNode(
+void TfGraph::getBestTransformFromStartNode(
     int start_node, const std::vector<int>& finish_nodes, std::vector<Transform>& best_transforms,
     std::vector<double>& errors) {
     std::vector<double> distance;
     std::vector<int> prev_node;
 
-    Dijkstra(nodes_count_, start_node, distance, prev_node, GetWeights());
+    dijkstra(nodes_count_, start_node, distance, prev_node, getWeights());
 
     best_transforms.clear();
     best_transforms.reserve(finish_nodes.size());
@@ -47,7 +47,7 @@ void TfGraph::GetBestTransformFromStartNode(
         Transform from_finish_to_current({0, 0, 0, 1}, {0, 0, 0});
         while (current_node != start_node) {
             from_finish_to_current =
-                GetTransform(current_node, prev_node[current_node]) * from_finish_to_current;
+                getTransform(current_node, prev_node[current_node]) * from_finish_to_current;
             current_node = prev_node[current_node];
         }
 
@@ -59,21 +59,21 @@ TfGraph::Edge::Edge() :
     average_translation_({0, 0, 0}),
     transforms_count_(0),
     average_transform_({0, 0, 0, 0}, {0, 0, 0}),
-    error_(kDefaultEdgeError) {
+    error_(DEFAULT_EDGE_ERROR) {
     quaternion_sum_ = cv::Mat::zeros(4, 4, CV_64F);
 }
 
-const Transform& TfGraph::Edge::GetAverage() const { return average_transform_; }
+const Transform& TfGraph::Edge::getAverage() const { return average_transform_; }
 
-double TfGraph::Edge::GetError() const {
-    if (Empty()) {
+double TfGraph::Edge::getError() const {
+    if (empty()) {
         return std::numeric_limits<double>::infinity();
     }
     return error_;
 }
 
-void TfGraph::Edge::AddTransform(const Transform& t) {
-    const auto& rotation = t.GetRotation();
+void TfGraph::Edge::addTransform(const Transform& t) {
+    const auto& rotation = t.getRotation();
     cv::Mat quat_vec(4, 1, CV_64F);
     quat_vec.at<double>(0, 0) = rotation.x();
     quat_vec.at<double>(1, 0) = rotation.y();
@@ -84,9 +84,9 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
                       + quat_vec * quat_vec.t() / (transforms_count_ + 1);
 
     average_translation_ = average_translation_ * transforms_count_ / (transforms_count_ + 1)
-                           + t.GetTranslation() / (transforms_count_ + 1);
+                           + t.getTranslation() / (transforms_count_ + 1);
 
-    auto translation_square = ElementWiseMul(t.GetTranslation(), t.GetTranslation());
+    auto translation_square = elementWiseMul(t.getTranslation(), t.getTranslation());
 
     average_translation_square_ =
         average_translation_square_ * transforms_count_ / (transforms_count_ + 1)
@@ -95,7 +95,7 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
     transforms_count_++;
 
     auto dispersion =
-        average_translation_square_ - ElementWiseMul(average_translation_, average_translation_);
+        average_translation_square_ - elementWiseMul(average_translation_, average_translation_);
 
     translation_error_square_ = 0;
 
@@ -108,10 +108,10 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
     cv::Mat vt;
     cv::SVD::compute(quaternion_sum_, w, u, vt);
 
-    average_transform_.SetRotation(tf2::Quaternion(
+    average_transform_.setRotation(tf2::Quaternion(
         vt.at<double>(0, 0), vt.at<double>(0, 1), vt.at<double>(0, 2), vt.at<double>(0, 3)));
 
-    average_transform_.SetTranslation(average_translation_);
+    average_transform_.setTranslation(average_translation_);
 
     quaternion_error_square_ = 0;
     for (size_t i = 1; i < 4; i++) {
@@ -121,6 +121,6 @@ void TfGraph::Edge::AddTransform(const Transform& t) {
     error_ = sqrt(translation_error_square_ + quaternion_error_square_);
 }
 
-bool TfGraph::Edge::Empty() const { return transforms_count_ == 0; }
+bool TfGraph::Edge::empty() const { return transforms_count_ == 0; }
 
 }  // namespace rosaruco
