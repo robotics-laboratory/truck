@@ -9,18 +9,18 @@ namespace truck::speed {
 
 namespace {
 
-constexpr double EPS = 1e-6;
+constexpr double kEps = 1e-6;
 
 double findTime(double dist, double v, double a) {
     VERIFY(dist >= 0);
     VERIFY(v >= 0);
 
-    if (std::abs(a) < EPS) {
+    if (std::abs(a) < kEps) {
         return dist / v;
     }
 
     double d = v * v + 2 * a * dist;
-    if (-EPS <= d && d <= 0) {
+    if (-kEps <= d && d <= 0) {
         d = 0.0;
     }
 
@@ -56,7 +56,7 @@ It fillAcceleration(
     It end) {
     VERIFY(begin != end);
 
-    if (scheduled_velocity + EPS > model.baseVelocityLimits().max) {
+    if (scheduled_velocity + kEps > model.baseVelocityLimits().max) {
         begin->time = 0;
         begin->velocity = model.baseVelocityLimits().max;
         begin->acceleration = 0;
@@ -79,12 +79,12 @@ It fillAcceleration(
         next->time = it->getTime() + dt;
 
         // reach max velocity
-        if (next->velocity + EPS > model.baseVelocityLimits().max) {
+        if (next->velocity + kEps > model.baseVelocityLimits().max) {
             next->velocity = model.baseVelocityLimits().max;
             it->acceleration = findAcceleration(distance, it->velocity, next->velocity);
 
-            dt = abs(it->acceleration) > EPS ? (next->velocity - it->velocity) / it->acceleration
-                                             : distance / it->velocity;
+            dt = abs(it->acceleration) > kEps ? (next->velocity - it->velocity) / it->acceleration
+                                              : distance / it->velocity;
 
             next->time = it->getTime() + dt;
             next->acceleration = 0;

@@ -16,7 +16,7 @@ CMAKE_ARGS ?= \
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
     -DCMAKE_CXX_FLAGS="${CXXFLAGS}"
 
-FILES_TO_LINT := $(shell find . \( -name "*.h" -or -name "*.cpp" -or -name "*.cc" \) \
+FILES_TO_LINT := $(shell find . \( -name "*.h" -or -name "*.cpp" -or -name "*.hpp" -or -name "*.cc" \) \
                     -not -path "*/build/*" -not -path "*/install/*" -not -path "*/log/*")
 
 CLANG_TIDY_FIX_FILES ?= ON

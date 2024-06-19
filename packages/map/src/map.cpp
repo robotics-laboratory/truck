@@ -38,7 +38,7 @@ Map Map::fromGeoJson(const std::string& path) {
             polys_cnt++;
         }
 
-        polygons.push_back(geom::ComplexPolygon(std::move(outer), std::move(inners)));
+        polygons.emplace_back(std::move(outer), std::move(inners));
     }
 
     return {std::move(polygons)};

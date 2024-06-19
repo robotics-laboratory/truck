@@ -9,7 +9,7 @@
 
 namespace truck::geom {
 
-enum class Orientation { COUNTERCLOCKWISE = 1, CLOCKWISE = -1 };
+enum class Orientation : int8_t { kCounterClockwise = 1, kClockwise = -1 };
 
 /** 2D Polygon
  *

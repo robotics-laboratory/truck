@@ -20,19 +20,19 @@ TEST(Polygon, isComplex) {
 TEST(Polygon, orientation) {
     {
         const Polygon poly{Vec2(0, 0), Vec2(1, 0), Vec2(1, 1), Vec2(0, 1)};
-        ASSERT_EQ(poly.orientation(), Orientation::COUNTERCLOCKWISE);
+        ASSERT_EQ(poly.orientation(), Orientation::kCounterClockwise);
     }
     {
         const Polygon poly{Vec2(2, 2), Vec2(0, 3), Vec2(0, 0), Vec2(1, -1), Vec2(4, 0), Vec2(4, 2)};
-        ASSERT_EQ(poly.orientation(), Orientation::COUNTERCLOCKWISE);
+        ASSERT_EQ(poly.orientation(), Orientation::kCounterClockwise);
     }
     {
         const Polygon poly{Vec2(0, 0), Vec2(0, 1), Vec2(1, 1), Vec2(1, 0)};
-        ASSERT_EQ(poly.orientation(), Orientation::CLOCKWISE);
+        ASSERT_EQ(poly.orientation(), Orientation::kClockwise);
     }
     {
         const Polygon poly{Vec2(2, 2), Vec2(4, 2), Vec2(4, 0), Vec2(1, -1), Vec2(0, 0), Vec2(0, 3)};
-        ASSERT_EQ(poly.orientation(), Orientation::CLOCKWISE);
+        ASSERT_EQ(poly.orientation(), Orientation::kClockwise);
     }
 }
 

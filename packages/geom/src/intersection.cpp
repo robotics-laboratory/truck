@@ -9,7 +9,7 @@ namespace truck::geom {
 
 namespace {
 
-enum class Mode : int8_t { COLINEAR = 0, CLOCKWISE = 1, COUNTERCLOCKWISE = -1 };
+enum class Mode : int8_t { kColinear = 0, kClockwise = 1, kCounterclockwise = -1 };
 
 }  // namespace
 
@@ -23,14 +23,14 @@ bool intersect(const Segment& seg1, const Segment& seg2, const double eps) noexc
         const double val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
         if (std::abs(val) < eps) {
-            return Mode::COLINEAR;
+            return Mode::kColinear;
         }
 
         if (val > 0) {
-            return Mode::CLOCKWISE;
+            return Mode::kClockwise;
         }
 
-        return Mode::COUNTERCLOCKWISE;
+        return Mode::kCounterclockwise;
     };
 
     // Given three collinear points p, q, r, the function checks if
@@ -54,19 +54,19 @@ bool intersect(const Segment& seg1, const Segment& seg2, const double eps) noexc
         return true;
     }
 
-    if (o1 == Mode::COLINEAR && onSegment(p1, p2, q1)) {
+    if (o1 == Mode::kColinear && onSegment(p1, p2, q1)) {
         return true;
     }
 
-    if (o2 == Mode::COLINEAR && onSegment(p1, q2, q1)) {
+    if (o2 == Mode::kColinear && onSegment(p1, q2, q1)) {
         return true;
     }
 
-    if (o3 == Mode::COLINEAR && onSegment(p2, p1, q2)) {
+    if (o3 == Mode::kColinear && onSegment(p2, p1, q2)) {
         return true;
     }
 
-    if (o4 == Mode::COLINEAR && onSegment(p2, q1, q2)) {
+    if (o4 == Mode::kColinear && onSegment(p2, q1, q2)) {
         return true;
     }
 

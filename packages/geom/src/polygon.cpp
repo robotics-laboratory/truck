@@ -46,9 +46,9 @@ std::vector<Triangle> Polygon::triangles() const noexcept {
 
     for (const auto& cgal_face_it : cgal_cdt.finite_face_handles()) {
         if (get(in_domain, cgal_face_it)) {
-            CGAL_Point p1 = cgal_face_it->vertex(0)->point();
-            CGAL_Point p2 = cgal_face_it->vertex(1)->point();
-            CGAL_Point p3 = cgal_face_it->vertex(2)->point();
+            const CGAL_Point p1 = cgal_face_it->vertex(0)->point();
+            const CGAL_Point p2 = cgal_face_it->vertex(1)->point();
+            const CGAL_Point p3 = cgal_face_it->vertex(2)->point();
 
             triangles.emplace_back(
                 Triangle(Vec2(p1.x(), p1.y()), Vec2(p2.x(), p2.y()), Vec2(p3.x(), p3.y())));
@@ -84,7 +84,7 @@ Orientation Polygon::orientation() const noexcept {
     auto side_2 = *next_it - *it;
     const int orientation_sign = sign(cross(side_1, side_2));
     VERIFY(orientation_sign != 0);
-    return (orientation_sign > 0 ? Orientation::COUNTERCLOCKWISE : Orientation::CLOCKWISE);
+    return (orientation_sign > 0 ? Orientation::kCounterClockwise : Orientation::kClockwise);
 }
 
 Segments Polygon::segments() const noexcept {

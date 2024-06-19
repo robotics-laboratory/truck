@@ -13,11 +13,11 @@ namespace truck::control_proxy {
 
 std::string toString(Mode mode) {
     switch (mode) {
-        case Mode::Off:
+        case Mode::kOff:
             return "Off";
-        case Mode::Remote:
+        case Mode::kRemote:
             return "Remote";
-        case Mode::Auto:
+        case Mode::kAuto:
             return "Auto";
         default:
             VERIFY(false);
@@ -128,14 +128,14 @@ truck_msgs::msg::Control ControlProxyNode::makeControlCommand(
 
 void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
     if (checkButtonPressed(joypad_command, control_map_->off_button)) {
-        setMode(Mode::Off);
+        setMode(Mode::kOff);
     } else if (checkButtonPressed(joypad_command, control_map_->remote_button)) {
-        setMode(Mode::Remote);
+        setMode(Mode::kRemote);
     } else if (checkButtonPressed(joypad_command, control_map_->auto_button)) {
-        setMode(Mode::Auto);
+        setMode(Mode::kAuto);
     }
 
-    if (state_.mode == Mode::Remote) {
+    if (state_.mode == Mode::kRemote) {
         const auto command = makeControlCommand(*joypad_command);
         publishCommand(command);
         state_.prev_command = std::make_shared<truck_msgs::msg::Control>(command);
@@ -180,7 +180,7 @@ void ControlProxyNode::publishStop() {
 }
 
 void ControlProxyNode::reset() {
-    setMode(Mode::Off);
+    setMode(Mode::kOff);
     state_.prev_joypad_command = nullptr;
     state_.prev_command = nullptr;
     publishMode();
@@ -196,19 +196,20 @@ void ControlProxyNode::watchdog() {
         return std::chrono::nanoseconds(duration_ns) > timeout;
     };
 
-    if (state_.mode == Mode::Off) {
+    if (state_.mode == Mode::kOff) {
         publishStop();
         return;
     }
 
-    if (state_.mode != Mode::Off
+    if (state_.mode != Mode::kOff
         && timeout_failed(state_.prev_joypad_command, params_.joypad_timeout)) {
         RCLCPP_ERROR(this->get_logger(), "lost joypad, stop!");
         reset();
         return;
     }
 
-    if (state_.mode == Mode::Auto && timeout_failed(state_.prev_command, params_.control_timeout)) {
+    if (state_.mode == Mode::kAuto
+        && timeout_failed(state_.prev_command, params_.control_timeout)) {
         RCLCPP_ERROR(this->get_logger(), "lost control, stop!");
         reset();
         return;
@@ -220,7 +221,7 @@ void ControlProxyNode::publishCommand(const truck_msgs::msg::Control& command) {
 }
 
 void ControlProxyNode::forwardControlCommand(truck_msgs::msg::Control::ConstSharedPtr command) {
-    if (state_.mode == Mode::Auto) {
+    if (state_.mode == Mode::kAuto) {
         publishCommand(*command);
         state_.prev_command = command;
     }

@@ -120,7 +120,7 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
         return;
     }
 
-    geom::Transform tf(*tf_opt);
+    const geom::Transform tf(*tf_opt);
 
     auto odom_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
 
@@ -145,7 +145,7 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
     sensor_msgs::PointCloud2Iterator<float> y(*odom_cloud, "y");
     // it's also possible to add z coordinate for visualization
 
-    Limits limit{scan->range_min, scan->range_max};
+    const Limits limit{scan->range_min, scan->range_max};
 
     size_t point_n = 0;
     for (size_t k = 0; k < scan->ranges.size(); ++k) {

@@ -94,7 +94,7 @@ class VisualizationNode : public rclcpp::Node {
         double navigation_route_width = 0.0;
     } params_{};
 
-    enum WheelIndex { kFrontLeft = 0, kFrontRight = 1, kRearLeft = 2, kRearRight = 3 };
+    enum WheelIndex : int8_t { kFrontLeft = 0, kFrontRight = 1, kRearLeft = 2, kRearRight = 3 };
 
     static constexpr std::array<int, 4> kAllWheels{
         WheelIndex::kFrontLeft,

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <string>
 #include <iostream>
+#include <string>
 
 #include "geom/test/equal_assert.h"
 

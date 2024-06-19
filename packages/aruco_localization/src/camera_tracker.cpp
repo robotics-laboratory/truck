@@ -6,7 +6,7 @@
 
 namespace rosaruco {
 
-const static std::string LOGGER_NAME = "CameraTracker";
+const static std::string kLoggerName = "CameraTracker";
 
 CameraTracker::CameraTracker(int marker_count) : graph_(marker_count) {
     to_anchor_.resize(marker_count);
@@ -40,7 +40,7 @@ void CameraTracker::update(
 
     if (std::isinf(errors[best_visible_idx])) {
         RCLCPP_ERROR(
-            rclcpp::get_logger(LOGGER_NAME),
+            rclcpp::get_logger(kLoggerName),
             "Current position can not be calculated: No visible marker reachable from an anchor "
             "marker.");
         return;
@@ -62,7 +62,7 @@ void CameraTracker::update(
             to_anchor_[ids[i]] = transforms_to_anchor[i];
         } else {
             RCLCPP_WARN(
-                rclcpp::get_logger(LOGGER_NAME),
+                rclcpp::get_logger(kLoggerName),
                 "Marker with id = %d is not reachable from an anchor marker.",
                 ids[i]);
         }

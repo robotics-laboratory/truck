@@ -11,10 +11,10 @@
 using namespace truck;
 using namespace truck::navigation;
 
-const std::string MAP_PKG_PATH = ament_index_cpp::get_package_share_directory("map");
+const std::string kMapPkgPath = ament_index_cpp::get_package_share_directory("map");
 
 TEST(Navigation, poly) {
-    const std::string file_path = MAP_PKG_PATH + "/data/map_6.geojson";
+    const std::string file_path = kMapPkgPath + "/data/map_6.geojson";
 
     const geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
@@ -30,7 +30,7 @@ TEST(Navigation, poly) {
 }
 
 TEST(Navigation, mesh) {
-    const std::string file_path = MAP_PKG_PATH + "/data/map_6.geojson";
+    const std::string file_path = kMapPkgPath + "/data/map_6.geojson";
 
     const geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
@@ -51,7 +51,7 @@ TEST(Navigation, mesh) {
 }
 
 TEST(Navigation, graph) {
-    const std::string file_path = MAP_PKG_PATH + "/data/map_6.geojson";
+    const std::string file_path = kMapPkgPath + "/data/map_6.geojson";
 
     const geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 

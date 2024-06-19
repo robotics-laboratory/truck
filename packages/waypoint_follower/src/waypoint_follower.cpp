@@ -16,12 +16,12 @@ LinkedPose::LinkedPose(uint32_t wp_seq_id, const geom::Pose& pose) :
 
 namespace {
 
-constexpr size_t K_NO_IDX = -1;
+constexpr size_t kNoIdx = -1;
 
 size_t getEgoSegmentIdx(
     const std::deque<LinkedPose>& points, const geom::Pose& ego_pose, double max_distance) {
     double min_distnace_sq = squared(max_distance);
-    size_t ego_segment_idx = K_NO_IDX;
+    size_t ego_segment_idx = kNoIdx;
 
     for (size_t end = 1; end < points.size(); ++end) {
         const size_t begin = end - 1;
@@ -29,7 +29,7 @@ size_t getEgoSegmentIdx(
         const double distance_sq = geom::distanceSq(ego_pose.pos, segment);
         // get closest segment
         if (distance_sq >= min_distnace_sq) {
-            if (ego_segment_idx == K_NO_IDX) {
+            if (ego_segment_idx == kNoIdx) {
                 continue;
             }
 
@@ -50,7 +50,7 @@ uint32_t cutByEgoPose(std::deque<LinkedPose>& points, const geom::Pose& ego_pose
     }
 
     const size_t ego_segment_idx = getEgoSegmentIdx(points, ego_pose, distance);
-    if (ego_segment_idx == K_NO_IDX) {
+    if (ego_segment_idx == kNoIdx) {
         return Waypoint::kNoSeqId;
     }
 

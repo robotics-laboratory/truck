@@ -39,14 +39,14 @@ std::string ToString(const truck::geom::ComplexPolygon& value) {
         std::vector<std::string> points;
         points.reserve(value.outer.size());
         switch (value.outer.orientation()) {
-            case truck::geom::Orientation::CLOCKWISE:
+            case truck::geom::Orientation::kClockwise:
                 std::transform(
                     value.outer.begin(),
                     value.outer.end(),
                     std::back_inserter(points),
                     [](const auto& point) { return ToString(point); });
                 break;
-            case truck::geom::Orientation::COUNTERCLOCKWISE:
+            case truck::geom::Orientation::kCounterClockwise:
                 std::transform(
                     value.outer.rbegin(),
                     value.outer.rend(),
@@ -60,14 +60,14 @@ std::string ToString(const truck::geom::ComplexPolygon& value) {
         std::vector<std::string> points;
         points.reserve(inner.size());
         switch (inner.orientation()) {
-            case truck::geom::Orientation::CLOCKWISE:
+            case truck::geom::Orientation::kClockwise:
                 std::transform(
                     inner.rbegin(),
                     inner.rend(),
                     std::back_inserter(points),
                     [](const auto& point) { return ToString(point); });
                 break;
-            case truck::geom::Orientation::COUNTERCLOCKWISE:
+            case truck::geom::Orientation::kCounterClockwise:
                 std::transform(
                     inner.begin(), inner.end(), std::back_inserter(points), [](const auto& point) {
                         return ToString(point);

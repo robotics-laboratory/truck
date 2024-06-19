@@ -225,7 +225,7 @@ void Trajectory::throwIfInvalid(
 
 namespace {
 
-constexpr double EPS = 1e-6;
+constexpr double kEps = 1e-6;
 
 std::optional<size_t> getEgoSegmentIndex(
     const motion::States& states, const geom::Vec2& pos, double max_distance) {
@@ -250,12 +250,12 @@ double findTime(double dist, double v, double a) {
     VERIFY(dist >= 0);
     VERIFY(v >= 0);
 
-    if (std::abs(a) < EPS) {
+    if (std::abs(a) < kEps) {
         return dist / v;
     }
 
     double d = v * v + 2 * a * dist;
-    if (-EPS <= d && d <= 0) {
+    if (-kEps <= d && d <= 0) {
         d = 0;
     }
 

@@ -4,7 +4,7 @@
 
 namespace rosaruco {
 
-const static double DEFAULT_EDGE_ERROR = 1e9;
+const static double kDefaultEdgeError = 1e9;
 
 TfGraph::TfGraph(int nodes_count) : nodes_count_(nodes_count) {
     edges_.resize(nodes_count);
@@ -59,7 +59,7 @@ TfGraph::Edge::Edge() :
     average_translation_({0, 0, 0}),
     transforms_count_(0),
     average_transform_({0, 0, 0, 0}, {0, 0, 0}),
-    error_(DEFAULT_EDGE_ERROR) {
+    error_(kDefaultEdgeError) {
     quaternion_sum_ = cv::Mat::zeros(4, 4, CV_64F);
 }
 

@@ -16,7 +16,7 @@
 
 namespace truck::simulator {
 
-const double FREE_FALL_ACCELERATION = 9.81;  // m/s^2
+const double kFreeFallAcceleration = 9.81;  // m/s^2
 
 SimulatorEngine::SimulatorEngine(
     std::unique_ptr<model::Model> model, double integration_step, double precision) {
@@ -164,7 +164,7 @@ geom::Vec3 SimulatorEngine::getImuLinearAcceleration(const model::Twist& rear_tw
     const auto imu_to_rotation = rotation - imu_pose.pos;
     const auto centr_a = imu_to_rotation.unit() * squared(twist.velocity) * twist.curvature;
 
-    const auto la = geom::Vec3(tan_a + centr_a, FREE_FALL_ACCELERATION);
+    const auto la = geom::Vec3(tan_a + centr_a, kFreeFallAcceleration);
     return applyRotation(cache_.base_to_hyro_rotation, la);
 }
 

@@ -25,7 +25,7 @@ void OdometryPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
     // world_ = world;
     node_ = gazebo_ros::Node::Get(sdf);
 
-    std::string link_name = "";
+    std::string link_name;
 
     period_ = std::chrono::milliseconds(sdf->Get<size_t>("period", 50).first);
     link_name = sdf->Get<std::string>("link_name");
@@ -66,10 +66,10 @@ nav_msgs::msg::Odometry OdometryPlugin::GetOdometry(const common::Time& now) con
     odometry.twist.twist.angular =
         gazebo_ros::Convert<geometry_msgs::msg::Vector3>(link_->WorldAngularVel());
 
-    static const double eps = 1e-6;
+    static const double kEps = 1e-6;
 
-    setCovariance(odometry.pose.covariance, eps);
-    setCovariance(odometry.twist.covariance, eps);
+    setCovariance(odometry.pose.covariance, kEps);
+    setCovariance(odometry.twist.covariance, kEps);
 
     return odometry;
 }

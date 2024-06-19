@@ -15,47 +15,46 @@
 
 using std::placeholders::_1;
 
-const static std::string IMAGE_RAW_TOPIC = "/color/image_raw";
-const static std::string CAMERA_INFO_TOPIC = "/color/camera_info";
-const static std::string ARUCO_LOCALIZATION_NODE_NAME = "aruco_localization";
-const static std::string ARUCO_ODOMETRY_TOPIC = "/truck/aruco/odometry";
-const static std::string ARUCO_POSE_TOPIC = "/truck/aruco/pose";
-const static std::string ARUCO_MARKERS_TOPIC = "/truck/aruco/vis/markers";
-const static std::string ARUCO_TRANSFORMS_TOPIC = "/truck/aruco/vis/transforms";
+const static std::string kImageRawTopic = "/color/image_raw";
+const static std::string kCameraInfoTopic = "/color/camera_info";
+const static std::string kArucoLocalizationNodeName = "aruco_localization";
+const static std::string kArucoOdometryTopic = "/truck/aruco/odometry";
+const static std::string kArucoPoseTopic = "/truck/aruco/pose";
+const static std::string kArucoMarkersTopic = "/truck/aruco/vis/markers";
+const static std::string kArucoTransformsTopic = "/truck/aruco/vis/transforms";
 
-const static std::string CAMERA_FRAME_ID = "camera";
+const static std::string kCameraFrameId = "camera";
 
-const static int CAMERA_MATRIX_SIZE = 3;
-const static int DIST_COEFFS_COUNT = 5;
-const static int CV_64_F_SIZE = 8;
-const static int MARKER_COUNT = 250;
+const static int kCameraMatrixSize = 3;
+const static int kDistCoeffsCount = 5;
+const static int kCv64FSize = 8;
+const static int kMarkerCount = 250;
 
 namespace rosaruco {
 
 ArucoLocalization::ArucoLocalization() :
-    rclcpp::Node(ARUCO_LOCALIZATION_NODE_NAME),
-    camera_matrix_(CAMERA_MATRIX_SIZE, CAMERA_MATRIX_SIZE, CV_64F),
-    dist_coeffs_(1, DIST_COEFFS_COUNT, CV_64F),
+    rclcpp::Node(kArucoLocalizationNodeName),
+    camera_matrix_(kCameraMatrixSize, kCameraMatrixSize, CV_64F),
+    dist_coeffs_(1, kDistCoeffsCount, CV_64F),
     detector_parameters_(cv::makePtr<cv::aruco::DetectorParameters>()),
     marker_dictionary_(cv::makePtr<cv::aruco::Dictionary>(
         cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250))),
-    coordinator_(MARKER_COUNT) {
+    coordinator_(kMarkerCount) {
     rclcpp::QoS qos(1);
     qos.reliable();
     qos.durability_volatile();
 
     subscription_image_raw_ = this->create_subscription<sensor_msgs::msg::Image>(
-        IMAGE_RAW_TOPIC, qos, std::bind(&ArucoLocalization::handleImage, this, _1));
+        kImageRawTopic, qos, std::bind(&ArucoLocalization::handleImage, this, _1));
     subscription_camera_info_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
-        CAMERA_INFO_TOPIC, qos, std::bind(&ArucoLocalization::updateCameraInfo, this, _1));
-    publisher_odometry_ =
-        this->create_publisher<nav_msgs::msg::Odometry>(ARUCO_ODOMETRY_TOPIC, qos);
+        kCameraInfoTopic, qos, std::bind(&ArucoLocalization::updateCameraInfo, this, _1));
+    publisher_odometry_ = this->create_publisher<nav_msgs::msg::Odometry>(kArucoOdometryTopic, qos);
     publisher_pose_stamped_ =
-        this->create_publisher<geometry_msgs::msg::PoseStamped>(ARUCO_POSE_TOPIC, qos);
+        this->create_publisher<geometry_msgs::msg::PoseStamped>(kArucoPoseTopic, qos);
     publisher_marker_array_ =
-        this->create_publisher<visualization_msgs::msg::MarkerArray>(ARUCO_MARKERS_TOPIC, qos);
+        this->create_publisher<visualization_msgs::msg::MarkerArray>(kArucoMarkersTopic, qos);
     publisher_tf2_transform_ =
-        this->create_publisher<tf2_msgs::msg::TFMessage>(ARUCO_TRANSFORMS_TOPIC, qos);
+        this->create_publisher<tf2_msgs::msg::TFMessage>(kArucoTransformsTopic, qos);
 }
 
 void ArucoLocalization::handleImage(sensor_msgs::msg::Image::ConstSharedPtr msg) {
@@ -113,7 +112,7 @@ void ArucoLocalization::handleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
 
         transform_msg.header.stamp = msg->header.stamp;
         transform_msg.header.frame_id = "";
-        transform_msg.child_frame_id = CAMERA_FRAME_ID;
+        transform_msg.child_frame_id = kCameraFrameId;
 
         geometry_msgs::msg::Vector3 translation_msg;
         setPoint(pose.point, translation_msg);
@@ -137,7 +136,7 @@ void ArucoLocalization::handleImage(sensor_msgs::msg::Image::ConstSharedPtr msg)
 
         const std::unordered_set<int> visible_markers(marker_ids.begin(), marker_ids.end());
 
-        for (size_t i = 0; i < MARKER_COUNT; i++) {
+        for (size_t i = 0; i < kMarkerCount; i++) {
             auto to_anchor = coordinator_.getTransformToAnchor(i);
             if (to_anchor) {
                 addLabeledMarker(
@@ -157,14 +156,14 @@ void ArucoLocalization::updateCameraInfo(sensor_msgs::msg::CameraInfo::ConstShar
     RCLCPP_INFO(this->get_logger(), "updateCameraInfo got message");
 
     static_assert(
-        std::tuple_size<decltype(msg->k)>::value == CAMERA_MATRIX_SIZE * CAMERA_MATRIX_SIZE);
-    static_assert(sizeof(decltype(msg->k)::value_type) == CV_64_F_SIZE);
+        std::tuple_size<decltype(msg->k)>::value == kCameraMatrixSize * kCameraMatrixSize);
+    static_assert(sizeof(decltype(msg->k)::value_type) == kCv64FSize);
     std::memcpy(
-        camera_matrix_.data, msg->k.data(), CAMERA_MATRIX_SIZE * CAMERA_MATRIX_SIZE * CV_64_F_SIZE);
+        camera_matrix_.data, msg->k.data(), kCameraMatrixSize * kCameraMatrixSize * kCv64FSize);
 
-    static_assert(sizeof(decltype(msg->d)::value_type) == CV_64_F_SIZE);
-    assert(msg->d.size() == DIST_COEFFS_COUNT);
-    std::memcpy(dist_coeffs_.data, msg->d.data(), DIST_COEFFS_COUNT * CV_64_F_SIZE);
+    static_assert(sizeof(decltype(msg->d)::value_type) == kCv64FSize);
+    assert(msg->d.size() == kDistCoeffsCount);
+    std::memcpy(dist_coeffs_.data, msg->d.data(), kDistCoeffsCount * kCv64FSize);
 }
 
 }  // namespace rosaruco

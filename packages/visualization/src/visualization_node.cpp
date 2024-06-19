@@ -23,7 +23,7 @@ using namespace std::chrono_literals;
 
 using namespace geom::literals;
 
-const double M_2PI = M_PI * 2;
+const double kM2Pi = M_PI * 2;
 
 VisualizationNode::VisualizationNode() : Node("visualization") {
     initializePtrFields();
@@ -290,7 +290,7 @@ void VisualizationNode::updateWheelsSpin() {
         }();
 
         const double angle = state_.wheel_spin_angles[wheel] + velocity * time;
-        state_.wheel_spin_angles[wheel] = std::fmod(angle, M_2PI);
+        state_.wheel_spin_angles[wheel] = std::fmod(angle, kM2Pi);
     }
 
     state_.last_ego_update_seconds = now_seconds;
