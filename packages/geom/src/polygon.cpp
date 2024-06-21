@@ -40,7 +40,7 @@ std::vector<Triangle> Polygon::triangles() const noexcept {
     cgal_cdt.insert_constraint(cgal_polygon.vertices_begin(), cgal_polygon.vertices_end(), true);
 
     std::unordered_map<CGAL_Face_handle, bool> in_domain_map;
-    boost::associative_property_map<std::unordered_map<CGAL_Face_handle, bool>> in_domain(
+    const boost::associative_property_map<std::unordered_map<CGAL_Face_handle, bool>> in_domain(
         in_domain_map);
     CGAL::mark_domain_in_triangulation(cgal_cdt, in_domain);
 
@@ -51,7 +51,7 @@ std::vector<Triangle> Polygon::triangles() const noexcept {
             const CGAL_Point p3 = cgal_face_it->vertex(2)->point();
 
             triangles.emplace_back(
-                Triangle(Vec2(p1.x(), p1.y()), Vec2(p2.x(), p2.y()), Vec2(p3.x(), p3.y())));
+                Vec2(p1.x(), p1.y()), Vec2(p2.x(), p2.y()), Vec2(p3.x(), p3.y()));
         }
     }
 

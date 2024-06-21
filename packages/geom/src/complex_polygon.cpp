@@ -44,18 +44,18 @@ std::vector<Triangle> ComplexPolygon::triangles() const noexcept {
     }
 
     std::unordered_map<CGAL_Face_handle, bool> in_domain_map;
-    boost::associative_property_map<std::unordered_map<CGAL_Face_handle, bool>> in_domain(
+    const boost::associative_property_map<std::unordered_map<CGAL_Face_handle, bool>> in_domain(
         in_domain_map);
     CGAL::mark_domain_in_triangulation(cgal_cdt, in_domain);
 
     for (const auto& cgal_face_it : cgal_cdt.finite_face_handles()) {
         if (get(in_domain, cgal_face_it)) {
-            CGAL_Point p1 = cgal_face_it->vertex(0)->point();
-            CGAL_Point p2 = cgal_face_it->vertex(1)->point();
-            CGAL_Point p3 = cgal_face_it->vertex(2)->point();
+            const CGAL_Point p1 = cgal_face_it->vertex(0)->point();
+            const CGAL_Point p2 = cgal_face_it->vertex(1)->point();
+            const CGAL_Point p3 = cgal_face_it->vertex(2)->point();
 
             triangles.emplace_back(
-                Triangle(Vec2(p1.x(), p1.y()), Vec2(p2.x(), p2.y()), Vec2(p3.x(), p3.y())));
+                Vec2(p1.x(), p1.y()), Vec2(p2.x(), p2.y()), Vec2(p3.x(), p3.y()));
         }
     }
 

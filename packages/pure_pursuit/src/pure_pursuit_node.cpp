@@ -92,7 +92,7 @@ PurePursuitNode::PurePursuitNode() : Node("pure_pursuit") {
 }
 
 void PurePursuitNode::publishCommand() {
-    auto toMsg = [this](const Command& cmd) {
+    auto to_msg = [this](const Command& cmd) {
         truck_msgs::msg::Control msg;
 
         msg.header.frame_id = "base";
@@ -120,7 +120,7 @@ void PurePursuitNode::publishCommand() {
 
     if (!has_localization) {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "missing localization");
-        signal_.command->publish(toMsg(Command::stop()));
+        signal_.command->publish(to_msg(Command::stop()));
         signal_.status->publish(toNoLocalizationStatus(now));
 
         return;
@@ -131,7 +131,7 @@ void PurePursuitNode::publishCommand() {
 
     if (!has_trajectory) {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "missing trajectory");
-        signal_.command->publish(toMsg(Command::stop()));
+        signal_.command->publish(to_msg(Command::stop()));
         signal_.status->publish(toNoTrajectoryStatus(state_.localization_msg->header));
         return;
     }
@@ -146,12 +146,12 @@ void PurePursuitNode::publishCommand() {
     if (!result) {
         const auto msg = toString(result.error());
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "%s", msg.data());
-        signal_.command->publish(toMsg(Command::stop()));
+        signal_.command->publish(to_msg(Command::stop()));
         signal_.status->publish(toErrorStatus(state_.localization_msg->header, result.error()));
         return;
     }
 
-    signal_.command->publish(toMsg(*result));
+    signal_.command->publish(to_msg(*result));
     signal_.status->publish(toOkStatus(state_.localization_msg->header));
 }
 

@@ -375,9 +375,8 @@ SimulatorEngine::State SimulatorEngine::calculateRK4(
 namespace {
 
 rclcpp::Duration convertFromSecondsToDuration(double seconds) {
-    auto int_seconds = int(seconds);
-    auto nanoseconds = (seconds - int_seconds) * 1e9;
-    return rclcpp::Duration(int_seconds, int(nanoseconds));
+    auto nanoseconds = (seconds - static_cast<int32_t>(seconds)) * 1e9;
+    return {static_cast<int32_t>(seconds), static_cast<uint32_t>(nanoseconds)};
 }
 
 }  // namespace

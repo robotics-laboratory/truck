@@ -272,7 +272,9 @@ builtin_interfaces::msg::Time max(
     builtin_interfaces::msg::Time lhs, builtin_interfaces::msg::Time rhs) {
     if (lhs.sec > rhs.sec) {
         return lhs;
-    } else if (lhs.sec < rhs.sec) {
+    }
+
+    if (lhs.sec < rhs.sec) {
         return rhs;
     }
 

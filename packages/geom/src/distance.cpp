@@ -19,11 +19,13 @@ double distanceSq(const Vec2& p, const Segment& s) noexcept {
 
     if (ap_ab <= 0) {
         return ap.lenSq();
-    } else if (bp_ab >= 0) {
-        return bp.lenSq();
-    } else {
-        return ap.lenSq() - squared(ap_ab) / ab_len_sq;
     }
+
+    if (bp_ab >= 0) {
+        return bp.lenSq();
+    }
+
+    return ap.lenSq() - squared(ap_ab) / ab_len_sq;
 }
 
 double denormalizedDistance(const Line& l, const Vec2& p) noexcept {

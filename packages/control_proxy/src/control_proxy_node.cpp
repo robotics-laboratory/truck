@@ -164,7 +164,7 @@ void ControlProxyNode::publishMode() {
 }
 
 void ControlProxyNode::publishStop() {
-    static const auto stop = [this] {
+    const auto stop = [this] {
         truck_msgs::msg::Control result;
 
         result.header.stamp = now();
@@ -228,8 +228,8 @@ void ControlProxyNode::forwardControlCommand(truck_msgs::msg::Control::ConstShar
 }
 
 void ControlProxyNode::onReset(
-    const std::shared_ptr<std_srvs::srv::Empty::Request>,
-    const std::shared_ptr<std_srvs::srv::Empty::Response>) {
+    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+    const std::shared_ptr<std_srvs::srv::Empty::Response> response) {
     RCLCPP_WARN(this->get_logger(), "Reset!");
     reset();
 }

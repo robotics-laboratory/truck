@@ -25,7 +25,7 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
 
     std::set<std::pair<double, graph::NodeId>> queue;
 
-    auto extractPath = [&]() {
+    auto extract_path = [&]() {
         Path path;
         graph::NodeId cur_id = to_id;
 
@@ -75,7 +75,7 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
         }
     }
 
-    return extractPath();
+    return extract_path();
 }
 
 }  // namespace truck::navigation::search

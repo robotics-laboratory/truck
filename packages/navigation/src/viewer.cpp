@@ -8,7 +8,10 @@ namespace {
 
 cv::Scalar toCVScalar(const std::vector<int>& color_rgb) {
     VERIFY(color_rgb.size() == 3);
-    return cv::Scalar(color_rgb[2], color_rgb[1], color_rgb[0]);
+    auto r = static_cast<double>(color_rgb[0]);
+    auto g = static_cast<double>(color_rgb[1]);
+    auto b = static_cast<double>(color_rgb[2]);
+    return {b, g, r};
 }
 
 cv::Point toCVPoint(const geom::Vec2& origin, double res, const geom::Vec2& point) {

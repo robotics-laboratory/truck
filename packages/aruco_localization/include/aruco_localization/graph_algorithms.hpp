@@ -8,7 +8,7 @@
 namespace rosaruco {
 
 /*
-@brief dijkstra's Shortest Path Algorithm Implementation
+@brief Dijkstra's Shortest Path Algorithm Implementation
 @param get_weight get_weight(i, j) equals to weight of edge between i or j, or inf if there is no
 edge
 @param distance length of shortest path from start_node

@@ -71,8 +71,8 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
 
     using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
 
-    TfCallback tf_call = std::bind(&WaypointFollowerNode::onTf, this, _1, false);
-    TfCallback static_tf_callback = std::bind(&WaypointFollowerNode::onTf, this, _1, true);
+    const TfCallback tf_call = std::bind(&WaypointFollowerNode::onTf, this, _1, false);
+    const TfCallback static_tf_callback = std::bind(&WaypointFollowerNode::onTf, this, _1, true);
 
     slot_.tf = this->create_subscription<tf2_msgs::msg::TFMessage>(
         "/tf", tf2_ros::DynamicListenerQoS(100), tf_call);
@@ -300,7 +300,7 @@ void WaypointFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
 }
 
 void WaypointFollowerNode::onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
-    static const std::string authority = "";
+    static const std::string authority;
     for (const auto& transform : msg->transforms) {
         tf_buffer_->setTransform(transform, authority, is_static);
     }

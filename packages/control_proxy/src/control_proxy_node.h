@@ -56,8 +56,8 @@ class ControlProxyNode : public rclcpp::Node {
         sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button);
 
     void onReset(
-        const std::shared_ptr<std_srvs::srv::Empty::Request>,
-        const std::shared_ptr<std_srvs::srv::Empty::Response>);
+        const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+        const std::shared_ptr<std_srvs::srv::Empty::Response> response);
 
     void watchdog();
     void reset();

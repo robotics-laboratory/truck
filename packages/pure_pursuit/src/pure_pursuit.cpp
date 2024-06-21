@@ -60,7 +60,7 @@ Result PurePursuit::operator()(
     command.target = goal;
 
     if (std::holds_alternative<geom::Arc>(variant)) {
-        const geom::Arc& arc = std::get<geom::Arc>(variant);
+        const auto& arc = std::get<geom::Arc>(variant);
         command.curvature = arc.curv();
     } else if (std::holds_alternative<geom::Segment>(variant)) {
         command.curvature = 0.0;

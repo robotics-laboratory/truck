@@ -35,7 +35,7 @@ bool intersect(const Segment& seg1, const Segment& seg2, const double eps) noexc
 
     // Given three collinear points p, q, r, the function checks if
     // point q lies on line segment 'pr'
-    auto onSegment = [](const Vec2& p, const Vec2& q, const Vec2& r) {
+    auto on_segment = [](const Vec2& p, const Vec2& q, const Vec2& r) {
         return q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) && q.y <= std::max(p.y, r.y)
                && q.y >= std::min(p.y, r.y);
     };
@@ -54,19 +54,19 @@ bool intersect(const Segment& seg1, const Segment& seg2, const double eps) noexc
         return true;
     }
 
-    if (o1 == Mode::kColinear && onSegment(p1, p2, q1)) {
+    if (o1 == Mode::kColinear && on_segment(p1, p2, q1)) {
         return true;
     }
 
-    if (o2 == Mode::kColinear && onSegment(p1, q2, q1)) {
+    if (o2 == Mode::kColinear && on_segment(p1, q2, q1)) {
         return true;
     }
 
-    if (o3 == Mode::kColinear && onSegment(p2, p1, q2)) {
+    if (o3 == Mode::kColinear && on_segment(p2, p1, q2)) {
         return true;
     }
 
-    if (o4 == Mode::kColinear && onSegment(p2, q1, q2)) {
+    if (o4 == Mode::kColinear && on_segment(p2, q1, q2)) {
         return true;
     }
 

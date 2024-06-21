@@ -10,10 +10,7 @@ void dijkstra(
 
     prev_node.resize(nodes_count);
 
-    std::priority_queue<
-        std::pair<double, int>,
-        std::vector<std::pair<double, int>>,
-        std::greater<std::pair<double, int>>>
+    std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<>>
         q;
 
     distance[start_node] = 0;

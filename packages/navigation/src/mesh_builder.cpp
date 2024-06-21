@@ -37,9 +37,9 @@ CGAL::Polygon_with_holes_2<CGAL_K> toCGALPolygonWithHoles(const geom::ComplexPol
 void extractSegmentsFromCGALPolygon(
     geom::Segments& segments, const CGAL::Polygon_2<CGAL_K>& cgal_poly) {
     for (const auto& cgal_seg : cgal_poly.edges()) {
-        segments.emplace_back(geom::Segment(
+        segments.emplace_back(
             geom::Vec2(cgal_seg.vertex(0).x(), cgal_seg.vertex(0).y()),
-            geom::Vec2(cgal_seg.vertex(1).x(), cgal_seg.vertex(1).y())));
+            geom::Vec2(cgal_seg.vertex(1).x(), cgal_seg.vertex(1).y()));
     }
 }
 
@@ -65,11 +65,11 @@ void MeshBuilder::buildSkeleton(MeshBuild& mesh_build, const geom::ComplexPolygo
         CGAL::create_interior_straight_skeleton_2(toCGALPolygonWithHoles(polygon));
 
     for (const auto& cgal_edge_it : cgal_skeleton_ptr->halfedge_handles()) {
-        mesh_build.skeleton.emplace_back(geom::Segment(
+        mesh_build.skeleton.emplace_back(
             geom::Vec2(cgal_edge_it->vertex()->point().x(), cgal_edge_it->vertex()->point().y()),
             geom::Vec2(
                 cgal_edge_it->opposite()->vertex()->point().x(),
-                cgal_edge_it->opposite()->vertex()->point().y())));
+                cgal_edge_it->opposite()->vertex()->point().y()));
     }
 }
 
