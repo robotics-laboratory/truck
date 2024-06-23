@@ -11,7 +11,8 @@ namespace truck::icp_odometry {
 
 namespace {
 
-std::unique_ptr<Matcher::ICP> makeICP(rclcpp::Logger logger, const std::string& config_path) {
+std::unique_ptr<Matcher::ICP> makeICP(
+    const rclcpp::Logger& logger, const std::string& config_path) {
     std::ifstream yaml(config_path);
 
     auto icp = std::make_unique<Matcher::ICP>();

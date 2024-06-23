@@ -82,11 +82,11 @@ void SimulatorNode::initializeEngine() {
     const auto initial_ego_state_path = declare_parameter("initial_ego_state_config", "");
     const auto initial_ego_state = nlohmann::json::parse(std::ifstream(initial_ego_state_path));
 
-    const auto x = initial_ego_state["x"];
-    const auto y = initial_ego_state["y"];
-    const auto yaw = initial_ego_state["yaw"];
-    const auto steering = initial_ego_state["middle_steering"];
-    const auto velocity = initial_ego_state["linear_velocity"];
+    const auto& x = initial_ego_state["x"];
+    const auto& y = initial_ego_state["y"];
+    const auto& yaw = initial_ego_state["yaw"];
+    const auto& steering = initial_ego_state["middle_steering"];
+    const auto& velocity = initial_ego_state["linear_velocity"];
 
     geom::Pose pose;
     pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));

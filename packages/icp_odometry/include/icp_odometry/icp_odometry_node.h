@@ -32,7 +32,7 @@ class IcpOdometryNode : public rclcpp::Node {
   private:
     IcpResult makeIcpStep(
         const std_msgs::msg::Header& header, const DataPoints& cloud,
-        const std_msgs::msg::Header& refernece_header, const DataPoints& reference_cloud,
+        const std_msgs::msg::Header& reference_header, const DataPoints& reference_cloud,
         const TransformationParameters& init);
 
     void handleLaserScan(sensor_msgs::msg::LaserScan::ConstSharedPtr scan);

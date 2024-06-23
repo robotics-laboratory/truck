@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "geom/test/equal_assert.h"
 #include "geom/angle_vector.h"
+#include "geom/test/equal_assert.h"
 #include "geom/vector.h"
 
 using namespace truck::geom;

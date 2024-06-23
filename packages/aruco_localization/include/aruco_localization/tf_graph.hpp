@@ -10,24 +10,24 @@ class TfGraph {
   public:
     TfGraph(int nodes_count);
 
-    void AddTransform(int x, int y, const Transform& t);
+    void addTransform(int x, int y, const Transform& t);
 
-    void GetBestTransformFromStartNode(
+    void getBestTransformFromStartNode(
         int start_node, const std::vector<int>& finish_nodes,
         std::vector<Transform>& best_transforms, std::vector<double>& errors);
 
   private:
-    const Transform& GetTransform(int x, int y);
+    const Transform& getTransform(int x, int y);
 
-    std::function<double(int, int)> GetWeights();
+    std::function<double(int, int)> getWeights();
 
     class Edge {
       public:
         Edge();
-        const Transform& GetAverage() const;
-        double GetError() const;
-        void AddTransform(const Transform& t);
-        bool Empty() const;
+        const Transform& getAverage() const;
+        double getError() const;
+        void addTransform(const Transform& t);
+        bool empty() const;
 
       private:
         cv::Mat quaternion_sum_;

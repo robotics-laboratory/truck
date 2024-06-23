@@ -14,7 +14,7 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
     feature_labels.push_back(DataPoints::Label("y", 1));
     feature_labels.push_back(DataPoints::Label("w", 1));
 
-    DataPoints::Labels descriptor_labels;
+    const DataPoints::Labels descriptor_labels;
 
     const size_t point_count = std::count_if(
         scan.ranges.begin(), scan.ranges.end(), [](float range) { return std::isfinite(range); });

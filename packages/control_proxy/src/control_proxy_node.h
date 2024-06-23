@@ -19,7 +19,7 @@
 
 namespace truck::control_proxy {
 
-enum class Mode : uint8_t { Off = 0, Remote = 1, Auto = 2 };
+enum class Mode : uint8_t { kOff = 0, kRemote = 1, kAuto = 2 };
 
 std::string toString(Mode mode);
 
@@ -56,8 +56,8 @@ class ControlProxyNode : public rclcpp::Node {
         sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button);
 
     void onReset(
-        const std::shared_ptr<std_srvs::srv::Empty::Request>,
-        std::shared_ptr<std_srvs::srv::Empty::Response>);
+        const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+        const std::shared_ptr<std_srvs::srv::Empty::Response> response);
 
     void watchdog();
     void reset();
@@ -99,7 +99,7 @@ class ControlProxyNode : public rclcpp::Node {
     } timer_;
 
     struct State {
-        Mode mode = Mode::Off;
+        Mode mode = Mode::kOff;
         sensor_msgs::msg::Joy::ConstSharedPtr prev_joypad_command = nullptr;
         truck_msgs::msg::Control::ConstSharedPtr prev_command = nullptr;
     } state_;

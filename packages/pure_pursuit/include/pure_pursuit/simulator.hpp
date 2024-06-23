@@ -13,14 +13,14 @@
 
 namespace pure_pursuit {
 
-enum class SimulationError { CONTROLLER_FAILED = 0, FINISH_POINT_IS_NOT_ARRIVED = 1 };
+enum class SimulationError : int8_t { kControllerFailed = 0, kFinishPointNotArrived = 1 };
 
 inline std::string errorToString(SimulationError e) {
     switch (SimulationError{static_cast<int>(e) & 1}) {
-        case SimulationError::CONTROLLER_FAILED:
+        case SimulationError::kControllerFailed:
             return "Controller failed. Reason: "
                    + errorToString(ControllerError{static_cast<int>(e) >> 1});
-        case SimulationError::FINISH_POINT_IS_NOT_ARRIVED:
+        case SimulationError::kFinishPointNotArrived:
             return "Finish point is not arrived in time";
         default:
             return "Unknown error";

@@ -15,12 +15,12 @@ struct Step {
     int32_t hv, dg, ldg;
 };
 
-constexpr Step step3 = {95, 137, 0};
-constexpr Step step5 = {10, 14, 22};
+constexpr Step kStep3 = {95, 137, 0};
+constexpr Step kStep5 = {10, 14, 22};
 
 ALWAYS_INLINE void intDistToFloat(
     const int32_t* data, int size, float scale, float* out_it) noexcept {
-    for (auto it = data; it != data + size; ++it, ++out_it) {
+    for (const auto* it = data; it != data + size; ++it, ++out_it) {
         *out_it = scale * (*it);
     }
 }
@@ -177,29 +177,29 @@ ALWAYS_INLINE F32GridHolder distanceTransformApprox(const U8Grid& input) noexcep
 /* DistanceTransformApprox3 */
 
 void distanceTransformApprox3(const U8Grid& input, S32Grid& buf, F32Grid& out) noexcept {
-    impl::distanceTransformApprox<1, impl::step3>(input, buf, out);
+    impl::distanceTransformApprox<1, impl::kStep3>(input, buf, out);
 }
 
 void distanceTransformApprox3(const U8Grid& input, F32Grid& out) noexcept {
-    impl::distanceTransformApprox<1, impl::step3>(input, out);
+    impl::distanceTransformApprox<1, impl::kStep3>(input, out);
 }
 
 F32GridHolder distanceTransformApprox3(const U8Grid& input) noexcept {
-    return impl::distanceTransformApprox<1, impl::step3>(input);
+    return impl::distanceTransformApprox<1, impl::kStep3>(input);
 }
 
 /* DistanceTransformApprox5 */
 
 void distanceTransformApprox5(const U8Grid& input, S32Grid& buf, F32Grid& out) noexcept {
-    impl::distanceTransformApprox<2, impl::step5>(input, buf, out);
+    impl::distanceTransformApprox<2, impl::kStep5>(input, buf, out);
 }
 
 void distanceTransformApprox5(const U8Grid& input, F32Grid& out) noexcept {
-    impl::distanceTransformApprox<2, impl::step5>(input, out);
+    impl::distanceTransformApprox<2, impl::kStep5>(input, out);
 }
 
 F32GridHolder distanceTransformApprox5(const U8Grid& input) noexcept {
-    return impl::distanceTransformApprox<2, impl::step5>(input);
+    return impl::distanceTransformApprox<2, impl::kStep5>(input);
 }
 
 }  // namespace truck::fastgrid
