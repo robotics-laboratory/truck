@@ -32,6 +32,7 @@ class SimulatorNode : public rclcpp::Node {
 
     void publishTime(const TruckState& truck_state);
     void publishOdometryMessage(const TruckState& truck_state);
+    void publishHardwareOdometryMessage(const TruckState& truck_state);
     void publishTransformMessage(const TruckState& truck_state);
     void publishTelemetryMessage(const TruckState& truck_state);
     void publishSimulationStateMessage(const TruckState& truck_state);
