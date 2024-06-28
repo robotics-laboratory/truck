@@ -43,7 +43,7 @@ void SimulatorNode::initializeTopicHandlers() {
         "/clock", rclcpp::QoS(1).reliability(qos));
 
     signals_.odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/ekf/odometry/filtered", rclcpp::QoS(1).reliability(qos));
+        "/simulator/localization", rclcpp::QoS(1).reliability(qos));
 
     signals_.hardware_odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
         "/hardware/odom", rclcpp::QoS(1).reliability(qos));
@@ -135,7 +135,20 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     odom_msg.twist.twist.angular.z = angular_velocity;
 
     signals_.odometry->publish(odom_msg);
-    signals_.hardware_odometry->publish(odom_msg);
+}
+
+void SimulatorNode::publishHardwareOdometryMessage(const TruckState& truck_state) {
+    nav_msgs::msg::Odometry hardware_odom_msg;
+    hardware_odom_msg.header.frame_id = "base";
+    hardware_odom_msg.header.stamp = truck_state.time();
+
+    // Set the twist.
+    hardware_odom_msg.twist.twist.linear.x = truck_state.baseTwist().velocity;
+    hardware_odom_msg.twist.twist.linear.y = 0;
+    hardware_odom_msg.twist.twist.linear.z = 0;
+    hardware_odom_msg.twist.covariance[0] = 0.0001;
+
+    signals_.hardware_odometry->publish(hardware_odom_msg);
 }
 
 void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {

@@ -50,6 +50,7 @@ void SimulatorEngine::initializeImuCache() {
     const auto imu_tf = model_->getLatestTranform("base", "camera_imu_optical_frame");
     cache_.rear_to_imu_translation.x = imu_tf.getOrigin().x() + model_->wheelBase().base_to_rear;
     cache_.rear_to_imu_translation.y = imu_tf.getOrigin().y();
+    cache_.base_to_hyro_rotation.setOrigin({0, 0, 0});
     cache_.base_to_hyro_rotation.setRotation(imu_tf.getRotation());
 }
 
