@@ -43,7 +43,7 @@ void SimulatorNode::initializeTopicHandlers() {
         "/clock", rclcpp::QoS(1).reliability(qos));
 
     signals_.odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/ekf/odometry/filtered", rclcpp::QoS(1).reliability(qos));
+        "/simulator/localization", rclcpp::QoS(1).reliability(qos));
 
     signals_.hardware_odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
         "/hardware/odom", rclcpp::QoS(1).reliability(qos));
@@ -135,6 +135,9 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     odom_msg.twist.twist.angular.z = angular_velocity;
 
     signals_.odometry->publish(odom_msg);
+
+    odom_msg.twist.twist.linear.x = truck_state.baseTwist().velocity;
+    odom_msg.twist.twist.linear.y = 0;
     signals_.hardware_odometry->publish(odom_msg);
 }
 
