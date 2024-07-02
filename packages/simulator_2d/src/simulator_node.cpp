@@ -31,17 +31,19 @@ void SimulatorNode::initializeParameters() {
         .update_period = declare_parameter("update_period", 0.01),
 
         .noise_generator = {
-            .lidar = {
-                .enable = declare_parameter("sensor_noise.lidar.enable", false),
-                .mean = declare_parameter("sensor_noise.lidar.mean", 0.0),
-                .variance = declare_parameter("sensor_noise.lidar.variance", 0.0),
-            },
+            .lidar =
+                {
+                    .enable = declare_parameter("sensor_noise.lidar.enable", false),
+                    .mean = declare_parameter("sensor_noise.lidar.mean", 0.0),
+                    .variance = declare_parameter("sensor_noise.lidar.variance", 0.0),
+                },
 
-            .gyro = {
-                .enable = declare_parameter("sensor_noise.gyro.enable", false),
-                .mean = declare_parameter("sensor_noise.gyro.mean", 0.0),
-                .variance = declare_parameter("sensor_noise.gyro.variance", 0.0),
-            },
+            .gyro =
+                {
+                    .enable = declare_parameter("sensor_noise.gyro.enable", false),
+                    .mean = declare_parameter("sensor_noise.gyro.mean", 0.0),
+                    .variance = declare_parameter("sensor_noise.gyro.variance", 0.0),
+                },
 
             .accel = {
                 .enable = declare_parameter("sensor_noise.accel.enable", false),
