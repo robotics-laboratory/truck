@@ -80,9 +80,9 @@ IcpOdometryNode::IcpOdometryNode() : Node("icp_odometry") {
         std::bind(&IcpOdometryNode::handleOdometry, this, std::placeholders::_1));
 
     signal_.odometry_stat =
-        this->create_publisher<truck_msgs::msg::IcpOdometryStat>("/odometry/stat", 10);
+        this->create_publisher<truck_msgs::msg::IcpOdometryStat>("/icp/odometry/status", 10);
 
-    signal_.odometry = this->create_publisher<nav_msgs::msg::Odometry>("/odometry/odom", 10);
+    signal_.odometry = this->create_publisher<nav_msgs::msg::Odometry>("/icp/odometry", 10);
 
     icp_ = makeICP(this->get_logger(), this->declare_parameter<std::string>("icp_config"));
 }
