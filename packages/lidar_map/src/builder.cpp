@@ -149,7 +149,7 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
 
 /**
  * Input: set of 'poses' and corresponding 'clouds'
- * Points coordinates of cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
+ * Points of cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
  *
  * Output: set of clouds, whose point coordinates are in the world frame
  */
@@ -190,7 +190,7 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds, 
 
 /**
  * Input: set of 'poses' and corresponding 'clouds'
- * Points coordinates of cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
+ * Points of cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
  *
  * Output: set of updated poses for given 'clouds'
  */
@@ -284,7 +284,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
  */
 std::map<std::string, double> Builder::calculateMetrics(
     const Cloud& cloud, const geom::ComplexPolygon& complex_polygon) {
-    const auto get_mean = [](const std::vector<double> & values) {
+    const auto get_mean = [](const std::vector<double>& values) {
         const size_t count = values.size();
         double mean = 0.0;
 
@@ -295,7 +295,7 @@ std::map<std::string, double> Builder::calculateMetrics(
         return mean / count;
     };
 
-    const auto get_rmse = [](const std::vector<double> & values) {
+    const auto get_rmse = [](const std::vector<double>& values) {
         const size_t count = values.size();
         double rmse = 0.0;
 

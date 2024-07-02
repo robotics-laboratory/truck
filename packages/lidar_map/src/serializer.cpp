@@ -89,8 +89,8 @@ std::pair<geom::Poses, Clouds> Serializer::deserializeMCAP() {
 }
 
 void Serializer::serializeToMCAP(
-    const Cloud& cloud, std::string cloud_topic,
-    std::optional<geom::ComplexPolygon> map, std::string map_topic) {
+    const Cloud& cloud, std::string cloud_topic, std::optional<geom::ComplexPolygon> map,
+    std::string map_topic) {
     const auto get_timestamp = []() {
         rclcpp::Clock clock;
         return clock.now();

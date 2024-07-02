@@ -15,7 +15,7 @@ Cloud toCloud(const sensor_msgs::msg::LaserScan& scan, double z_lev = 1.0);
 sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string frame_id = "");
 
 visualization_msgs::msg::Marker toMarker(
-    const geom::ComplexPolygon& complex_polygon, std::string frame_id = "",
-    double z_lev = 1.0, std::vector<double> rgba_color = {0.4, 0.4, 0.4, 1.0});
+    const geom::ComplexPolygon& complex_polygon, std::string frame_id = "", double z_lev = 1.0,
+    std::vector<double> rgba_color = {0.4, 0.4, 0.4, 1.0});
 
 }  // namespace truck::lidar_map

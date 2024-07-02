@@ -31,7 +31,8 @@ class Builder {
 
     geom::Poses optimizePoses(const geom::Poses& poses, const Clouds& clouds);
 
-    std::map<std::string, double> calculateMetrics(const Cloud& cloud, const geom::ComplexPolygon& complex_polygon);
+    std::map<std::string, double> calculateMetrics(
+        const Cloud& cloud, const geom::ComplexPolygon& complex_polygon);
 
   private:
     ICP icp_;

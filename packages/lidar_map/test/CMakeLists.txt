@@ -1,14 +1,8 @@
-ament_add_gtest(
-    ${PROJECT_NAME}_tests
-    main.cpp
-)
+ament_add_gtest(${PROJECT_NAME}_tests main.cpp)
 
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 
-ament_target_dependencies(
-    ${PROJECT_NAME}_tests
-    map
-)
+ament_target_dependencies(${PROJECT_NAME}_tests map)
 
 target_include_directories(
   ${PROJECT_NAME}_tests

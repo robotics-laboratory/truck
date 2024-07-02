@@ -81,8 +81,8 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string fram
 }
 
 visualization_msgs::msg::Marker toMarker(
-    const geom::ComplexPolygon& complex_polygon, std::string frame_id,
-    double z_lev, std::vector<double> rgba_color) {
+    const geom::ComplexPolygon& complex_polygon, std::string frame_id, double z_lev,
+    std::vector<double> rgba_color) {
     const auto get_color = [&]() {
         std_msgs::msg::ColorRGBA color;
         color.r = rgba_color[0];
@@ -91,7 +91,7 @@ visualization_msgs::msg::Marker toMarker(
         color.a = rgba_color[3];
         return color;
     };
-    
+
     visualization_msgs::msg::Marker msg;
     msg.header.frame_id = frame_id;
     msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
