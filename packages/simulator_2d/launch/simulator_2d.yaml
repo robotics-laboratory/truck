@@ -39,3 +39,23 @@ launch:
         - { name: "integration_step", value: "$(var integration_step)" }
         # precision of calculations
         - { name: "calculations_precision", value: "$(var calculations_precision)" }
+        # sensor noise based on normal distribution
+        - name: "sensor_noise"
+          param:
+            - name: "lidar"
+              param:
+                - { name: "enable", value: true }
+                - { name: "mean", value: 0.0 }
+                - { name: "variance", value: 0.1 }
+
+            - name: "gyro"
+              param:
+                - { name: "enable", value: true }
+                - { name: "mean", value: 0.0 }
+                - { name: "variance", value: 0.1 }
+
+            - name: "accel"
+              param:
+                - { name: "enable", value: true }
+                - { name: "mean", value: 0.0 }
+                - { name: "variance", value: 0.1 }

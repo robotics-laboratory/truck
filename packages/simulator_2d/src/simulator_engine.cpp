@@ -18,9 +18,42 @@ namespace truck::simulator {
 
 const double kFreeFallAcceleration = 9.81;  // m/s^2
 
+NoiseGenerator::NoiseGenerator(const NoiseGeneratorParams& params, size_t seed) : params_(params) {
+    generator_ = std::default_random_engine(seed);
+    gyro_dist_ = std::normal_distribution<double>(params_.gyro.mean, params_.gyro.variance);
+    accel_dist_ = std::normal_distribution<double>(params_.accel.mean, params_.accel.variance);
+    lidar_dist_ = std::normal_distribution<double>(params_.lidar.mean, params_.lidar.variance);
+}
+
+void NoiseGenerator::applyToGyro(geom::Vec3& gyro) {
+    if (params_.gyro.enable) {
+        gyro.x = gyro.x + gyro_dist_(generator_);
+        gyro.y = gyro.y + gyro_dist_(generator_);
+        gyro.z = gyro.z + gyro_dist_(generator_);
+    }
+}
+
+void NoiseGenerator::applyToAccel(geom::Vec3& accel) {
+    if (params_.accel.enable) {
+        accel.x = accel.x + accel_dist_(generator_);
+        accel.y = accel.y + accel_dist_(generator_);
+        accel.z = accel.z + accel_dist_(generator_);
+    }
+}
+
+void NoiseGenerator::applyToLidar(std::vector<float>& ranges) {
+    if (params_.lidar.enable) {
+        for (size_t i = 0; i < ranges.size(); i++) {
+            ranges[i] = ranges[i] + lidar_dist_(generator_);
+        }
+    }
+}
+
 SimulatorEngine::SimulatorEngine(
-    std::unique_ptr<model::Model> model, double integration_step, double precision) {
+    std::unique_ptr<model::Model> model, std::unique_ptr<NoiseGenerator> noise_generator,
+    double integration_step, double precision) {
     model_ = std::move(model);
+    noise_generator_ = std::move(noise_generator);
     initializeParameters(integration_step, precision);
     initializeMathCache(integration_step);
     initializeLidarCache();
@@ -50,6 +83,7 @@ void SimulatorEngine::initializeImuCache() {
     const auto imu_tf = model_->getLatestTranform("base", "camera_imu_optical_frame");
     cache_.rear_to_imu_translation.x = imu_tf.getOrigin().x() + model_->wheelBase().base_to_rear;
     cache_.rear_to_imu_translation.y = imu_tf.getOrigin().y();
+    cache_.base_to_hyro_rotation.setOrigin({0, 0, 0});
     cache_.base_to_hyro_rotation.setRotation(imu_tf.getRotation());
 }
 
@@ -188,8 +222,12 @@ TruckState SimulatorEngine::getTruckState() const {
     const auto current_rps = model_->linearVelocityToMotorRPS(twist.velocity);
     const auto target_rps = model_->linearVelocityToMotorRPS(control_.velocity);
     const auto wheel_velocity = model_->rearTwistToWheelVelocity(rear_twist);
-    const auto gyro_angular_velocity = getImuAngularVelocity(angular_velocity);
-    const auto accel_linear_acceleration = getImuLinearAcceleration(rear_twist);
+    auto gyro_angular_velocity = getImuAngularVelocity(angular_velocity);
+    auto accel_linear_acceleration = getImuLinearAcceleration(rear_twist);
+
+    noise_generator_->applyToAccel(accel_linear_acceleration);
+    noise_generator_->applyToGyro(gyro_angular_velocity);
+    noise_generator_->applyToLidar(lidar_ranges);
 
     return TruckState()
         .status(status_)

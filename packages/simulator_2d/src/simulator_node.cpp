@@ -27,7 +27,27 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
 }
 
 void SimulatorNode::initializeParameters() {
-    params_.update_period = declare_parameter("update_period", 0.01);
+    params_ = {
+        .update_period = declare_parameter("update_period", 0.01),
+
+        .noise_generator = {
+            .lidar = {
+                .enable = declare_parameter("sensor_noise.lidar.enable", false),
+                .mean = declare_parameter("sensor_noise.lidar.mean", 0.0),
+                .variance = declare_parameter("sensor_noise.lidar.variance", 0.0),
+            },
+
+            .gyro = {
+                .enable = declare_parameter("sensor_noise.gyro.enable", false),
+                .mean = declare_parameter("sensor_noise.gyro.mean", 0.0),
+                .variance = declare_parameter("sensor_noise.gyro.variance", 0.0),
+            },
+
+            .accel = {
+                .enable = declare_parameter("sensor_noise.accel.enable", false),
+                .mean = declare_parameter("sensor_noise.accel.mean", 0.0),
+                .variance = declare_parameter("sensor_noise.accel.variance", 0.0),
+            }}};
 }
 
 void SimulatorNode::initializeTopicHandlers() {
@@ -42,11 +62,11 @@ void SimulatorNode::initializeTopicHandlers() {
     signals_.time = Node::create_publisher<rosgraph_msgs::msg::Clock>(
         "/clock", rclcpp::QoS(1).reliability(qos));
 
-    signals_.odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/ekf/odometry/filtered", rclcpp::QoS(1).reliability(qos));
+    signals_.simulator_odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
+        "/simulator/odometry", rclcpp::QoS(1).reliability(qos));
 
     signals_.hardware_odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/hardware/odom", rclcpp::QoS(1).reliability(qos));
+        "/hardware/odometry", rclcpp::QoS(1).reliability(qos));
 
     signals_.tf_publisher =
         Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf", rclcpp::QoS(1).reliability(qos));
@@ -79,6 +99,8 @@ void SimulatorNode::initializeEngine() {
         model::load(get_logger(), declare_parameter("model_config", "")));
     initializeCache(model);
 
+    auto noise_generator = std::make_unique<NoiseGenerator>(params_.noise_generator);
+
     const auto initial_ego_state_path = declare_parameter("initial_ego_state_config", "");
     const auto initial_ego_state = nlohmann::json::parse(std::ifstream(initial_ego_state_path));
 
@@ -94,6 +116,7 @@ void SimulatorNode::initializeEngine() {
 
     engine_ = std::make_unique<SimulatorEngine>(
         std::move(model),
+        std::move(noise_generator),
         declare_parameter("integration_step", 0.001),
         declare_parameter("calculations_precision", 1e-8));
     engine_->resetBase(pose, steering, velocity);
@@ -117,7 +140,7 @@ void SimulatorNode::publishTime(const TruckState& truck_state) {
     signals_.time->publish(clock_msg);
 }
 
-void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
+void SimulatorNode::publishSimulatorOdometryMessage(const TruckState& truck_state) {
     nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.frame_id = "odom_ekf";
     odom_msg.child_frame_id = "base";
@@ -134,7 +157,15 @@ void SimulatorNode::publishOdometryMessage(const TruckState& truck_state) {
     const double angular_velocity = truck_state.baseAngularVelocity();
     odom_msg.twist.twist.angular.z = angular_velocity;
 
-    signals_.odometry->publish(odom_msg);
+    signals_.simulator_odometry->publish(odom_msg);
+}
+
+void SimulatorNode::publishHardwareOdometryMessage(const TruckState& truck_state) {
+    nav_msgs::msg::Odometry odom_msg;
+    odom_msg.header.frame_id = "base";
+    odom_msg.header.stamp = truck_state.time();
+    odom_msg.twist.twist.linear.x = truck_state.baseTwist().velocity;
+    odom_msg.twist.covariance[0] = 0.0001;
     signals_.hardware_odometry->publish(odom_msg);
 }
 
@@ -244,7 +275,8 @@ void SimulatorNode::publishImuMessage(const TruckState& truck_state) {
 void SimulatorNode::publishSimulationState() {
     const auto truck_state = engine_->getTruckState();
     publishTime(truck_state);
-    publishOdometryMessage(truck_state);
+    publishSimulatorOdometryMessage(truck_state);
+    publishHardwareOdometryMessage(truck_state);
     publishTransformMessage(truck_state);
     publishTelemetryMessage(truck_state);
     publishSimulationStateMessage(truck_state);

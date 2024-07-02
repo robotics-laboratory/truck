@@ -27,6 +27,11 @@ launch:
       - { name: "map_config", value: "$(var map_config)" }
 
 - include:
+    file: $(find-pkg-share truck)/launch/slam.yaml
+    arg:
+    - { name: "simulation", value: "true" }
+
+- include:
     file: $(find-pkg-share simulator_2d)/launch/simulator_2d.yaml
     arg:
       - { name: "model_config", value: "$(var model_config)" }

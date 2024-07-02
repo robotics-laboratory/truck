@@ -2,6 +2,9 @@ launch:
 - arg: { name: "simulation", default: "false" }
 - arg: { name: "qos", default: "0" }
 
+- let: { name: "publish_tf", value: "false", if: "$(var simulation)" }
+- let: { name: "publish_tf", value: "true", unless: "$(var simulation)" }
+
 - include:
     file: $(find-pkg-share icp_odometry)/launch/icp_odometry.yaml
     arg:
@@ -24,7 +27,7 @@ launch:
     - { name: "world_frame", value: "odom_ekf" }
     - { name: "odom_frame", value: "odom_ekf" }
     - { name: "base_link_frame", value: "base" }
-    - { name: "publish_tf", value: True }
+    - { name: "publish_tf", value: "$(var publish_tf)" }
     - { name: "publish_acceleration", value: False }
     - { name: "predict_to_current_time", value: True }
     - { name: "dynamic_process_noise_covariance", value: True }
@@ -41,7 +44,7 @@ launch:
         ]
     }
 
-    - { name: "odom0", value: "/odometry/odom" }
+    - { name: "odom0", value: "/icp/odometry" }
     - { name: "odom0_differential", value: False }
     - { name: "odom0_queue_size", value: 30 }
     - { name: "odom0_config", value: [
@@ -53,7 +56,7 @@ launch:
         ]
     }
 
-    - { name: "odom0", value: "/hardware/odom" }
+    - { name: "odom0", value: "/hardware/odometry" }
     - { name: "odom0_differential", value: False }
     - { name: "odom0_queue_size", value: 30 }
     - { name: "odom0_config", value: [
