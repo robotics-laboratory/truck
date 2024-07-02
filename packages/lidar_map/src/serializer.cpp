@@ -10,6 +10,9 @@
 
 namespace truck::lidar_map {
 
+const std::string RIDE_BAGS_FOLDER_PATH = "/truck/packages/lidar_map/test/bags/rides/";
+const std::string CLOUD_BAGS_FOLDER_PATH = "/truck/packages/lidar_map/test/bags/clouds/";
+
 namespace {
 
 template<typename T>
@@ -43,8 +46,7 @@ Serializer::Serializer(const SerializerParams& params) : params_(params) {
 
 std::unique_ptr<rosbag2_cpp::readers::SequentialReader> Serializer::getSequentialReader() {
     rosbag2_storage::StorageOptions storage_options;
-    storage_options.uri = params_.path.bag;
-    storage_options.storage_id = "sqlite3";
+    storage_options.uri = RIDE_BAGS_FOLDER_PATH + params_.bag_name.ride + ".mcap";
 
     rosbag2_cpp::ConverterOptions converter_options;
     converter_options.input_serialization_format = "cdr";
@@ -67,7 +69,7 @@ std::optional<std::pair<geom::Pose, Cloud>> Serializer::readNextMessages() {
     return std::make_pair(geom::toPose(*odom), toCloud(*laser_scan));
 }
 
-std::pair<geom::Poses, Clouds> Serializer::deserializeBag() {
+std::pair<geom::Poses, Clouds> Serializer::deserializeMCAP() {
     geom::Poses poses;
     Clouds clouds;
 
@@ -78,7 +80,7 @@ std::pair<geom::Poses, Clouds> Serializer::deserializeBag() {
             break;
         }
 
-        auto [pose, cloud] = *messages;
+        const auto [pose, cloud] = *messages;
         poses.push_back(pose);
         clouds.push_back(cloud);
     }
@@ -86,18 +88,21 @@ std::pair<geom::Poses, Clouds> Serializer::deserializeBag() {
     return std::make_pair(poses, clouds);
 }
 
-void Serializer::serializeToMCAP(const Clouds& clouds) {
-    std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
-    writer->open(params_.path.mcap);
-
-    for (size_t i = 0; i < clouds.size(); i++) {
-        sensor_msgs::msg::PointCloud2 point_cloud = toPointCloud2(clouds[i]);
-
-        std::string topic_name = params_.topic.lidar_map + "_" + std::to_string(i);
-
+void Serializer::serializeToMCAP(
+    const Cloud& cloud, std::string cloud_topic,
+    std::optional<geom::ComplexPolygon> map, std::string map_topic) {
+    const auto get_timestamp = []() {
         rclcpp::Clock clock;
-        rclcpp::Time timestamp = clock.now();
-        writer->write(point_cloud, topic_name, timestamp);
+        return clock.now();
+    };
+
+    std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
+    writer->open(CLOUD_BAGS_FOLDER_PATH + params_.bag_name.cloud);
+
+    writer->write(toPointCloud2(cloud), cloud_topic, get_timestamp());
+
+    if (map.has_value()) {
+        writer->write(toMarker(*map), map_topic, get_timestamp());
     }
 }
 

@@ -123,7 +123,7 @@ Builder::Builder(const BuilderParams& params, const ICP& icp) : params_(params),
 
 /**
  * Returns a subset of given 'poses' and 'clouds' via removing too close poses
- * Next pose will be added, if it's far enough from a previous one 
+ * Next pose will be added, if it's far enough from a previous one
  */
 std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
     const geom::Poses& poses, const Clouds& clouds) {
@@ -149,8 +149,8 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
 
 /**
  * Input: set of 'poses' and corresponding 'clouds'
- * Points coordinates of given cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
- * 
+ * Points coordinates of cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
+ *
  * Output: set of clouds, whose point coordinates are in the world frame
  */
 Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds, bool concatenate) {
@@ -166,7 +166,7 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds, 
         Cloud tf_cloud = Cloud(clouds[i]);
 
         // Applying 'rotation_matrix' and 'translation_vector'
-        // to each (x,y,z) point 'tf_cloud.features.col(j)' of curernt cloud 
+        // to each (x,y,z) point 'tf_cloud.features.col(j)' of curernt cloud
         for (size_t j = 0; j < tf_cloud.features.cols(); j++) {
             tf_cloud.features.col(j) =
                 rotation_matrix * tf_cloud.features.col(j) + translation_vector;
@@ -190,9 +190,9 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds, 
 
 /**
  * Input: set of 'poses' and corresponding 'clouds'
- * Points coordinates of given cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
- * 
- * Output: set of updated poses for given 'clouds' 
+ * Points coordinates of cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
+ *
+ * Output: set of updated poses for given 'clouds'
  */
 geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& clouds) {
     g2o::SparseOptimizer optimizer;
@@ -277,6 +277,50 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
     }
 
     return optimized_poses;
+}
+
+/**
+ * Available metrics keys: "mean", "rmse", "perc-5", "perc-10", "perc-25"
+ */
+std::map<std::string, double> Builder::calculateMetrics(
+    const Cloud& cloud, const geom::ComplexPolygon& complex_polygon) {
+    const auto get_mean = [](const std::vector<double> & values) {
+        const size_t count = values.size();
+        double mean = 0.0;
+
+        for (double value : values) {
+            mean += value;
+        }
+
+        return mean / count;
+    };
+
+    const auto get_rmse = [](const std::vector<double> & values) {
+        const size_t count = values.size();
+        double rmse = 0.0;
+
+        for (double value : values) {
+            rmse += (value * value);
+        }
+
+        return std::sqrt(rmse / count);
+    };
+
+    std::vector<double> min_dists;
+    const auto segments = complex_polygon.segments();
+
+    for (size_t i = 0; i < cloud.features.cols(); i++) {
+        const geom::Vec2 cloud_point = {cloud.features.col(i)(0), cloud.features.col(i)(1)};
+        double min_dist = std::sqrt(geom::distanceSq(cloud_point, segments[0]));
+
+        for (size_t j = 1; j < segments.size(); j++) {
+            min_dist = std::min(min_dist, std::sqrt(geom::distanceSq(cloud_point, segments[j])));
+        }
+
+        min_dists.push_back(min_dist);
+    }
+
+    return {{"mean", get_mean(min_dists)}, {"rmse", get_rmse(min_dists)}};
 }
 
 }  // namespace truck::lidar_map

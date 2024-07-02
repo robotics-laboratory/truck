@@ -3,30 +3,32 @@
 #include "lidar_map/common.h"
 
 #include "geom/pose.h"
+#include "geom/complex_polygon.h"
 
 #include <rosbag2_cpp/readers/sequential_reader.hpp>
 
 namespace truck::lidar_map {
 
 struct SerializerParams {
-    struct Path {
-        std::string bag = "/truck/packages/lidar_map/test/bag/file_1_atrium.db3";
-        std::string mcap = "/truck/packages/lidar_map/test/mcap";
-    } path;
-
     struct Topic {
-        std::string odom = "/ekf/odometry/filtered";
-        std::string point_cloud = "/lidar/scan";
-        std::string lidar_map = "/lidar/map";
+        std::string odom;
+        std::string point_cloud;
     } topic;
+
+    struct BagName {
+        std::string ride;
+        std::string cloud;
+    } bag_name;
 };
 
 class Serializer {
   public:
     Serializer(const SerializerParams& params);
 
-    std::pair<geom::Poses, Clouds> deserializeBag();
-    void serializeToMCAP(const Clouds& clouds);
+    std::pair<geom::Poses, Clouds> deserializeMCAP();
+    void serializeToMCAP(
+        const Cloud& cloud, std::string cloud_topic = "/cloud",
+        std::optional<geom::ComplexPolygon> map = std::nullopt, std::string map_topic = "/map");
 
   private:
     std::unique_ptr<rosbag2_cpp::readers::SequentialReader> getSequentialReader();
