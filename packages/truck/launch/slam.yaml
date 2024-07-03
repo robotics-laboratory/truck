@@ -1,6 +1,9 @@
 launch:
 - arg: { name: "simulation", default: "false" }
 - arg: { name: "qos", default: "0" }
+- arg: { name: "initial_x", default: "0.0" }
+- arg: { name: "initial_y", default: "0.0" }
+- arg: { name: "initial_yaw", default: "0.0" }
 
 - let: { name: "publish_tf", value: "false", if: "$(var simulation)" }
 - let: { name: "publish_tf", value: "true", unless: "$(var simulation)" }
@@ -31,6 +34,14 @@ launch:
     - { name: "publish_acceleration", value: False }
     - { name: "predict_to_current_time", value: True }
     - { name: "dynamic_process_noise_covariance", value: True }
+    - { name: "initial_state", value: [
+            "$(var initial_x)", "$(var initial_y)", 0.0,    # pos
+            0.0, 0.0, "$(var initial_yaw)",                 # rot
+            0.0, 0.0, 0.0,                                  # pos`
+            0.0, 0.0, 0.0,                                  # rot`
+            0.0, 0.0, 0.0                                   # pos``
+        ]
+    }
 
     - { name: "imu0", value: "/camera/imu" }
     - { name: "imu0_queue_size", value: 30 }

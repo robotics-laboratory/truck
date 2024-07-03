@@ -6,9 +6,6 @@ launch:
       name: "map_config"
       default: "$(find-pkg-share map)/data/map_6.geojson"
   - arg:
-      name: "initial_ego_state_config"
-      default: "$(find-pkg-share simulator_2d)/config/initial_ego_state.json"
-  - arg:
       name: "lidar_config"
       default: "$(find-pkg-share simulator_2d)/config/lidar.json"
   - arg:
@@ -20,6 +17,15 @@ launch:
   - arg:
       name: "calculations_precision"
       default: "1e-4"
+  - arg:
+      name: "initial_x"
+      default: "0.0"
+  - arg:
+      name: "initial_y"
+      default: "0.0"
+  - arg:
+      name: "initial_yaw"
+      default: "0.0"
   - node:
       pkg: "simulator_2d"
       exec: "simulator_2d_node"
@@ -31,14 +37,18 @@ launch:
         - { name: "model_config", value: "$(var model_config)" }
         # path to map config
         - { name: "map_config", value: "$(var map_config)" }
-        # the state of the truck model at the beginning of the simulation
-        - { name: "initial_ego_state_config", value: "$(var initial_ego_state_config)" }
         # timers period (seconds)
         - { name: "update_period", value: "$(var update_period)" }
         # integration step per second
         - { name: "integration_step", value: "$(var integration_step)" }
         # precision of calculations
         - { name: "calculations_precision", value: "$(var calculations_precision)" }
+        # robot initial x coordinate
+        - { name: "initial_x", value: "$(var initial_x)" }
+        # robot initial y coordinate
+        - { name: "initial_y", value: "$(var initial_y)" }
+        # robot initial yaw coordinate
+        - { name: "initial_yaw", value: "$(var initial_yaw)" }
         # sensor noise based on normal distribution
         - name: "sensor_noise"
           param:

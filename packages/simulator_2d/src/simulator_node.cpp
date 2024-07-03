@@ -103,25 +103,20 @@ void SimulatorNode::initializeEngine() {
 
     auto noise_generator = std::make_unique<NoiseGenerator>(params_.noise_generator);
 
-    const auto initial_ego_state_path = declare_parameter("initial_ego_state_config", "");
-    const auto initial_ego_state = nlohmann::json::parse(std::ifstream(initial_ego_state_path));
-
-    const auto& x = initial_ego_state["x"];
-    const auto& y = initial_ego_state["y"];
-    const auto& yaw = initial_ego_state["yaw"];
-    const auto& steering = initial_ego_state["middle_steering"];
-    const auto& velocity = initial_ego_state["linear_velocity"];
+    const double x = declare_parameter("initial_x", 0.0);
+    const double y = declare_parameter("initial_y", 0.0);
+    const double yaw = declare_parameter("initial_yaw", 0.0);
 
     geom::Pose pose;
     pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
-    pose.pos = geom::Vec2{x, y} + model->wheelBase().base_to_rear * pose.dir;
+    pose.pos = geom::Vec2{x, y};
 
     engine_ = std::make_unique<SimulatorEngine>(
         std::move(model),
         std::move(noise_generator),
         declare_parameter("integration_step", 0.001),
         declare_parameter("calculations_precision", 1e-8));
-    engine_->resetBase(pose, steering, velocity);
+    engine_->resetBase(pose, 0.0, 0.0);
     engine_->resetMap(declare_parameter("map_config", ""));
 
     // The zero state of the simulation.
