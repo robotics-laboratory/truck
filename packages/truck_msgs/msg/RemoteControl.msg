@@ -8,4 +8,3 @@ uint8 mode
 # values in range [-1, 1]
 float64 curvature_ratio
 float64 velocity_ratio
-
