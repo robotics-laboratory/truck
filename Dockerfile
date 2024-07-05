@@ -8,7 +8,7 @@ ENV CUDA_HOME="/usr/local/cuda"
 ENV PATH="/usr/local/cuda/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
 
-ENV FLAGS="-O3 -ffast-math -Wall -march=armv8.2-a+simd+crypto+predres -mtune=cortex-a57"
+ENV FLAGS="-O3 -Wall -march=armv8.2-a+simd+crypto+predres -mtune=cortex-a57"
 
 ### INSTALL NVIDIA
 
@@ -30,7 +30,7 @@ RUN apt-get update -q \
 
 FROM --platform=linux/amd64 ubuntu:20.04 AS truck-base-amd64
 
-ENV FLAGS="-O3 -ffast-math -Wall"
+ENV FLAGS="-O3 -Wall"
 
 FROM truck-base-${TARGETARCH} AS truck-common
 
@@ -68,6 +68,7 @@ RUN apt-get update -q && \
         curl \
         git \
         gnupg2 \
+        libceres-dev \
         libmpfr-dev \
         libboost-dev \
         libpython3-dev \
@@ -101,6 +102,18 @@ RUN apt-get update -q && \
         libgstreamer-plugins-bad1.0-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
+### INSTALL EIGEN
+
+ARG EIGEN_VERSION="3.3.9"
+
+RUN wget -qO - https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz | tar -xz \
+    && cd eigen-${EIGEN_VERSION} && mkdir -p build && cd build \
+    && cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
 ### PREPARE FOR OPENCV
 
 RUN apt-get update -yq && \
@@ -108,7 +121,6 @@ RUN apt-get update -yq && \
         gfortran \
         file \
         libatlas-base-dev \
-        libeigen3-dev \
         libjpeg-dev \
         liblapack-dev \
         liblapacke-dev \
@@ -149,9 +161,10 @@ RUN apt-get update -yq \
         pkg-config \
         sudo \
         udev \
+        v4l-utils \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV LIBRS_VERSION=2.54.2
+ENV LIBRS_VERSION=2.55.1
 
 FROM --platform=linux/arm64 truck-common AS truck-cuda-arm64
 
@@ -443,7 +456,9 @@ RUN cd ${ROS_TMP} \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
-        --cmake-args -DBUILD_TESTING=OFF \
+        --cmake-args \
+            -DCMAKE_CXX_FLAGS="-Wno-error=pedantic" \
+            -DBUILD_TESTING=OFF \
     && rm -rf /tmp/*
 
 RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
@@ -478,7 +493,6 @@ RUN declare -A map \
 
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
-        libeigen3-dev \
         libtbb-dev \
         libproj-dev \
         libsuitesparse-dev \
@@ -597,8 +611,8 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export RCUTILS_CONSOLE_OUTPUT_FORMAT='[{severity}:{time}] {message}'\n" >> /root/.bashrc \
     && printf "export TRUCK_SIMULATION=false\n" >> /root/.bashrc \
     && printf "export TRUCK_CONTROL=ipega\n" >> /root/.bashrc \
-    && printf "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash\n" >> /root/.bashrc \
     && printf "source /usr/share/bash-completion/completions/git\n" >> /root/.bashrc \
+    && printf "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
 
 ### SETUP ENTRYPOINT
