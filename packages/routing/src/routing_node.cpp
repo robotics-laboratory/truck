@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "routing/routing_node.h"
 
 #include "geom/distance.h"
@@ -10,17 +12,11 @@ using namespace std::chrono_literals;
 
 namespace {
 
-RTreePoint toRTreePoint(const geom::Vec2& point) { return RTreePoint(point.x, point.y); }
-
-RTreeIndexedPoint toRTreeIndexedPoint(const geom::Vec2& point, size_t index) {
-    return RTreeIndexedPoint(toRTreePoint(point), index);
-}
-
 RTree toRTree(const std::vector<geom::Vec2>& points) {
     RTree rtree;
 
     for (size_t i = 0; i < points.size(); i++) {
-        rtree.insert(toRTreeIndexedPoint(points[i], i));
+        rtree.insert(RTreeIndexedPoint(points[i], i));
     }
 
     return rtree;
@@ -30,7 +26,7 @@ RTree toRTree(const navigation::graph::Nodes& nodes) {
     RTree rtree;
 
     for (const auto& node : nodes) {
-        rtree.insert(toRTreeIndexedPoint(node.point, node.id));
+        rtree.insert(RTreeIndexedPoint(node.point, node.id));
     }
 
     return rtree;
@@ -39,8 +35,7 @@ RTree toRTree(const navigation::graph::Nodes& nodes) {
 size_t findNearestIndex(const RTree& rtree, const geom::Vec2& point) {
     RTreeIndexedPoints rtree_indexed_points;
 
-    rtree.query(
-        bg::index::nearest(toRTreePoint(point), 1), std::back_inserter(rtree_indexed_points));
+    rtree.query(bg::index::nearest(point, 1), std::back_inserter(rtree_indexed_points));
 
     return rtree_indexed_points[0].second;
 }
