@@ -13,7 +13,7 @@ namespace truck::navigation::graph {
 
 namespace bg = boost::geometry;
 
-using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
+using RTreePoint = geom::Vec2;
 using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
 using RTreeIndexedPoints = std::vector<RTreeIndexedPoint>;
 using RTreeBox = bg::model::box<RTreePoint>;
@@ -23,21 +23,11 @@ using EdgesMap = std::unordered_map<NodeId, std::unordered_map<NodeId, EdgeId>>;
 
 namespace {
 
-geom::Vec2 toVec2(const RTreePoint& rtree_point) {
-    return {rtree_point.get<0>(), rtree_point.get<1>()};
-}
-
-RTreePoint toRTreePoint(const geom::Vec2& point) { return RTreePoint(point.x, point.y); }
-
-RTreeIndexedPoint toRTreeIndexedPoint(const geom::Vec2& point, size_t index) {
-    return RTreeIndexedPoint(toRTreePoint(point), index);
-}
-
 RTree toRTree(const Nodes& nodes) {
     RTree rtree;
 
     for (const Node& node : nodes) {
-        rtree.insert(toRTreeIndexedPoint(node.point, node.id));
+        rtree.insert(RTreeIndexedPoint(node.point, node.id));
     }
 
     return rtree;
@@ -48,7 +38,7 @@ RTreeIndexedPoints getNodeNeighborsKNN(
     RTreeIndexedPoints rtree_indexed_points;
 
     rtree.query(
-        bg::index::nearest(toRTreePoint(point), k_nearest + 1),
+        bg::index::nearest(point, k_nearest + 1),
         std::back_inserter(rtree_indexed_points));
 
     return rtree_indexed_points;
@@ -65,7 +55,7 @@ RTreeIndexedPoints getNodeNeighborsSearchRadius(
     rtree.query(
         bg::index::intersects(rtree_box)
             && bg::index::satisfies([&](const RTreeIndexedPoint& rtree_indexed_point) {
-                   const geom::Vec2 neighbor_point = toVec2(rtree_indexed_point.first);
+                   const geom::Vec2 neighbor_point = rtree_indexed_point.first;
                    return (point - neighbor_point).lenSq() < squared(search_radius);
                }),
         std::back_inserter(rtree_indexed_points));
@@ -111,7 +101,7 @@ std::vector<NodeId> getNodeNeighbors(
 
     for (const RTreeIndexedPoint& rtree_indexed_point : rtree_indexed_points) {
         const NodeId neighbor_node_id = rtree_indexed_point.second;
-        const geom::Vec2 neighbor_node_point = toVec2(rtree_indexed_point.first);
+        const geom::Vec2 neighbor_node_point = rtree_indexed_point.first;
 
         const geom::Segment edge(node.point, neighbor_node_point);
 
