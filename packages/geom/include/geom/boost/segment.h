@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geom/segment.h"
+#include "geom/boost/point.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/register/segment.hpp>
