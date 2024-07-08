@@ -4,6 +4,8 @@
 #include "common/math.h"
 #include "geom/distance.h"
 #include "geom/intersection.h"
+#include "geom/boost/point.h"
+#include "geom/boost/box.h"
 
 #include <boost/geometry.hpp>
 
@@ -13,10 +15,9 @@ namespace truck::navigation::graph {
 
 namespace bg = boost::geometry;
 
-using RTreePoint = geom::Vec2;
-using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
+using RTreeIndexedPoint = std::pair<geom::Vec2, size_t>;
 using RTreeIndexedPoints = std::vector<RTreeIndexedPoint>;
-using RTreeBox = bg::model::box<RTreePoint>;
+using RTreeBox = geom::BoundingBox;
 using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
 
 using EdgesMap = std::unordered_map<NodeId, std::unordered_map<NodeId, EdgeId>>;
@@ -47,8 +48,8 @@ RTreeIndexedPoints getNodeNeighborsSearchRadius(
     RTreeIndexedPoints rtree_indexed_points;
 
     const RTreeBox rtree_box(
-        RTreePoint(point.x - search_radius, point.y - search_radius),
-        RTreePoint(point.x + search_radius, point.y + search_radius));
+        geom::Vec2(point.x - search_radius, point.y - search_radius),
+        geom::Vec2(point.x + search_radius, point.y + search_radius));
 
     rtree.query(
         bg::index::intersects(rtree_box)
