@@ -7,7 +7,7 @@
 using namespace truck::geom;
 namespace bg = boost::geometry;
 
-TEST(Vector, get) {
+TEST(BoostVector, get) {
     Vec2 v2(1, 2);
     Vec3 v3(3, 4, 5);
 
@@ -17,7 +17,7 @@ TEST(Vector, get) {
         == std::make_tuple(bg::get<0>(v3), bg::get<1>(v3), bg::get<2>(v3)));
 }
 
-TEST(Vector, set) {
+TEST(BoostVector, set) {
     Vec2 v2;
 
     bg::set<0>(v2, 42.69);
@@ -25,7 +25,7 @@ TEST(Vector, set) {
     ASSERT_GEOM_EQUAL(v2.x, 42.69);
 }
 
-TEST(BoundingBox, get) {
+TEST(BoostBoundingBox, get) {
     BoundingBox box({1, 2}, {3, 4});
     double x0 = bg::get<bg::min_corner, 0>(box);
     double y0 = bg::get<bg::min_corner, 1>(box);
@@ -38,7 +38,7 @@ TEST(BoundingBox, get) {
     ASSERT_GEOM_EQUAL(y1, 4.0);
 }
 
-TEST(BoundingBox, set) {
+TEST(BoostBoundingBox, set) {
     BoundingBox box({0, 0}, {0, 0});
 
     bg::set<bg::min_corner, 0>(box, 1.0);
@@ -48,7 +48,7 @@ TEST(BoundingBox, set) {
     ASSERT_GEOM_EQUAL(box.max.y, 2.0);
 }
 
-TEST(Segment, bruh) {
+TEST(BoostSegment, bruh) {
     Segment seg1({}, {});
 
     bg::set<0, 0>(seg1, 1.0);
@@ -67,7 +67,7 @@ TEST(Segment, bruh) {
     ASSERT_GEOM_EQUAL(y1, 4.0);
 }
 
-TEST(Polygon, area) {
+TEST(BoostPolygon, area) {
     Polygon ring;
 
     bg::append(ring, Vec2(0.0, 0.0));
@@ -80,7 +80,7 @@ TEST(Polygon, area) {
     ASSERT_GEOM_EQUAL(a, 25.0);
 }
 
-TEST(ComplexPolygon, area) {
+TEST(BoostComplexPolygon, area) {
     ComplexPolygon poly;
 
     bg::append(poly.outer, Vec2(0.0, 0.0));
@@ -100,7 +100,7 @@ TEST(ComplexPolygon, area) {
     ASSERT_GEOM_EQUAL(a, 16.0);
 }
 
-TEST(Polyline, length) {
+TEST(BoostPolyline, length) {
     Polyline ls;
 
     bg::append(ls, Vec2(0.0, 0.0));

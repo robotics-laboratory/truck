@@ -10,6 +10,9 @@
 namespace boost {
 namespace geometry {
 namespace traits {
+
+using namespace truck::geom;
+
 template<>
 struct tag<ComplexPolygon> {
     typedef polygon_tag type;
@@ -40,15 +43,11 @@ struct exterior_ring<ComplexPolygon> {
 
 template<>
 struct interior_rings<ComplexPolygon> {
-    static std::vector<Polygon> get(ComplexPolygon& p) {
-        return std::vector<Polygon>(
-            std::vector<Polygon>::iterator(p.inners.begin()),
-            std::vector<Polygon>::iterator(p.inners.end()));
+    static std::vector<Polygon>& get(ComplexPolygon& p) {
+        return p.inners;
     }
-    static const std::vector<Polygon> get(const ComplexPolygon& p) {
-        return std::vector<Polygon>(
-            std::vector<Polygon>::const_iterator(p.inners.begin()),
-            std::vector<Polygon>::const_iterator(p.inners.end()));
+    static const std::vector<Polygon>& get(const ComplexPolygon& p) {
+        return p.inners;
     }
 };
 }  // namespace traits
