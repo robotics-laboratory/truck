@@ -37,9 +37,7 @@ RTreeIndexedPoints getNodeNeighborsKNN(
     const geom::Vec2& point, const RTree& rtree, size_t k_nearest) {
     RTreeIndexedPoints rtree_indexed_points;
 
-    rtree.query(
-        bg::index::nearest(point, k_nearest + 1),
-        std::back_inserter(rtree_indexed_points));
+    rtree.query(bg::index::nearest(point, k_nearest + 1), std::back_inserter(rtree_indexed_points));
 
     return rtree_indexed_points;
 }
