@@ -1,6 +1,8 @@
 #include "geom/pose.h"
 #include "geom/polygon.h"
 #include "geom/segment.h"
+#include "geom/boost/point.h"
+#include "geom/boost/segment.h"
 #include "model/model.h"
 
 #include <boost/geometry.hpp>
@@ -13,8 +15,8 @@ namespace truck::simulator {
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
-using RTreeSegment = bg::model::segment<RTreePoint>;
+using RTreePoint = geom::Vec2;
+using RTreeSegment = geom::Segment;
 using RTreeBox = bg::model::box<RTreePoint>;
 using RTreeIndexedSegment = std::pair<RTreeSegment, size_t>;
 using RTreeIndexedSegments = std::vector<RTreeIndexedSegment>;
