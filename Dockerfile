@@ -146,8 +146,6 @@ RUN apt-get update && \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* apt-get clean
 
-ENV TORCHVISION_VERSION=0.14.0
-
 ### PREPARE FOR REALSENSE2
 
 RUN apt-get update -yq \
@@ -155,7 +153,6 @@ RUN apt-get update -yq \
         ca-certificates \
         libssl-dev \
         libusb-1.0-0-dev \
-        libusb-1.0-0 \
         libudev-dev \
         libomp-dev \
         pkg-config \
@@ -174,7 +171,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && cd opencv-${OPENCV_VERSION} && mkdir -p build && cd build \
     && OPENCV_MODULES=(core calib3d imgproc imgcodecs ccalib ximgproc \
-        aruco cudev cudaarithm cudacodec cudafilters cudaimgproc) \
+        cudev cudaarithm cudacodec cudafilters cudaimgproc) \
     && cmake .. \
         -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' ' ',') \
         -DCMAKE_BUILD_TYPE=RELEASE \
@@ -232,11 +229,6 @@ RUN wget --no-check-certificate -qO ${PYTORCH_WHL} ${PYTORCH_URL} \
     && pip3 install --no-cache-dir ${PYTORCH_WHL} \
     && rm -rf /tmp/*
 
-RUN wget -qO - https://github.com/pytorch/vision/archive/refs/tags/v${TORCHVISION_VERSION}.tar.gz | tar -xz \
-    && cd vision-${TORCHVISION_VERSION} \
-    && python3 setup.py install \
-    && rm -rf /tmp/*
-
 ENV PYTORCH_PATH="/usr/local/lib/python3.8/dist-packages/torch"
 ENV LD_LIBRARY_PATH="${PYTORCH_PATH}/lib:${LD_LIBRARY_PATH}"
 
@@ -264,7 +256,7 @@ FROM --platform=linux/amd64 truck-common AS truck-cuda-amd64
 RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && cd opencv-${OPENCV_VERSION} && mkdir -p build && cd build \
-    && OPENCV_MODULES=(core calib3d imgcodecs ccalib ximgproc aruco) \
+    && OPENCV_MODULES=(core calib3d imgcodecs ccalib ximgproc) \
     && cmake .. \
         -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' '  ',') \
         -DCMAKE_BUILD_TYPE=RELEASE \
@@ -309,8 +301,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
 ENV TORCH_VERSION=1.13.0
 
 RUN pip3 install --no-cache-dir \
-    torch==${TORCH_VERSION} \
-    torchvision==${TORCHVISION_VERSION}
+    torch==${TORCH_VERSION}
 
 ENV PYTORCH_PATH="/usr/local/lib/python3.8/dist-packages/torch"
 ENV LD_LIBRARY_PATH="${PYTORCH_PATH}/lib:${LD_LIBRARY_PATH}"
@@ -322,7 +313,6 @@ RUN apt-get update -yq \
         ca-certificates \
         libssl-dev \
         libusb-1.0-0-dev \
-        libusb-1.0-0 \
         libudev-dev \
         libomp-dev \
         pkg-config \
@@ -354,18 +344,12 @@ ENV ROS_PYTHON_VERSION=3
 
 RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
-    && wget -qO - https://packages.osrfoundation.org/gazebo.key | apt-key add - \
-    && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
 
 ENV RMW_IMPLEMENTATION="rmw_cyclonedds_cpp"
 
 RUN apt-get update -q \
     && apt remove -yq python-is-python2 \
     && apt-get install -yq --no-install-recommends \
-        gazebo11 \
-        gazebo11-common \
-        gazebo11-plugin-base \
-        libgazebo11-dev \
         libpcl-dev \
         locales \
         python3-colcon-common-extensions \
@@ -411,11 +395,7 @@ RUN mkdir -p ${ROS_ROOT} \
         image_transport \
         imu_filter_madgwick \
         imu_complementary_filter\
-        gazebo_dev \
-        gazebo_plugins \
-        gazebo_ros \
         geometry2 \
-        joy \
         launch_yaml \
         laser_geometry \
         pcl_conversions \
@@ -446,12 +426,10 @@ RUN apt-get update -q \
         --skip-keys libopencv-imgproc-dev \
         --skip-keys libpcl-dev \
         --skip-keys python3-opencv \
-        --skip-keys gazebo11 \
-        --skip-keys gazebo11-common \
-        --skip-keys gazebo11-plugin-base \
-        --skip-keys libgazebo11-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
+# Pay attention that we disable pedantic warnings here!
+# The reason is that foxglove_bridge has such warnings.
 RUN cd ${ROS_TMP} \
     && colcon build \
         --merge-install \
@@ -610,7 +588,6 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export RCUTILS_LOGGING_BUFFERED_STREAM=1\n" >> /root/.bashrc \
     && printf "export RCUTILS_CONSOLE_OUTPUT_FORMAT='[{severity}:{time}] {message}'\n" >> /root/.bashrc \
     && printf "export TRUCK_SIMULATION=false\n" >> /root/.bashrc \
-    && printf "export TRUCK_CONTROL=ipega\n" >> /root/.bashrc \
     && printf "source /usr/share/bash-completion/completions/git\n" >> /root/.bashrc \
     && printf "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
