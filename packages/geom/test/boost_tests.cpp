@@ -121,6 +121,6 @@ TEST(BoostPolyline, length) {
     bg::append(ls, Vec2(1.0, 0.0));
     bg::append(ls, Vec2(1.0, 2.0));
 
-    const const double l = bg::length(ls);
+    const double l = bg::length(ls);
     ASSERT_GEOM_EQUAL(l, 3.0);
 }

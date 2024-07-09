@@ -51,7 +51,7 @@ bool hasCollision(const SimulationMap& map, const geom::Polygon& shape_polygon, 
         geom::Vec2(bounding_box.min.x, bounding_box.min.y),
         geom::Vec2(bounding_box.max.x, bounding_box.max.y)};
 
-    std::vector<IndexSegment> result;
+    IndexSegments result;
     map.rtree().query(bgi::intersects(rtree_box), std::back_inserter(result));
 
     for (const auto& rtree_segment : result) {
