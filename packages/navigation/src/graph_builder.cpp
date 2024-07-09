@@ -33,8 +33,7 @@ RTree toRTree(const Nodes& nodes) {
     return rtree;
 }
 
-IndexPoints getNodeNeighborsKNN(
-    const geom::Vec2& point, const RTree& rtree, size_t k_nearest) {
+IndexPoints getNodeNeighborsKNN(const geom::Vec2& point, const RTree& rtree, size_t k_nearest) {
     IndexPoints rtree_indexed_points;
 
     rtree.query(bg::index::nearest(point, k_nearest + 1), std::back_inserter(rtree_indexed_points));
