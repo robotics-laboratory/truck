@@ -16,7 +16,7 @@ RTree toRTree(const std::vector<geom::Vec2>& points) {
     RTree rtree;
 
     for (size_t i = 0; i < points.size(); i++) {
-        rtree.insert(RTreeIndexedPoint(points[i], i));
+        rtree.insert(IndexPoint(points[i], i));
     }
 
     return rtree;
@@ -26,14 +26,14 @@ RTree toRTree(const navigation::graph::Nodes& nodes) {
     RTree rtree;
 
     for (const auto& node : nodes) {
-        rtree.insert(RTreeIndexedPoint(node.point, node.id));
+        rtree.insert(IndexPoint(node.point, node.id));
     }
 
     return rtree;
 }
 
 size_t findNearestIndex(const RTree& rtree, const geom::Vec2& point) {
-    RTreeIndexedPoints rtree_indexed_points;
+    IndexPoints rtree_indexed_points;
 
     rtree.query(bg::index::nearest(point, 1), std::back_inserter(rtree_indexed_points));
 

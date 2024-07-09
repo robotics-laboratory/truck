@@ -16,9 +16,9 @@ namespace truck::simulator {
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using RTreeIndexedSegment = std::pair<geom::Segment, size_t>;
-using RTreeIndexedSegments = std::vector<RTreeIndexedSegment>;
-using RTree = bgi::rtree<RTreeIndexedSegment, bgi::rstar<16>>;
+using IndexSegment = std::pair<geom::Segment, size_t>;
+using IndexSegments = std::vector<IndexSegment>;
+using RTree = bgi::rtree<IndexSegment, bgi::rstar<16>>;
 
 class SimulationMap {
   public:
