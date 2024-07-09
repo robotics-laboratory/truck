@@ -27,10 +27,10 @@ TEST(BoostVector, set) {
 
 TEST(BoostBoundingBox, get) {
     const BoundingBox box({1, 2}, {3, 4});
-    double x0 = bg::get<bg::min_corner, 0>(box);
-    double y0 = bg::get<bg::min_corner, 1>(box);
-    double x1 = bg::get<bg::max_corner, 0>(box);
-    double y1 = bg::get<bg::max_corner, 1>(box);
+    const double x0 = bg::get<bg::min_corner, 0>(box);
+    const double y0 = bg::get<bg::min_corner, 1>(box);
+    const double x1 = bg::get<bg::max_corner, 0>(box);
+    const double y1 = bg::get<bg::max_corner, 1>(box);
 
     ASSERT_GEOM_EQUAL(x0, 1.0);
     ASSERT_GEOM_EQUAL(y0, 2.0);
@@ -51,10 +51,10 @@ TEST(BoostBoundingBox, set) {
 TEST(BoostSegment, get) {
     const Segment seg({1, 2}, {3, 4});
 
-    double x0 = bg::get<0, 0>(seg);
-    double y0 = bg::get<0, 1>(seg);
-    double x1 = bg::get<1, 0>(seg);
-    double y1 = bg::get<1, 1>(seg);
+    const double x0 = bg::get<0, 0>(seg);
+    const double y0 = bg::get<0, 1>(seg);
+    const double x1 = bg::get<1, 0>(seg);
+    const double y1 = bg::get<1, 1>(seg);
 
     ASSERT_GEOM_EQUAL(x0, 1.0);
     ASSERT_GEOM_EQUAL(y0, 2.0);
@@ -70,10 +70,10 @@ TEST(BoostSegment, set) {
     bg::set<1, 0>(seg, 3.0);
     bg::set<1, 1>(seg, 4.0);
 
-    double x0 = bg::get<0, 0>(seg);
-    double y0 = bg::get<0, 1>(seg);
-    double x1 = bg::get<1, 0>(seg);
-    double y1 = bg::get<1, 1>(seg);
+    const double x0 = bg::get<0, 0>(seg);
+    const double y0 = bg::get<0, 1>(seg);
+    const double x1 = bg::get<1, 0>(seg);
+    const double y1 = bg::get<1, 1>(seg);
 
     ASSERT_GEOM_EQUAL(x0, 1.0);
     ASSERT_GEOM_EQUAL(y0, 2.0);
@@ -90,7 +90,7 @@ TEST(BoostPolygon, area) {
     bg::append(ring, Vec2(5.0, 0.0));
     bg::append(ring, Vec2(0.0, 0.0));
 
-    double a = bg::area(ring);
+    const double a = bg::area(ring);
     ASSERT_GEOM_EQUAL(a, 25.0);
 }
 
@@ -110,7 +110,7 @@ TEST(BoostComplexPolygon, area) {
     bg::append(poly.inners[0], Vec2(1.0, 4.0));
     bg::append(poly.inners[0], Vec2(1.0, 1.0));
 
-    double a = bg::area(poly);
+    const double a = bg::area(poly);
     ASSERT_GEOM_EQUAL(a, 16.0);
 }
 
@@ -121,6 +121,6 @@ TEST(BoostPolyline, length) {
     bg::append(ls, Vec2(1.0, 0.0));
     bg::append(ls, Vec2(1.0, 2.0));
 
-    double l = bg::length(ls);
+    const const double l = bg::length(ls);
     ASSERT_GEOM_EQUAL(l, 3.0);
 }
