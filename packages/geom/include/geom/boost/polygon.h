@@ -46,6 +46,7 @@ struct interior_rings<ComplexPolygon> {
     static std::vector<Polygon>& get(ComplexPolygon& p) { return p.inners; }
     static const std::vector<Polygon>& get(const ComplexPolygon& p) { return p.inners; }
 };
+
 }  // namespace traits
 }  // namespace geometry
 }  // namespace boost

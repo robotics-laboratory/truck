@@ -8,8 +8,8 @@ using namespace truck::geom;
 namespace bg = boost::geometry;
 
 TEST(BoostVector, get) {
-    Vec2 v2(1, 2);
-    Vec3 v3(3, 4, 5);
+    const Vec2 v2(1, 2);
+    const Vec3 v3(3, 4, 5);
 
     EXPECT_TRUE(std::make_tuple(v2.x, v2.y) == std::make_tuple(bg::get<0>(v2), bg::get<1>(v2)));
     EXPECT_TRUE(
@@ -26,7 +26,7 @@ TEST(BoostVector, set) {
 }
 
 TEST(BoostBoundingBox, get) {
-    BoundingBox box({1, 2}, {3, 4});
+    const BoundingBox box({1, 2}, {3, 4});
     double x0 = bg::get<bg::min_corner, 0>(box);
     double y0 = bg::get<bg::min_corner, 1>(box);
     double x1 = bg::get<bg::max_corner, 0>(box);
@@ -48,18 +48,32 @@ TEST(BoostBoundingBox, set) {
     ASSERT_GEOM_EQUAL(box.max.y, 2.0);
 }
 
-TEST(BoostSegment, bruh) {
-    Segment seg1({}, {});
+TEST(BoostSegment, get) {
+    const Segment seg({1, 2}, {3, 4});
 
-    bg::set<0, 0>(seg1, 1.0);
-    bg::set<0, 1>(seg1, 2.0);
-    bg::set<1, 0>(seg1, 3.0);
-    bg::set<1, 1>(seg1, 4.0);
+    double x0 = bg::get<0, 0>(seg);
+    double y0 = bg::get<0, 1>(seg);
+    double x1 = bg::get<1, 0>(seg);
+    double y1 = bg::get<1, 1>(seg);
 
-    double x0 = bg::get<0, 0>(seg1);
-    double y0 = bg::get<0, 1>(seg1);
-    double x1 = bg::get<1, 0>(seg1);
-    double y1 = bg::get<1, 1>(seg1);
+    ASSERT_GEOM_EQUAL(x0, 1.0);
+    ASSERT_GEOM_EQUAL(y0, 2.0);
+    ASSERT_GEOM_EQUAL(x1, 3.0);
+    ASSERT_GEOM_EQUAL(y1, 4.0);
+}
+
+TEST(BoostSegment, set) {
+    Segment seg({}, {});
+
+    bg::set<0, 0>(seg, 1.0);
+    bg::set<0, 1>(seg, 2.0);
+    bg::set<1, 0>(seg, 3.0);
+    bg::set<1, 1>(seg, 4.0);
+
+    double x0 = bg::get<0, 0>(seg);
+    double y0 = bg::get<0, 1>(seg);
+    double x1 = bg::get<1, 0>(seg);
+    double y1 = bg::get<1, 1>(seg);
 
     ASSERT_GEOM_EQUAL(x0, 1.0);
     ASSERT_GEOM_EQUAL(y0, 2.0);

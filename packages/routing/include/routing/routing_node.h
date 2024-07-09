@@ -19,8 +19,7 @@ namespace truck::routing {
 
 namespace bg = boost::geometry;
 
-using RTreePoint = geom::Vec2;
-using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
+using RTreeIndexedPoint = std::pair<geom::Vec2, size_t>;
 using RTreeIndexedPoints = std::vector<RTreeIndexedPoint>;
 using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
 
