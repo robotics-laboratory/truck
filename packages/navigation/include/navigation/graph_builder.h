@@ -1,7 +1,6 @@
 #pragma once
 
 #include "geom/complex_polygon.h"
-// #include "geom/boost/point.h"
 
 namespace truck::navigation::graph {
 
