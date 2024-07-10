@@ -53,4 +53,6 @@ class Exception : public std::exception {
         THROW_EXCEPTION() << ":" << #condition << "\n" << fmt(__VA_ARGS__); \
     }
 
+#define FALL(...) THROW_EXCEPTION() << ": " << fmt(__VA_ARGS__);
+
 }  // namespace truck

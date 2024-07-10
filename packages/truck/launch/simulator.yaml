@@ -1,6 +1,4 @@
 launch:
-- arg: { name: "world", default: "simple.world" }
-- arg: { name: "control_name", default: "$(env TRUCK_CONTROL)" }
 - arg: { name: "model_config", default: "$(find-pkg-share model)/config/model.yaml" }
 - arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
 - arg: { name: "initial_ego_state_config", default: "$(find-pkg-share simulator_2d)/config/initial_ego_state.json" }
@@ -17,4 +15,3 @@ launch:
     arg:
     - { name: "simulation", value: "true" }
     - { name: "qos", value: "2" }
-    - { name: "control_name", value: "$(var control_name)" }

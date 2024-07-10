@@ -23,16 +23,6 @@ struct Vec2 {
 
     static Vec2 fromAngle(Angle a) noexcept { return {cos(a), sin(a)}; }
 
-    Vec2& operator=(const Vec2& other) noexcept {
-        if (this == &other) {
-            return *this;
-        }
-
-        x = other.x;
-        y = other.y;
-        return *this;
-    }
-
     Vec2& operator+=(const Vec2& other) noexcept {
         x += other.x;
         y += other.y;

@@ -1,6 +1,6 @@
 #include "control_proxy_node.h"
 
-#include "common/exception.h"
+#include "common/math.h"
 
 #include <rclcpp/time.hpp>
 
@@ -11,59 +11,25 @@ using namespace std::placeholders;
 
 namespace truck::control_proxy {
 
-std::string toString(Mode mode) {
-    switch (mode) {
-        case Mode::kOff:
-            return "Off";
-        case Mode::kRemote:
-            return "Remote";
-        case Mode::kAuto:
-            return "Auto";
-        default:
-            VERIFY(false);
-    }
-}
-
-ControlMap::ControlMap(const YAML::Node& node) :
-    velocity_axis(node["velocity_axis"].as<size_t>()),
-    curvature_axis(node["curvature_axis"].as<size_t>()),
-    off_button(node["off_button"].as<size_t>()),
-    remote_button(node["remote_button"].as<size_t>()),
-    auto_button(node["auto_button"].as<size_t>()) {}
-
-ControlMap::ControlMap(const std::string& path) : ControlMap(YAML::LoadFile(path)) {}
-
-namespace {
-
-auto loadControlMap(const rclcpp::Logger& logger, const std::string& path) {
-    RCLCPP_INFO(logger, "load control map: %s", path.c_str());
-    return ControlMap(path);
-}
-
-}  // namespace
-
 ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
 
-    control_map_ = std::make_unique<ControlMap>(
-        loadControlMap(this->get_logger(), Node::declare_parameter<std::string>("control_config")));
-
     RCLCPP_INFO(
         this->get_logger(),
         "velocity: [%f, %f] m/s",
-        model_->baseVelocityLimits().max,
-        model_->baseVelocityLimits().min);
+        model_->baseVelocityLimits().min,
+        model_->baseVelocityLimits().max);
 
     RCLCPP_INFO(this->get_logger(), "curvature: %f", model_->baseMaxAbsCurvature());
 
     params_ = Params{
         std::chrono::milliseconds(this->declare_parameter<long int>("watchdog_period", 20)),
         std::chrono::milliseconds(this->declare_parameter<long int>("mode_period", 200)),
-        std::chrono::milliseconds(this->declare_parameter<long int>("joypad_timeout", 200)),
+        std::chrono::milliseconds(this->declare_parameter<long int>("remote_timeout", 200)),
         std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 150))};
 
-    RCLCPP_INFO(this->get_logger(), "joypad timeout: %li ms", params_.joypad_timeout.count());
+    RCLCPP_INFO(this->get_logger(), "remote timeout: %li ms", params_.remote_timeout.count());
     RCLCPP_INFO(this->get_logger(), "control timeout: %li ms", params_.control_timeout.count());
 
     service_.reset = this->create_service<std_srvs::srv::Empty>(
@@ -72,8 +38,8 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
     slot_.command = Node::create_subscription<truck_msgs::msg::Control>(
         "/motion/command", 1, std::bind(&ControlProxyNode::forwardControlCommand, this, _1));
 
-    slot_.joypad = Node::create_subscription<sensor_msgs::msg::Joy>(
-        "/joy", 1, std::bind(&ControlProxyNode::handleJoypadCommand, this, _1));
+    slot_.input = Node::create_subscription<truck_msgs::msg::RemoteControl>(
+        "/control/input", 1, std::bind(&ControlProxyNode::handleRemoteCommand, this, _1));
 
     timer_.watchdog = this->create_wall_timer(
         params_.watchdog_period, std::bind(&ControlProxyNode::watchdog, this));
@@ -81,8 +47,6 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
     timer_.mode = this->create_wall_timer(
         params_.mode_period, std::bind(&ControlProxyNode::publishMode, this));
 
-    signal_.mode_feedback =
-        Node::create_publisher<sensor_msgs::msg::JoyFeedback>("/joy/set_feedback", 1);
     signal_.mode = Node::create_publisher<truck_msgs::msg::ControlMode>("/control/mode", 1);
     signal_.command = Node::create_publisher<truck_msgs::msg::Control>("/control/command", 1);
 
@@ -90,67 +54,54 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
 }
 
 void ControlProxyNode::setMode(Mode mode) {
-    if (mode == state_.mode) {
-        return;
+    if (mode != state_.mode) {
+        state_.mode = mode;
+        RCLCPP_WARN(this->get_logger(), "set mode: %s", toString(mode).data());
     }
-
-    state_.mode = mode;
-    RCLCPP_WARN(this->get_logger(), "mode: %s", toString(mode).c_str());
-
-    sensor_msgs::msg::JoyFeedback result;
-
-    result.type = sensor_msgs::msg::JoyFeedback::TYPE_RUMBLE;
-    result.id = 0;
-    result.intensity = 0.5;
-
-    signal_.mode_feedback->publish(result);
 }
 
 truck_msgs::msg::Control ControlProxyNode::makeControlCommand(
-    const sensor_msgs::msg::Joy& command) {
+    const truck_msgs::msg::RemoteControl& command) {
     truck_msgs::msg::Control result;
 
     result.header.stamp = command.header.stamp;
     result.header.frame_id = frame_id_;
 
-    result.curvature = command.axes[control_map_->curvature_axis] * model_->baseMaxAbsCurvature();
-
-    result.velocity = [&] {
-        const double ratio = command.axes[control_map_->velocity_axis];
-        return ratio >= 0 ? ratio * model_->baseVelocityLimits().max
-                          : -ratio * model_->baseVelocityLimits().min;
-    }();
-
+    double curvature_ratio = clamp(command.curvature_ratio, -1.0, 1.0);
+    double velocity_ratio = clamp(command.velocity_ratio, -1.0, 1.0);
+    result.curvature = curvature_ratio * model_->baseMaxAbsCurvature();
+    result.velocity =
+        (velocity_ratio >= 0 ? velocity_ratio * model_->baseVelocityLimits().max
+                             : -velocity_ratio * model_->baseVelocityLimits().min);
     result.has_acceleration = false;
 
     return result;
 }
 
-void ControlProxyNode::handleJoypadCommand(sensor_msgs::msg::Joy::ConstSharedPtr joypad_command) {
-    if (checkButtonPressed(joypad_command, control_map_->off_button)) {
-        setMode(Mode::kOff);
-    } else if (checkButtonPressed(joypad_command, control_map_->remote_button)) {
-        setMode(Mode::kRemote);
-    } else if (checkButtonPressed(joypad_command, control_map_->auto_button)) {
-        setMode(Mode::kAuto);
+void ControlProxyNode::handleRemoteCommand(truck_msgs::msg::RemoteControl::ConstSharedPtr input) {
+    if (!state_.prev_input || state_.prev_input->mode != input->mode) {
+        switch (input->mode) {
+            case 0:
+                setMode(Mode::kOff);
+                break;
+            case 1:
+                setMode(Mode::kRemote);
+                break;
+            case 2:
+                setMode(Mode::kAuto);
+                break;
+            default:
+                FALL("unknown mode: %d", static_cast<uint8_t>(input->mode));
+        }
     }
 
     if (state_.mode == Mode::kRemote) {
-        const auto command = makeControlCommand(*joypad_command);
+        const auto command = makeControlCommand(*input);
         publishCommand(command);
         state_.prev_command = std::make_shared<truck_msgs::msg::Control>(command);
     }
 
-    state_.prev_joypad_command = std::move(joypad_command);
-}
-
-bool ControlProxyNode::checkButtonPressed(
-    sensor_msgs::msg::Joy::ConstSharedPtr joypad_command, size_t joypad_button) {
-    if (!state_.prev_joypad_command || !joypad_command) {
-        return false;
-    }
-    return state_.prev_joypad_command->buttons[joypad_button] == 0
-           && joypad_command->buttons[joypad_button] == 1;
+    state_.prev_input = std::move(input);
 }
 
 void ControlProxyNode::publishMode() {
@@ -181,7 +132,7 @@ void ControlProxyNode::publishStop() {
 
 void ControlProxyNode::reset() {
     setMode(Mode::kOff);
-    state_.prev_joypad_command = nullptr;
+    state_.prev_input = nullptr;
     state_.prev_command = nullptr;
     publishMode();
     publishStop();
@@ -201,9 +152,8 @@ void ControlProxyNode::watchdog() {
         return;
     }
 
-    if (state_.mode != Mode::kOff
-        && timeout_failed(state_.prev_joypad_command, params_.joypad_timeout)) {
-        RCLCPP_ERROR(this->get_logger(), "lost joypad, stop!");
+    if (state_.mode != Mode::kOff && timeout_failed(state_.prev_input, params_.remote_timeout)) {
+        RCLCPP_ERROR(this->get_logger(), "lost remote input, stop!");
         reset();
         return;
     }
