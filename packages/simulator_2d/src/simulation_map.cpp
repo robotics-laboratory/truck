@@ -14,12 +14,12 @@
 namespace truck::simulator {
 
 void SimulationMap::initializeRTree() {
-    RTreeIndexedSegments segments;
+    IndexSegments segments;
     segments.reserve(obstacles_.size());
     for (auto i = 0; i < obstacles_.size(); ++i) {
-        const auto first = RTreePoint(obstacles_[i].begin.x, obstacles_[i].begin.y);
-        const auto second = RTreePoint(obstacles_[i].end.x, obstacles_[i].end.y);
-        segments.emplace_back(RTreeSegment(first, second), i);
+        const auto first = geom::Vec2(obstacles_[i].begin.x, obstacles_[i].begin.y);
+        const auto second = geom::Vec2(obstacles_[i].end.x, obstacles_[i].end.y);
+        segments.emplace_back(geom::Segment(first, second), i);
     }
 
     rtree_ = RTree(segments.begin(), segments.end());
@@ -47,11 +47,11 @@ void SimulationMap::eraseMap() {
 
 bool hasCollision(const SimulationMap& map, const geom::Polygon& shape_polygon, double precision) {
     const auto bounding_box = geom::makeBoundingBox(shape_polygon);
-    const RTreeBox rtree_box = {
-        RTreePoint(bounding_box.min.x, bounding_box.min.y),
-        RTreePoint(bounding_box.max.x, bounding_box.max.y)};
+    const geom::BoundingBox rtree_box = {
+        geom::Vec2(bounding_box.min.x, bounding_box.min.y),
+        geom::Vec2(bounding_box.max.x, bounding_box.max.y)};
 
-    std::vector<RTreeIndexedSegment> result;
+    IndexSegments result;
     map.rtree().query(bgi::intersects(rtree_box), std::back_inserter(result));
 
     for (const auto& rtree_segment : result) {

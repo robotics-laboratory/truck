@@ -13,15 +13,15 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <boost/geometry.hpp>
+#include "geom/boost/point.h"
 
 namespace truck::routing {
 
 namespace bg = boost::geometry;
 
-using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
-using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
-using RTreeIndexedPoints = std::vector<RTreeIndexedPoint>;
-using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
+using IndexPoint = std::pair<geom::Vec2, size_t>;
+using IndexPoints = std::vector<IndexPoint>;
+using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
 struct Route {
     Route();

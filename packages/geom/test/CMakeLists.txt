@@ -4,6 +4,7 @@ ament_add_gtest(
   angle_vector_tests.cpp
   arc_tests.cpp
   bounding_box_tests.cpp
+  boost_tests.cpp
   distance_tests.cpp
   line_tests.cpp
   main.cpp

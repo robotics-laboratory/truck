@@ -1,6 +1,9 @@
 #include "geom/pose.h"
 #include "geom/polygon.h"
 #include "geom/segment.h"
+#include "geom/boost/point.h"
+#include "geom/boost/segment.h"
+#include "geom/boost/box.h"
 #include "model/model.h"
 
 #include <boost/geometry.hpp>
@@ -13,12 +16,9 @@ namespace truck::simulator {
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
-using RTreeSegment = bg::model::segment<RTreePoint>;
-using RTreeBox = bg::model::box<RTreePoint>;
-using RTreeIndexedSegment = std::pair<RTreeSegment, size_t>;
-using RTreeIndexedSegments = std::vector<RTreeIndexedSegment>;
-using RTree = bgi::rtree<RTreeIndexedSegment, bgi::rstar<16>>;
+using IndexSegment = std::pair<geom::Segment, size_t>;
+using IndexSegments = std::vector<IndexSegment>;
+using RTree = bgi::rtree<IndexSegment, bgi::rstar<16>>;
 
 class SimulationMap {
   public:
