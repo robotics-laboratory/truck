@@ -22,14 +22,17 @@ template<>
 struct ring_const_type<ComplexPolygon> {
     typedef const Polygon& type;
 };
+
 template<>
 struct ring_mutable_type<ComplexPolygon> {
     typedef Polygon& type;
 };
+
 template<>
 struct interior_const_type<ComplexPolygon> {
     typedef const std::vector<Polygon>& type;
 };
+
 template<>
 struct interior_mutable_type<ComplexPolygon> {
     typedef std::vector<Polygon>& type;
