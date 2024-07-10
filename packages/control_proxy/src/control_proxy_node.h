@@ -1,10 +1,9 @@
 #pragma once
 
-#include <geometry_msgs/msg/twist.hpp>
-
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
 
+#include "common/exception.h"
 #include "model/model.h"
 
 #include "truck_msgs/msg/control.hpp"
@@ -14,13 +13,25 @@
 
 #include <chrono>
 #include <cstdint>
-#include <string>
+#include <string_view>
 
 namespace truck::control_proxy {
 
 enum class Mode : uint8_t { kOff = 0, kRemote = 1, kAuto = 2 };
 
-std::string toString(Mode mode);
+// Pay attention! The returned string are null terminated, but still be careful when using it.
+constexpr std::string_view toString(Mode mode) {
+    switch (mode) {
+        case Mode::kOff:
+            return "Off";
+        case Mode::kRemote:
+            return "Remote";
+        case Mode::kAuto:
+            return "Auto";
+        default:
+            FALL("Unexpected mode: %d", static_cast<uint8_t>(mode));
+    }
+}
 
 class ControlProxyNode : public rclcpp::Node {
   public:
@@ -31,11 +42,9 @@ class ControlProxyNode : public rclcpp::Node {
 
     void publishCommand(const truck_msgs::msg::Control& command);
 
-    geometry_msgs::msg::Twist transformToTwist(const truck_msgs::msg::Control& command) const;
-
     void forwardControlCommand(truck_msgs::msg::Control::ConstSharedPtr command);
 
-    void handleInputCommand(truck_msgs::msg::RemoteControl::ConstSharedPtr command);
+    void handleRemoteCommand(truck_msgs::msg::RemoteControl::ConstSharedPtr command);
 
     void onReset(
         const std::shared_ptr<std_srvs::srv::Empty::Request> request,
@@ -54,7 +63,7 @@ class ControlProxyNode : public rclcpp::Node {
     struct Params {
         std::chrono::milliseconds watchdog_period{20};
         std::chrono::milliseconds mode_period{200};
-        std::chrono::milliseconds control_timeout{200};
+        std::chrono::milliseconds control_timeout{150};
         std::chrono::milliseconds remote_timeout{200};
     } params_{};
 
@@ -70,7 +79,6 @@ class ControlProxyNode : public rclcpp::Node {
     struct Signals {
         rclcpp::Publisher<truck_msgs::msg::Control>::SharedPtr command = nullptr;
         rclcpp::Publisher<truck_msgs::msg::ControlMode>::SharedPtr mode = nullptr;
-        rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr twist = nullptr;
     } signal_;
 
     struct Timers {

@@ -1,10 +1,6 @@
 launch:
-- arg: { name: "control_name", default: "ps4" }
-
 - include:
     file: $(find-pkg-share truck)/launch/control.yaml
-    arg:
-    - { name: "control_name", value: "$(var control_name)" }
 
 - include:
     file: $(find-pkg-share hardware_node)/launch/hardware_node.yaml

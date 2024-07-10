@@ -1,6 +1,5 @@
 #include "control_proxy_node.h"
 
-#include "common/exception.h"
 #include "common/math.h"
 
 #include <rclcpp/time.hpp>
@@ -12,19 +11,6 @@ using namespace std::placeholders;
 
 namespace truck::control_proxy {
 
-std::string toString(Mode mode) {
-    switch (mode) {
-        case Mode::kOff:
-            return "Off";
-        case Mode::kRemote:
-            return "Remote";
-        case Mode::kAuto:
-            return "Auto";
-        default:
-            VERIFY(false);
-    }
-}
-
 ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
@@ -32,8 +18,8 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
     RCLCPP_INFO(
         this->get_logger(),
         "velocity: [%f, %f] m/s",
-        model_->baseVelocityLimits().max,
-        model_->baseVelocityLimits().min);
+        model_->baseVelocityLimits().min,
+        model_->baseVelocityLimits().max);
 
     RCLCPP_INFO(this->get_logger(), "curvature: %f", model_->baseMaxAbsCurvature());
 
@@ -41,8 +27,7 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
         std::chrono::milliseconds(this->declare_parameter<long int>("watchdog_period", 20)),
         std::chrono::milliseconds(this->declare_parameter<long int>("mode_period", 200)),
         std::chrono::milliseconds(this->declare_parameter<long int>("remote_timeout", 200)),
-        std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 150))
-    };
+        std::chrono::milliseconds(this->declare_parameter<long int>("control_timeout", 150))};
 
     RCLCPP_INFO(this->get_logger(), "remote timeout: %li ms", params_.remote_timeout.count());
     RCLCPP_INFO(this->get_logger(), "control timeout: %li ms", params_.control_timeout.count());
@@ -54,7 +39,7 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
         "/motion/command", 1, std::bind(&ControlProxyNode::forwardControlCommand, this, _1));
 
     slot_.input = Node::create_subscription<truck_msgs::msg::RemoteControl>(
-        "/control/input", 1, std::bind(&ControlProxyNode::handleInputCommand, this, _1));
+        "/control/input", 1, std::bind(&ControlProxyNode::handleRemoteCommand, this, _1));
 
     timer_.watchdog = this->create_wall_timer(
         params_.watchdog_period, std::bind(&ControlProxyNode::watchdog, this));
@@ -69,12 +54,10 @@ ControlProxyNode::ControlProxyNode() : Node("control_proxy") {
 }
 
 void ControlProxyNode::setMode(Mode mode) {
-    if (mode == state_.mode) {
-        return;
+    if (mode != state_.mode) {
+        state_.mode = mode;
+        RCLCPP_WARN(this->get_logger(), "set mode: %s", toString(mode).data());
     }
-
-    state_.mode = mode;
-    RCLCPP_WARN(this->get_logger(), "mode: %s", toString(mode).c_str());
 }
 
 truck_msgs::msg::Control ControlProxyNode::makeControlCommand(
@@ -87,29 +70,32 @@ truck_msgs::msg::Control ControlProxyNode::makeControlCommand(
     double curvature_ratio = clamp(command.curvature_ratio, -1.0, 1.0);
     double velocity_ratio = clamp(command.velocity_ratio, -1.0, 1.0);
     result.curvature = curvature_ratio * model_->baseMaxAbsCurvature();
-    result.velocity = (
-        velocity_ratio >= 0
-        ? velocity_ratio * model_->baseVelocityLimits().max
-        : -velocity_ratio * model_->baseVelocityLimits().min
-    );
+    result.velocity =
+        (velocity_ratio >= 0 ? velocity_ratio * model_->baseVelocityLimits().max
+                             : -velocity_ratio * model_->baseVelocityLimits().min);
     result.has_acceleration = false;
 
     return result;
 }
 
-void ControlProxyNode::handleInputCommand(truck_msgs::msg::RemoteControl::ConstSharedPtr input) {
-    if (state_.prev_input && state_.prev_input->mode != input->mode) {
+void ControlProxyNode::handleRemoteCommand(truck_msgs::msg::RemoteControl::ConstSharedPtr input) {
+    if (!state_.prev_input || state_.prev_input->mode != input->mode) {
         switch (input->mode) {
-            case 0: setMode(Mode::Off); break;
-            case 1: setMode(Mode::Remote); break;
-            case 2: setMode(Mode::Auto); break;
+            case 0:
+                setMode(Mode::kOff);
+                break;
+            case 1:
+                setMode(Mode::kRemote);
+                break;
+            case 2:
+                setMode(Mode::kAuto);
+                break;
             default:
-                RCLCPP_WARN(get_logger(), "unknown mode: %d", input->mode);
-                setMode(Mode::Off);
+                FALL("unknown mode: %d", static_cast<uint8_t>(input->mode));
         }
     }
 
-    if (state_.mode == Mode::Remote) {
+    if (state_.mode == Mode::kRemote) {
         const auto command = makeControlCommand(*input);
         publishCommand(command);
         state_.prev_command = std::make_shared<truck_msgs::msg::Control>(command);
@@ -145,7 +131,7 @@ void ControlProxyNode::publishStop() {
 }
 
 void ControlProxyNode::reset() {
-    setMode(Mode::Off);
+    setMode(Mode::kOff);
     state_.prev_input = nullptr;
     state_.prev_command = nullptr;
     publishMode();
@@ -167,7 +153,7 @@ void ControlProxyNode::watchdog() {
     }
 
     if (state_.mode != Mode::kOff && timeout_failed(state_.prev_input, params_.remote_timeout)) {
-        RCLCPP_ERROR(this->get_logger(), "lost input, stop!");
+        RCLCPP_ERROR(this->get_logger(), "lost remote input, stop!");
         reset();
         return;
     }
