@@ -30,26 +30,32 @@ void SimulatorNode::initializeParameters() {
     params_ = {
         .update_period = declare_parameter("update_period", 0.01),
 
-        .noise_generator = {
-            .lidar =
-                {
-                    .enable = declare_parameter("sensor_noise.lidar.enable", false),
-                    .mean = declare_parameter("sensor_noise.lidar.mean", 0.0),
-                    .variance = declare_parameter("sensor_noise.lidar.variance", 0.0),
-                },
+        .noise_generator =
+            {.lidar =
+                 {
+                     .enable = declare_parameter("sensor_noise.lidar.enable", false),
+                     .mean = declare_parameter("sensor_noise.lidar.mean", 0.0),
+                     .variance = declare_parameter("sensor_noise.lidar.variance", 0.0),
+                 },
 
-            .gyro =
-                {
-                    .enable = declare_parameter("sensor_noise.gyro.enable", false),
-                    .mean = declare_parameter("sensor_noise.gyro.mean", 0.0),
-                    .variance = declare_parameter("sensor_noise.gyro.variance", 0.0),
-                },
+             .gyro =
+                 {
+                     .enable = declare_parameter("sensor_noise.gyro.enable", false),
+                     .mean = declare_parameter("sensor_noise.gyro.mean", 0.0),
+                     .variance = declare_parameter("sensor_noise.gyro.variance", 0.0),
+                 },
 
-            .accel = {
-                .enable = declare_parameter("sensor_noise.accel.enable", false),
-                .mean = declare_parameter("sensor_noise.accel.mean", 0.0),
-                .variance = declare_parameter("sensor_noise.accel.variance", 0.0),
-            }}};
+             .accel =
+                 {
+                     .enable = declare_parameter("sensor_noise.accel.enable", false),
+                     .mean = declare_parameter("sensor_noise.accel.mean", 0.0),
+                     .variance = declare_parameter("sensor_noise.accel.variance", 0.0),
+                 }},
+
+        .init_state = {
+            .x = declare_parameter("initial_x", 0.0),
+            .y = declare_parameter("initial_y", 0.0),
+            .yaw = declare_parameter("initial_yaw", 0.0)}};
 }
 
 void SimulatorNode::initializeTopicHandlers() {
@@ -64,11 +70,11 @@ void SimulatorNode::initializeTopicHandlers() {
     signals_.time = Node::create_publisher<rosgraph_msgs::msg::Clock>(
         "/clock", rclcpp::QoS(1).reliability(qos));
 
-    signals_.simulator_odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/simulator/odometry", rclcpp::QoS(1).reliability(qos));
+    signals_.localization = Node::create_publisher<nav_msgs::msg::Odometry>(
+        "/simulator/localization", rclcpp::QoS(1).reliability(qos));
 
     signals_.hardware_odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
-        "/hardware/odometry", rclcpp::QoS(1).reliability(qos));
+        "/hardware/wheel/odometry", rclcpp::QoS(1).reliability(qos));
 
     signals_.tf_publisher =
         Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf", rclcpp::QoS(1).reliability(qos));
@@ -87,7 +93,6 @@ void SimulatorNode::initializeTopicHandlers() {
 }
 
 void SimulatorNode::initializeCache(const std::unique_ptr<model::Model>& model) {
-    cache_.lidar_config.tf = model->getLatestTranform("base", "lidar_link");
     cache_.lidar_config.angle_min = static_cast<float>(model->lidar().angle_min.radians());
     cache_.lidar_config.angle_max = static_cast<float>(model->lidar().angle_max.radians());
     cache_.lidar_config.angle_increment =
@@ -103,20 +108,16 @@ void SimulatorNode::initializeEngine() {
 
     auto noise_generator = std::make_unique<NoiseGenerator>(params_.noise_generator);
 
-    const double x = declare_parameter("initial_x", 0.0);
-    const double y = declare_parameter("initial_y", 0.0);
-    const double yaw = declare_parameter("initial_yaw", 0.0);
-
-    geom::Pose pose;
-    pose.dir = geom::AngleVec2(geom::Angle::fromRadians(yaw));
-    pose.pos = geom::Vec2{x, y};
+    const geom::Pose init_pose = {
+        geom::Vec2(params_.init_state.x, params_.init_state.y),
+        geom::AngleVec2(geom::Angle(params_.init_state.yaw))};
 
     engine_ = std::make_unique<SimulatorEngine>(
         std::move(model),
         std::move(noise_generator),
         declare_parameter("integration_step", 0.001),
         declare_parameter("calculations_precision", 1e-8));
-    engine_->resetBase(pose, 0.0, 0.0);
+    engine_->resetBase(init_pose);
     engine_->resetMap(declare_parameter("map_config", ""));
 
     // The zero state of the simulation.
@@ -137,24 +138,24 @@ void SimulatorNode::publishTime(const TruckState& truck_state) {
     signals_.time->publish(clock_msg);
 }
 
-void SimulatorNode::publishSimulatorOdometryMessage(const TruckState& truck_state) {
-    nav_msgs::msg::Odometry odom_msg;
-    odom_msg.header.frame_id = "odom_ekf";
-    odom_msg.child_frame_id = "base";
-    odom_msg.header.stamp = truck_state.time();
+void SimulatorNode::publishSimulatorLocalizationMessage(const TruckState& truck_state) {
+    nav_msgs::msg::Odometry msg;
+    msg.header.frame_id = "world";
+    msg.child_frame_id = "base_gt";
+    msg.header.stamp = truck_state.time();
 
     // Set the pose.
     const auto pose = truck_state.odomBasePose();
-    odom_msg.pose.pose = truck::geom::msg::toPose(pose);
+    msg.pose.pose = truck::geom::msg::toPose(pose);
 
     // Set the twist.
     const auto linear_velocity = truck_state.odomBaseLinearVelocity();
-    odom_msg.twist.twist.linear.x = linear_velocity.x;
-    odom_msg.twist.twist.linear.y = linear_velocity.y;
+    msg.twist.twist.linear.x = linear_velocity.x;
+    msg.twist.twist.linear.y = linear_velocity.y;
     const double angular_velocity = truck_state.baseAngularVelocity();
-    odom_msg.twist.twist.angular.z = angular_velocity;
+    msg.twist.twist.angular.z = angular_velocity;
 
-    signals_.simulator_odometry->publish(odom_msg);
+    signals_.localization->publish(msg);
 }
 
 void SimulatorNode::publishHardwareOdometryMessage(const TruckState& truck_state) {
@@ -167,24 +168,26 @@ void SimulatorNode::publishHardwareOdometryMessage(const TruckState& truck_state
 }
 
 void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
-    geometry_msgs::msg::TransformStamped odom_to_base_transform_msg;
-    odom_to_base_transform_msg.header.frame_id = "odom_ekf";
-    odom_to_base_transform_msg.child_frame_id = "base";
-    odom_to_base_transform_msg.header.stamp = truck_state.time();
+    tf2_msgs::msg::TFMessage tf_msg;
 
     const auto pose = truck_state.odomBasePose();
-    odom_to_base_transform_msg.transform.translation.x = pose.pos.x;
-    odom_to_base_transform_msg.transform.translation.y = pose.pos.y;
-    odom_to_base_transform_msg.transform.rotation = truck::geom::msg::toQuaternion(pose.dir);
 
-    tf2_msgs::msg::TFMessage tf_msg;
-    tf_msg.transforms.push_back(odom_to_base_transform_msg);
+    geometry_msgs::msg::TransformStamped world_to_base_gt;
+    world_to_base_gt.header.frame_id = "world";
+    world_to_base_gt.child_frame_id = "base_gt";
+    world_to_base_gt.header.stamp = truck_state.time();
+
+    world_to_base_gt.transform.translation.x = pose.pos.x;
+    world_to_base_gt.transform.translation.y = pose.pos.y;
+    world_to_base_gt.transform.rotation = geom::msg::toQuaternion(pose.dir);
+
+    tf_msg.transforms.push_back(world_to_base_gt);
     signals_.tf_publisher->publish(tf_msg);
 }
 
 void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
     truck_msgs::msg::HardwareTelemetry telemetry_msg;
-    telemetry_msg.header.frame_id = "base";
+    telemetry_msg.header.frame_id = "base_gt";
     telemetry_msg.header.stamp = truck_state.time();
 
     const auto current_steering = truck_state.currentSteering();
@@ -209,7 +212,7 @@ void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
 
 void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state) {
     truck_msgs::msg::SimulationState state_msg;
-    state_msg.header.frame_id = "base";
+    state_msg.header.frame_id = "base_gt";
     state_msg.header.stamp = truck_state.time();
 
     state_msg.speed = truck_state.baseTwist().velocity;
@@ -272,7 +275,7 @@ void SimulatorNode::publishImuMessage(const TruckState& truck_state) {
 void SimulatorNode::publishSimulationState() {
     const auto truck_state = engine_->getTruckState();
     publishTime(truck_state);
-    publishSimulatorOdometryMessage(truck_state);
+    publishSimulatorLocalizationMessage(truck_state);
     publishHardwareOdometryMessage(truck_state);
     publishTransformMessage(truck_state);
     publishTelemetryMessage(truck_state);

@@ -63,7 +63,8 @@ class SimulatorEngine {
         std::unique_ptr<model::Model> model, std::unique_ptr<NoiseGenerator> noise_generator,
         double integration_step = 1e-3, double precision = 1e-8);
 
-    void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
+    void resetBase(
+        const geom::Pose& pose, double middle_steering = 0.0, double linear_velocity = 0.0);
     void resetMap(const std::string& path);
     void eraseMap();
 

@@ -1,12 +1,6 @@
 launch:
 - arg: { name: "simulation", default: "false" }
 - arg: { name: "qos", default: "0" }
-- arg: { name: "initial_x", default: "0.0" }
-- arg: { name: "initial_y", default: "0.0" }
-- arg: { name: "initial_yaw", default: "0.0" }
-
-- let: { name: "publish_tf", value: "false", if: "$(var simulation)" }
-- let: { name: "publish_tf", value: "true", unless: "$(var simulation)" }
 
 - include:
     file: $(find-pkg-share icp_odometry)/launch/icp_odometry.yaml
@@ -30,18 +24,10 @@ launch:
     - { name: "world_frame", value: "odom_ekf" }
     - { name: "odom_frame", value: "odom_ekf" }
     - { name: "base_link_frame", value: "base" }
-    - { name: "publish_tf", value: "$(var publish_tf)" }
+    - { name: "publish_tf", value: True }
     - { name: "publish_acceleration", value: False }
     - { name: "predict_to_current_time", value: True }
     - { name: "dynamic_process_noise_covariance", value: True }
-    - { name: "initial_state", value: [
-            "$(var initial_x)", "$(var initial_y)", 0.0,    # pos
-            0.0, 0.0, "$(var initial_yaw)",                 # rot
-            0.0, 0.0, 0.0,                                  # pos`
-            0.0, 0.0, 0.0,                                  # rot`
-            0.0, 0.0, 0.0                                   # pos``
-        ]
-    }
 
     - { name: "imu0", value: "/camera/imu" }
     - { name: "imu0_queue_size", value: 30 }
@@ -67,7 +53,7 @@ launch:
         ]
     }
 
-    - { name: "odom0", value: "/hardware/odometry" }
+    - { name: "odom0", value: "/hardware/wheel/odometry" }
     - { name: "odom0_differential", value: False }
     - { name: "odom0_queue_size", value: 30 }
     - { name: "odom0_config", value: [

@@ -26,26 +26,32 @@ NoiseGenerator::NoiseGenerator(const NoiseGeneratorParams& params, size_t seed) 
 }
 
 void NoiseGenerator::applyToGyro(geom::Vec3& gyro) {
-    if (params_.gyro.enable) {
-        gyro.x = gyro.x + gyro_dist_(generator_);
-        gyro.y = gyro.y + gyro_dist_(generator_);
-        gyro.z = gyro.z + gyro_dist_(generator_);
+    if (!params_.gyro.enable) {
+        return;
     }
+
+    gyro.x += gyro_dist_(generator_);
+    gyro.y += gyro_dist_(generator_);
+    gyro.z += gyro_dist_(generator_);
 }
 
 void NoiseGenerator::applyToAccel(geom::Vec3& accel) {
-    if (params_.accel.enable) {
-        accel.x = accel.x + accel_dist_(generator_);
-        accel.y = accel.y + accel_dist_(generator_);
-        accel.z = accel.z + accel_dist_(generator_);
+    if (!params_.accel.enable) {
+        return;
     }
+
+    accel.x += accel_dist_(generator_);
+    accel.y += accel_dist_(generator_);
+    accel.z += accel_dist_(generator_);
 }
 
 void NoiseGenerator::applyToLidar(std::vector<float>& ranges) {
-    if (params_.lidar.enable) {
-        for (size_t i = 0; i < ranges.size(); i++) {
-            ranges[i] = ranges[i] + lidar_dist_(generator_);
-        }
+    if (!params_.lidar.enable) {
+        return;
+    }
+
+    for (size_t i = 0; i < ranges.size(); i++) {
+        ranges[i] += lidar_dist_(generator_);
     }
 }
 

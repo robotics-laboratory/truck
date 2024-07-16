@@ -21,7 +21,8 @@ void MotorOdometryPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
 
     period_ = std::chrono::duration<double>(GetParam<double>(sdf, "period"));
 
-    slot_.odometry = node_->create_publisher<nav_msgs::msg::Odometry>("/hardware/odometry", 1);
+    slot_.odometry =
+        node_->create_publisher<nav_msgs::msg::Odometry>("/hardware/wheel/odometry", 1);
     RCLCPP_INFO(
         node_->get_logger(), "Publish odometry on [/motor/odom] with period %f s", period_.count());
 

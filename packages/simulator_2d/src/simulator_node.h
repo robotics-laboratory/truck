@@ -31,7 +31,7 @@ class SimulatorNode : public rclcpp::Node {
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
 
     void publishTime(const TruckState& truck_state);
-    void publishSimulatorOdometryMessage(const TruckState& truck_state);
+    void publishSimulatorLocalizationMessage(const TruckState& truck_state);
     void publishHardwareOdometryMessage(const TruckState& truck_state);
     void publishTransformMessage(const TruckState& truck_state);
     void publishTelemetryMessage(const TruckState& truck_state);
@@ -49,11 +49,16 @@ class SimulatorNode : public rclcpp::Node {
     struct Parameters {
         double update_period;
         NoiseGeneratorParams noise_generator;
+
+        struct InitialState {
+            double x;
+            double y;
+            double yaw;
+        } init_state;
     } params_;
 
     struct Cache {
         struct LidarConfig {
-            tf2::Transform tf;
             float angle_min;
             float angle_max;
             float angle_increment;
@@ -68,7 +73,7 @@ class SimulatorNode : public rclcpp::Node {
 
     struct Signals {
         rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr time = nullptr;
-        rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr simulator_odometry = nullptr;
+        rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr localization = nullptr;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr hardware_odometry = nullptr;
         rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
         rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
