@@ -6,7 +6,7 @@
 
 namespace truck::model {
 
-Shape::Shape() {}
+Shape::Shape() = default;
 
 Shape::Shape(const YAML::Node& node) :
     width(node["width"].as<double>()),
@@ -28,7 +28,7 @@ std::vector<geom::Vec2> Shape::getCircleDecomposition(const geom::Pose& ego_pose
     const double pos_step = (length - 2 * radius()) / (circles_count - 1);
 
     for (int i = 0; i < circles_count; i++) {
-        double offset = pos_first + (i * pos_step);
+        const double offset = pos_first + (i * pos_step);
         points.push_back(ego_pose.pos + offset * ego_pose.dir);
     }
 

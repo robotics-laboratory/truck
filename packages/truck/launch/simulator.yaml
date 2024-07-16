@@ -1,15 +1,17 @@
 launch:
-- arg: { name: "world", default: "simple.world" }
-- arg: { name: "control_name", default: "$(env TRUCK_CONTROL)" }
+- arg: { name: "model_config", default: "$(find-pkg-share model)/config/model.yaml" }
+- arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
+- arg: { name: "initial_ego_state_config", default: "$(find-pkg-share simulator_2d)/config/initial_ego_state.json" }
 
 - include:
-    file: $(find-pkg-share truck_gazebo)/launch/simulator.yaml
+    file: $(find-pkg-share simulator_2d)/launch/simulator_2d.yaml
     arg:
-    - { name: "world", value: "$(var world)" }
+      - { name: "model_config", value: "$(var model_config)" }
+      - { name: "map_config", value: "$(var map_config)" }
+      - { name: "initial_ego_state_config", value: "$(var initial_ego_state_config)" }
 
 - include:
     file: $(find-pkg-share truck)/launch/common.yaml
     arg:
     - { name: "simulation", value: "true" }
     - { name: "qos", value: "2" }
-    - { name: "control_name", value: "$(var control_name)" }

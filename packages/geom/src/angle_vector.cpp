@@ -11,7 +11,7 @@ bool equal(const AngleVec2& a, const AngleVec2& b, double eps) noexcept {
 
 AngleVec2 interpolate(const AngleVec2& a, const AngleVec2& b, double t) noexcept {
     VERIFY(0 <= t && t <= 1);
-    return AngleVec2(a.angle() + t * (b.angle() - a.angle()));
+    return {a.angle() + t * (b.angle() - a.angle())};
 }
 
 std::ostream& operator<<(std::ostream& out, const AngleVec2& a) noexcept {

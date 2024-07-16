@@ -1,7 +1,6 @@
 launch:
 - arg: { name: "simulation", default: "false" }
 - arg: { name: "qos", default: "0" }
-- arg: { name: "control_name", default: "ps4" }
 
 - include:
     file: $(find-pkg-share model)/launch/model_tf.yaml
@@ -13,7 +12,6 @@ launch:
     arg:
     - { name: "simulation", value: "$(var simulation)" }
     - { name: "qos", value: "$(var qos)" }
-    - { name: "control_name", value: "$(var control_name)" }
 
 - include:
     file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml
@@ -28,7 +26,8 @@ launch:
     - { name: "qos", value: "$(var qos)" }
 
 - include:
-    file: $(find-pkg-share truck)/launch/slam.yaml
+    file: $(find-pkg-share slam)/launch/slam.yaml
+    unless: "$(var simulation)"
     arg:
     - { name: "simulation", value: "$(var simulation)" }
     - { name: "qos", value: "$(var qos)" }
@@ -38,9 +37,6 @@ launch:
     arg:
     - { name: "simulation", value: "$(var simulation)" }
     - { name: "qos", value: "$(var qos)" }
-
-# - include:
-#     file: $(find-pkg-share truck)/launch/rosbridge.yaml
 
 - include:
     file: $(find-pkg-share truck)/launch/bridge.yaml

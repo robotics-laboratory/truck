@@ -10,12 +10,12 @@ StaticCollisionChecker::StaticCollisionChecker(const model::Shape& shape) : shap
 
 bool StaticCollisionChecker::initialized() const { return state_.has_value(); }
 
-void StaticCollisionChecker::reset(Map disntace_transform) {
-    const auto& origin = disntace_transform.origin;
+void StaticCollisionChecker::reset(Map distance_transform) {
+    const auto& origin = distance_transform.origin;
     const auto tf = geom::Transform(origin.pos, origin.dir);
 
     state_ = State{
-        .distance_transform = std::move(disntace_transform),
+        .distance_transform = std::move(distance_transform),
         .tf = tf.inv(),
     };
 }
@@ -39,7 +39,7 @@ double StaticCollisionChecker::distance(const geom::Vec2& point) const {
 
 double StaticCollisionChecker::distance(const geom::Pose& ego_pose) const {
     double min_dist = kMaxDistance;
-    std::vector<geom::Vec2> points = shape_.getCircleDecomposition(ego_pose);
+    const std::vector<geom::Vec2> points = shape_.getCircleDecomposition(ego_pose);
 
     for (const geom::Vec2& point : points) {
         min_dist = std::min(min_dist, std::max(distance(point) - shape_.radius(), 0.0));

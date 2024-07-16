@@ -1,7 +1,7 @@
 #include <waypoint_follower/waypoint_follower.h>
 
-#include "common/math.h"
 #include "common/exception.h"
+#include "common/math.h"
 #include "geom/distance.h"
 #include "motion/primitive.h"
 
@@ -74,7 +74,7 @@ void WaypointFollower::reset() {
 }
 
 bool WaypointFollower::isReadyToFinish(const geom::Pose& ego_pose) const {
-    return state_.waypoints.size() == 1 && state_.path.size() >= 1
+    return state_.waypoints.size() == 1 && !state_.path.empty()
            && geom::distanceSq(ego_pose.pos, state_.path.back().pose.pos)
                   < squared(params_.check_in_distance);
 }

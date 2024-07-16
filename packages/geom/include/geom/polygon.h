@@ -9,7 +9,7 @@
 
 namespace truck::geom {
 
-enum class Orientation { COUNTERCLOCKWISE = 1, CLOCKWISE = -1 };
+enum class Orientation : int8_t { kCounterClockwise = 1, kClockwise = -1 };
 
 /** 2D Polygon
  *
@@ -34,8 +34,7 @@ struct Polygon : public std::vector<Vec2> {
 using Polygons = std::vector<Polygon>;
 
 Polygon clip(
-    const Polygon& boundary_polygon, const Polygon& clipped_polygon,
-    const double eps = 1e-4) noexcept;
+    const Polygon& clip_polygon, const Polygon& subject_polygon, const double eps = 1e-4) noexcept;
 
 BoundingBox makeBoundingBox(const Polygon& polygon) noexcept;
 

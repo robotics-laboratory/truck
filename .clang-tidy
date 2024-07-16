@@ -101,7 +101,6 @@ Checks:          'bugprone-argument-comment,
                   performance-trivially-destructible,
                   performance-type-promotion-in-math-fn,
                   performance-unnecessary-copy-initialization,
-                  performance-unnecessary-value-param,
 
                   readability-avoid-const-params-in-decls,
                   readability-avoid-nested-conditional-operator,
@@ -110,7 +109,6 @@ Checks:          'bugprone-argument-comment,
                   readability-braces-around-statements,
                   readability-const-return-type,
                   readability-container-size-empty,
-                  readability-convert-member-functions-to-static,
                   readability-duplicate-include,
                   readability-else-after-return,
                   readability-inconsistent-declaration-parameter-name,
@@ -231,7 +229,6 @@ WarningsAsErrors:  'bugprone-argument-comment,
                     performance-trivially-destructible,
                     performance-type-promotion-in-math-fn,
                     performance-unnecessary-copy-initialization,
-                    performance-unnecessary-value-param,
 
                     readability-avoid-const-params-in-decls,
                     readability-avoid-nested-conditional-operator,
@@ -240,7 +237,6 @@ WarningsAsErrors:  'bugprone-argument-comment,
                     readability-braces-around-statements,
                     readability-const-return-type,
                     readability-container-size-empty,
-                    readability-convert-member-functions-to-static,
                     readability-duplicate-include,
                     readability-else-after-return,
                     readability-inconsistent-declaration-parameter-name,
@@ -271,8 +267,6 @@ CheckOptions:
   - key:             readability-identifier-naming.UnionCase
     value:           CamelCase
   - key:             readability-identifier-naming.StructCase
-    value:           CamelCase
-  - key:             readability-identifier-naming.TypeAliasCase
     value:           CamelCase
   - key:             readability-identifier-naming.TemplateParameterCase
     value:           CamelCase

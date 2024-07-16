@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "model/params.h"
-#include "model/model.h"
-#include "geom/vector.h"
 #include "geom/test/equal_assert.h"
+#include "geom/vector.h"
+#include "model/model.h"
+#include "model/params.h"
 
 #include <cmath>
 
@@ -11,7 +11,7 @@ using namespace truck::model;
 
 TEST(Params, yaml_params) {
     // check config
-    Params params("config/model.yaml");
+    const Params params("config/model.yaml");
 }
 
 TEST(Shape, rearPoseToShapePolygon) {

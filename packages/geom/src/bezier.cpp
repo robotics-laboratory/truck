@@ -16,7 +16,7 @@ Poses bezier1(const Vec2& p0, const Vec2& p1, size_t n) {
     poses.emplace_back(p0, dir);
 
     for (size_t i = 1; i < n - 1; ++i) {
-        const double t = double(i) / (n - 1);
+        const double t = static_cast<double>(i) / (n - 1);
         const double t_1 = 1 - t;
         poses.emplace_back(p0 * t_1 + p1 * t, dir);
     }
@@ -43,7 +43,7 @@ Poses bezier2(const Vec2& p0, const Vec2& p1, const Vec2& p2, size_t n) {
     poses.emplace_back(p0, AngleVec2::fromVector(p1 - p0));
 
     for (size_t i = 1; i < n - 1; ++i) {
-        const double t = double(i) / (n - 1);
+        const double t = static_cast<double>(i) / (n - 1);
         const double t_1 = 1 - t;
 
         const auto pos = p0 * t_1 * t_1 + p1 * 2 * t * t_1 + p2 * t * t;
@@ -74,7 +74,7 @@ Poses bezier3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, si
     poses.emplace_back(p0, AngleVec2::fromVector(p1 - p0));
 
     for (size_t i = 1; i < n - 1; ++i) {
-        const double t = double(i) / (n - 1);
+        const double t = static_cast<double>(i) / (n - 1);
         const double t2 = t * t;
 
         const double t_1 = 1 - t;

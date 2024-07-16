@@ -31,7 +31,7 @@ struct Line {
     double a, b, c;
 };
 
-bool equal(const Line& l1, const Line& l2, double eps) noexcept;
+bool equal(const Line& a, const Line& b, double eps) noexcept;
 
 std::ostream& operator<<(std::ostream& out, const Line& l) noexcept;
 

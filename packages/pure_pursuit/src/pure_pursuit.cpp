@@ -36,16 +36,16 @@ Result PurePursuit::operator()(
     const geom::Localization& localization, const motion::Trajectory& trajectory) {
     const auto& states = trajectory.states;
     if (states.empty()) {
-        return Result(Command::stop());
+        return {Command::stop()};
     }
 
     const auto ego_state = trajectory.byProjection(localization.pose, params_.max_distance);
     if (!ego_state) {
-        return Result(Error::kNoProjection);
+        return {Error::kNoProjection};
     }
 
     if (!ego_state->reachable()) {
-        return Result(Error::kUnreachableProjection);
+        return {Error::kUnreachableProjection};
     }
 
     const double radius = getRadius(localization.velocity);
@@ -60,12 +60,12 @@ Result PurePursuit::operator()(
     command.target = goal;
 
     if (std::holds_alternative<geom::Arc>(variant)) {
-        const geom::Arc& arc = std::get<geom::Arc>(variant);
+        const auto& arc = std::get<geom::Arc>(variant);
         command.curvature = arc.curv();
     } else if (std::holds_alternative<geom::Segment>(variant)) {
         command.curvature = 0.0;
     } else {
-        return Result(Error::kImpossibleBuildArc);
+        return {Error::kImpossibleBuildArc};
     }
 
     return Result{command};

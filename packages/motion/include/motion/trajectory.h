@@ -66,15 +66,15 @@ struct Trajectory {
     void fillDistance();
 
     // check main requqirements
-    void throwIfInvalid(const TrajectoryValidations& validations, const model::Model& model);
+    void throwIfInvalid(const TrajectoryValidations& validations, const model::Model& model) const;
 
     bool overbraking = false;
     States states = {};
 };
 
-State toState(const truck_msgs::msg::TrajectoryState& state);
-States toStates(const std::vector<truck_msgs::msg::TrajectoryState>& states);
-Trajectory toTrajectory(const truck_msgs::msg::Trajectory& trajectory);
+State toState(const truck_msgs::msg::TrajectoryState& msg);
+States toStates(const std::vector<truck_msgs::msg::TrajectoryState>& msgs);
+Trajectory toTrajectory(const truck_msgs::msg::Trajectory& msg);
 
 namespace msg {
 

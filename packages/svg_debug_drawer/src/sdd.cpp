@@ -8,50 +8,50 @@
 
 namespace {
 
-std::string ToString(const truck::sdd::color::RGB& value) {
+std::string toString(const truck::sdd::color::RGB& value) {
     return fmt::format("rgb({}, {}, {})", value.r, value.g, value.b);
 }
 
 template<typename T>
-std::enable_if_t<std::is_arithmetic_v<T>, std::string> ToString(const T& value) {
+std::enable_if_t<std::is_arithmetic_v<T>, std::string> toString(const T& value) {
     return fmt::to_string(value);
 }
 
-std::string ToString(const truck::geom::Vec2& value) {
+std::string toString(const truck::geom::Vec2& value) {
     return fmt::format("{},{}", value.x, value.y);
 }
 
 template<typename T>
-std::enable_if_t<std::is_base_of_v<std::vector<truck::geom::Vec2>, T>, std::string> ToString(
+std::enable_if_t<std::is_base_of_v<std::vector<truck::geom::Vec2>, T>, std::string> toString(
     const T& value) {
     std::vector<std::string> points;
     points.reserve(value.size());
     std::transform(value.begin(), value.end(), std::back_inserter(points), [](const auto& point) {
-        return ToString(point);
+        return toString(point);
     });
     return fmt::format("{}", fmt::join(std::move(points), " "));
 }
 
-std::string ToString(const truck::geom::ComplexPolygon& value) {
+std::string toString(const truck::geom::ComplexPolygon& value) {
     std::vector<std::string> store;
     store.reserve(value.inners.size() + 1);
     {
         std::vector<std::string> points;
         points.reserve(value.outer.size());
         switch (value.outer.orientation()) {
-            case truck::geom::Orientation::CLOCKWISE:
+            case truck::geom::Orientation::kClockwise:
                 std::transform(
                     value.outer.begin(),
                     value.outer.end(),
                     std::back_inserter(points),
-                    [](const auto& point) { return ToString(point); });
+                    [](const auto& point) { return toString(point); });
                 break;
-            case truck::geom::Orientation::COUNTERCLOCKWISE:
+            case truck::geom::Orientation::kCounterClockwise:
                 std::transform(
                     value.outer.rbegin(),
                     value.outer.rend(),
                     std::back_inserter(points),
-                    [](const auto& point) { return ToString(point); });
+                    [](const auto& point) { return toString(point); });
                 break;
         }
         store.push_back(fmt::format("M {} Z", fmt::join(std::move(points), " L ")));
@@ -60,17 +60,17 @@ std::string ToString(const truck::geom::ComplexPolygon& value) {
         std::vector<std::string> points;
         points.reserve(inner.size());
         switch (inner.orientation()) {
-            case truck::geom::Orientation::CLOCKWISE:
+            case truck::geom::Orientation::kClockwise:
                 std::transform(
                     inner.rbegin(),
                     inner.rend(),
                     std::back_inserter(points),
-                    [](const auto& point) { return ToString(point); });
+                    [](const auto& point) { return toString(point); });
                 break;
-            case truck::geom::Orientation::COUNTERCLOCKWISE:
+            case truck::geom::Orientation::kCounterClockwise:
                 std::transform(
                     inner.begin(), inner.end(), std::back_inserter(points), [](const auto& point) {
-                        return ToString(point);
+                        return toString(point);
                     });
                 break;
         }
@@ -102,12 +102,12 @@ SDD::SDD(const std::string& path) : SDD(path, path) {}
 SDD::SDD(const Size& size, const std::string& output_path) : output_path_(output_path) {
     auto svg = doc_.append_child("svg");
     svg.append_attribute("version").set_value("1.1");
-    svg.append_attribute("width").set_value(ToString(size.width).data());
-    svg.append_attribute("height").set_value(ToString(size.height).data());
+    svg.append_attribute("width").set_value(toString(size.width).data());
+    svg.append_attribute("height").set_value(toString(size.height).data());
     svg.append_attribute("xmlns").set_value("http://www.w3.org/2000/svg");
     root_ = svg.append_child("g");
     root_.append_attribute("transform")
-        .set_value(("translate(0," + ToString(size.height) + ") scale(1,-1)").data());
+        .set_value(("translate(0," + toString(size.height) + ") scale(1,-1)").data());
 }
 
 SDD& SDD::Add(const Marker& marker) noexcept {
@@ -115,21 +115,21 @@ SDD& SDD::Add(const Marker& marker) noexcept {
     switch (marker.shape) {
         case Marker::Shape::Circle:
             node = root_.append_child("circle");
-            node.append_attribute("cx").set_value(ToString(marker.point.x).data());
-            node.append_attribute("cy").set_value(ToString(marker.point.y).data());
-            node.append_attribute("r").set_value(ToString(marker.scale / 2).data());
+            node.append_attribute("cx").set_value(toString(marker.point.x).data());
+            node.append_attribute("cy").set_value(toString(marker.point.y).data());
+            node.append_attribute("r").set_value(toString(marker.scale / 2).data());
             break;
         case Marker::Shape::Square:
             node = root_.append_child("rect");
             node.append_attribute("x").set_value(
-                ToString(marker.point.x - marker.scale / 2).data());
+                toString(marker.point.x - marker.scale / 2).data());
             node.append_attribute("y").set_value(
-                ToString(marker.point.y - marker.scale / 2).data());
-            node.append_attribute("width").set_value(ToString(marker.scale).data());
-            node.append_attribute("height").set_value(ToString(marker.scale).data());
+                toString(marker.point.y - marker.scale / 2).data());
+            node.append_attribute("width").set_value(toString(marker.scale).data());
+            node.append_attribute("height").set_value(toString(marker.scale).data());
             break;
     }
-    node.append_attribute("fill").set_value(ToString(marker.color).data());
+    node.append_attribute("fill").set_value(toString(marker.color).data());
     node.append_attribute("id").set_value(marker.label.data());
     node.append_child("title").text().set(marker.label.data());
     return *this;
@@ -154,16 +154,16 @@ SDD& SDD::Add(const Pose& pose) noexcept {
         pos_marker_node = defs_node.append_child("marker");
         pos_marker_node.append_attribute("id").set_value(pos_marker_id.data());
         pos_marker_node.append_attribute("orient").set_value("auto");
-        pos_marker_node.append_attribute("markerWidth").set_value(ToString(pose.scale).data());
-        pos_marker_node.append_attribute("markerHeight").set_value(ToString(pose.scale).data());
+        pos_marker_node.append_attribute("markerWidth").set_value(toString(pose.scale).data());
+        pos_marker_node.append_attribute("markerHeight").set_value(toString(pose.scale).data());
         pos_marker_node.append_attribute("markerUnits").set_value("userSpaceOnUse");
-        pos_marker_node.append_attribute("refX").set_value(ToString(pose.scale * 0.5).data());
-        pos_marker_node.append_attribute("refY").set_value(ToString(pose.scale * 0.5).data());
+        pos_marker_node.append_attribute("refX").set_value(toString(pose.scale * 0.5).data());
+        pos_marker_node.append_attribute("refY").set_value(toString(pose.scale * 0.5).data());
         auto circle_node = pos_marker_node.append_child("circle");
-        circle_node.append_attribute("cx").set_value(ToString(pose.scale * 0.5).data());
-        circle_node.append_attribute("cy").set_value(ToString(pose.scale * 0.5).data());
-        circle_node.append_attribute("r").set_value(ToString(pose.scale * 0.5).data());
-        circle_node.append_attribute("fill").set_value(ToString(pose.color).data());
+        circle_node.append_attribute("cx").set_value(toString(pose.scale * 0.5).data());
+        circle_node.append_attribute("cy").set_value(toString(pose.scale * 0.5).data());
+        circle_node.append_attribute("r").set_value(toString(pose.scale * 0.5).data());
+        circle_node.append_attribute("fill").set_value(toString(pose.color).data());
     }
 
     const auto dir_marker_id = fmt::format("dir-{}", marker_id);
@@ -172,32 +172,32 @@ SDD& SDD::Add(const Pose& pose) noexcept {
         dir_marker_node = defs_node.append_child("marker");
         dir_marker_node.append_attribute("id").set_value(dir_marker_id.data());
         dir_marker_node.append_attribute("orient").set_value("auto");
-        dir_marker_node.append_attribute("markerWidth").set_value(ToString(pose.scale).data());
-        dir_marker_node.append_attribute("markerHeight").set_value(ToString(pose.scale).data());
+        dir_marker_node.append_attribute("markerWidth").set_value(toString(pose.scale).data());
+        dir_marker_node.append_attribute("markerHeight").set_value(toString(pose.scale).data());
         dir_marker_node.append_attribute("markerUnits").set_value("userSpaceOnUse");
         dir_marker_node.append_attribute("refX").set_value("0");
-        dir_marker_node.append_attribute("refY").set_value(ToString(pose.scale * 0.5).data());
+        dir_marker_node.append_attribute("refY").set_value(toString(pose.scale * 0.5).data());
         auto polygon_node = dir_marker_node.append_child("polygon");
         polygon_node.append_attribute("points").set_value(
-            ToString(geom::Polygon{
+            toString(geom::Polygon{
                          geom::Vec2(0, 0),
                          geom::Vec2(0, pose.scale),
                          geom::Vec2(pose.scale, pose.scale * 0.5)})
                 .data());
-        polygon_node.append_attribute("fill").set_value(ToString(pose.color).data());
+        polygon_node.append_attribute("fill").set_value(toString(pose.color).data());
     }
 
     auto node = root_.append_child("line");
-    node.append_attribute("x1").set_value(ToString(pose.pose.pos.x).data());
-    node.append_attribute("y1").set_value(ToString(pose.pose.pos.y).data());
+    node.append_attribute("x1").set_value(toString(pose.pose.pos.x).data());
+    node.append_attribute("y1").set_value(toString(pose.pose.pos.y).data());
     node.prepend_attribute("x2").set_value(
-        ToString((pose.pose.pos + pose.pose.dir.vec().unit() * pose.length).x).data());
+        toString((pose.pose.pos + pose.pose.dir.vec().unit() * pose.length).x).data());
     node.prepend_attribute("y2").set_value(
-        ToString((pose.pose.pos + pose.pose.dir.vec().unit() * pose.length).y).data());
+        toString((pose.pose.pos + pose.pose.dir.vec().unit() * pose.length).y).data());
     node.append_attribute("marker-start").set_value(("url(#" + pos_marker_id + ")").data());
     node.append_attribute("marker-end").set_value(("url(#" + dir_marker_id + ")").data());
-    node.append_attribute("stroke").set_value(ToString(pose.color).data());
-    node.append_attribute("stroke-width").set_value(ToString(pose.scale * 0.5).data());
+    node.append_attribute("stroke").set_value(toString(pose.color).data());
+    node.append_attribute("stroke-width").set_value(toString(pose.scale * 0.5).data());
     node.append_attribute("id").set_value(pose.label.data());
     node.append_child("title").text().set(pose.label.data());
 
@@ -210,10 +210,10 @@ SDD& SDD::Add(const geom::Pose& pose) noexcept {
 
 SDD& SDD::Add(const Polyline& polyline) noexcept {
     auto node = root_.append_child("polyline");
-    node.append_attribute("points").set_value(ToString(polyline.polyline).data());
+    node.append_attribute("points").set_value(toString(polyline.polyline).data());
     node.append_attribute("fill").set_value("none");
-    node.append_attribute("stroke").set_value(ToString(polyline.color).data());
-    node.append_attribute("stroke-width").set_value(ToString(polyline.thickness).data());
+    node.append_attribute("stroke").set_value(toString(polyline.color).data());
+    node.append_attribute("stroke-width").set_value(toString(polyline.thickness).data());
     node.append_attribute("id").set_value(polyline.label.data());
     node.append_child("title").text().set(polyline.label.data());
 
@@ -226,11 +226,11 @@ SDD& SDD::Add(const geom::Polyline& polyline) noexcept {
 
 SDD& SDD::Add(const Polygon& polygon) noexcept {
     auto node = root_.append_child("polygon");
-    node.append_attribute("points").set_value(ToString(polygon.polygon).data());
-    node.append_attribute("stroke").set_value(ToString(polygon.color).data());
-    node.append_attribute("stroke-width").set_value(ToString(polygon.border_thickness).data());
+    node.append_attribute("points").set_value(toString(polygon.polygon).data());
+    node.append_attribute("stroke").set_value(toString(polygon.color).data());
+    node.append_attribute("stroke-width").set_value(toString(polygon.border_thickness).data());
     node.append_attribute("fill").set_value(
-        (polygon.fill ? ToString(polygon.color) : "none").data());
+        (polygon.fill ? toString(polygon.color) : "none").data());
     node.append_attribute("id").set_value(polygon.label.data());
     node.append_child("title").text().set(polygon.label.data());
 
@@ -241,11 +241,11 @@ SDD& SDD::Add(const geom::Polygon& polygon) noexcept { return Add(Polygon{.polyg
 
 SDD& SDD::Add(const ComplexPolygon& polygon) noexcept {
     auto node = root_.append_child("path");
-    node.append_attribute("d").set_value(ToString(polygon.complex_polygon).data());
-    node.append_attribute("stroke").set_value(ToString(polygon.color).data());
-    node.append_attribute("stroke-width").set_value(ToString(polygon.border_thickness).data());
+    node.append_attribute("d").set_value(toString(polygon.complex_polygon).data());
+    node.append_attribute("stroke").set_value(toString(polygon.color).data());
+    node.append_attribute("stroke-width").set_value(toString(polygon.border_thickness).data());
     node.append_attribute("fill").set_value(
-        (polygon.fill ? ToString(polygon.color) : "none").data());
+        (polygon.fill ? toString(polygon.color) : "none").data());
     node.append_attribute("id").set_value(polygon.label.data());
     node.append_child("title").text().set(polygon.label.data());
 

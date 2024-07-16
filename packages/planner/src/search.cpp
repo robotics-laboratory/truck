@@ -20,16 +20,16 @@ Grid& Grid::setCollisionChecker(std::shared_ptr<const collision::StaticCollision
 }
 
 Grid& Grid::build() {
-    geom::Vec2 grid_origin_point =
+    const geom::Vec2 grid_origin_point =
         snapPoint(ego_pose_) - geom::Vec2(params_.width, params_.height) * (params_.resolution / 2);
 
     for (size_t i = 0; i < params_.height; i++) {
         for (size_t j = 0; j < params_.width; j++) {
             // initialize node
-            Node node = Node{
+            const Node node = Node{
                 .index = (i * params_.width) + j,
                 .point = grid_origin_point + (geom::Vec2(j, i) * params_.resolution),
-                .collision = (checker_->distance(node.point) < (shape_.width / 2)) ? true : false};
+                .collision = checker_->distance(node.point) < (shape_.width / 2)};
 
             node_cache_.nodes.emplace_back(node);
             node_cache_.indexed_point_rtree.insert(
@@ -56,9 +56,9 @@ const std::unordered_set<size_t>& Grid::getFinishAreaNodesIndices() const {
 }
 
 geom::Vec2 Grid::snapPoint(const geom::Vec2& point) const {
-    return geom::Vec2(
+    return {
         round<double>(point.x / params_.resolution) * params_.resolution,
-        round<double>(point.y / params_.resolution) * params_.resolution);
+        round<double>(point.y / params_.resolution) * params_.resolution};
 }
 
 void Grid::calculateNodeTypes() {
@@ -74,7 +74,7 @@ void Grid::calculateEgoNode() {
         bg::index::nearest(RTreePoint(ego_pose_.pos.x, ego_pose_.pos.y), 1),
         std::back_inserter(rtree_indexed_points));
 
-    int node_index = rtree_indexed_points.back().second;
+    const int node_index = rtree_indexed_points.back().second;
     node_cache_.nodes[node_index].ego = true;
     node_cache_.index.ego = node_index;
 }
@@ -86,7 +86,7 @@ void Grid::calculateFinishNode() {
         bg::index::nearest(RTreePoint(finish_area_.center.x, finish_area_.center.y), 1),
         std::back_inserter(rtree_indexed_points));
 
-    int node_index = rtree_indexed_points.back().second;
+    const int node_index = rtree_indexed_points.back().second;
     node_cache_.nodes[node_index].finish = true;
     node_cache_.index.finish = rtree_indexed_points.back().second;
 }
@@ -96,7 +96,7 @@ void Grid::calculateFinishAreaNodes() {
 
     geom::Vec2 finish_node_point = getNodeByIndex(node_cache_.index.finish.value()).point;
 
-    RTreeBox rtree_finish_box(
+    const RTreeBox rtree_finish_box(
         RTreePoint(
             finish_node_point.x - finish_area_.radius, finish_node_point.y - finish_area_.radius),
         RTreePoint(
@@ -104,8 +104,8 @@ void Grid::calculateFinishAreaNodes() {
 
     node_cache_.indexed_point_rtree.query(
         bg::index::intersects(rtree_finish_box)
-            && bg::index::satisfies([&](RTreeIndexedPoint const& rtree_indexed_point) {
-                   geom::Vec2 node_point(
+            && bg::index::satisfies([&](const RTreeIndexedPoint& rtree_indexed_point) {
+                   const geom::Vec2 node_point(
                        rtree_indexed_point.first.get<0>(), rtree_indexed_point.first.get<1>());
 
                    return (finish_node_point - node_point).lenSq() < squared(finish_area_.radius);

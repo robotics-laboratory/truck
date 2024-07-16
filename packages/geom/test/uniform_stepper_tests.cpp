@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "geom/test/equal_assert.h"
 #include "geom/polygon.h"
 #include "geom/polyline.h"
+#include "geom/test/equal_assert.h"
 #include "geom/uniform_stepper.h"
 
 using namespace truck::geom;

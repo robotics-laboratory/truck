@@ -1,6 +1,6 @@
-#include <pybind11/pybind11.h>
 #include "model/model.h"
 #include <boost/format.hpp>
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 using namespace truck;

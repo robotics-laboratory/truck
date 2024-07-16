@@ -23,16 +23,6 @@ struct Vec2 {
 
     static Vec2 fromAngle(Angle a) noexcept { return {cos(a), sin(a)}; }
 
-    Vec2& operator=(const Vec2& other) noexcept {
-        if (this == &other) {
-            return *this;
-        }
-
-        x = other.x;
-        y = other.y;
-        return *this;
-    }
-
     Vec2& operator+=(const Vec2& other) noexcept {
         x += other.x;
         y += other.y;
@@ -107,7 +97,7 @@ inline double len(const Vec2& v) noexcept { return v.len(); }
 
 bool equal(const Vec2& a, const Vec2& b, double eps = 0) noexcept;
 
-Angle angleBetween(const Vec2& from, const Vec2& to) noexcept;
+Angle angleBetween(const Vec2& a, const Vec2& b) noexcept;
 
 Vec2 interpolate(const Vec2& a, const Vec2& b, double t) noexcept;
 
