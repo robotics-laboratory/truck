@@ -8,7 +8,7 @@ ENV CUDA_HOME="/usr/local/cuda"
 ENV PATH="/usr/local/cuda/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
 
-ENV FLAGS="-O3 -ffast-math -Wall -march=armv8.2-a+simd+crypto+predres -mtune=cortex-a57"
+ENV FLAGS="-O3 -Wall -march=armv8.2-a+simd+crypto+predres -mtune=cortex-a57"
 
 ### INSTALL NVIDIA
 
@@ -30,7 +30,7 @@ RUN apt-get update -q \
 
 FROM --platform=linux/amd64 ubuntu:20.04 AS truck-base-amd64
 
-ENV FLAGS="-O3 -ffast-math -Wall"
+ENV FLAGS="-O3 -Wall"
 
 FROM truck-base-${TARGETARCH} AS truck-common
 
@@ -68,6 +68,7 @@ RUN apt-get update -q && \
         curl \
         git \
         gnupg2 \
+        libceres-dev \
         libmpfr-dev \
         libboost-dev \
         libpython3-dev \
@@ -101,6 +102,18 @@ RUN apt-get update -q && \
         libgstreamer-plugins-bad1.0-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
+### INSTALL EIGEN
+
+ARG EIGEN_VERSION="3.3.9"
+
+RUN wget -qO - https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz | tar -xz \
+    && cd eigen-${EIGEN_VERSION} && mkdir -p build && cd build \
+    && cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
 ### PREPARE FOR OPENCV
 
 RUN apt-get update -yq && \
@@ -108,7 +121,6 @@ RUN apt-get update -yq && \
         gfortran \
         file \
         libatlas-base-dev \
-        libeigen3-dev \
         libjpeg-dev \
         liblapack-dev \
         liblapacke-dev \
@@ -134,8 +146,6 @@ RUN apt-get update && \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* apt-get clean
 
-ENV TORCHVISION_VERSION=0.14.0
-
 ### PREPARE FOR REALSENSE2
 
 RUN apt-get update -yq \
@@ -143,15 +153,15 @@ RUN apt-get update -yq \
         ca-certificates \
         libssl-dev \
         libusb-1.0-0-dev \
-        libusb-1.0-0 \
         libudev-dev \
         libomp-dev \
         pkg-config \
         sudo \
         udev \
+        v4l-utils \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV LIBRS_VERSION=2.54.2
+ENV LIBRS_VERSION=2.55.1
 
 FROM --platform=linux/arm64 truck-common AS truck-cuda-arm64
 
@@ -161,7 +171,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && cd opencv-${OPENCV_VERSION} && mkdir -p build && cd build \
     && OPENCV_MODULES=(core calib3d imgproc imgcodecs ccalib ximgproc \
-        aruco cudev cudaarithm cudacodec cudafilters cudaimgproc) \
+        cudev cudaarithm cudacodec cudafilters cudaimgproc) \
     && cmake .. \
         -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' ' ',') \
         -DCMAKE_BUILD_TYPE=RELEASE \
@@ -219,11 +229,6 @@ RUN wget --no-check-certificate -qO ${PYTORCH_WHL} ${PYTORCH_URL} \
     && pip3 install --no-cache-dir ${PYTORCH_WHL} \
     && rm -rf /tmp/*
 
-RUN wget -qO - https://github.com/pytorch/vision/archive/refs/tags/v${TORCHVISION_VERSION}.tar.gz | tar -xz \
-    && cd vision-${TORCHVISION_VERSION} \
-    && python3 setup.py install \
-    && rm -rf /tmp/*
-
 ENV PYTORCH_PATH="/usr/local/lib/python3.8/dist-packages/torch"
 ENV LD_LIBRARY_PATH="${PYTORCH_PATH}/lib:${LD_LIBRARY_PATH}"
 
@@ -251,7 +256,7 @@ FROM --platform=linux/amd64 truck-common AS truck-cuda-amd64
 RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && cd opencv-${OPENCV_VERSION} && mkdir -p build && cd build \
-    && OPENCV_MODULES=(core calib3d imgcodecs ccalib ximgproc aruco) \
+    && OPENCV_MODULES=(core calib3d imgcodecs ccalib ximgproc) \
     && cmake .. \
         -DBUILD_LIST=$(echo ${OPENCV_MODULES[*]} | tr ' '  ',') \
         -DCMAKE_BUILD_TYPE=RELEASE \
@@ -296,8 +301,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
 ENV TORCH_VERSION=1.13.0
 
 RUN pip3 install --no-cache-dir \
-    torch==${TORCH_VERSION} \
-    torchvision==${TORCHVISION_VERSION}
+    torch==${TORCH_VERSION}
 
 ENV PYTORCH_PATH="/usr/local/lib/python3.8/dist-packages/torch"
 ENV LD_LIBRARY_PATH="${PYTORCH_PATH}/lib:${LD_LIBRARY_PATH}"
@@ -309,7 +313,6 @@ RUN apt-get update -yq \
         ca-certificates \
         libssl-dev \
         libusb-1.0-0-dev \
-        libusb-1.0-0 \
         libudev-dev \
         libomp-dev \
         pkg-config \
@@ -341,18 +344,12 @@ ENV ROS_PYTHON_VERSION=3
 
 RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
-    && wget -qO - https://packages.osrfoundation.org/gazebo.key | apt-key add - \
-    && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
 
 ENV RMW_IMPLEMENTATION="rmw_cyclonedds_cpp"
 
 RUN apt-get update -q \
     && apt remove -yq python-is-python2 \
     && apt-get install -yq --no-install-recommends \
-        gazebo11 \
-        gazebo11-common \
-        gazebo11-plugin-base \
-        libgazebo11-dev \
         libpcl-dev \
         locales \
         python3-colcon-common-extensions \
@@ -398,11 +395,7 @@ RUN mkdir -p ${ROS_ROOT} \
         image_transport \
         imu_filter_madgwick \
         imu_complementary_filter\
-        gazebo_dev \
-        gazebo_plugins \
-        gazebo_ros \
         geometry2 \
-        joy \
         launch_yaml \
         laser_geometry \
         pcl_conversions \
@@ -433,17 +426,17 @@ RUN apt-get update -q \
         --skip-keys libopencv-imgproc-dev \
         --skip-keys libpcl-dev \
         --skip-keys python3-opencv \
-        --skip-keys gazebo11 \
-        --skip-keys gazebo11-common \
-        --skip-keys gazebo11-plugin-base \
-        --skip-keys libgazebo11-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
+# Pay attention that we disable pedantic warnings here!
+# The reason is that foxglove_bridge has such warnings.
 RUN cd ${ROS_TMP} \
     && colcon build \
         --merge-install \
         --install-base ${ROS_ROOT} \
-        --cmake-args -DBUILD_TESTING=OFF \
+        --cmake-args \
+            -DCMAKE_CXX_FLAGS="-Wno-error=pedantic" \
+            -DBUILD_TESTING=OFF \
     && rm -rf /tmp/*
 
 RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
@@ -478,7 +471,6 @@ RUN declare -A map \
 
 RUN apt-get update -q && \
     apt-get install -yq --no-install-recommends \
-        libeigen3-dev \
         libtbb-dev \
         libproj-dev \
         libsuitesparse-dev \
@@ -596,7 +588,8 @@ RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
     && printf "export RCUTILS_LOGGING_BUFFERED_STREAM=1\n" >> /root/.bashrc \
     && printf "export RCUTILS_CONSOLE_OUTPUT_FORMAT='[{severity}:{time}] {message}'\n" >> /root/.bashrc \
     && printf "export TRUCK_SIMULATION=false\n" >> /root/.bashrc \
-    && printf "export TRUCK_CONTROL=ipega\n" >> /root/.bashrc \
+    && printf "source /usr/share/bash-completion/completions/git\n" >> /root/.bashrc \
+    && printf "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash\n" >> /root/.bashrc \
     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
 
 ### SETUP ENTRYPOINT

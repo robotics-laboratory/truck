@@ -14,7 +14,6 @@ launch:
     file: $(find-pkg-share truck)/launch/control.yaml
     arg:
       - { name: "simulation", value: "true" }
-      - { name: "control_name", value: "ps4" }
 
 - include:
     file: $(find-pkg-share model)/launch/model_tf.yaml

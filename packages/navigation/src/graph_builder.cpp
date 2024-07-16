@@ -4,6 +4,8 @@
 #include "common/math.h"
 #include "geom/distance.h"
 #include "geom/intersection.h"
+#include "geom/boost/point.h"
+#include "geom/boost/box.h"
 
 #include <boost/geometry.hpp>
 
@@ -13,59 +15,44 @@ namespace truck::navigation::graph {
 
 namespace bg = boost::geometry;
 
-using RTreePoint = bg::model::point<double, 2, bg::cs::cartesian>;
-using RTreeIndexedPoint = std::pair<RTreePoint, size_t>;
-using RTreeIndexedPoints = std::vector<RTreeIndexedPoint>;
-using RTreeBox = bg::model::box<RTreePoint>;
-using RTree = bg::index::rtree<RTreeIndexedPoint, bg::index::rstar<16>>;
+using IndexPoint = std::pair<geom::Vec2, size_t>;
+using IndexPoints = std::vector<IndexPoint>;
+using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
 using EdgesMap = std::unordered_map<NodeId, std::unordered_map<NodeId, EdgeId>>;
 
 namespace {
 
-geom::Vec2 toVec2(const RTreePoint& rtree_point) {
-    return {rtree_point.get<0>(), rtree_point.get<1>()};
-}
-
-RTreePoint toRTreePoint(const geom::Vec2& point) { return RTreePoint(point.x, point.y); }
-
-RTreeIndexedPoint toRTreeIndexedPoint(const geom::Vec2& point, size_t index) {
-    return RTreeIndexedPoint(toRTreePoint(point), index);
-}
-
 RTree toRTree(const Nodes& nodes) {
     RTree rtree;
 
     for (const Node& node : nodes) {
-        rtree.insert(toRTreeIndexedPoint(node.point, node.id));
+        rtree.insert(IndexPoint(node.point, node.id));
     }
 
     return rtree;
 }
 
-RTreeIndexedPoints getNodeNeighborsKNN(
-    const geom::Vec2& point, const RTree& rtree, size_t k_nearest) {
-    RTreeIndexedPoints rtree_indexed_points;
+IndexPoints getNodeNeighborsKNN(const geom::Vec2& point, const RTree& rtree, size_t k_nearest) {
+    IndexPoints rtree_indexed_points;
 
-    rtree.query(
-        bg::index::nearest(toRTreePoint(point), k_nearest + 1),
-        std::back_inserter(rtree_indexed_points));
+    rtree.query(bg::index::nearest(point, k_nearest + 1), std::back_inserter(rtree_indexed_points));
 
     return rtree_indexed_points;
 }
 
-RTreeIndexedPoints getNodeNeighborsSearchRadius(
+IndexPoints getNodeNeighborsSearchRadius(
     const geom::Vec2& point, const RTree& rtree, double search_radius) {
-    RTreeIndexedPoints rtree_indexed_points;
+    IndexPoints rtree_indexed_points;
 
-    const RTreeBox rtree_box(
-        RTreePoint(point.x - search_radius, point.y - search_radius),
-        RTreePoint(point.x + search_radius, point.y + search_radius));
+    const geom::BoundingBox rtree_box(
+        geom::Vec2(point.x - search_radius, point.y - search_radius),
+        geom::Vec2(point.x + search_radius, point.y + search_radius));
 
     rtree.query(
         bg::index::intersects(rtree_box)
-            && bg::index::satisfies([&](const RTreeIndexedPoint& rtree_indexed_point) {
-                   const geom::Vec2 neighbor_point = toVec2(rtree_indexed_point.first);
+            && bg::index::satisfies([&](const IndexPoint& rtree_indexed_point) {
+                   const geom::Vec2 neighbor_point = rtree_indexed_point.first;
                    return (point - neighbor_point).lenSq() < squared(search_radius);
                }),
         std::back_inserter(rtree_indexed_points));
@@ -92,7 +79,7 @@ bool isCollisionFree(const geom::Segment& edge, const geom::ComplexPolygons& pol
 std::vector<NodeId> getNodeNeighbors(
     const Node& node, const RTree& rtree, const geom::ComplexPolygons& polygons,
     const GraphParams& params) {
-    RTreeIndexedPoints rtree_indexed_points;
+    IndexPoints rtree_indexed_points;
 
     switch (params.mode) {
         case GraphParams::Mode::kNearest:
@@ -109,9 +96,9 @@ std::vector<NodeId> getNodeNeighbors(
 
     std::vector<NodeId> neighbor_nodes_ids;
 
-    for (const RTreeIndexedPoint& rtree_indexed_point : rtree_indexed_points) {
+    for (const IndexPoint& rtree_indexed_point : rtree_indexed_points) {
         const NodeId neighbor_node_id = rtree_indexed_point.second;
-        const geom::Vec2 neighbor_node_point = toVec2(rtree_indexed_point.first);
+        const geom::Vec2 neighbor_node_point = rtree_indexed_point.first;
 
         const geom::Segment edge(node.point, neighbor_node_point);
 

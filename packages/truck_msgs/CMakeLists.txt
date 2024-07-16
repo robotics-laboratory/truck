@@ -13,6 +13,7 @@ rosidl_generate_interfaces(
   ${PROJECT_NAME}
   msg/Control.msg
   msg/ControlMode.msg
+  msg/RemoteControl.msg
   msg/CpuStat.msg
   msg/HardwareStatus.msg
   msg/HardwareTelemetry.msg

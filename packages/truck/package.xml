@@ -17,12 +17,11 @@
   <depend>hardware_node</depend>
   <depend>occupancy_grid</depend>
   <depend>pure_pursuit</depend>
-  <depend>truck_gazebo</depend>
-  <depend>truck_gazebo_plugins</depend>
   <depend>visualization</depend>
   <depend>perf</depend>
   <depend>video_streaming</depend>
   <depend>waypoint_follower</depend>
+  <depend>simulator_2d</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
