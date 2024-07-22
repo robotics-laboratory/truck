@@ -37,8 +37,8 @@ Metrics calculateMetrics(const Cloud& cloud, const ComplexPolygon& complex_polyg
     std::vector<double> min_dists;
     const auto& segments = complex_polygon.segments();
 
-    for (size_t i = 0; i < cloud.features.cols(); i++) {
-        const Vec2 cloud_point = {cloud.features.col(i)(0), cloud.features.col(i)(1)};
+    for (size_t i = 0; i < cloud.cols(); i++) {
+        const Vec2 cloud_point = {cloud.col(i)(0), cloud.col(i)(1)};
         double min_dist = distance(cloud_point, segments[0]);
 
         for (size_t j = 1; j < segments.size(); j++) {
@@ -106,8 +106,7 @@ TEST(LidarMap, lidar_map_test) {
 
     Builder builder = Builder(builder_params, icp);
 
-    ComplexPolygon map =
-        Map::fromGeoJson("/truck/packages/map/data/map_7.geojson").polygons()[0];
+    ComplexPolygon map = Map::fromGeoJson("/truck/packages/map/data/map_7.geojson").polygons()[0];
 
     const auto [all_poses, all_clouds] = serializer.deserializeMCAP();
     const auto [poses, clouds] = builder.filterByPosesProximity(all_poses, all_clouds);

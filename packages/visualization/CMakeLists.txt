@@ -39,9 +39,7 @@ install(
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
-add_executable(
-  ${PROJECT_NAME}_node src/main.cpp src/visualization_node.cpp
-)
+add_executable(${PROJECT_NAME}_node src/main.cpp src/visualization_node.cpp)
 
 ament_target_dependencies(
   ${PROJECT_NAME}_node

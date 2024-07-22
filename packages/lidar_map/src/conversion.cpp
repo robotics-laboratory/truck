@@ -10,22 +10,15 @@ constexpr bool isBigendian() { return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__; }
 
 }  // namespace
 
-Cloud toCloud(const sensor_msgs::msg::LaserScan& scan, double z_lev) {
+Cloud toCloud(const sensor_msgs::msg::LaserScan& scan) {
     Limits range_limit{scan.range_min, scan.range_max};
-
-    Cloud::Labels feature_labels;
-    feature_labels.push_back(Cloud::Label("x", 1));
-    feature_labels.push_back(Cloud::Label("y", 1));
-    feature_labels.push_back(Cloud::Label("w", 1));
-
-    const Cloud::Labels descriptor_labels;
 
     auto is_valid = [&](double range) { return std::isnormal(range) && range_limit.isMet(range); };
 
     const size_t point_count = std::count_if(
         scan.ranges.begin(), scan.ranges.end(), [&](float range) { return is_valid(range); });
 
-    Cloud result(feature_labels, descriptor_labels, point_count);
+    Cloud cloud(3, point_count);
 
     for (size_t i = 0, j = 0; i < scan.ranges.size(); ++i) {
         const double range = scan.ranges[i];
@@ -36,13 +29,13 @@ Cloud toCloud(const sensor_msgs::msg::LaserScan& scan, double z_lev) {
 
         const double angle = scan.angle_min + i * scan.angle_increment;
 
-        result.features(0, j) = range * std::cos(angle);
-        result.features(1, j) = range * std::sin(angle);
-        result.features(2, j) = z_lev;
+        cloud(0, j) = range * std::cos(angle);
+        cloud(1, j) = range * std::sin(angle);
+        cloud(2, j) = 1.0;
         j++;
     }
 
-    return result;
+    return cloud;
 }
 
 sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, const std::string& frame_id) {
@@ -50,7 +43,7 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, const std::strin
 
     result.header.frame_id = frame_id;
     result.height = 1;
-    result.width = cloud.features.cols();
+    result.width = cloud.cols();
     result.fields.resize(3);
 
     result.fields[0].name = "x";
@@ -74,7 +67,7 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, const std::strin
     result.is_dense = true;
 
     result.data.resize(result.row_step * result.height);
-    std::memcpy(result.data.data(), cloud.features.data(), result.data.size());
+    std::memcpy(result.data.data(), cloud.data(), result.data.size());
 
     return result;
 }

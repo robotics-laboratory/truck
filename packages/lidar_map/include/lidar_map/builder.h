@@ -28,8 +28,7 @@ class Builder {
 
     geom::Poses optimizePoses(const geom::Poses& poses, const Clouds& clouds);
 
-    Clouds transformClouds(
-        const geom::Poses& poses, const Clouds& clouds);
+    Clouds transformClouds(const geom::Poses& poses, const Clouds& clouds);
 
     Cloud mergeClouds(const Clouds& clouds);
 

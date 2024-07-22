@@ -7,7 +7,7 @@
 
 namespace truck::lidar_map {
 
-Cloud toCloud(const sensor_msgs::msg::LaserScan& scan, double z_lev = 1.0);
+Cloud toCloud(const sensor_msgs::msg::LaserScan& scan);
 
 sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, const std::string& frame_id);
 

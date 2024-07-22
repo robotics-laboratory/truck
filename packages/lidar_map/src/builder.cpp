@@ -18,65 +18,6 @@ using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>
 namespace {
 
 /**
- * Returns 3x3 transformation by given 2D translation vector (tx, ty) and rotation angle theta
- */
-Eigen::Matrix3f transformationMatrix(const geom::Pose& pose) {
-    const double dtheta = pose.dir.angle().radians();
-    const double cos_dtheta = std::cos(dtheta);
-    const double sin_dtheta = std::sin(dtheta);
-    
-    Eigen::Matrix3f tf_matrix = Eigen::Matrix3f::Identity();
-    
-    // Rotation
-    tf_matrix(0, 0) = cos_dtheta;
-    tf_matrix(0, 1) = -1.0 * sin_dtheta;
-    tf_matrix(1, 0) = sin_dtheta;
-    tf_matrix(1, 1) = cos_dtheta;
-
-    // Translation
-    tf_matrix(0, 2) = pose.pos.x;
-    tf_matrix(1, 2) = pose.pos.y;
-
-    return tf_matrix;
-}
-
-/**
- * Returns 3x3 transformation of 'pose_j' relatively to 'pose_i', knows as T_ij
- *
- * Poses 'pose_i' and 'pose_j' are given in a world frame,
- * so a 2D translation vector (tx, ty) of a 'pose_j' relatively to 'pose_i' CAN'T be expressed as:
- *
- * (tx, ty) = (pose_j.pos.x - pose_i.pos.x, pose_j.pos.y - pose_i.pos.y)
- *
- * 2D translation vector (tx, ty) is extracted from a 3x3 transformation T_ij, where:
- *
- * T_ij = T_iw * T_wj
- * T_wj: 3x3 transformation of 'pose_j' relatively to a world frame
- * T_wi: 3x3 transformation of 'pose_i' relatively to a world frame
- * T_iw = (T_wi).inverse(): 3x3 transformation of a world frame relatively to 'pose_i'
- *
- * In this function 2D translation vector (tx, ty) is calculated directly to avoid
- * inaccuracies of inverse operation
- */
-Eigen::Matrix3f transformationMatrix(
-    const geom::Pose& pose_i, const geom::Pose& pose_j) {
-    const double theta_i = pose_i.dir.angle().radians();
-    const double theta_j = pose_j.dir.angle().radians();
-    const double dtheta = theta_j - theta_i;
-
-    const double dx = pose_j.pos.x - pose_i.pos.x;
-    const double dy = pose_j.pos.y - pose_i.pos.y;
-
-    const double cos_theta_i = std::cos(theta_i);
-    const double sin_theta_i = std::sin(theta_i);
-
-    const double tx = dx * cos_theta_i + dy * sin_theta_i;
-    const double ty = -1.0 * dx * sin_theta_i + dy * cos_theta_i;
-
-    return transformationMatrix({geom::Vec2(tx, ty), geom::AngleVec2(geom::Angle(dtheta))});
-}
-
-/**
  * Returns g2o pose constructed from geom::Pose
  */
 g2o::SE2 toSE2(const geom::Pose& pose) {
@@ -98,12 +39,74 @@ g2o::SE2 toSE2(const Eigen::Matrix3f& tf_matrix) {
  */
 geom::Pose toPose(const g2o::SE2& se2) {
     return {
-        {se2.translation().x(), se2.translation().y()}, {geom::AngleVec2(geom::Angle(se2.rotation().angle()))}};
+        {se2.translation().x(), se2.translation().y()},
+        {geom::AngleVec2(geom::Angle(se2.rotation().angle()))}};
+}
+
+/**
+ * Returns 3x3 transformation matrix in 2D by geom::Pose
+ *
+ * Translation is assigned from pose.pos
+ * Rotation is assigned from pose.dir
+ */
+Eigen::Matrix3f transformationMatrix(const geom::Pose& pose) {
+    const double dtheta = pose.dir.angle().radians();
+    const double cos_dtheta = std::cos(dtheta);
+    const double sin_dtheta = std::sin(dtheta);
+
+    Eigen::Matrix3f tf_matrix = Eigen::Matrix3f::Identity();
+
+    // Rotation
+    tf_matrix(0, 0) = cos_dtheta;
+    tf_matrix(0, 1) = -1.0 * sin_dtheta;
+    tf_matrix(1, 0) = sin_dtheta;
+    tf_matrix(1, 1) = cos_dtheta;
+
+    // Translation
+    tf_matrix(0, 2) = pose.pos.x;
+    tf_matrix(1, 2) = pose.pos.y;
+
+    return tf_matrix;
+}
+
+/**
+ * Returns 3x3 transformation matrix T_ij in 2D of pose_j relatively to pose_i
+ *
+ * Poses pose_i and pose_j are given in a world frame
+ *
+ * Translation and rotation is taken from 3x3 transformation matrix T_ij where:
+ *
+ * T_ij = T_iw * T_wj
+ * T_wj: 3x3 transformation matrix of pose_j relatively to a world
+ * T_wi: 3x3 transformation matrix of pose_i relatively to a world
+ * T_iw = (T_wi).inv(): 3x3 transformation matrix of a world relatively to pose_i
+ */
+Eigen::Matrix3f transformationMatrix(const geom::Pose& pose_i, const geom::Pose& pose_j) {
+    const double theta_i = pose_i.dir.angle().radians();
+    const double theta_j = pose_j.dir.angle().radians();
+    const double dtheta = theta_j - theta_i;
+
+    const double dx = pose_j.pos.x - pose_i.pos.x;
+    const double dy = pose_j.pos.y - pose_i.pos.y;
+
+    const double cos_theta_i = std::cos(theta_i);
+    const double sin_theta_i = std::sin(theta_i);
+
+    const double tx = dx * cos_theta_i + dy * sin_theta_i;
+    const double ty = -1.0 * dx * sin_theta_i + dy * cos_theta_i;
+
+    return transformationMatrix({geom::Vec2(tx, ty), geom::AngleVec2(geom::Angle(dtheta))});
+}
+
+DataPoints toDataPoints(const Cloud& cloud) {
+    DataPoints data_points;
+    data_points.features = cloud;
+    return data_points;
 }
 
 }  // namespace
 
-Builder::Builder(const BuilderParams& params, const ICP& icp) : params_(params), icp_(icp) {}
+Builder::Builder(const BuilderParams& params, const ICP& icp) : icp_(icp), params_(params) {}
 
 /**
  * Returns a subset of given 'poses' and 'clouds' via removing too close poses
@@ -179,11 +182,13 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
 
             Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
 
-            Cloud cloud_i = Cloud(clouds[i]);
-            Cloud cloud_j_tf = Cloud(clouds[j]);
-            icp_.transformations.apply(cloud_j_tf, tf_matrix_odom);
+            DataPoints data_points_cloud_i = toDataPoints(clouds[i]);
+            DataPoints data_points_cloud_j_transformed = toDataPoints(clouds[j]);
 
-            Eigen::Matrix3f tf_matrix_icp = icp_(cloud_j_tf, cloud_i);
+            icp_.transformations.apply(data_points_cloud_j_transformed, tf_matrix_odom);
+
+            Eigen::Matrix3f tf_matrix_icp =
+                icp_(data_points_cloud_j_transformed, data_points_cloud_i);
             Eigen::Matrix3f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
 
             auto* edge = new g2o::EdgeSE2();
@@ -209,8 +214,8 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
     for (size_t i = 0; i < poses.size(); i++) {
         g2o::VertexSE2* optimized_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer.vertex(i));
         if (optimized_vertex) {
-            g2o::SE2 tf_vector = optimized_vertex->estimate();
-            optimized_poses.push_back(toPose(tf_vector));
+            const g2o::SE2 se2 = optimized_vertex->estimate();
+            optimized_poses.push_back(toPose(se2));
         }
     }
 
@@ -231,11 +236,7 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) 
 
     for (size_t i = 0; i < clouds.size(); i++) {
         Eigen::Matrix3f tf_matrix = transformationMatrix(poses[i]);
-        
-        Cloud cloud_tf = clouds[i];
-        cloud_tf.features = tf_matrix * cloud_tf.features;
-
-        clouds_tf.push_back(cloud_tf);
+        clouds_tf.push_back(tf_matrix * clouds[i]);
     }
 
     return clouds_tf;
@@ -243,10 +244,12 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) 
 
 Cloud Builder::mergeClouds(const Clouds& clouds) {
     VERIFY(clouds.size() > 0);
-    Cloud merged_cloud = Cloud(clouds[0]);
+    Cloud merged_cloud = clouds[0];
 
     for (size_t i = 1; i < clouds.size(); i++) {
-        merged_cloud.concatenate(clouds[i]);
+        Cloud tmp = Cloud(3, merged_cloud.cols() + clouds[i].cols());
+        tmp << merged_cloud, clouds[i];
+        merged_cloud = tmp;
     }
 
     return merged_cloud;
