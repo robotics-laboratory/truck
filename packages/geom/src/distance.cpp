@@ -9,30 +9,23 @@ double distanceSq(const Vec2& a, const Vec2& b) noexcept { return (a - b).lenSq(
 double distance(const Vec2& a, const Vec2& b) noexcept { return (a - b).len(); }
 
 double distanceSq(const Vec2& p, const Segment& s) noexcept {
-    return squared(distance(p, s));
-}
+    const Vec2 ab = s.end - s.begin;
+    const Vec2 ap = p - s.begin;
+    const Vec2 bp = p - s.end;
 
-double distance(const Vec2& p, const Segment& s) noexcept {
-    const Vec2 a = s.begin;
-    const Vec2 b = s.end;
-    const Vec2 ab = b - a;
-    const Vec2 ap = p - a;
-
+    const double ab_len_sq = ab.lenSq();
     const double ap_ab = dot(ap, ab);
+    const double bp_ab = dot(bp, ab);
 
     if (ap_ab <= 0) {
-        return (p - a).len(); 
+        return ap.lenSq();
     }
 
-    // projection scalar of ap on ab 
-    const double t = ap_ab / dot(ab, ab);
-
-    if (t >= 1) {
-        return (p - b).len();
+    if (bp_ab >= 0) {
+        return bp.lenSq();
     }
 
-    const Vec2 c = a + t * ab;
-    return (p - c).len();
+    return ap.lenSq() - squared(ap_ab) / ab_len_sq;
 }
 
 double denormalizedDistance(const Line& l, const Vec2& p) noexcept {

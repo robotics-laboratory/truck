@@ -9,15 +9,17 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 
-#include <rosbag2_transport/reader_writer_factory.hpp>
-
 namespace truck::lidar_map {
+
+const std::string RIDE_BAGS_FOLDER_PATH = "/truck/packages/lidar_map/test/bags/rides/";
+const std::string CLOUD_BAGS_FOLDER_PATH = "/truck/packages/lidar_map/test/bags/clouds/";
 
 namespace {
 
 template<typename T>
 std::optional<T> readNextMessage(
-    std::unique_ptr<rosbag2_cpp::Reader>& reader, const std::string& topic_name) {
+    const std::string& topic_name,
+    std::unique_ptr<rosbag2_cpp::readers::SequentialReader>& reader) {
     while (reader->has_next()) {
         rosbag2_storage::SerializedBagMessageSharedPtr msg = reader->read_next();
 
@@ -39,51 +41,61 @@ std::optional<T> readNextMessage(
 
 }  // namespace
 
-Clouds loadLidarScan(const std::string& mcap_path, const std::string& scan_topic) {
-    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>(); 
-    reader->open(mcap_path);
+Serializer::Serializer(const SerializerParams& params) : params_(params) {
+    reader_ = getSequentialReader();
+}
 
+std::unique_ptr<rosbag2_cpp::readers::SequentialReader> Serializer::getSequentialReader() {
+    rosbag2_storage::StorageOptions storage_options;
+    storage_options.uri = RIDE_BAGS_FOLDER_PATH + params_.bag_name.ride + ".mcap";
+
+    rosbag2_cpp::ConverterOptions converter_options;
+    converter_options.input_serialization_format = "cdr";
+    converter_options.output_serialization_format = "cdr";
+
+    auto reader = std::make_unique<rosbag2_cpp::readers::SequentialReader>();
+    reader->open(storage_options, converter_options);
+    return reader;
+}
+
+std::optional<std::pair<geom::Pose, Cloud>> Serializer::readNextMessages() {
+    auto laser_scan =
+        readNextMessage<sensor_msgs::msg::LaserScan>(params_.topic.point_cloud, reader_);
+    auto odom = readNextMessage<nav_msgs::msg::Odometry>(params_.topic.odom, reader_);
+
+    if (!laser_scan.has_value() || !odom.has_value()) {
+        return std::nullopt;
+    }
+
+    return std::make_pair(geom::toPose(*odom), toCloud(*laser_scan));
+}
+
+std::pair<geom::Poses, Clouds> Serializer::deserializeMCAP() {
+    geom::Poses poses;
     Clouds clouds;
 
     while (true) {
-        auto laser_scan_msg = readNextMessage<sensor_msgs::msg::LaserScan>(reader, scan_topic);
+        auto messages = readNextMessages();
 
-        if (!laser_scan_msg.has_value()) {
+        if (!messages.has_value()) {
             break;
         }
 
-        clouds.push_back(toCloud(*laser_scan_msg));
+        const auto [pose, cloud] = *messages;
+        poses.push_back(pose);
+        clouds.push_back(cloud);
     }
 
-    return clouds;
+    return std::make_pair(poses, clouds);
 }
 
-geom::Poses loadOdometry(const std::string& mcap_path, const std::string& odom_topic) {
-    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>(); 
-    reader->open(mcap_path);
-
-    geom::Poses poses;
-
-    while (true) {
-        auto odom_msg = readNextMessage<nav_msgs::msg::Odometry>(reader, odom_topic);
-
-        if (!odom_msg.has_value()) {
-            break;
-        }
-
-        poses.push_back(geom::toPose(*odom_msg));
-    }
-
-    return poses;
-}
-
-void serializeToMCAP(
-    const std::string& mcap_path, const Cloud& cloud, std::string cloud_topic, std::optional<geom::ComplexPolygon> map,
+void Serializer::serializeToMCAP(
+    const Cloud& cloud, std::string cloud_topic, std::optional<geom::ComplexPolygon> map,
     std::string map_topic) {
     rclcpp::Time time;
 
     std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
-    writer->open(mcap_path);
+    writer->open(CLOUD_BAGS_FOLDER_PATH + params_.bag_name.cloud);
 
     writer->write(toPointCloud2(cloud, "world"), cloud_topic, time);
 
