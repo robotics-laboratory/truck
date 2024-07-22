@@ -19,6 +19,7 @@
   <depend>libpointmatcher</depend>
   <depend>map</depend>
   <depend>G2O</depend>
+  <depend>visualization</depend>
   <depend>Boost</depend>
 
   <export>

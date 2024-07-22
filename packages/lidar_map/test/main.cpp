@@ -12,7 +12,7 @@ using namespace truck::geom;
 TEST(LidarMap, lidar_map_test) {
     const SerializerParams serializer_params{
         .topic = {.odom = "/ekf/odometry/filtered", .point_cloud = "/lidar/scan"},
-        .bag_name = {.ride = "ride_sim_map_7_1", .cloud = "cloud_sim_map_7_1"}};
+        .bag_name = {.ride = "ride_real_office_1", .cloud = "cloud_real_office_1"}};
 
     ICPBuilderParams icp_builder_params;
 

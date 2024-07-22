@@ -15,6 +15,7 @@ find_package(rosbag2_cpp REQUIRED)
 find_package(libpointmatcher REQUIRED)
 find_package(map REQUIRED)
 find_package(G2O REQUIRED)
+find_package(visualization REQUIRED)
 find_package(
   Boost
   COMPONENTS thread
@@ -49,6 +50,7 @@ ament_target_dependencies(
   rosbag2_cpp
   libpointmatcher
   G2O
+  visualization
   Boost
 )
 
@@ -72,6 +74,7 @@ ament_export_dependencies(
   rosbag2_cpp
   libpointmatcher
   G2O
+  visualization
   Boost
 )
 
