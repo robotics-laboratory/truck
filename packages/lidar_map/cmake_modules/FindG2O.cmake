@@ -19,7 +19,7 @@ find_path(
 # Macro to unify finding both the debug and release versions of the libraries;
 # this is adapted from the OpenSceneGraph FIND_LIBRARY macro.
 
-macro(FIND_G2O_LIBRARY MYLIBRARY MYLIBRARYNAME)
+macro(find_g2o_library MYLIBRARY MYLIBRARYNAME)
 
   find_library(
     "${MYLIBRARY}_DEBUG"
@@ -71,7 +71,7 @@ macro(FIND_G2O_LIBRARY MYLIBRARY MYLIBRARYNAME)
   endif(NOT ${MYLIBRARY}_DEBUG)
 
 endmacro(
-  FIND_G2O_LIBRARY
+  find_g2o_library
   LIBRARY
   LIBRARYNAME
 )
