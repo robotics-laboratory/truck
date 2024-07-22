@@ -40,7 +40,7 @@ std::optional<T> readNextMessage(
 }  // namespace
 
 Clouds loadLidarScan(const std::string& mcap_path, const std::string& scan_topic) {
-    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
+    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>(); 
     reader->open(mcap_path);
 
     Clouds clouds;
@@ -59,7 +59,7 @@ Clouds loadLidarScan(const std::string& mcap_path, const std::string& scan_topic
 }
 
 geom::Poses loadOdometry(const std::string& mcap_path, const std::string& odom_topic) {
-    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
+    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>(); 
     reader->open(mcap_path);
 
     geom::Poses poses;
@@ -78,8 +78,8 @@ geom::Poses loadOdometry(const std::string& mcap_path, const std::string& odom_t
 }
 
 void serializeToMCAP(
-    const std::string& mcap_path, const Cloud& cloud, std::string cloud_topic,
-    std::optional<geom::ComplexPolygon> map, std::string map_topic) {
+    const std::string& mcap_path, const Cloud& cloud, std::string cloud_topic, std::optional<geom::ComplexPolygon> map,
+    std::string map_topic) {
     rclcpp::Time time;
 
     std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
@@ -88,8 +88,7 @@ void serializeToMCAP(
     writer->write(toPointCloud2(cloud, "world"), cloud_topic, time);
 
     if (map.has_value()) {
-        writer->write(
-            visualization::msg::toMarker(*map, "world", {0.3, 0.3, 0.3, 1.0}), map_topic, time);
+        writer->write(visualization::msg::toMarker(*map, "world", {0.3, 0.3, 0.3, 1.0}), map_topic, time);
     }
 }
 

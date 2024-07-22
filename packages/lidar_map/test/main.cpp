@@ -26,11 +26,11 @@ struct Metrics {
 };
 
 /**
- * Metrics for calculations lidar map quality
+ * Metrics for calculations lidar map quality 
  *
  * Error is calculated as distance from point cloud point
  * to the nearest segment of vector map.
- *
+ * 
  * Error aggregation is done by next metrics:
  *  mean: mean error
  *  rmse: root mean squared error
