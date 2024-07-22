@@ -87,7 +87,7 @@ std::ostream& operator<<(std::ostream& out, const Metrics& m) noexcept {
 TEST(LidarMap, lidar_map_test) {
     const SerializerParams serializer_params{
         .topic = {.odom = "/ekf/odometry/filtered", .point_cloud = "/lidar/scan"},
-        .bag_name = {.ride = "ride_real_office_1", .cloud = "cloud_real_office_1"}};
+        .bag_name = {.ride = "ride_sim_map_7_2", .cloud = "cloud_sim_map_7_2"}};
 
     ICPBuilderParams icp_builder_params;
 
@@ -114,11 +114,12 @@ TEST(LidarMap, lidar_map_test) {
 
     const auto poses_optimized = builder.optimizePoses(poses, clouds);
 
-    const auto cloud = builder.transformClouds(poses_optimized, clouds, true)[0];
+    const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
+    const auto final_cloud = builder.mergeClouds(clouds_tf);
 
-    serializer.serializeToMCAP(cloud, "/cloud", map, "/map");
+    serializer.serializeToMCAP(final_cloud, "/cloud", map, "/map");
 
-    std::cout << calculateMetrics(cloud, map);
+    std::cout << calculateMetrics(final_cloud, map);
 }
 
 int main(int argc, char* argv[]) {
