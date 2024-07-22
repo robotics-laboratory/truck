@@ -5,7 +5,6 @@ set(OpenGL_GL_PREFERENCE LEGACY)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules)
 
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(geom REQUIRED)
 find_package(common REQUIRED)
 find_package(nav_msgs REQUIRED)
@@ -42,7 +41,6 @@ add_library(
 
 ament_target_dependencies(
   ${PROJECT_NAME}
-  rclcpp
   geom
   common
   nav_msgs
@@ -66,7 +64,6 @@ target_include_directories(
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(
-  rclcpp
   geom
   common
   nav_msgs

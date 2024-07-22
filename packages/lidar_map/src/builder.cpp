@@ -39,8 +39,7 @@ g2o::SE2 toSE2(const Eigen::Matrix3f& tf_matrix) {
  */
 geom::Pose toPose(const g2o::SE2& se2) {
     return {
-        {se2.translation().x(), se2.translation().y()},
-        {geom::AngleVec2(geom::Angle(se2.rotation().angle()))}};
+        {se2.translation().x(), se2.translation().y()}, {geom::AngleVec2(se2.rotation().angle())}};
 }
 
 /**
@@ -95,7 +94,7 @@ Eigen::Matrix3f transformationMatrix(const geom::Pose& pose_i, const geom::Pose&
     const double tx = dx * cos_theta_i + dy * sin_theta_i;
     const double ty = -1.0 * dx * sin_theta_i + dy * cos_theta_i;
 
-    return transformationMatrix({geom::Vec2(tx, ty), geom::AngleVec2(geom::Angle(dtheta))});
+    return transformationMatrix({geom::Vec2(tx, ty), geom::AngleVec2(dtheta)});
 }
 
 DataPoints toDataPoints(const Cloud& cloud) {
@@ -138,7 +137,7 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
  * Input: set of 'poses' and corresponding 'clouds'
  * Points of cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
  *
- * Output: set of updated poses for given 'clouds'
+ * Output: set of updated poses in world frame for given 'clouds'
  */
 geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& clouds) {
     g2o::SparseOptimizer optimizer;
