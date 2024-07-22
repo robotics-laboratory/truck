@@ -279,48 +279,4 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
     return optimized_poses;
 }
 
-/**
- * Available metrics keys: "mean", "rmse", "perc-5", "perc-10", "perc-25"
- */
-std::map<std::string, double> Builder::calculateMetrics(
-    const Cloud& cloud, const geom::ComplexPolygon& complex_polygon) {
-    const auto get_mean = [](const std::vector<double>& values) {
-        const size_t count = values.size();
-        double mean = 0.0;
-
-        for (double value : values) {
-            mean += value;
-        }
-
-        return mean / count;
-    };
-
-    const auto get_rmse = [](const std::vector<double>& values) {
-        const size_t count = values.size();
-        double rmse = 0.0;
-
-        for (double value : values) {
-            rmse += (value * value);
-        }
-
-        return std::sqrt(rmse / count);
-    };
-
-    std::vector<double> min_dists;
-    const auto segments = complex_polygon.segments();
-
-    for (size_t i = 0; i < cloud.features.cols(); i++) {
-        const geom::Vec2 cloud_point = {cloud.features.col(i)(0), cloud.features.col(i)(1)};
-        double min_dist = std::sqrt(geom::distanceSq(cloud_point, segments[0]));
-
-        for (size_t j = 1; j < segments.size(); j++) {
-            min_dist = std::min(min_dist, std::sqrt(geom::distanceSq(cloud_point, segments[j])));
-        }
-
-        min_dists.push_back(min_dist);
-    }
-
-    return {{"mean", get_mean(min_dists)}, {"rmse", get_rmse(min_dists)}};
-}
-
 }  // namespace truck::lidar_map
