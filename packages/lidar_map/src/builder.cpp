@@ -17,33 +17,6 @@ using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>
 
 namespace {
 
-Eigen::Vector3f translationVectorIn3D(double x, double y, double z) {
-    return Eigen::Vector3f(x, y, z);
-}
-
-Eigen::Vector3f translationVectorIn3DFromPose(const geom::Pose& pose) {
-    return translationVectorIn3D(pose.pos.x, pose.pos.y, 0.0);
-}
-
-/**
- * Returns 3x3 rotation matrix by Z-axis by given theta rotation
- */
-Eigen::Matrix3f rotationMatrixIn3D(double theta) {
-    Eigen::Matrix3f rotation_matrix = Eigen::Matrix3f::Identity();
-    rotation_matrix(0, 0) = std::cos(theta);
-    rotation_matrix(0, 1) = -1.0 * std::sin(theta);
-    rotation_matrix(1, 0) = std::sin(theta);
-    rotation_matrix(1, 1) = std::cos(theta);
-    return rotation_matrix;
-}
-
-/**
- * Returns 3x3 rotation matrix by Z-axis by given pose
- */
-Eigen::Matrix3f rotationMatrixIn3DFromPose(const geom::Pose& pose) {
-    return rotationMatrixIn3D(pose.dir.angle().radians());
-}
-
 /**
  * Returns 3x3 transformation by given 2D translation vector (tx, ty) and rotation angle theta
  */
@@ -254,25 +227,18 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) 
     VERIFY(poses.size() > 0);
     VERIFY(poses.size() == clouds.size());
 
-    Clouds tf_clouds;
+    Clouds clouds_tf;
 
     for (size_t i = 0; i < clouds.size(); i++) {
-        Eigen::Matrix3f rotation_matrix = rotationMatrixIn3DFromPose(poses[i]);
-        Eigen::Vector3f translation_vector = translationVectorIn3DFromPose(poses[i]);
+        Eigen::Matrix3f tf_matrix = transformationMatrix(poses[i]);
+        
+        Cloud cloud_tf = clouds[i];
+        cloud_tf.features = tf_matrix * cloud_tf.features;
 
-        Cloud tf_cloud = Cloud(clouds[i]);
-
-        // Applying 'rotation_matrix' and 'translation_vector'
-        // to each (x,y,z) point 'tf_cloud.features.col(j)' of curernt cloud
-        for (size_t j = 0; j < tf_cloud.features.cols(); j++) {
-            tf_cloud.features.col(j) =
-                rotation_matrix * tf_cloud.features.col(j) + translation_vector;
-        }
-
-        tf_clouds.push_back(tf_cloud);
+        clouds_tf.push_back(cloud_tf);
     }
 
-    return tf_clouds;
+    return clouds_tf;
 }
 
 Cloud Builder::mergeClouds(const Clouds& clouds) {
