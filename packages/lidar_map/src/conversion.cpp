@@ -1,6 +1,7 @@
 #include "lidar_map/conversion.h"
 
-#include "common/math.h"
+#include <common/math.h>
+#include "geom/msg.h"
 
 namespace truck::lidar_map {
 
@@ -45,7 +46,7 @@ Cloud toCloud(const sensor_msgs::msg::LaserScan& scan, double z_lev) {
     return result;
 }
 
-sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, const std::string& frame_id) {
+sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string frame_id) {
     sensor_msgs::msg::PointCloud2 result;
 
     result.header.frame_id = frame_id;
@@ -77,6 +78,34 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, const std::strin
     std::memcpy(result.data.data(), cloud.features.data(), result.data.size());
 
     return result;
+}
+
+visualization_msgs::msg::Marker toMarker(
+    const geom::ComplexPolygon& complex_polygon, std::string frame_id, double z_lev,
+    std::vector<double> rgba_color) {
+    const auto get_color = [&]() {
+        std_msgs::msg::ColorRGBA color;
+        color.r = rgba_color[0];
+        color.g = rgba_color[1];
+        color.b = rgba_color[2];
+        color.a = rgba_color[3];
+        return color;
+    };
+
+    visualization_msgs::msg::Marker msg;
+    msg.header.frame_id = frame_id;
+    msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
+    msg.action = visualization_msgs::msg::Marker::ADD;
+    msg.color = get_color();
+    msg.pose.position.z = z_lev;
+
+    for (const geom::Triangle& triangle : complex_polygon.triangles()) {
+        msg.points.push_back(geom::msg::toPoint(triangle.p1));
+        msg.points.push_back(geom::msg::toPoint(triangle.p2));
+        msg.points.push_back(geom::msg::toPoint(triangle.p3));
+    }
+
+    return msg;
 }
 
 }  // namespace truck::lidar_map

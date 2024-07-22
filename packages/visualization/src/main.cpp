@@ -1,4 +1,4 @@
-#include "visualization/visualization_node.h"
+#include "visualization_node.h"
 
 #include "rclcpp/rclcpp.hpp"
 

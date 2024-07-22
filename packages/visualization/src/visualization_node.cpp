@@ -1,5 +1,5 @@
-#include "visualization/visualization_node.h"
-#include "visualization/color.h"
+#include "visualization_node.h"
+#include "color.h"
 
 #include "common/math.h"
 #include "geom/angle.h"

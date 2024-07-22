@@ -7,7 +7,6 @@
 namespace truck::visualization::color {
 
 std_msgs::msg::ColorRGBA make(float r, float g, float b, float a = 1.0);
-std_msgs::msg::ColorRGBA make(const std::vector<float>& rbga_color);
 
 std_msgs::msg::ColorRGBA white(float alpha = 1.0);
 std_msgs::msg::ColorRGBA gray(float alpha = 1.0);

@@ -2,7 +2,6 @@
 #include "lidar_map/conversion.h"
 
 #include "geom/msg.h"
-#include "visualization/msg.h"
 
 #include <rclcpp/rclcpp.hpp>
 #include <rosbag2_cpp/writer.hpp>
@@ -92,15 +91,18 @@ std::pair<geom::Poses, Clouds> Serializer::deserializeMCAP() {
 void Serializer::serializeToMCAP(
     const Cloud& cloud, std::string cloud_topic, std::optional<geom::ComplexPolygon> map,
     std::string map_topic) {
-    rclcpp::Time time;
+    const auto get_timestamp = []() {
+        rclcpp::Clock clock;
+        return clock.now();
+    };
 
     std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
     writer->open(CLOUD_BAGS_FOLDER_PATH + params_.bag_name.cloud);
 
-    writer->write(toPointCloud2(cloud, "world"), cloud_topic, time);
+    writer->write(toPointCloud2(cloud), cloud_topic, get_timestamp());
 
     if (map.has_value()) {
-        writer->write(visualization::msg::toMarker(*map, "world", {0.3, 0.3, 0.3, 1.0}), map_topic, time);
+        writer->write(toMarker(*map), map_topic, get_timestamp());
     }
 }
 
