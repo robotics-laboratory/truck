@@ -9,7 +9,7 @@ namespace msg {
 
 visualization_msgs::msg::Marker toMarker(
     const geom::ComplexPolygon& complex_polygon, const std::string& frame_id,
-    const std::vector<float>& rgba_color, float z_lev) {
+    std::vector<float> rgba_color, float z_lev) {
     visualization_msgs::msg::Marker msg;
     msg.header.frame_id = frame_id;
     msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;

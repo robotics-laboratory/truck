@@ -3,7 +3,6 @@
 #include "lidar_map/common.h"
 
 #include "geom/pose.h"
-#include "geom/complex_polygon.h"
 
 namespace truck::lidar_map {
 
@@ -24,13 +23,13 @@ class Builder {
     Builder(const BuilderParams& params, const ICP& icp);
 
     std::pair<geom::Poses, Clouds> filterByPosesProximity(
-        const geom::Poses& poses, const Clouds& clouds);
+        const geom::Poses& poses, const Clouds& clouds) const;
 
     geom::Poses optimizePoses(const geom::Poses& poses, const Clouds& clouds);
 
-    Clouds transformClouds(const geom::Poses& poses, const Clouds& clouds);
+    Clouds transformClouds(const geom::Poses& poses, const Clouds& clouds) const;
 
-    Cloud mergeClouds(const Clouds& clouds);
+    Cloud mergeClouds(const Clouds& clouds) const;
 
   private:
     ICP icp_;

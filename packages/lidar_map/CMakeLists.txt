@@ -15,6 +15,7 @@ find_package(rosbag2_cpp REQUIRED)
 find_package(libpointmatcher REQUIRED)
 find_package(map REQUIRED)
 find_package(G2O REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(visualization REQUIRED)
 find_package(
   Boost

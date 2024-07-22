@@ -1,43 +1,28 @@
 #pragma once
 
 #include "lidar_map/common.h"
-
-#include "geom/pose.h"
 #include "geom/complex_polygon.h"
 
-#include <rosbag2_cpp/readers/sequential_reader.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
 
 namespace truck::lidar_map {
 
-struct SerializerParams {
-    struct Topic {
-        std::string odom;
-        std::string point_cloud;
-    } topic;
+std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
+    const std::string& mcap_path, const std::string& odom_topic);
 
-    struct BagName {
-        std::string ride;
-        std::string cloud;
-    } bag_name;
-};
+std::vector<sensor_msgs::msg::LaserScan> loadLaserScanTopic(
+    const std::string& mcap_path, const std::string& laser_scan_topic);
 
-class Serializer {
-  public:
-    Serializer(const SerializerParams& params);
+void syncOdomWithCloud(
+    std::vector<nav_msgs::msg::Odometry>& odom_msgs,
+    std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs);
 
-    std::pair<geom::Poses, Clouds> deserializeMCAP();
-    void serializeToMCAP(
-        const Cloud& cloud, std::string cloud_topic = "/cloud",
-        std::optional<geom::ComplexPolygon> map = std::nullopt, std::string map_topic = "/map");
+void writeToMCAP(
+    const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name);
 
-  private:
-    std::unique_ptr<rosbag2_cpp::readers::SequentialReader> getSequentialReader();
-
-    std::optional<std::pair<geom::Pose, Cloud>> readNextMessages();
-
-    std::unique_ptr<rosbag2_cpp::readers::SequentialReader> reader_ = nullptr;
-
-    SerializerParams params_;
-};
+void writeToMCAP(
+    const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name,
+    const geom::ComplexPolygon& map, const std::string& map_topic_name);
 
 }  // namespace truck::lidar_map

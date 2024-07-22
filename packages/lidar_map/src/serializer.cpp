@@ -1,25 +1,20 @@
 #include "lidar_map/serializer.h"
-#include "lidar_map/conversion.h"
 
+#include "lidar_map/conversion.h"
 #include "geom/msg.h"
+#include "common/exception.h"
 #include "visualization/msg.h"
 
-#include <rclcpp/rclcpp.hpp>
 #include <rosbag2_cpp/writer.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include <sensor_msgs/msg/laser_scan.hpp>
+#include <rosbag2_cpp/reader.hpp>
 
 namespace truck::lidar_map {
-
-const std::string RIDE_BAGS_FOLDER_PATH = "/truck/packages/lidar_map/test/bags/rides/";
-const std::string CLOUD_BAGS_FOLDER_PATH = "/truck/packages/lidar_map/test/bags/clouds/";
 
 namespace {
 
 template<typename T>
 std::optional<T> readNextMessage(
-    const std::string& topic_name,
-    std::unique_ptr<rosbag2_cpp::readers::SequentialReader>& reader) {
+    std::unique_ptr<rosbag2_cpp::Reader>& reader, const std::string& topic_name) {
     while (reader->has_next()) {
         rosbag2_storage::SerializedBagMessageSharedPtr msg = reader->read_next();
 
@@ -41,68 +36,108 @@ std::optional<T> readNextMessage(
 
 }  // namespace
 
-Serializer::Serializer(const SerializerParams& params) : params_(params) {
-    reader_ = getSequentialReader();
-}
+std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
+    const std::string& mcap_path, const std::string& odom_topic) {
+    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
+    reader->open(mcap_path);
 
-std::unique_ptr<rosbag2_cpp::readers::SequentialReader> Serializer::getSequentialReader() {
-    rosbag2_storage::StorageOptions storage_options;
-    storage_options.uri = RIDE_BAGS_FOLDER_PATH + params_.bag_name.ride + ".mcap";
-
-    rosbag2_cpp::ConverterOptions converter_options;
-    converter_options.input_serialization_format = "cdr";
-    converter_options.output_serialization_format = "cdr";
-
-    auto reader = std::make_unique<rosbag2_cpp::readers::SequentialReader>();
-    reader->open(storage_options, converter_options);
-    return reader;
-}
-
-std::optional<std::pair<geom::Pose, Cloud>> Serializer::readNextMessages() {
-    auto laser_scan =
-        readNextMessage<sensor_msgs::msg::LaserScan>(params_.topic.point_cloud, reader_);
-    auto odom = readNextMessage<nav_msgs::msg::Odometry>(params_.topic.odom, reader_);
-
-    if (!laser_scan.has_value() || !odom.has_value()) {
-        return std::nullopt;
-    }
-
-    return std::make_pair(geom::toPose(*odom), toCloud(*laser_scan));
-}
-
-std::pair<geom::Poses, Clouds> Serializer::deserializeMCAP() {
-    geom::Poses poses;
-    Clouds clouds;
+    std::vector<nav_msgs::msg::Odometry> data;
 
     while (true) {
-        auto messages = readNextMessages();
+        auto msg = readNextMessage<nav_msgs::msg::Odometry>(reader, odom_topic);
 
-        if (!messages.has_value()) {
+        if (!msg.has_value()) {
             break;
         }
 
-        const auto [pose, cloud] = *messages;
-        poses.push_back(pose);
-        clouds.push_back(cloud);
+        data.push_back(*msg);
     }
 
-    return std::make_pair(poses, clouds);
+    return data;
 }
 
-void Serializer::serializeToMCAP(
-    const Cloud& cloud, std::string cloud_topic, std::optional<geom::ComplexPolygon> map,
-    std::string map_topic) {
-    rclcpp::Time time;
+std::vector<sensor_msgs::msg::LaserScan> loadLaserScanTopic(
+    const std::string& mcap_path, const std::string& laser_scan_topic) {
+    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
+    reader->open(mcap_path);
 
-    std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
-    writer->open(CLOUD_BAGS_FOLDER_PATH + params_.bag_name.cloud);
+    std::vector<sensor_msgs::msg::LaserScan> data;
 
-    writer->write(toPointCloud2(cloud, "world"), cloud_topic, time);
+    while (true) {
+        auto msg = readNextMessage<sensor_msgs::msg::LaserScan>(reader, laser_scan_topic);
 
-    if (map.has_value()) {
-        writer->write(
-            visualization::msg::toMarker(*map, "world", {0.3, 0.3, 0.3, 1.0}), map_topic, time);
+        if (!msg.has_value()) {
+            break;
+        }
+
+        data.push_back(*msg);
     }
+
+    return data;
+}
+
+namespace {
+
+bool operator<(const std_msgs::msg::Header& a, const std_msgs::msg::Header& b) {
+    if (a.stamp.sec < b.stamp.sec) {
+        return true;
+    }
+
+    if (a.stamp.sec > b.stamp.sec) {
+        return false;
+    }
+
+    return a.stamp.nanosec < b.stamp.nanosec;
+}
+
+}  // namespace
+
+void syncOdomWithCloud(
+    std::vector<nav_msgs::msg::Odometry>& odom_msgs,
+    std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs) {
+    VERIFY(odom_msgs.size() > 0);
+    VERIFY(laser_scan_msgs.size() > 0);
+
+    const size_t odom_count = odom_msgs.size();
+    const size_t laser_scan_count = laser_scan_msgs.size();
+
+    size_t odom_id = 0;
+    size_t laser_scan_id = 0;
+
+    std::vector<nav_msgs::msg::Odometry> odom_msgs_synced;
+    std::vector<sensor_msgs::msg::LaserScan> laser_scan_msgs_synced;
+
+    while (odom_id < odom_count && laser_scan_id < laser_scan_count) {
+        while (odom_msgs[odom_id].header < laser_scan_msgs[laser_scan_id].header) {
+            odom_id++;
+        }
+
+        odom_msgs_synced.push_back(odom_msgs[odom_id]);
+        laser_scan_msgs_synced.push_back(laser_scan_msgs[laser_scan_id]);
+
+        laser_scan_id++;
+    }
+
+    odom_msgs = odom_msgs_synced;
+    laser_scan_msgs = laser_scan_msgs_synced;
+}
+
+void writeToMCAP(
+    const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name) {
+    rclcpp::Time time;
+    std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
+    writer->open(mcap_path);
+    writer->write(toPointCloud2(cloud, "world"), cloud_topic_name, time);
+}
+
+void writeToMCAP(
+    const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name,
+    const geom::ComplexPolygon& map, const std::string& map_topic_name) {
+    rclcpp::Time time;
+    std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
+    writer->open(mcap_path);
+    writer->write(toPointCloud2(cloud, "world"), cloud_topic_name, time);
+    writer->write(visualization::msg::toMarker(map, "world"), map_topic_name, time);
 }
 
 }  // namespace truck::lidar_map

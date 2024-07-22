@@ -38,6 +38,16 @@ Cloud toCloud(const sensor_msgs::msg::LaserScan& scan) {
     return cloud;
 }
 
+Clouds toClouds(const std::vector<sensor_msgs::msg::LaserScan>& scans) {
+    Clouds clouds;
+
+    for (const auto& scan : scans) {
+        clouds.push_back(toCloud(scan));
+    }
+
+    return clouds;
+}
+
 sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, const std::string& frame_id) {
     sensor_msgs::msg::PointCloud2 result;
 

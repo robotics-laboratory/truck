@@ -3,10 +3,15 @@
 #include "lidar_map/serializer.h"
 #include "lidar_map/builder.h"
 #include "lidar_map/icp.h"
+#include "lidar_map/conversion.h"
 #include "map/map.h"
+#include "geom/msg.h"
 #include "geom/distance.h"
 
 #include <numeric>
+#include <nav_msgs/msg/odometry.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
+#include <ament_index_cpp/get_package_share_directory.hpp>
 
 using namespace truck::lidar_map;
 using namespace truck::map;
@@ -84,10 +89,13 @@ std::ostream& operator<<(std::ostream& out, const Metrics& m) noexcept {
 
 }  // namespace
 
-TEST(LidarMap, lidar_map_test) {
-    const SerializerParams serializer_params{
-        .topic = {.odom = "/ekf/odometry/filtered", .point_cloud = "/lidar/scan"},
-        .bag_name = {.ride = "ride_real_office_1", .cloud = "cloud_real_office_1"}};
+const std::string kLaserScanTopic = "/lidar/scan";
+const std::string kOdomTopic = "/ekf/odometry/filtered";
+const std::string kMapPkgPath = ament_index_cpp::get_package_share_directory("map");
+
+TEST(Builder, sim_test) {
+    const std::string kRideBagPath = "test/bags/rides/ride_sim_map_7_1.mcap";
+    const std::string kCloudBagPath = "test/bags/clouds/cloud_sim_map_7_1";
 
     ICPBuilderParams icp_builder_params;
 
@@ -99,16 +107,21 @@ TEST(LidarMap, lidar_map_test) {
         .optimizer_steps = 10,
         .verbose = false};
 
-    Serializer serializer = Serializer(serializer_params);
-
     ICPBuilder icp_builder = ICPBuilder(icp_builder_params);
     ICP icp = icp_builder.build();
 
     Builder builder = Builder(builder_params, icp);
 
-    ComplexPolygon map = Map::fromGeoJson("/truck/packages/map/data/map_7.geojson").polygons()[0];
+    ComplexPolygon map = Map::fromGeoJson(kMapPkgPath + "/data/map_7.geojson").polygons()[0];
 
-    const auto [all_poses, all_clouds] = serializer.deserializeMCAP();
+    auto odom_msgs = loadOdomTopic(kRideBagPath, kOdomTopic);
+    auto cloud_msgs = loadLaserScanTopic(kRideBagPath, kLaserScanTopic);
+
+    syncOdomWithCloud(odom_msgs, cloud_msgs);
+
+    const auto all_poses = toPoses(odom_msgs);
+    const auto all_clouds = toClouds(cloud_msgs);
+
     const auto [poses, clouds] = builder.filterByPosesProximity(all_poses, all_clouds);
 
     const auto poses_optimized = builder.optimizePoses(poses, clouds);
@@ -116,9 +129,46 @@ TEST(LidarMap, lidar_map_test) {
     const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
     const auto final_cloud = builder.mergeClouds(clouds_tf);
 
-    serializer.serializeToMCAP(final_cloud, "/cloud", map, "/map");
+    writeToMCAP(kCloudBagPath, final_cloud, "/cloud", map, "/map");
 
     std::cout << calculateMetrics(final_cloud, map);
+}
+
+TEST(Builder, real_test) {
+    const std::string kRideBagPath = "test/bags/rides/ride_real_office_1.mcap";
+    const std::string kCloudBagPath = "test/bags/clouds/cloud_real_office_1";
+
+    ICPBuilderParams icp_builder_params;
+
+    const BuilderParams builder_params{
+        .icp_edge_max_dist = 0.6,
+        .poses_min_dist = 0.5,
+        .odom_edge_weight = 1.0,
+        .icp_edge_weight = 3.0,
+        .optimizer_steps = 10,
+        .verbose = false};
+
+    ICPBuilder icp_builder = ICPBuilder(icp_builder_params);
+    ICP icp = icp_builder.build();
+
+    Builder builder = Builder(builder_params, icp);
+
+    auto odom_msgs = loadOdomTopic(kRideBagPath, kOdomTopic);
+    auto cloud_msgs = loadLaserScanTopic(kRideBagPath, kLaserScanTopic);
+
+    syncOdomWithCloud(odom_msgs, cloud_msgs);
+
+    const auto all_poses = toPoses(odom_msgs);
+    const auto all_clouds = toClouds(cloud_msgs);
+
+    const auto [poses, clouds] = builder.filterByPosesProximity(all_poses, all_clouds);
+
+    const auto poses_optimized = builder.optimizePoses(poses, clouds);
+
+    const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
+    const auto final_cloud = builder.mergeClouds(clouds_tf);
+
+    writeToMCAP(kCloudBagPath, final_cloud, "/cloud");
 }
 
 int main(int argc, char* argv[]) {

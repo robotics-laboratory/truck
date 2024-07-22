@@ -113,7 +113,7 @@ Builder::Builder(const BuilderParams& params, const ICP& icp) : icp_(icp), param
  * Next pose will be added, if it's far enough from a previous one
  */
 std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
-    const geom::Poses& poses, const Clouds& clouds) {
+    const geom::Poses& poses, const Clouds& clouds) const {
     VERIFY(poses.size() > 0);
     VERIFY(poses.size() == clouds.size());
 
@@ -228,7 +228,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
  *
  * Output: set of clouds, whose point coordinates are in the world frame
  */
-Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) {
+Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) const {
     VERIFY(poses.size() > 0);
     VERIFY(poses.size() == clouds.size());
 
@@ -242,7 +242,7 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) 
     return clouds_tf;
 }
 
-Cloud Builder::mergeClouds(const Clouds& clouds) {
+Cloud Builder::mergeClouds(const Clouds& clouds) const {
     VERIFY(clouds.size() > 0);
     Cloud merged_cloud = clouds[0];
 
