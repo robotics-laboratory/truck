@@ -9,7 +9,6 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>rclcpp</depend>
   <depend>geom</depend>
   <depend>common</depend>
   <depend>nav_msgs</depend>
