@@ -17,15 +17,21 @@ using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>
 
 namespace {
 
+DataPoints toDataPoints(const Cloud& cloud) {
+    DataPoints data_points;
+    data_points.features = cloud;
+    return data_points;
+}
+
 /**
- * Returns g2o pose constructed from geom::Pose
+ * Returns g2o::SE2 constructed from pose
  */
 g2o::SE2 toSE2(const geom::Pose& pose) {
     return g2o::SE2(pose.pos.x, pose.pos.y, pose.dir.angle().radians());
 }
 
 /**
- * Returns g2o pose constructed from 3x3 transformation matrix in 2D
+ * Returns g2o::SE2 constructed from 3x3 transformation matrix
  */
 g2o::SE2 toSE2(const Eigen::Matrix3f& tf_matrix) {
     const double tx = tf_matrix(0, 2);
@@ -35,7 +41,7 @@ g2o::SE2 toSE2(const Eigen::Matrix3f& tf_matrix) {
 }
 
 /**
- * Returns geom::Pose constructed from g2o pose
+ * Returns pose constructed from g2o::SE2
  */
 geom::Pose toPose(const g2o::SE2& se2) {
     return {
@@ -43,10 +49,12 @@ geom::Pose toPose(const g2o::SE2& se2) {
 }
 
 /**
- * Returns 3x3 transformation matrix in 2D by geom::Pose
+ * Returns 3x3 transformation matrix of pose relatively to a world
  *
- * Translation is assigned from pose.pos
- * Rotation is assigned from pose.dir
+ * Pose is given in a world frame
+ *
+ * Translation is taken from pose.pos
+ * Rotation is taken from pose.dir
  */
 Eigen::Matrix3f transformationMatrix(const geom::Pose& pose) {
     const double dtheta = pose.dir.angle().radians();
@@ -69,16 +77,15 @@ Eigen::Matrix3f transformationMatrix(const geom::Pose& pose) {
 }
 
 /**
- * Returns 3x3 transformation matrix T_ij in 2D of pose_j relatively to pose_i
+ * Returns 3x3 transformation matrix of pose_j relatively to pose_i (T_ij)
  *
  * Poses pose_i and pose_j are given in a world frame
  *
  * Translation and rotation is taken from 3x3 transformation matrix T_ij where:
- *
- * T_ij = T_iw * T_wj
- * T_wj: 3x3 transformation matrix of pose_j relatively to a world
- * T_wi: 3x3 transformation matrix of pose_i relatively to a world
- * T_iw = (T_wi).inv(): 3x3 transformation matrix of a world relatively to pose_i
+ * - T_ij = T_iw * T_wj
+ * - T_wj: 3x3 transformation matrix of pose_j relatively to a world
+ * - T_wi: 3x3 transformation matrix of pose_i relatively to a world
+ * - T_iw = (T_wi).inv(): 3x3 transformation matrix of world relatively to pose_i
  */
 Eigen::Matrix3f transformationMatrix(const geom::Pose& pose_i, const geom::Pose& pose_j) {
     const double theta_i = pose_i.dir.angle().radians();
@@ -97,18 +104,12 @@ Eigen::Matrix3f transformationMatrix(const geom::Pose& pose_i, const geom::Pose&
     return transformationMatrix({geom::Vec2(tx, ty), geom::AngleVec2(dtheta)});
 }
 
-DataPoints toDataPoints(const Cloud& cloud) {
-    DataPoints data_points;
-    data_points.features = cloud;
-    return data_points;
-}
-
 }  // namespace
 
 Builder::Builder(const BuilderParams& params, const ICP& icp) : icp_(icp), params_(params) {}
 
 /**
- * Returns a subset of given 'poses' and 'clouds' via removing too close poses
+ * Returns a subset of given poses and clouds via removing too close poses
  * Next pose will be added, if it's far enough from a previous one
  */
 std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
@@ -130,14 +131,19 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
         ref_pose = poses[i];
     }
 
-    return std::make_pair(filtered_poses, filtered_clouds);
+    return {filtered_poses, filtered_clouds};
 }
 
 /**
- * Input: set of 'poses' and corresponding 'clouds'
- * Points of cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
+ * Optimize clouds' poses via optimization
  *
- * Output: set of updated poses in world frame for given 'clouds'
+ * Input:
+ * - set of poses in a world frame
+ * - set of clouds which located in correspondig poses
+ * - points coordinates of each cloud (clouds[i]) are given in a corresponding frame (poses[i])
+ *
+ * Output:
+ * - set of optimized poses in a world frame
  */
 geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& clouds) {
     g2o::SparseOptimizer optimizer;
@@ -161,7 +167,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
 
     // Add odometry edges
     for (size_t i = 1; i < poses.size(); i++) {
-        Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i - 1], poses[i]);
+        const Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i - 1], poses[i]);
 
         auto* edge = new g2o::EdgeSE2();
         edge->setVertex(0, vertices[i - 1]);
@@ -179,16 +185,16 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
                 continue;
             }
 
-            Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
+            const Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
 
             DataPoints data_points_cloud_i = toDataPoints(clouds[i]);
             DataPoints data_points_cloud_j_transformed = toDataPoints(clouds[j]);
 
             icp_.transformations.apply(data_points_cloud_j_transformed, tf_matrix_odom);
 
-            Eigen::Matrix3f tf_matrix_icp =
+            const Eigen::Matrix3f tf_matrix_icp =
                 icp_(data_points_cloud_j_transformed, data_points_cloud_i);
-            Eigen::Matrix3f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
+            const Eigen::Matrix3f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
 
             auto* edge = new g2o::EdgeSE2();
             edge->setVertex(0, vertices[i]);
@@ -222,10 +228,15 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
 }
 
 /**
- * Input: set of 'poses' and corresponding 'clouds'
- * Points of cloud 'clouds[i]' should be in the frame of the corresponding pose 'poses[i]'
+ * Transform points coordinates of each cloud from corresponding local frame to a common world frame
  *
- * Output: set of clouds, whose point coordinates are in the world frame
+ * Input:
+ * - set of poses in a world frame
+ * - set of clouds which located in correspondig poses
+ * - points coordinates of each cloud (clouds[i]) are given in a corresponding frame (poses[i])
+ *
+ * Output:
+ * - set of clouds in a world frame
  */
 Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) const {
     VERIFY(poses.size() > 0);

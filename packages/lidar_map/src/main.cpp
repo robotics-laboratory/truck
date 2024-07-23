@@ -1,5 +1,3 @@
-#include <gtest/gtest.h>
-
 #include "lidar_map/serializer.h"
 #include "lidar_map/builder.h"
 #include "lidar_map/icp.h"
@@ -12,10 +10,13 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
+#include <boost/program_options.hpp>
 
 using namespace truck::lidar_map;
 using namespace truck::map;
 using namespace truck::geom;
+
+namespace po = boost::program_options;
 
 namespace {
 
@@ -81,22 +82,24 @@ Metrics calculateMetrics(const Cloud& cloud, const ComplexPolygon& complex_polyg
 }
 
 std::ostream& operator<<(std::ostream& out, const Metrics& m) noexcept {
-    return out << "mean: \t" << m.mean << "\n"
-               << "rmse: \t" << m.rmse << "\n"
-               << "q95: \t" << m.q95 << "\n"
-               << "q90: \t" << m.q90 << "\n";
+    return out << "Metrics:\n"
+               << "  mean = " << m.mean << "\n"
+               << "  rmse = " << m.rmse << "\n"
+               << "  q95 = " << m.q95 << "\n"
+               << "  q90 = " << m.q90 << "\n";
 }
 
 }  // namespace
+
+bool kTesting;
+std::string kInputMCAP;
+std::string kOutputFolder;
 
 const std::string kLaserScanTopic = "/lidar/scan";
 const std::string kOdomTopic = "/ekf/odometry/filtered";
 const std::string kMapPkgPath = ament_index_cpp::get_package_share_directory("map");
 
-TEST(Builder, sim_test) {
-    const std::string kRideBagPath = "test/bags/rides/ride_sim_map_7_1.mcap";
-    const std::string kCloudBagPath = "test/bags/clouds/cloud_sim_map_7_1";
-
+void buildMap() {
     ICPBuilderParams icp_builder_params;
 
     const BuilderParams builder_params{
@@ -112,15 +115,13 @@ TEST(Builder, sim_test) {
 
     Builder builder = Builder(builder_params, icp);
 
-    ComplexPolygon map = Map::fromGeoJson(kMapPkgPath + "/data/map_7.geojson").polygons()[0];
+    auto odom_msgs = loadOdomTopic(kInputMCAP, kOdomTopic);
+    auto laser_scan_msgs = loadLaserScanTopic(kInputMCAP, kLaserScanTopic);
 
-    auto odom_msgs = loadOdomTopic(kRideBagPath, kOdomTopic);
-    auto cloud_msgs = loadLaserScanTopic(kRideBagPath, kLaserScanTopic);
-
-    syncOdomWithCloud(odom_msgs, cloud_msgs);
+    syncOdomWithCloud(odom_msgs, laser_scan_msgs);
 
     const auto all_poses = toPoses(odom_msgs);
-    const auto all_clouds = toClouds(cloud_msgs);
+    const auto all_clouds = toClouds(laser_scan_msgs);
 
     const auto [poses, clouds] = builder.filterByPosesProximity(all_poses, all_clouds);
 
@@ -129,49 +130,44 @@ TEST(Builder, sim_test) {
     const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
     const auto final_cloud = builder.mergeClouds(clouds_tf);
 
-    writeToMCAP(kCloudBagPath, final_cloud, "/cloud", map, "/map");
-
-    std::cout << calculateMetrics(final_cloud, map);
-}
-
-TEST(Builder, real_test) {
-    const std::string kRideBagPath = "test/bags/rides/ride_real_office_1.mcap";
-    const std::string kCloudBagPath = "test/bags/clouds/cloud_real_office_1";
-
-    ICPBuilderParams icp_builder_params;
-
-    const BuilderParams builder_params{
-        .icp_edge_max_dist = 0.6,
-        .poses_min_dist = 0.5,
-        .odom_edge_weight = 1.0,
-        .icp_edge_weight = 3.0,
-        .optimizer_steps = 10,
-        .verbose = false};
-
-    ICPBuilder icp_builder = ICPBuilder(icp_builder_params);
-    ICP icp = icp_builder.build();
-
-    Builder builder = Builder(builder_params, icp);
-
-    auto odom_msgs = loadOdomTopic(kRideBagPath, kOdomTopic);
-    auto cloud_msgs = loadLaserScanTopic(kRideBagPath, kLaserScanTopic);
-
-    syncOdomWithCloud(odom_msgs, cloud_msgs);
-
-    const auto all_poses = toPoses(odom_msgs);
-    const auto all_clouds = toClouds(cloud_msgs);
-
-    const auto [poses, clouds] = builder.filterByPosesProximity(all_poses, all_clouds);
-
-    const auto poses_optimized = builder.optimizePoses(poses, clouds);
-
-    const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
-    const auto final_cloud = builder.mergeClouds(clouds_tf);
-
-    writeToMCAP(kCloudBagPath, final_cloud, "/cloud");
+    if (kTesting) {
+        ComplexPolygon map = Map::fromGeoJson(kMapPkgPath + "/data/map_7.geojson").polygons()[0];
+        writeToMCAP(kOutputFolder, final_cloud, "/cloud", map, "/map");
+        std::cout << calculateMetrics(final_cloud, map);
+    } else {
+        writeToMCAP(kOutputFolder, final_cloud, "/cloud");
+    }
 }
 
 int main(int argc, char* argv[]) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    {
+        po::options_description desc("Options and arguments");
+        desc.add_options()("help,h", "show this help message and exit")(
+            "input,i",
+            po::value<std::string>(&kInputMCAP)->required(),
+            "path to .mcap file with ride data")(
+            "output,o",
+            po::value<std::string>(&kOutputFolder)->required(),
+            "path to folder where to store .mcap file with cloud (folder shouldn't exist)")(
+            "test,t", po::bool_switch(&kTesting), "enable test mode");
+
+        po::variables_map vm;
+        try {
+            po::store(po::parse_command_line(argc, argv, desc), vm);
+
+            if (vm.count("help")) {
+                std::cout << desc << "\n";
+                return 0;
+            }
+
+            po::notify(vm);
+        } catch (po::error& e) {
+            std::cerr << "ERROR: " << e.what() << "\n";
+            std::cerr << desc << "\n";
+            return 1;
+        }
+    }
+
+    buildMap();
+    return 0;
 }

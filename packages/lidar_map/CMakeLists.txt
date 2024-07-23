@@ -86,9 +86,14 @@ install(
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
-if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
-  add_subdirectory("test")
-endif()
+add_executable(${PROJECT_NAME}_executable src/main.cpp)
+
+ament_target_dependencies(
+  ${PROJECT_NAME}_executable map geom nav_msgs sensor_msgs ament_index_cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_executable ${PROJECT_NAME})
+
+install(TARGETS ${PROJECT_NAME}_executable DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
