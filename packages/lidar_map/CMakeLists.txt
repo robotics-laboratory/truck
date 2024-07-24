@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(lidar_map)
 
-set(OpenGL_GL_PREFERENCE LEGACY)
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules)
-
 find_package(ament_cmake REQUIRED)
 find_package(geom REQUIRED)
 find_package(common REQUIRED)
@@ -27,12 +24,9 @@ find_package(
              REQUIRED
 )
 
-set(G2O_INCLUDE_DIRS ${G2O_INCLUDE_DIR})
 set(G2O_LIBRARIES ${G2O_SOLVER_EIGEN} ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY}
                   ${G2O_TYPES_SLAM2D}
 )
-
-include_directories(${G2O_INCLUDE_DIRS})
 
 add_library(
   ${PROJECT_NAME} SHARED src/builder.cpp src/serializer.cpp src/conversion.cpp
