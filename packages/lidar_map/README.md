@@ -53,10 +53,10 @@ root@fca8223dfa98:/truck/packages/lidar_map# ros2 run lidar_map lidar_map_execut
   --output data/clouds/cloud_real_office
 ```
 
-If you building 2D LiDAR map based on simulated data, then you can measure its quality by comparing it with corresponding ground truth vector map. You can do this with `--test` option:
+If you building 2D LiDAR map based on simulated data, then you can measure its quality by comparing it with corresponding ground truth vector map which stored in `map/data` folder in `map` package. You can do this with `--test` option:
 ```console
 root@fca8223dfa98:/truck/packages/lidar_map# ros2 run lidar_map lidar_map_executable
   --input data/rides/ride_sim_map_7.mcap
   --output data/clouds/sim_map_7
-  --test
+  --test map_7.geojson
 ```

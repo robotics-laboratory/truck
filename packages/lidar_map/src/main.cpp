@@ -91,7 +91,8 @@ std::ostream& operator<<(std::ostream& out, const Metrics& m) noexcept {
 
 }  // namespace
 
-bool kTesting;
+bool kTest;
+std::string kVectorMapName;
 std::string kInputMCAP;
 std::string kOutputFolder;
 
@@ -130,10 +131,11 @@ void buildMap() {
     const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
     const auto final_cloud = builder.mergeClouds(clouds_tf);
 
-    if (kTesting) {
-        ComplexPolygon map = Map::fromGeoJson(kMapPkgPath + "/data/map_7.geojson").polygons()[0];
-        writeToMCAP(kOutputFolder, final_cloud, "/cloud", map, "/map");
-        std::cout << calculateMetrics(final_cloud, map);
+    if (kTest) {
+        ComplexPolygon vector_map =
+            Map::fromGeoJson(kMapPkgPath + "/data/" + kVectorMapName).polygons()[0];
+        writeToMCAP(kOutputFolder, final_cloud, "/cloud", vector_map, "/map");
+        std::cout << calculateMetrics(final_cloud, vector_map);
     } else {
         writeToMCAP(kOutputFolder, final_cloud, "/cloud");
     }
@@ -145,11 +147,13 @@ int main(int argc, char* argv[]) {
         desc.add_options()("help,h", "show this help message and exit")(
             "input,i",
             po::value<std::string>(&kInputMCAP)->required(),
-            "path to .mcap file with ride data")(
+            "path to .mcap file with ride bag")(
             "output,o",
             po::value<std::string>(&kOutputFolder)->required(),
-            "path to folder where to store .mcap file with cloud (folder shouldn't exist)")(
-            "test,t", po::bool_switch(&kTesting), "enable test mode");
+            "path to folder where to store .mcap file with 2D LiDAR map (folder shouldn't exist)")(
+            "test,t",
+            po::value<std::string>(&kVectorMapName),
+            "enable test mode and set vector map (only for simulated data)");
 
         po::variables_map vm;
         try {
@@ -158,6 +162,10 @@ int main(int argc, char* argv[]) {
             if (vm.count("help")) {
                 std::cout << desc << "\n";
                 return 0;
+            }
+
+            if (vm.count("test")) {
+                kTest = true;
             }
 
             po::notify(vm);
