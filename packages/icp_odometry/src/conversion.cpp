@@ -20,7 +20,7 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
 
     const DataPoints::Labels descriptor_labels;
 
-    auto is_valid = [&](double range) { return std::isnormal(range) && range_limit.isMet(range); };
+    auto is_valid = [&](double range) { return std::isfinite(range) && range_limit.isMet(range); };
 
     const size_t point_count = std::count_if(
         scan.ranges.begin(), scan.ranges.end(), [&](float range) { return is_valid(range); });

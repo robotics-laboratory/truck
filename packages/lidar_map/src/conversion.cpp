@@ -13,7 +13,7 @@ constexpr bool isBigendian() { return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__; }
 Cloud toCloud(const sensor_msgs::msg::LaserScan& scan) {
     Limits range_limit{scan.range_min, scan.range_max};
 
-    auto is_valid = [&](double range) { return std::isnormal(range) && range_limit.isMet(range); };
+    auto is_valid = [&](double range) { return std::isfinite(range) && range_limit.isMet(range); };
 
     const size_t point_count = std::count_if(
         scan.ranges.begin(), scan.ranges.end(), [&](float range) { return is_valid(range); });
