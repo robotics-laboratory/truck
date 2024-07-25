@@ -526,6 +526,10 @@ RUN git clone https://github.com/RainerKuemmerle/g2o.git \
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
+ARG CMAKE_VERSION="3.16"
+
+RUN wget https://raw.githubusercontent.com/RainerKuemmerle/g2o/master/cmake_modules/FindG2O.cmake -qO /usr/share/cmake-${CMAKE_VERSION}/Modules/FindG2O.cmake
+
 ### INSTALL GTSAM
 
 ARG GTSAM_VERSION="4.1.1"
