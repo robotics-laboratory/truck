@@ -1,8 +1,10 @@
 #include "lidar_map/builder.h"
 
 #include "geom/distance.h"
+#include "geom/boost/point.h"
 #include "common/exception.h"
 
+#include <boost/geometry.hpp>
 #include <g2o/core/block_solver.h>
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
@@ -11,6 +13,10 @@
 #include <g2o/types/slam2d/edge_se2.h>
 
 namespace truck::lidar_map {
+
+namespace bg = boost::geometry;
+
+using RTree = bg::index::rtree<geom::Vec2, bg::index::rstar<16>>;
 
 using BlockSolverType = g2o::BlockSolver<g2o::BlockSolverTraits<3, 3>>;
 using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>;
@@ -128,18 +134,29 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
     VERIFY(poses.size() > 0);
     VERIFY(poses.size() == clouds.size());
 
-    geom::Poses filtered_poses = {poses[0]};
-    Clouds filtered_clouds = {clouds[0]};
-    geom::Pose ref_pose = poses[0];
+    geom::Poses filtered_poses;
+    Clouds filtered_clouds;
+
+    RTree rtree;
+    rtree.insert(poses[0].pos);
 
     for (size_t i = 1; i < poses.size(); i++) {
-        if (geom::distance(poses[i].pos, ref_pose.pos) < params_.poses_min_dist) {
+        const auto& pose = poses[i];
+        const auto& cloud = clouds[i];
+
+        std::vector<geom::Vec2> query_points;
+        rtree.query(bg::index::nearest(pose.pos, 1), std::back_inserter(query_points));
+
+        const double dist = geom::distance(pose.pos, query_points.front());
+
+        if (dist < params_.poses_min_dist) {
             continue;
         }
 
-        filtered_poses.push_back(poses[i]);
-        filtered_clouds.push_back(clouds[i]);
-        ref_pose = poses[i];
+        filtered_poses.push_back(pose);
+        filtered_clouds.push_back(cloud);
+
+        rtree.insert(pose.pos);
     }
 
     return {filtered_poses, filtered_clouds};
