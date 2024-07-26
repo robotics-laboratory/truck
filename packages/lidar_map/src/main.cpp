@@ -1,16 +1,16 @@
 #include "lidar_map/serializer.h"
-#include "lidar_map/builder.h"
-#include "lidar_map/icp.h"
-#include "lidar_map/conversion.h"
-#include "map/map.h"
-#include "geom/msg.h"
 #include "geom/distance.h"
+#include "geom/msg.h"
+#include "lidar_map/builder.h"
+#include "lidar_map/conversion.h"
+#include "lidar_map/icp.h"
+#include "map/map.h"
 
-#include <numeric>
-#include <nav_msgs/msg/odometry.hpp>
-#include <sensor_msgs/msg/laser_scan.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <boost/program_options.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <numeric>
+#include <sensor_msgs/msg/laser_scan.hpp>
 
 using namespace truck::lidar_map;
 using namespace truck::map;
@@ -58,7 +58,7 @@ Metrics calculateMetrics(const Cloud& cloud, const ComplexPolygon& complex_polyg
     std::sort(min_dists.begin(), min_dists.end());
 
     auto get_quantile = [&](double q) {
-        const size_t id = static_cast<size_t>(q * (count - 1));
+        const auto id = static_cast<size_t>(q * (count - 1));
         return min_dists[id];
     };
 

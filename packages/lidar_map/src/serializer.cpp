@@ -1,12 +1,12 @@
 #include "lidar_map/serializer.h"
 
-#include "lidar_map/conversion.h"
-#include "geom/msg.h"
 #include "common/exception.h"
+#include "geom/msg.h"
+#include "lidar_map/conversion.h"
 #include "visualization/msg.h"
 
-#include <rosbag2_cpp/writer.hpp>
 #include <rosbag2_cpp/reader.hpp>
+#include <rosbag2_cpp/writer.hpp>
 
 namespace truck::lidar_map {
 
@@ -95,8 +95,8 @@ bool operator<(const std_msgs::msg::Header& a, const std_msgs::msg::Header& b) {
 void syncOdomWithCloud(
     std::vector<nav_msgs::msg::Odometry>& odom_msgs,
     std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs) {
-    VERIFY(odom_msgs.size() > 0);
-    VERIFY(laser_scan_msgs.size() > 0);
+    VERIFY(!odom_msgs.empty());
+    VERIFY(!laser_scan_msgs.empty());
 
     const size_t odom_count = odom_msgs.size();
     const size_t laser_scan_count = laser_scan_msgs.size();
@@ -124,7 +124,7 @@ void syncOdomWithCloud(
 
 void writeToMCAP(
     const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name) {
-    rclcpp::Time time;
+    const rclcpp::Time time;
     std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
     writer->open(mcap_path);
     writer->write(toPointCloud2(cloud, "world"), cloud_topic_name, time);
@@ -133,7 +133,7 @@ void writeToMCAP(
 void writeToMCAP(
     const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name,
     const geom::ComplexPolygon& map, const std::string& map_topic_name) {
-    rclcpp::Time time;
+    const rclcpp::Time time;
     std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
     writer->open(mcap_path);
     writer->write(toPointCloud2(cloud, "world"), cloud_topic_name, time);

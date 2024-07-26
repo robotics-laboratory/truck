@@ -1,16 +1,16 @@
 #include "lidar_map/builder.h"
 
-#include "geom/distance.h"
-#include "geom/boost/point.h"
 #include "common/exception.h"
+#include "geom/boost/point.h"
+#include "geom/distance.h"
 
 #include <boost/geometry.hpp>
 #include <g2o/core/block_solver.h>
-#include <g2o/core/sparse_optimizer.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
+#include <g2o/core/sparse_optimizer.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
-#include <g2o/types/slam2d/vertex_se2.h>
 #include <g2o/types/slam2d/edge_se2.h>
+#include <g2o/types/slam2d/vertex_se2.h>
 
 namespace truck::lidar_map {
 
@@ -44,7 +44,7 @@ DataPoints toDataPoints(const Cloud& cloud) {
  * Returns g2o::SE2 constructed from pose
  */
 g2o::SE2 toSE2(const geom::Pose& pose) {
-    return g2o::SE2(pose.pos.x, pose.pos.y, pose.dir.angle().radians());
+    return {pose.pos.x, pose.pos.y, pose.dir.angle().radians()};
 }
 
 /**
@@ -54,7 +54,7 @@ g2o::SE2 toSE2(const Eigen::Matrix3f& tf_matrix) {
     const double tx = tf_matrix(0, 2);
     const double ty = tf_matrix(1, 2);
     const double dtheta = std::atan2(tf_matrix(1, 0), tf_matrix(0, 0));
-    return g2o::SE2(tx, ty, dtheta);
+    return {tx, ty, dtheta};
 }
 
 /**
@@ -131,7 +131,7 @@ Builder::Builder(const BuilderParams& params, const ICP& icp) : icp_(icp), param
  */
 std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
     const geom::Poses& poses, const Clouds& clouds) const {
-    VERIFY(poses.size() > 0);
+    VERIFY(!poses.empty());
     VERIFY(poses.size() == clouds.size());
 
     geom::Poses filtered_poses;
@@ -230,7 +230,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
         }
     }
 
-    g2o::VertexSE2* fixed_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer.vertex(0));
+    auto* fixed_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer.vertex(0));
     fixed_vertex->setFixed(true);
 
     optimizer.setVerbose(params_.verbose);
@@ -241,7 +241,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
     geom::Poses optimized_poses;
 
     for (size_t i = 0; i < poses.size(); i++) {
-        g2o::VertexSE2* optimized_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer.vertex(i));
+        auto* optimized_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer.vertex(i));
         if (optimized_vertex) {
             const g2o::SE2 se2 = optimized_vertex->estimate();
             optimized_poses.push_back(toPose(se2));
@@ -263,13 +263,13 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
  * - set of clouds in a world frame
  */
 Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) const {
-    VERIFY(poses.size() > 0);
+    VERIFY(!poses.empty());
     VERIFY(poses.size() == clouds.size());
 
     Clouds clouds_tf;
 
     for (size_t i = 0; i < clouds.size(); i++) {
-        Eigen::Matrix3f tf_matrix = transformationMatrix(poses[i]);
+        const Eigen::Matrix3f tf_matrix = transformationMatrix(poses[i]);
         clouds_tf.push_back(normalize(tf_matrix * clouds[i]));
     }
 
@@ -277,7 +277,7 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) 
 }
 
 Cloud Builder::mergeClouds(const Clouds& clouds) const {
-    VERIFY(clouds.size() > 0);
+    VERIFY(!clouds.empty());
     Cloud merged_cloud = clouds[0];
 
     for (size_t i = 1; i < clouds.size(); i++) {
