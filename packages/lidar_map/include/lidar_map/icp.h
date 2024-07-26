@@ -15,4 +15,6 @@ class ICPBuilder {
     ICPBuilderParams params_;
 };
 
+ICP buildBaseICP();
+
 }  // namespace truck::lidar_map

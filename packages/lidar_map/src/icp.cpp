@@ -5,36 +5,38 @@ namespace truck::lidar_map {
 ICPBuilder::ICPBuilder(const ICPBuilderParams& params) : params_(params) { /** @todo */
 }
 
-ICP ICPBuilder::build() {
+ICP ICPBuilder::build() { /** @todo */
+}
+
+ICP buildBaseICP() {
     ICP icp;
     icp.setDefault();
 
-    PointMatcherSupport::Parametrizable::Parameters kdtree_params;
-    kdtree_params["knn"] = "1";
-    kdtree_params["epsilon"] = "3.16";
+    PointMatcherSupport::Parametrizable::Parameters matcher_params;
+    matcher_params["knn"] = "1";
+    matcher_params["epsilon"] = "3.16";
 
-    PointMatcherSupport::Parametrizable::Parameters point_to_plane_params_params;
-    point_to_plane_params_params["force2D"] = "1";
+    std::shared_ptr<Matcher::Matcher> matcher =
+        Matcher::get().MatcherRegistrar.create("KDTreeMatcher", matcher_params);
 
-    PointMatcherSupport::Parametrizable::Parameters robust_outlier_filter_params;
-    robust_outlier_filter_params["robustFct"] = "cauchy";
-    robust_outlier_filter_params["tuning"] = "1.0";
-    robust_outlier_filter_params["distanceType"] = "point2plane";
+    PointMatcherSupport::Parametrizable::Parameters error_minimizer_params;
+    error_minimizer_params["force2D"] = "1";
 
-    std::shared_ptr<Matcher::Matcher> kdtree =
-        Matcher::get().MatcherRegistrar.create("KDTreeMatcher", kdtree_params);
-
-    std::shared_ptr<Matcher::ErrorMinimizer> point_to_plane =
+    std::shared_ptr<Matcher::ErrorMinimizer> error_minimizer =
         Matcher::get().ErrorMinimizerRegistrar.create(
-            "PointToPlaneErrorMinimizer", point_to_plane_params_params);
+            "PointToPlaneErrorMinimizer", error_minimizer_params);
 
-    std::shared_ptr<Matcher::OutlierFilter> robust_outlier_filter =
-        Matcher::get().OutlierFilterRegistrar.create(
-            "RobustOutlierFilter", robust_outlier_filter_params);
+    PointMatcherSupport::Parametrizable::Parameters outlier_filter_params;
+    outlier_filter_params["robustFct"] = "cauchy";
+    outlier_filter_params["tuning"] = "1.0";
+    outlier_filter_params["distanceType"] = "point2plane";
 
-    icp.matcher = kdtree;
-    icp.errorMinimizer = point_to_plane;
-    icp.outlierFilters.push_back(robust_outlier_filter);
+    std::shared_ptr<Matcher::OutlierFilter> outlier_filter =
+        Matcher::get().OutlierFilterRegistrar.create("RobustOutlierFilter", outlier_filter_params);
+
+    icp.matcher = matcher;
+    icp.errorMinimizer = error_minimizer;
+    icp.outlierFilters.push_back(outlier_filter);
 
     return icp;
 }

@@ -23,21 +23,35 @@ using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>
 
 namespace {
 
-Cloud normalize(const Cloud& cloud) {
-    Cloud cloud_normalized = cloud;
-
+void normalize(Cloud& cloud) {
     for (size_t i = 0; i < cloud.cols(); i++) {
         const double scalar = cloud.col(i)(2);
-        cloud_normalized.col(i) /= scalar;
+        cloud.col(i) /= scalar;
     }
+}
 
-    return cloud_normalized;
+void normalize(DataPoints& data_points) {
+    auto& matrix = data_points.features;
+    for (size_t i = 0; i < matrix.cols(); i++) {
+        const double scalar = matrix.col(i)(2);
+        matrix.col(i) /= scalar;
+    }
 }
 
 DataPoints toDataPoints(const Cloud& cloud) {
     DataPoints data_points;
     data_points.features = cloud;
     return data_points;
+}
+
+std::vector<DataPoints> toDataPoints(const Clouds& clouds) {
+    std::vector<DataPoints> data_points_array;
+
+    for (const auto& cloud : clouds) {
+        data_points_array.push_back(toDataPoints(cloud));
+    }
+
+    return data_points_array;
 }
 
 /**
@@ -206,6 +220,8 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
         optimizer.addEdge(edge);
     }
 
+    auto data_points_clouds = toDataPoints(clouds);
+
     // Add ICP edges
     for (size_t i = 0; i < poses.size(); i++) {
         for (size_t j = i + 1; j < poses.size(); j++) {
@@ -215,9 +231,13 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
 
             const Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
 
-            const Eigen::Matrix3f tf_matrix_icp =
-                icp_(toDataPoints(normalize(tf_matrix_odom * clouds[j])), toDataPoints(clouds[i]));
+            const auto& reference_cloud = data_points_clouds[i];
 
+            auto reading_cloud = data_points_clouds[j];
+            icp_.transformations.apply(reading_cloud, tf_matrix_odom);
+            normalize(reading_cloud);
+
+            const Eigen::Matrix3f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
             const Eigen::Matrix3f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
 
             auto* edge = new g2o::EdgeSE2();
@@ -270,7 +290,11 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) 
 
     for (size_t i = 0; i < clouds.size(); i++) {
         const Eigen::Matrix3f tf_matrix = transformationMatrix(poses[i]);
-        clouds_tf.push_back(normalize(tf_matrix * clouds[i]));
+
+        Cloud cloud_tf = tf_matrix * clouds[i];
+        normalize(cloud_tf);
+
+        clouds_tf.push_back(cloud_tf);
     }
 
     return clouds_tf;

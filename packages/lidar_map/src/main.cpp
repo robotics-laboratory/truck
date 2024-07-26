@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        ICPBuilderParams icp_builder_params;
+        ICP icp = buildBaseICP();
 
         const BuilderParams builder_params{
             .icp_edge_max_dist = 0.6,
@@ -145,9 +145,6 @@ int main(int argc, char* argv[]) {
             .icp_edge_weight = 3.0,
             .optimizer_steps = 10,
             .verbose = false};
-
-        ICPBuilder icp_builder = ICPBuilder(icp_builder_params);
-        ICP icp = icp_builder.build();
 
         Builder builder = Builder(builder_params, icp);
 
@@ -167,8 +164,9 @@ int main(int argc, char* argv[]) {
         const auto lidar_map = builder.mergeClouds(clouds_tf);
 
         if (enable_test) {
-            ComplexPolygon vector_map =
-                Map::fromGeoJson(kPkgPathMap + "/data/" + vector_map_file).polygons()[0];
+            const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
+            ComplexPolygon vector_map = Map::fromGeoJson(map_path).polygons()[0];
+
             writeToMCAP(output_folder_path, lidar_map, "/map/lidar", vector_map, "/map/vector");
             std::cout << calculateMetrics(lidar_map, vector_map);
         } else {
