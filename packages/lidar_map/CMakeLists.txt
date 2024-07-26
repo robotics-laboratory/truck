@@ -83,7 +83,13 @@ install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 add_executable(${PROJECT_NAME}_executable src/main.cpp)
 
 ament_target_dependencies(
-  ${PROJECT_NAME}_executable map geom nav_msgs sensor_msgs ament_index_cpp Boost
+  ${PROJECT_NAME}_executable
+  map
+  geom
+  nav_msgs
+  sensor_msgs
+  ament_index_cpp
+  Boost
 )
 
 target_link_libraries(${PROJECT_NAME}_executable ${PROJECT_NAME})
