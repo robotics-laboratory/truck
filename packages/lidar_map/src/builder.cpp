@@ -39,7 +39,14 @@ void normalize(DataPoints& data_points) {
 }
 
 DataPoints toDataPoints(const Cloud& cloud) {
-    DataPoints data_points;
+    DataPoints::Labels feature_labels;
+    feature_labels.push_back(DataPoints::Label("x", 1));
+    feature_labels.push_back(DataPoints::Label("y", 1));
+    feature_labels.push_back(DataPoints::Label("w", 1));
+
+    DataPoints::Labels descriptor_labels;
+
+    DataPoints data_points(feature_labels, descriptor_labels, cloud.cols());
     data_points.features = cloud;
     return data_points;
 }
