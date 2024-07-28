@@ -6,9 +6,6 @@ launch:
       name: "map_config"
       default: "$(find-pkg-share map)/data/map_6.geojson"
   - arg:
-      name: "lidar_config"
-      default: "$(find-pkg-share simulator_2d)/config/lidar.json"
-  - arg:
       name: "update_period"
       default: "1e-2"
   - arg:

@@ -1,31 +1,9 @@
 launch:
 - arg: { name: "model_config", default: "$(find-pkg-share model)/config/model.yaml" }
 - arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
-- arg: { name: "initial_x", default: "5.0" }
-- arg: { name: "initial_y", default: "4.0" }
+- arg: { name: "initial_x", default: "0.0" }
+- arg: { name: "initial_y", default: "0.0" }
 - arg: { name: "initial_yaw", default: "0.0" }
-
-- include:
-    file: $(find-pkg-share truck)/launch/bridge.yaml
-    arg:
-      - { name: "simulation", value: "true" }
-
-- include:
-    file: $(find-pkg-share truck)/launch/control.yaml
-    arg:
-      - { name: "simulation", value: "true" }
-
-- include:
-    file: $(find-pkg-share model)/launch/model_tf.yaml
-    arg:
-      - { name: "simulation", value: "true" }
-
-- include:
-    file: $(find-pkg-share visualization)/launch/visualization.yaml
-    arg:
-      - { name: "simulation", value: "true" }
-      - { name: "model_config", value: "$(var model_config)" }
-      - { name: "map_config", value: "$(var map_config)" }
 
 - include:
     file: $(find-pkg-share simulator_2d)/launch/simulator_2d.yaml
@@ -35,3 +13,10 @@ launch:
       - { name: "initial_x", value: "$(var initial_x)" }
       - { name: "initial_y", value: "$(var initial_y)" }
       - { name: "initial_yaw", value: "$(var initial_yaw)" }
+
+- include:
+    file: $(find-pkg-share truck)/launch/common.yaml
+    arg:
+    - { name: "simulation", value: "true" }
+    - { name: "qos", value: "2" }
+    - { name: "map_config", value: "$(var map_config)" }

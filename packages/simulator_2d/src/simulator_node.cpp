@@ -140,7 +140,7 @@ void SimulatorNode::publishTime(const TruckState& truck_state) {
 
 void SimulatorNode::publishSimulatorLocalizationMessage(const TruckState& truck_state) {
     nav_msgs::msg::Odometry msg;
-    msg.header.frame_id = "world";
+    msg.header.frame_id = "odom_ekf";
     msg.child_frame_id = "base_gt";
     msg.header.stamp = truck_state.time();
 
@@ -173,7 +173,7 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
     const auto pose = truck_state.odomBasePose();
 
     geometry_msgs::msg::TransformStamped world_to_base_gt;
-    world_to_base_gt.header.frame_id = "world";
+    world_to_base_gt.header.frame_id = "odom_ekf";
     world_to_base_gt.child_frame_id = "base_gt";
     world_to_base_gt.header.stamp = truck_state.time();
 
@@ -187,7 +187,7 @@ void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
 
 void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
     truck_msgs::msg::HardwareTelemetry telemetry_msg;
-    telemetry_msg.header.frame_id = "base_gt";
+    telemetry_msg.header.frame_id = "base";
     telemetry_msg.header.stamp = truck_state.time();
 
     const auto current_steering = truck_state.currentSteering();
@@ -212,7 +212,7 @@ void SimulatorNode::publishTelemetryMessage(const TruckState& truck_state) {
 
 void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state) {
     truck_msgs::msg::SimulationState state_msg;
-    state_msg.header.frame_id = "base_gt";
+    state_msg.header.frame_id = "base";
     state_msg.header.stamp = truck_state.time();
 
     state_msg.speed = truck_state.baseTwist().velocity;

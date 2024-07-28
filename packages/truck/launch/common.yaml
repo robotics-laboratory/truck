@@ -1,6 +1,7 @@
 launch:
 - arg: { name: "simulation", default: "false" }
 - arg: { name: "qos", default: "0" }
+- arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
 
 - include:
     file: $(find-pkg-share model)/launch/model_tf.yaml
@@ -24,10 +25,10 @@ launch:
     arg:
     - { name: "simulation", value: "$(var simulation)" }
     - { name: "qos", value: "$(var qos)" }
+    - { name: "map_config", value: "$(var map_config)" }
 
 - include:
-    file: $(find-pkg-share slam)/launch/slam.yaml
-    unless: "$(var simulation)"
+    file: $(find-pkg-share truck)/launch/slam.yaml
     arg:
     - { name: "simulation", value: "$(var simulation)" }
     - { name: "qos", value: "$(var qos)" }
