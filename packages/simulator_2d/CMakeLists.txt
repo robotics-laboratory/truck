@@ -10,6 +10,7 @@ find_package(geom REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
@@ -57,6 +58,7 @@ ament_target_dependencies(
   geom
   tf2_geometry_msgs
   tf2_msgs
+  tf2_ros
   rosgraph_msgs
   sensor_msgs
   nlohmann_json

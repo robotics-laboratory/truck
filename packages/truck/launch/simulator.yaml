@@ -1,9 +1,9 @@
 launch:
 - arg: { name: "model_config", default: "$(find-pkg-share model)/config/model.yaml" }
 - arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
-- arg: { name: "initial_x", default: "0.0" }
-- arg: { name: "initial_y", default: "0.0" }
-- arg: { name: "initial_yaw", default: "0.0" }
+- arg: { name: "initial_x", default: "5.0" }
+- arg: { name: "initial_y", default: "4.0" }
+- arg: { name: "initial_yaw", default: "0.3" }
 
 - include:
     file: $(find-pkg-share simulator_2d)/launch/simulator_2d.yaml

@@ -17,6 +17,9 @@ namespace truck::simulator {
 using namespace std::placeholders;
 
 SimulatorNode::SimulatorNode() : Node("simulator") {
+    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
     initializeParameters();
     initializeTopicHandlers();
     initializeEngine();
@@ -124,6 +127,18 @@ void SimulatorNode::initializeEngine() {
     publishSimulationState();
 }
 
+std::optional<tf2::Transform> SimulatorNode::getLatestTranform(
+    const std::string& source, const std::string& target) {
+    try {
+        const auto tf_msg = tf_buffer_->lookupTransform(target, source, tf2::TimePointZero);
+        tf2::Transform tf;
+        tf2::fromMsg(tf_msg.transform, tf);
+        return tf;
+    } catch (const tf2::TransformException& ex) {
+        return std::nullopt;
+    }
+}
+
 void SimulatorNode::handleControl(const truck_msgs::msg::Control::ConstSharedPtr control) {
     if (control->has_acceleration) {
         engine_->setBaseControl(control->velocity, control->acceleration, control->curvature);
@@ -140,8 +155,8 @@ void SimulatorNode::publishTime(const TruckState& truck_state) {
 
 void SimulatorNode::publishSimulatorLocalizationMessage(const TruckState& truck_state) {
     nav_msgs::msg::Odometry msg;
-    msg.header.frame_id = "odom_ekf";
-    msg.child_frame_id = "base_gt";
+    msg.header.frame_id = "world";
+    msg.child_frame_id = "base";
     msg.header.stamp = truck_state.time();
 
     // Set the pose.
@@ -168,20 +183,26 @@ void SimulatorNode::publishHardwareOdometryMessage(const TruckState& truck_state
 }
 
 void SimulatorNode::publishTransformMessage(const TruckState& truck_state) {
-    tf2_msgs::msg::TFMessage tf_msg;
+    if (!transforms_.ekf_base.has_value()) {
+        return;
+    }
 
+    const tf2::Transform& tf_ekf_base = *transforms_.ekf_base;
     const auto pose = truck_state.odomBasePose();
 
-    geometry_msgs::msg::TransformStamped world_to_base_gt;
-    world_to_base_gt.header.frame_id = "odom_ekf";
-    world_to_base_gt.child_frame_id = "base_gt";
-    world_to_base_gt.header.stamp = truck_state.time();
+    tf2::Transform tf_world_base;
+    tf2::fromMsg(geom::msg::toPose(pose), tf_world_base);
 
-    world_to_base_gt.transform.translation.x = pose.pos.x;
-    world_to_base_gt.transform.translation.y = pose.pos.y;
-    world_to_base_gt.transform.rotation = geom::msg::toQuaternion(pose.dir);
+    const tf2::Transform tf_world_ekf = tf_world_base * tf_ekf_base.inverse();
 
-    tf_msg.transforms.push_back(world_to_base_gt);
+    geometry_msgs::msg::TransformStamped tf_msg_world_ekf;
+    tf_msg_world_ekf.header.frame_id = "world";
+    tf_msg_world_ekf.child_frame_id = "odom_ekf";
+    tf_msg_world_ekf.header.stamp = truck_state.time();
+    tf2::toMsg(tf_world_ekf, tf_msg_world_ekf.transform);
+
+    tf2_msgs::msg::TFMessage tf_msg;
+    tf_msg.transforms.push_back(tf_msg_world_ekf);
     signals_.tf_publisher->publish(tf_msg);
 }
 
@@ -285,6 +306,12 @@ void SimulatorNode::publishSimulationState() {
 }
 
 void SimulatorNode::makeSimulationTick() {
+    const auto tf_ekf_base = getLatestTranform("base", "odom_ekf");
+
+    if (tf_ekf_base.has_value()) {
+        transforms_.ekf_base = tf_ekf_base;
+    }
+
     engine_->advance(params_.update_period);
     publishSimulationState();
 }

@@ -7,6 +7,8 @@
 #include "truck_msgs/msg/simulation_state.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <rosgraph_msgs/msg/clock.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
@@ -42,6 +44,9 @@ class SimulatorNode : public rclcpp::Node {
 
     void makeSimulationTick();
 
+    std::optional<tf2::Transform> getLatestTranform(
+        const std::string& source, const std::string& target);
+
     std::unique_ptr<SimulatorEngine> engine_ = nullptr;
 
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
@@ -67,6 +72,10 @@ class SimulatorNode : public rclcpp::Node {
         } lidar_config;
     } cache_;
 
+    struct Transforms {
+        std::optional<tf2::Transform> ekf_base = std::nullopt;
+    } transforms_;
+
     struct Slots {
         rclcpp::Subscription<truck_msgs::msg::Control>::SharedPtr control = nullptr;
     } slots_;
@@ -81,6 +90,9 @@ class SimulatorNode : public rclcpp::Node {
         rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan = nullptr;
         rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu = nullptr;
     } signals_;
+
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener_ = nullptr;
 };
 
 }  // namespace truck::simulator
