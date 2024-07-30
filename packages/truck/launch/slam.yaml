@@ -41,7 +41,7 @@ launch:
         ]
     }
 
-    - { name: "odom0", value: "/odometry/odom" }
+    - { name: "odom0", value: "/icp/odometry" }
     - { name: "odom0_differential", value: False }
     - { name: "odom0_queue_size", value: 30 }
     - { name: "odom0_config", value: [
@@ -53,7 +53,7 @@ launch:
         ]
     }
 
-    - { name: "odom0", value: "/hardware/odom" }
+    - { name: "odom0", value: "/hardware/wheel/odometry" }
     - { name: "odom0_differential", value: False }
     - { name: "odom0_queue_size", value: 30 }
     - { name: "odom0_config", value: [

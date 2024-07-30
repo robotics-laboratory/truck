@@ -13,18 +13,58 @@
 #include <Eigen/Dense>
 
 #include <optional>
+#include <random>
 #include <string>
 #include <vector>
 
 namespace truck::simulator {
 
+struct NoiseGeneratorParams {
+    struct Lidar {
+        bool enable;
+        double mean;
+        double variance;
+    } lidar;
+
+    struct Gyro {
+        bool enable;
+        double mean;
+        double variance;
+    } gyro;
+
+    struct Accel {
+        bool enable;
+        double mean;
+        double variance;
+    } accel;
+};
+
+class NoiseGenerator {
+  public:
+    NoiseGenerator(const NoiseGeneratorParams& params, size_t seed = 0);
+
+    void applyToGyro(geom::Vec3& gyro);
+    void applyToAccel(geom::Vec3& accel);
+    void applyToLidar(std::vector<float>& ranges);
+
+  private:
+    std::default_random_engine generator_;
+
+    std::normal_distribution<double> gyro_dist_;
+    std::normal_distribution<double> accel_dist_;
+    std::normal_distribution<double> lidar_dist_;
+
+    NoiseGeneratorParams params_;
+};
+
 class SimulatorEngine {
   public:
     SimulatorEngine(
-        std::unique_ptr<model::Model> model, double integration_step = 1e-3,
-        double precision = 1e-8);
+        std::unique_ptr<model::Model> model, std::unique_ptr<NoiseGenerator> noise_generator,
+        double integration_step = 1e-3, double precision = 1e-8);
 
-    void resetBase(const geom::Pose& pose, double middle_steering, double linear_velocity);
+    void resetBase(
+        const geom::Pose& pose, double middle_steering = 0.0, double linear_velocity = 0.0);
     void resetMap(const std::string& path);
     void eraseMap();
 
@@ -89,6 +129,8 @@ class SimulatorEngine {
     State rear_ax_state_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
+
+    std::unique_ptr<NoiseGenerator> noise_generator_ = nullptr;
 
     SimulationMap map_;
 };
