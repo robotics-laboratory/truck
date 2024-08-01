@@ -8,6 +8,7 @@ struct GraphParams {
     enum class Mode : uint8_t { kNearest = 0, searchRadius = 1 } mode;
     size_t k_nearest = 6;
     double search_radius = 2;
+    double safe_zone_radius = 2.0;
 };
 
 using NodeId = size_t;
