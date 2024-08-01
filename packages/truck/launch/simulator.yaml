@@ -1,17 +1,22 @@
 launch:
 - arg: { name: "model_config", default: "$(find-pkg-share model)/config/model.yaml" }
 - arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
-- arg: { name: "initial_ego_state_config", default: "$(find-pkg-share simulator_2d)/config/initial_ego_state.json" }
+- arg: { name: "initial_x", default: "5.0" }
+- arg: { name: "initial_y", default: "4.0" }
+- arg: { name: "initial_yaw", default: "0.3" }
 
 - include:
     file: $(find-pkg-share simulator_2d)/launch/simulator_2d.yaml
     arg:
       - { name: "model_config", value: "$(var model_config)" }
       - { name: "map_config", value: "$(var map_config)" }
-      - { name: "initial_ego_state_config", value: "$(var initial_ego_state_config)" }
+      - { name: "initial_x", value: "$(var initial_x)" }
+      - { name: "initial_y", value: "$(var initial_y)" }
+      - { name: "initial_yaw", value: "$(var initial_yaw)" }
 
 - include:
     file: $(find-pkg-share truck)/launch/common.yaml
     arg:
     - { name: "simulation", value: "true" }
     - { name: "qos", value: "2" }
+    - { name: "map_config", value: "$(var map_config)" }

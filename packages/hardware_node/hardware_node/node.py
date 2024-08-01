@@ -73,7 +73,7 @@ class HardwareNode(Node):
         )
         self._odom_pub = self.create_publisher(
             Odometry,
-            "/hardware/odom",
+            "/hardware/wheel/odometry",
             qos_profile=1,
         )
 
