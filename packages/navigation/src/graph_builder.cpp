@@ -60,14 +60,21 @@ IndexPoints getNodeNeighborsSearchRadius(
     return rtree_indexed_points;
 }
 
-bool isCollisionFree(const geom::Segment& edge, const geom::ComplexPolygons& polygons) {
+bool isInSafeZone(
+    const geom::Segment& edge, const geom::ComplexPolygons& polygons, double bbox_radius) {
     for (const geom::ComplexPolygon& polygon : polygons) {
-        if (geom::intersect(polygon.outer, edge)) {
-            return false;
-        }
+        for (const auto& seg : polygon.segments()) {
+            geom::Vec2 u = seg.dir();
+            geom::Vec2 p = {-u.y, u.x};  // perpendicular
 
-        for (const geom::Polygon& polygon_inner : polygon.inners) {
-            if (geom::intersect(polygon_inner, edge)) {
+            geom::Polygon seg_bbox{
+                seg.begin + (-u - p) * bbox_radius,
+                seg.begin + (-u + p) * bbox_radius,
+                seg.begin + (u + p) * bbox_radius,
+                seg.begin + (-u - p) * bbox_radius,
+                seg.begin + (u - p) * bbox_radius};
+
+            if (geom::intersect(seg, edge) || geom::intersect(seg_bbox, edge)) {
                 return false;
             }
         }
@@ -102,7 +109,7 @@ std::vector<NodeId> getNodeNeighbors(
 
         const geom::Segment edge(node.point, neighbor_node_point);
 
-        if (node.id != neighbor_node_id && isCollisionFree(edge, polygons)) {
+        if (node.id != neighbor_node_id && isInSafeZone(edge, polygons, params.safe_zone_radius)) {
             neighbor_nodes_ids.emplace_back(neighbor_node_id);
         }
     }
