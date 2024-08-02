@@ -146,7 +146,7 @@ void Viewer::addPolygon(const geom::ComplexPolygon& polygon) {
 
 void Viewer::addMeshBuild(const navigation::mesh::MeshBuild& mesh_build) {
     drawMesh(params_, bbox_origin_, frame_, mesh_build.mesh);
-    drawLevelLines(params_, bbox_origin_, frame_, mesh_build.level_lines);
+    drawLevelLines(params_, bbox_origin_, frame_, mesh_build.level_lines_segments);
     drawSkeleton(params_, bbox_origin_, frame_, mesh_build.skeleton);
 }
 

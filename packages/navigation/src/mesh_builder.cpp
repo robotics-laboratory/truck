@@ -52,6 +52,14 @@ void extractSegmentsFromCGALPolygon(
     }
 }
 
+geom::Polyline extractPolylineFromCGALPolygon(const CGAL::Polygon_2<CGAL_K>& cgal_poly) {
+    geom::Polyline polyline;
+    for (const auto& cgal_point : cgal_poly) {
+        polyline.emplace_back(cgal_point.x(), cgal_point.y());
+    }
+    return polyline;
+}
+
 IndexPoints getNodeNeighborsSearchRadius(
     const geom::Vec2& point, const RTree& rtree, double search_radius) {
     IndexPoints rtree_indexed_points;
@@ -115,10 +123,14 @@ void MeshBuilder::buildLevelLines(
     while (!cgal_polys_with_holes.empty()) {
         for (const auto& cgal_poly_with_holes_ptr : cgal_polys_with_holes) {
             extractSegmentsFromCGALPolygon(
-                mesh_build.level_lines, cgal_poly_with_holes_ptr->outer_boundary());
+                mesh_build.level_lines_segments, cgal_poly_with_holes_ptr->outer_boundary());
+
+            mesh_build.level_lines.push_back(
+                extractPolylineFromCGALPolygon(cgal_poly_with_holes_ptr->outer_boundary()));
 
             for (const auto& cgal_poly_inner : cgal_poly_with_holes_ptr->holes()) {
-                extractSegmentsFromCGALPolygon(mesh_build.level_lines, cgal_poly_inner);
+                mesh_build.level_lines.push_back(extractPolylineFromCGALPolygon(cgal_poly_inner));
+                extractSegmentsFromCGALPolygon(mesh_build.level_lines_segments, cgal_poly_inner);
             }
         }
 
@@ -130,9 +142,9 @@ void MeshBuilder::buildLevelLines(
 }
 
 void MeshBuilder::buildMesh(MeshBuild& mesh_build, double dist) const {
-    for (const geom::Segment& seg : mesh_build.level_lines) {
-        for (size_t i = 0; i < ceil<size_t>(seg.len() / dist); i++) {
-            mesh_build.mesh.emplace_back(seg.pos(i * dist / seg.len()));
+    for (const geom::Polyline& level_line : mesh_build.level_lines) {
+        for (auto it = level_line.ubegin(params_.dist); it != level_line.uend(); ++it) {
+            mesh_build.mesh.emplace_back((*it).pos);
         }
     }
 }
@@ -159,7 +171,6 @@ void MeshBuilder::applyMeshFilter(MeshBuild& mesh_build) const {
             }
 
             deleted[neighbor.second] = true;
-            // std::cout << "deleted neighbor of " << i << '\n';
         }
     }
 

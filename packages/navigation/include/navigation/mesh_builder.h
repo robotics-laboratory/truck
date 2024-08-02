@@ -2,6 +2,7 @@
 
 #include "geom/vector.h"
 #include "geom/segment.h"
+#include "geom/polyline.h"
 #include "geom/complex_polygon.h"
 
 namespace truck::navigation::mesh {
@@ -18,7 +19,8 @@ struct MeshParams {
 
 struct MeshBuild {
     geom::Segments skeleton;
-    geom::Segments level_lines;
+    geom::Segments level_lines_segments;
+    std::vector<geom::Polyline> level_lines;
     std::vector<geom::Vec2> mesh;
 };
 
