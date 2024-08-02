@@ -3,11 +3,11 @@
 #include "geom/msg.h"
 #include "lidar_map/builder.h"
 #include "lidar_map/conversion.h"
-#include "lidar_map/icp.h"
 #include "map/map.h"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <boost/program_options.hpp>
+#include <fstream>
 #include <nav_msgs/msg/odometry.hpp>
 #include <numeric>
 #include <sensor_msgs/msg/laser_scan.hpp>
@@ -94,6 +94,7 @@ std::ostream& operator<<(std::ostream& out, const Metrics& m) noexcept {
 const std::string kTopicLaserScan = "/lidar/scan";
 const std::string kTopicOdom = "/ekf/odometry/filtered";
 const std::string kPkgPathMap = ament_index_cpp::get_package_share_directory("map");
+const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
 
 int main(int argc, char* argv[]) {
     bool enable_test = false;
@@ -136,7 +137,9 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        ICP icp = buildBaseICP();
+        std::ifstream icp_config(kPkgPathLidarMap + "/config/icp.yaml");
+        ICP icp;
+        icp.loadFromYaml(icp_config);
 
         const BuilderParams builder_params{
             .icp_edge_max_dist = 0.6,

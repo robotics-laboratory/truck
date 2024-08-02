@@ -30,7 +30,6 @@ set(G2O_LIBRARIES ${G2O_SOLVER_EIGEN} ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY}
 
 add_library(
   ${PROJECT_NAME} SHARED src/builder.cpp src/serializer.cpp src/conversion.cpp
-                         src/icp.cpp
 )
 
 ament_target_dependencies(
@@ -79,6 +78,8 @@ install(
 )
 
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 
 add_executable(${PROJECT_NAME}_executable src/main.cpp)
 
