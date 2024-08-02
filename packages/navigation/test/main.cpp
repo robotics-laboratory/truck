@@ -63,7 +63,9 @@ TEST(Navigation, graph) {
     const mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
     const graph::GraphParams graph_params{
-        .mode = graph::GraphParams::Mode::searchRadius, .search_radius = 3.6};
+        .mode = graph::GraphParams::Mode::searchRadius,
+        .search_radius = 3.6,
+        .safe_zone_radius = 1.0};
     const graph::GraphBuilder graph_builder = graph::GraphBuilder(graph_params);
     const graph::Graph graph = graph_builder.build(mesh_build.mesh, polygons);
 

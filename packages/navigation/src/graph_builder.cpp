@@ -4,8 +4,7 @@
 #include "common/math.h"
 #include "geom/distance.h"
 #include "geom/intersection.h"
-#include "geom/boost/point.h"
-#include "geom/boost/box.h"
+#include "geom/boost.h"
 
 #include <boost/geometry.hpp>
 
@@ -60,14 +59,11 @@ IndexPoints getNodeNeighborsSearchRadius(
     return rtree_indexed_points;
 }
 
-bool isCollisionFree(const geom::Segment& edge, const geom::ComplexPolygons& polygons) {
+bool areNotWithinDistance(
+    const geom::Segment& edge, const geom::ComplexPolygons& polygons, double distance) {
     for (const geom::ComplexPolygon& polygon : polygons) {
-        if (geom::intersect(polygon.outer, edge)) {
-            return false;
-        }
-
         for (const geom::Polygon& polygon_inner : polygon.inners) {
-            if (geom::intersect(polygon_inner, edge)) {
+            if (bg::distance(polygon_inner, edge) < distance) {
                 return false;
             }
         }
@@ -102,7 +98,8 @@ std::vector<NodeId> getNodeNeighbors(
 
         const geom::Segment edge(node.point, neighbor_node_point);
 
-        if (node.id != neighbor_node_id && isCollisionFree(edge, polygons)) {
+        if (node.id != neighbor_node_id
+            && areNotWithinDistance(edge, polygons, params.safe_zone_radius)) {
             neighbor_nodes_ids.emplace_back(neighbor_node_id);
         }
     }
