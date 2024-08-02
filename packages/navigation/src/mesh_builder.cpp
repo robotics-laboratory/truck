@@ -7,10 +7,19 @@
 #include <CGAL/create_offset_polygons_from_polygon_with_holes_2.h>
 #include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/geometry.hpp>
+
+#include "geom/boost.h"
 
 namespace truck::navigation::mesh {
 
 using CGAL_K = CGAL::Exact_predicates_inexact_constructions_kernel;
+
+namespace bg = boost::geometry;
+
+using IndexPoint = std::pair<geom::Vec2, size_t>;
+using IndexPoints = std::vector<IndexPoint>;
+using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
 namespace {
 
@@ -43,6 +52,25 @@ void extractSegmentsFromCGALPolygon(
     }
 }
 
+IndexPoints getNodeNeighborsSearchRadius(
+    const geom::Vec2& point, const RTree& rtree, double search_radius) {
+    IndexPoints rtree_indexed_points;
+
+    const geom::BoundingBox rtree_box(
+        geom::Vec2(point.x - search_radius, point.y - search_radius),
+        geom::Vec2(point.x + search_radius, point.y + search_radius));
+
+    rtree.query(
+        bg::index::intersects(rtree_box)
+            && bg::index::satisfies([&](const IndexPoint& rtree_indexed_point) {
+                   const geom::Vec2 neighbor_point = rtree_indexed_point.first;
+                   return (point - neighbor_point).lenSq() < squared(search_radius);
+               }),
+        std::back_inserter(rtree_indexed_points));
+
+    return rtree_indexed_points;
+}
+
 }  // namespace
 
 MeshBuilder::MeshBuilder(const MeshParams& params) : params_(params) {}
@@ -56,6 +84,10 @@ MeshBuild MeshBuilder::build(const geom::ComplexPolygons& polygons) const {
     buildSkeleton(mesh_build, polygon);
     buildLevelLines(mesh_build, polygon, params_.offset);
     buildMesh(mesh_build, params_.dist);
+
+    if (params_.filter.enabled) {
+        applyMeshFilter(mesh_build);
+    }
 
     return mesh_build;
 }
@@ -103,16 +135,43 @@ void MeshBuilder::buildMesh(MeshBuild& mesh_build, double dist) const {
             mesh_build.mesh.emplace_back(seg.pos(i * dist / seg.len()));
         }
     }
-
-    if (params_.filter.grid) {
-        gridFilter();
-    }
 }
 
-void MeshBuilder::gridFilter() const {
-    /** @todo
-     * remove some points from 'build.mesh'
-     */
+void MeshBuilder::applyMeshFilter(MeshBuild& mesh_build) const {
+    RTree rtree;
+    const size_t n_points = mesh_build.mesh.size();
+
+    for (size_t i = 0; i < n_points; ++i) {
+        rtree.insert(IndexPoint(mesh_build.mesh[i], i));
+    }
+
+    std::vector<bool> deleted(n_points, false);
+
+    for (size_t i = 0; i < n_points; ++i) {
+        if (deleted[i]) {
+            continue;
+        }
+
+        for (IndexPoint neighbor : getNodeNeighborsSearchRadius(
+                 mesh_build.mesh[i], rtree, params_.filter.search_radius)) {
+            if (neighbor.second == i) {
+                continue;
+            }
+
+            deleted[neighbor.second] = true;
+            // std::cout << "deleted neighbor of " << i << '\n';
+        }
+    }
+
+    std::vector<geom::Vec2> filtered_mesh;
+
+    for (size_t i = 0; i < n_points; ++i) {
+        if (!deleted[i]) {
+            filtered_mesh.push_back(mesh_build.mesh[i]);
+        }
+    }
+
+    mesh_build.mesh = std::move(filtered_mesh);
 }
 
 }  // namespace truck::navigation::mesh

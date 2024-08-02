@@ -10,8 +10,9 @@ struct MeshParams {
     double dist;
     double offset;
 
-    struct Filter {
-        bool grid;
+    struct RadialFilter {
+        bool enabled;
+        double search_radius;
     } filter;
 };
 
@@ -32,8 +33,7 @@ class MeshBuilder {
     void buildLevelLines(
         MeshBuild& mesh_build, const geom::ComplexPolygon& polygon, double offset) const;
     void buildMesh(MeshBuild& mesh_build, double dist) const;
-
-    void gridFilter() const;
+    void applyMeshFilter(MeshBuild& mesh_build) const;
 
     MeshParams params_;
 };

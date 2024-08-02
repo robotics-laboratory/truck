@@ -37,7 +37,8 @@ TEST(Navigation, mesh) {
     const viewer::ViewerParams viewer_params{
         .path = "test/data/mesh.png", .color_rgb = {}, .thickness = {}};
 
-    const mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
+    const mesh::MeshParams mesh_params{
+        .dist = 1.4, .offset = 1.6, .filter = {.enabled = true, .search_radius = .8}};
     const mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
     const mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
