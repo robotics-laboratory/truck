@@ -1,4 +1,8 @@
 #include "navigation/search.h"
+#include "geom/distance.h"
+
+#include <set>
+#include <optional>
 
 namespace truck::navigation::search {
 
@@ -23,7 +27,22 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
     auto dist = std::vector<double>(nodes_count, max_dist);
     auto prev = std::vector<graph::NodeId>(nodes_count, nodes_count);
 
-    std::set<std::pair<double, graph::NodeId>> queue;
+    struct NodeWrap {
+        graph::NodeId id;
+        double dist;
+        double dist_to_dest;
+
+        bool operator<(const NodeWrap& other) const {  // A* heuristic
+            return dist + dist_to_dest < other.dist + other.dist_to_dest;
+        }
+    };
+
+    auto node_from_id = [&](graph::NodeId id) -> NodeWrap {
+        return NodeWrap{
+            .id = id,
+            .dist = dist[id],
+            .dist_to_dest = geom::distance(graph.nodes[id].point, graph.nodes[to_id].point)};
+    };
 
     auto extract_path = [&]() {
         Path path;
@@ -46,31 +65,33 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
         return path;
     };
 
+    std::set<NodeWrap> queue;
+
     dist[from_id] = 0.0;
-    queue.emplace(dist[from_id], from_id);
+    queue.insert(node_from_id(from_id));
 
     while (!queue.empty()) {
-        const auto [cur_dist, cur_id] = *queue.begin();
+        NodeWrap cur_node = *queue.begin();
 
         queue.erase(queue.begin());
 
-        if (cur_id == to_id || dist[cur_id] == max_dist) {
+        if (cur_node.id == to_id || dist[cur_node.id] == max_dist) {
             break;
         }
 
-        for (const graph::EdgeId& edge_id : graph.nodes[cur_id].edges) {
+        for (const graph::EdgeId& edge_id : graph.nodes[cur_node.id].edges) {
             const graph::Edge& edge = graph.edges[edge_id];
             const graph::NodeId neighbor_id = edge.to;
 
-            const double alt_dist = cur_dist + edge.weight;
+            const double alt_dist = cur_node.dist + edge.weight;
 
             if (alt_dist < dist[neighbor_id]) {
-                queue.erase(std::make_pair(dist[neighbor_id], neighbor_id));
+                queue.erase(node_from_id(neighbor_id));
 
                 dist[neighbor_id] = alt_dist;
-                prev[neighbor_id] = cur_id;
+                prev[neighbor_id] = cur_node.id;
 
-                queue.emplace(dist[neighbor_id], neighbor_id);
+                queue.emplace(node_from_id(neighbor_id));
             }
         }
     }
