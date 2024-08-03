@@ -57,6 +57,8 @@ geom::Polyline extractPolylineFromCGALPolygon(const CGAL::Polygon_2<CGAL_K>& cga
     for (const auto& cgal_point : cgal_poly) {
         polyline.emplace_back(cgal_point.x(), cgal_point.y());
     }
+
+    polyline.push_back(*polyline.begin());
     return polyline;
 }
 
