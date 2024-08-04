@@ -43,26 +43,18 @@ CGAL::Polygon_with_holes_2<CGAL_K> toCGALPolygonWithHoles(const geom::ComplexPol
     return cgal_poly_with_holes;
 }
 
-void extractSegmentsFromCGALPolygon(
-    geom::Segments& segments, const CGAL::Polygon_2<CGAL_K>& cgal_poly) {
-    for (const auto& cgal_seg : cgal_poly.edges()) {
-        segments.emplace_back(
-            geom::Vec2(cgal_seg.vertex(0).x(), cgal_seg.vertex(0).y()),
-            geom::Vec2(cgal_seg.vertex(1).x(), cgal_seg.vertex(1).y()));
-    }
-}
-
 geom::Polyline extractPolylineFromCGALPolygon(const CGAL::Polygon_2<CGAL_K>& cgal_poly) {
     geom::Polyline polyline;
+
     for (const auto& cgal_point : cgal_poly) {
         polyline.emplace_back(cgal_point.x(), cgal_point.y());
     }
 
-    polyline.push_back(*polyline.begin());
+    polyline.push_back(polyline.front());
     return polyline;
 }
 
-IndexPoints getNodeNeighborsSearchRadius(
+IndexPoints getPointNeighborsSearchRadius(
     const geom::Vec2& point, const RTree& rtree, double search_radius) {
     IndexPoints rtree_indexed_points;
 
@@ -95,8 +87,8 @@ MeshBuild MeshBuilder::build(const geom::ComplexPolygons& polygons) const {
     buildLevelLines(mesh_build, polygon, params_.offset);
     buildMesh(mesh_build, params_.dist);
 
-    if (params_.filter.enabled) {
-        applyMeshFilter(mesh_build);
+    if (params_.radial_filter.enabled) {
+        applyMeshFilter(mesh_build, params_.radial_filter.search_radius);
     }
 
     return mesh_build;
@@ -124,15 +116,11 @@ void MeshBuilder::buildLevelLines(
 
     while (!cgal_polys_with_holes.empty()) {
         for (const auto& cgal_poly_with_holes_ptr : cgal_polys_with_holes) {
-            extractSegmentsFromCGALPolygon(
-                mesh_build.level_lines_segments, cgal_poly_with_holes_ptr->outer_boundary());
-
             mesh_build.level_lines.push_back(
                 extractPolylineFromCGALPolygon(cgal_poly_with_holes_ptr->outer_boundary()));
 
             for (const auto& cgal_poly_inner : cgal_poly_with_holes_ptr->holes()) {
                 mesh_build.level_lines.push_back(extractPolylineFromCGALPolygon(cgal_poly_inner));
-                extractSegmentsFromCGALPolygon(mesh_build.level_lines_segments, cgal_poly_inner);
             }
         }
 
@@ -144,47 +132,49 @@ void MeshBuilder::buildLevelLines(
 }
 
 void MeshBuilder::buildMesh(MeshBuild& mesh_build, double dist) const {
-    for (const geom::Polyline& level_line : mesh_build.level_lines) {
+    for (const auto& level_line : mesh_build.level_lines) {
         for (auto it = level_line.ubegin(params_.dist); it != level_line.uend(); ++it) {
             mesh_build.mesh.emplace_back((*it).pos);
         }
     }
 }
 
-void MeshBuilder::applyMeshFilter(MeshBuild& mesh_build) const {
+void MeshBuilder::applyMeshFilter(MeshBuild& mesh_build, double search_radius) const {
     RTree rtree;
-    const size_t n_points = mesh_build.mesh.size();
+    const size_t points_count = mesh_build.mesh.size();
 
-    for (size_t i = 0; i < n_points; ++i) {
+    for (size_t i = 0; i < points_count; ++i) {
         rtree.insert(IndexPoint(mesh_build.mesh[i], i));
     }
 
-    std::vector<bool> deleted(n_points, false);
+    std::vector<bool> points_to_remove_mask(points_count, false);
 
-    for (size_t i = 0; i < n_points; ++i) {
-        if (deleted[i]) {
+    for (size_t i = 0; i < points_count; ++i) {
+        if (points_to_remove_mask[i]) {
             continue;
         }
 
-        for (IndexPoint neighbor : getNodeNeighborsSearchRadius(
-                 mesh_build.mesh[i], rtree, params_.filter.search_radius)) {
-            if (neighbor.second == i) {
+        for (const IndexPoint& indexed_neighbor_point :
+             getPointNeighborsSearchRadius(mesh_build.mesh[i], rtree, search_radius)) {
+            if (indexed_neighbor_point.second == i) {
                 continue;
             }
 
-            deleted[neighbor.second] = true;
+            points_to_remove_mask[indexed_neighbor_point.second] = true;
         }
     }
 
-    std::vector<geom::Vec2> filtered_mesh;
+    std::vector<geom::Vec2> mesh_filtered;
 
-    for (size_t i = 0; i < n_points; ++i) {
-        if (!deleted[i]) {
-            filtered_mesh.push_back(mesh_build.mesh[i]);
+    for (size_t i = 0; i < points_count; ++i) {
+        if (points_to_remove_mask[i]) {
+            continue;
         }
+
+        mesh_filtered.push_back(mesh_build.mesh[i]);
     }
 
-    mesh_build.mesh = std::move(filtered_mesh);
+    mesh_build.mesh = std::move(mesh_filtered);
 }
 
 }  // namespace truck::navigation::mesh

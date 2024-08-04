@@ -14,12 +14,11 @@ struct MeshParams {
     struct RadialFilter {
         bool enabled;
         double search_radius;
-    } filter;
+    } radial_filter;
 };
 
 struct MeshBuild {
     geom::Segments skeleton;
-    geom::Segments level_lines_segments;
     std::vector<geom::Polyline> level_lines;
     std::vector<geom::Vec2> mesh;
 };
@@ -35,7 +34,8 @@ class MeshBuilder {
     void buildLevelLines(
         MeshBuild& mesh_build, const geom::ComplexPolygon& polygon, double offset) const;
     void buildMesh(MeshBuild& mesh_build, double dist) const;
-    void applyMeshFilter(MeshBuild& mesh_build) const;
+
+    void applyMeshFilter(MeshBuild& mesh_build, double search_radius) const;
 
     MeshParams params_;
 };

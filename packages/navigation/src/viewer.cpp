@@ -60,14 +60,16 @@ void drawSkeleton(
 
 void drawLevelLines(
     const ViewerParams& params, const geom::Vec2& origin, cv::Mat& frame,
-    const geom::Segments& level_lines) {
-    for (const geom::Segment& seg : level_lines) {
-        cv::line(
-            frame,
-            toCVPoint(origin, params.res, seg.begin),
-            toCVPoint(origin, params.res, seg.end),
-            toCVScalar(params.color_rgb.mesh_build.level_lines),
-            params.thickness.mesh_build.level_lines);
+    const std::vector<geom::Polyline>& level_lines) {
+    for (const auto& level_line : level_lines) {
+        for (size_t i = 1; i < level_line.size(); i++) {
+            cv::line(
+                frame,
+                toCVPoint(origin, params.res, level_line[i - 1]),
+                toCVPoint(origin, params.res, level_line[i]),
+                toCVScalar(params.color_rgb.mesh_build.level_lines),
+                params.thickness.mesh_build.level_lines);
+        }
     }
 }
 
@@ -146,7 +148,7 @@ void Viewer::addPolygon(const geom::ComplexPolygon& polygon) {
 
 void Viewer::addMeshBuild(const navigation::mesh::MeshBuild& mesh_build) {
     drawMesh(params_, bbox_origin_, frame_, mesh_build.mesh);
-    drawLevelLines(params_, bbox_origin_, frame_, mesh_build.level_lines_segments);
+    drawLevelLines(params_, bbox_origin_, frame_, mesh_build.level_lines);
     drawSkeleton(params_, bbox_origin_, frame_, mesh_build.skeleton);
 }
 
