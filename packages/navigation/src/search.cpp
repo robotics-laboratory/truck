@@ -2,7 +2,6 @@
 #include "geom/distance.h"
 
 #include <set>
-#include <optional>
 
 namespace truck::navigation::search {
 
@@ -29,22 +28,23 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
 
     struct NodeWrap {
         graph::NodeId id;
-        double dist;
-        double dist_to_dest;
+        double from_dist;
+        double to_dist;
 
-        bool operator<(const NodeWrap& other) const {  // A* heuristic
-            return dist + dist_to_dest < other.dist + other.dist_to_dest;
+        // A* heuristic
+        bool operator<(const NodeWrap& other) const {
+            return from_dist + to_dist < other.from_dist + other.to_dist;
         }
     };
 
-    auto node_from_id = [&](graph::NodeId id) -> NodeWrap {
+    auto buildNodeById = [&](graph::NodeId id) -> NodeWrap {
         return NodeWrap{
             .id = id,
-            .dist = dist[id],
-            .dist_to_dest = geom::distance(graph.nodes[id].point, graph.nodes[to_id].point)};
+            .from_dist = dist[id],
+            .to_dist = geom::distance(graph.nodes[id].point, graph.nodes[to_id].point)};
     };
 
-    auto extract_path = [&]() {
+    auto extractPath = [&]() {
         Path path;
         graph::NodeId cur_id = to_id;
 
@@ -68,7 +68,7 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
     std::set<NodeWrap> queue;
 
     dist[from_id] = 0.0;
-    queue.insert(node_from_id(from_id));
+    queue.insert(buildNodeById(from_id));
 
     while (!queue.empty()) {
         NodeWrap cur_node = *queue.begin();
@@ -83,20 +83,20 @@ Path findShortestPath(const graph::Graph& graph, graph::NodeId from_id, graph::N
             const graph::Edge& edge = graph.edges[edge_id];
             const graph::NodeId neighbor_id = edge.to;
 
-            const double alt_dist = cur_node.dist + edge.weight;
+            const double alt_dist = cur_node.from_dist + edge.weight;
 
             if (alt_dist < dist[neighbor_id]) {
-                queue.erase(node_from_id(neighbor_id));
+                queue.erase(buildNodeById(neighbor_id));
 
                 dist[neighbor_id] = alt_dist;
                 prev[neighbor_id] = cur_node.id;
 
-                queue.emplace(node_from_id(neighbor_id));
+                queue.emplace(buildNodeById(neighbor_id));
             }
         }
     }
 
-    return extract_path();
+    return extractPath();
 }
 
 }  // namespace truck::navigation::search
