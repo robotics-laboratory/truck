@@ -5,9 +5,6 @@
 #include "geom/polyline.h"
 #include "common/exception.h"
 
-#include <set>
-#include <optional>
-
 namespace truck::navigation::search {
 
 struct Path {

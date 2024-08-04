@@ -71,7 +71,7 @@ TEST(Navigation, graph) {
     const graph::GraphBuilder graph_builder = graph::GraphBuilder(graph_params);
     const graph::Graph graph = graph_builder.build(mesh_build.mesh, polygons);
 
-    const geom::Polyline path = search::toPolyline(graph, search::findShortestPath(graph, 28, 141));
+    const geom::Polyline path = search::toPolyline(graph, search::findShortestPath(graph, 28, 148));
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
