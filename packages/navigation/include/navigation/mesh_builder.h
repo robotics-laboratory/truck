@@ -2,6 +2,7 @@
 
 #include "geom/vector.h"
 #include "geom/segment.h"
+#include "geom/polyline.h"
 #include "geom/complex_polygon.h"
 
 namespace truck::navigation::mesh {
@@ -10,14 +11,15 @@ struct MeshParams {
     double dist;
     double offset;
 
-    struct Filter {
-        bool grid;
+    struct RadialFilter {
+        bool enabled;
+        double search_radius;
     } filter;
 };
 
 struct MeshBuild {
     geom::Segments skeleton;
-    geom::Segments level_lines;
+    std::vector<geom::Polyline> level_lines;
     std::vector<geom::Vec2> mesh;
 };
 
@@ -33,7 +35,7 @@ class MeshBuilder {
         MeshBuild& mesh_build, const geom::ComplexPolygon& polygon, double offset) const;
     void buildMesh(MeshBuild& mesh_build, double dist) const;
 
-    void gridFilter() const;
+    void applyMeshFilter(MeshBuild& mesh_build, double search_radius) const;
 
     MeshParams params_;
 };
