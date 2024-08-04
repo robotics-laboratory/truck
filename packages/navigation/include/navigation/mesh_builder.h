@@ -14,7 +14,7 @@ struct MeshParams {
     struct RadialFilter {
         bool enabled;
         double search_radius;
-    } radial_filter;
+    } filter;
 };
 
 struct MeshBuild {

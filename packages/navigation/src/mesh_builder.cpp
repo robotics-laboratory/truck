@@ -87,8 +87,8 @@ MeshBuild MeshBuilder::build(const geom::ComplexPolygons& polygons) const {
     buildLevelLines(mesh_build, polygon, params_.offset);
     buildMesh(mesh_build, params_.dist);
 
-    if (params_.radial_filter.enabled) {
-        applyMeshFilter(mesh_build, params_.radial_filter.search_radius);
+    if (params_.filter.enabled) {
+        applyMeshFilter(mesh_build, params_.filter.search_radius);
     }
 
     return mesh_build;
