@@ -38,6 +38,8 @@ Pose toPose(const geometry_msgs::msg::Pose& p);
 
 Pose toPose(const nav_msgs::msg::Odometry& odom);
 
+Poses toPoses(const std::vector<nav_msgs::msg::Odometry>& odom_msgs);
+
 Vec2 toVec2(const geometry_msgs::msg::Vector3& v);
 
 Transform toTransform(const geometry_msgs::msg::Transform& t);

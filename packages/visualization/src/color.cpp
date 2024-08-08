@@ -1,4 +1,4 @@
-#include "color.h"
+#include "visualization/color.h"
 
 #include <boost/assert.hpp>
 
@@ -11,6 +11,10 @@ std_msgs::msg::ColorRGBA make(float r, float g, float b, float a) {
     color.b = b;
     color.a = a;
     return color;
+}
+
+std_msgs::msg::ColorRGBA make(const std::vector<float>& rbga_color) {
+    return make(rbga_color[0], rbga_color[1], rbga_color[2], rbga_color[3]);
 }
 
 std_msgs::msg::ColorRGBA white(float alpha) { return make(1.0, 1.0, 1.0, alpha); }

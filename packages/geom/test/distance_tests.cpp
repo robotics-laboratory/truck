@@ -24,3 +24,36 @@ TEST(Distance, line_point) {
     ASSERT_GEOM_EQUAL(distance(a, l), std::sqrt(2.0), 1e-9);
     ASSERT_GEOM_EQUAL(distance(b, l), std::sqrt(2.0), 1e-9);
 }
+
+TEST(Distance, segment_point) {
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {1, 0.84};
+        ASSERT_GEOM_EQUAL(distance(p, s), 0.84, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {3, 0};
+        ASSERT_GEOM_EQUAL(distance(p, s), 1.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {3, 1};
+        ASSERT_GEOM_EQUAL(distance(p, s), std::sqrt(2), 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {-2, 0};
+        ASSERT_GEOM_EQUAL(distance(p, s), 2.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {-2, 2};
+        ASSERT_GEOM_EQUAL(distance(p, s), std::sqrt(8), 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {-2, 2};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 8.0, 1e-9);
+    }
+}
