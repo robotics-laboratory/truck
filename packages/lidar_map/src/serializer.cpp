@@ -107,9 +107,14 @@ void syncOdomWithCloud(
     std::vector<nav_msgs::msg::Odometry> odom_msgs_synced;
     std::vector<sensor_msgs::msg::LaserScan> laser_scan_msgs_synced;
 
-    while (odom_id < odom_count && laser_scan_id < laser_scan_count) {
-        while (odom_msgs[odom_id].header < laser_scan_msgs[laser_scan_id].header) {
+    while (laser_scan_id < laser_scan_count) {
+        while (odom_id < odom_count
+               && odom_msgs[odom_id].header < laser_scan_msgs[laser_scan_id].header) {
             odom_id++;
+        }
+
+        if (odom_id >= odom_count) {
+            break;
         }
 
         odom_msgs_synced.push_back(odom_msgs[odom_id]);
@@ -118,8 +123,8 @@ void syncOdomWithCloud(
         laser_scan_id++;
     }
 
-    odom_msgs = odom_msgs_synced;
-    laser_scan_msgs = laser_scan_msgs_synced;
+    odom_msgs = std::move(odom_msgs_synced);
+    laser_scan_msgs = std::move(laser_scan_msgs_synced);
 }
 
 void writeToMCAP(
