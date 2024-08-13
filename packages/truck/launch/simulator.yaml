@@ -1,6 +1,7 @@
 launch:
 - arg: { name: "model_config", default: "$(find-pkg-share model)/config/model.yaml" }
 - arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
+- arg: { name: "lidar_map_config", default: "/truck/packages/lidar_map/data/clouds/atrium_0.05_pcd/atrium_0.05_pcd_0.mcap" }
 - arg: { name: "initial_x", default: "5.0" }
 - arg: { name: "initial_y", default: "4.0" }
 - arg: { name: "initial_yaw", default: "0.3" }
@@ -20,3 +21,4 @@ launch:
     - { name: "simulation", value: "true" }
     - { name: "qos", value: "2" }
     - { name: "map_config", value: "$(var map_config)" }
+    - { name: "lidar_map_config", value: "$(var lidar_map_config)" }

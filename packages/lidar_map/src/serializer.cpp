@@ -7,6 +7,8 @@
 
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writer.hpp>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
 
 namespace truck::lidar_map {
 
@@ -107,9 +109,14 @@ void syncOdomWithCloud(
     std::vector<nav_msgs::msg::Odometry> odom_msgs_synced;
     std::vector<sensor_msgs::msg::LaserScan> laser_scan_msgs_synced;
 
-    while (odom_id < odom_count && laser_scan_id < laser_scan_count) {
-        while (odom_msgs[odom_id].header < laser_scan_msgs[laser_scan_id].header) {
+    while (laser_scan_id < laser_scan_count) {
+        while (odom_id < odom_count
+               && odom_msgs[odom_id].header < laser_scan_msgs[laser_scan_id].header) {
             odom_id++;
+        }
+
+        if (odom_id >= odom_count) {
+            break;
         }
 
         odom_msgs_synced.push_back(odom_msgs[odom_id]);
@@ -118,8 +125,10 @@ void syncOdomWithCloud(
         laser_scan_id++;
     }
 
-    odom_msgs = odom_msgs_synced;
-    laser_scan_msgs = laser_scan_msgs_synced;
+    VERIFY(odom_msgs_synced.size() == laser_scan_msgs_synced.size());
+
+    odom_msgs = std::move(odom_msgs_synced);
+    laser_scan_msgs = std::move(laser_scan_msgs_synced);
 }
 
 void writeToMCAP(
@@ -138,6 +147,23 @@ void writeToMCAP(
     writer->open(mcap_path);
     writer->write(toPointCloud2(cloud, "world"), cloud_topic_name, time);
     writer->write(visualization::msg::toMarker(map, "world"), map_topic_name, time);
+}
+
+void writeToPCD(const std::string& pcd_path, const Cloud& cloud) {
+    pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
+
+    pcl_cloud.width = cloud.cols();
+    pcl_cloud.height = 1;
+    pcl_cloud.is_dense = false;
+    pcl_cloud.resize(pcl_cloud.width * pcl_cloud.height);
+
+    for (size_t i = 0; i < cloud.cols(); i++) {
+        pcl_cloud.points[i].x = cloud(0, i);
+        pcl_cloud.points[i].y = cloud(1, i);
+        pcl_cloud.points[i].z = 0.0;
+    }
+
+    pcl::io::savePCDFileASCII(pcd_path, pcl_cloud);
 }
 
 }  // namespace truck::lidar_map

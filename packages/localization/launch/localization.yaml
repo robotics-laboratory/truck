@@ -1,0 +1,13 @@
+launch:
+  - arg:
+      name: "lidar_map_config"
+      default: "$(find-pkg-share lidar_map)/data/clouds/atrium_0.05_pcd/atrium_0.05_pcd_0.mcap"
+  - node:
+      pkg: "localization"
+      exec: "localization_node"
+      name: "localization_node"
+      output: "log"
+      param:
+        - { name: "lidar_map_config", value: "$(var lidar_map_config)" }
+        - { name: "icp_config", value: "$(find-pkg-share localization)/config/icp.yaml" }
+        - { name: "bbox_radius", value: 12.0 }

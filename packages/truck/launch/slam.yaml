@@ -2,11 +2,11 @@ launch:
 - arg: { name: "simulation", default: "false" }
 - arg: { name: "qos", default: "0" }
 
-- include:
-    file: $(find-pkg-share icp_odometry)/launch/icp_odometry.yaml
-    arg:
-    - { name: "use_sim_time", value: "$(var simulation)" }
-    - { name: "qos", value: "$(var qos)" }
+#- include:
+#    file: $(find-pkg-share icp_odometry)/launch/icp_odometry.yaml
+#    arg:
+#    - { name: "use_sim_time", value: "$(var simulation)" }
+#    - { name: "qos", value: "$(var qos)" }
 
 - node:
     pkg: "robot_localization"

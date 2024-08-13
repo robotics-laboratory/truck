@@ -7,15 +7,30 @@
 namespace truck::lidar_map {
 
 struct BuilderParams {
-    double icp_edge_max_dist = 0.6;
-    double poses_min_dist = 0.5;
+    struct Optimizer {
+        struct EdgeWeight {
+            double icp;
+            double odom;
+        } edge_weight;
 
-    double odom_edge_weight = 1.0;
-    double icp_edge_weight = 3.0;
+        double icp_edge_max_dist;
+        size_t steps;
+    } optimizer;
 
-    size_t optimizer_steps = 10;
+    struct Filter {
+        struct Grid {
+            double cell_size;
+        } grid;
 
-    bool verbose = true;
+        struct KNN {
+            double max_dist;
+            int min_neighboring_clouds;
+            int max_neighboring_clouds;
+        } knn;
+    } filter;
+
+    double poses_min_dist;
+    bool verbose;
 };
 
 class Builder {
@@ -30,6 +45,10 @@ class Builder {
     Clouds transformClouds(const geom::Poses& poses, const Clouds& clouds) const;
 
     Cloud mergeClouds(const Clouds& clouds) const;
+
+    Cloud applyKNNFilter(const Clouds& clouds) const;
+
+    Cloud applyVoxelGridFilter(const Cloud& cloud, double cell_size) const;
 
   private:
     ICP icp_;

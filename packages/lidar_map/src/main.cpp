@@ -141,13 +141,15 @@ int main(int argc, char* argv[]) {
         ICP icp;
         icp.loadFromYaml(icp_config);
 
-        const BuilderParams builder_params{
-            .icp_edge_max_dist = 0.6,
+        BuilderParams builder_params = {
+            .optimizer =
+                {.edge_weight = {.icp = 3.0, .odom = 1.0}, .icp_edge_max_dist = 0.6, .steps = 10},
+
+            .filter =
+                {.grid = {.cell_size = 0.02}, .knn = {.max_dist = 0.001, .min_neighboring_clouds = 6, .max_neighboring_clouds = 20}},
+
             .poses_min_dist = 0.5,
-            .odom_edge_weight = 1.0,
-            .icp_edge_weight = 3.0,
-            .optimizer_steps = 10,
-            .verbose = false};
+            .verbose = true};
 
         Builder builder = Builder(builder_params, icp);
 
@@ -164,7 +166,9 @@ int main(int argc, char* argv[]) {
         const auto poses_optimized = builder.optimizePoses(poses, clouds);
 
         const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
-        const auto lidar_map = builder.mergeClouds(clouds_tf);
+
+        const auto cloud_filtered_knn = builder.applyKNNFilter(clouds_tf);
+        const auto lidar_map = builder.applyVoxelGridFilter(cloud_filtered_knn, 0.05);
 
         if (enable_test) {
             const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
@@ -175,6 +179,8 @@ int main(int argc, char* argv[]) {
         } else {
             writeToMCAP(output_folder_path, lidar_map, "/map/lidar");
         }
+
+        writeToPCD(output_folder_path + "/cloud.pcd", lidar_map);
     }
 
     return 0;

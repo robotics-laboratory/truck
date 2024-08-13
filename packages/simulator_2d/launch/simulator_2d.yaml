@@ -7,7 +7,7 @@ launch:
       default: "$(find-pkg-share map)/data/map_6.geojson"
   - arg:
       name: "update_period"
-      default: "1e-2"
+      default: "0.05"
   - arg:
       name: "integration_step"
       default: "1e-3"
@@ -53,7 +53,7 @@ launch:
               param:
                 - { name: "enable", value: true }
                 - { name: "mean", value: 0.0 }
-                - { name: "variance", value: 0.1 }
+                - { name: "variance", value: 0.01 }
 
             - name: "gyro"
               param:

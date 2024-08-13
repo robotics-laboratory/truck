@@ -25,4 +25,6 @@ void writeToMCAP(
     const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name,
     const geom::ComplexPolygon& map, const std::string& map_topic_name);
 
+void writeToPCD(const std::string& pcd_path, const Cloud& cloud);
+
 }  // namespace truck::lidar_map

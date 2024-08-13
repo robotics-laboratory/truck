@@ -12,6 +12,8 @@
 #include <g2o/types/slam2d/edge_se2.h>
 #include <g2o/types/slam2d/vertex_se2.h>
 
+#include <rclcpp/rclcpp.hpp>
+
 namespace truck::lidar_map {
 
 namespace bg = boost::geometry;
@@ -155,6 +157,8 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
     VERIFY(!poses.empty());
     VERIFY(poses.size() == clouds.size());
 
+    RCLCPP_INFO(rclcpp::get_logger("builder.cpp::filterByPosesProximity"), "start");
+
     geom::Poses filtered_poses;
     Clouds filtered_clouds;
 
@@ -162,6 +166,8 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
     rtree.insert(poses[0].pos);
 
     for (size_t i = 1; i < poses.size(); i++) {
+        std::string log = std::to_string(i) + " of " + std::to_string(poses.size()) + " iterations";
+        RCLCPP_INFO(rclcpp::get_logger("builder.cpp::filterByPosesProximity"), log.c_str());
         const auto& pose = poses[i];
         const auto& cloud = clouds[i];
 
@@ -180,6 +186,9 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
         rtree.insert(pose.pos);
     }
 
+    VERIFY(filtered_poses.size() == filtered_clouds.size());
+
+    RCLCPP_INFO(rclcpp::get_logger("builder.cpp::filterByPosesProximity"), "done");
     return {filtered_poses, filtered_clouds};
 }
 
@@ -195,6 +204,9 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
  * - set of optimized poses in a world frame
  */
 geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& clouds) {
+    VERIFY(!poses.empty());
+    VERIFY(poses.size() == clouds.size());
+
     g2o::SparseOptimizer optimizer;
 
     auto solver = new g2o::OptimizationAlgorithmLevenberg(
@@ -222,7 +234,8 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
         edge->setVertex(0, vertices[i - 1]);
         edge->setVertex(1, vertices[i]);
         edge->setMeasurement(toSE2(tf_matrix_odom));
-        edge->setInformation(Eigen::Matrix3d::Identity() * params_.odom_edge_weight);
+
+        edge->setInformation(Eigen::Matrix3d::Identity() * params_.optimizer.edge_weight.odom);
 
         optimizer.addEdge(edge);
     }
@@ -232,7 +245,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
     // Add ICP edges
     for (size_t i = 0; i < poses.size(); i++) {
         for (size_t j = i + 1; j < poses.size(); j++) {
-            if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
+            if (geom::distance(poses[i], poses[j]) > params_.optimizer.icp_edge_max_dist) {
                 continue;
             }
 
@@ -251,7 +264,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
             edge->setVertex(0, vertices[i]);
             edge->setVertex(1, vertices[j]);
             edge->setMeasurement(toSE2(tf_matrix_final));
-            edge->setInformation(Eigen::Matrix3d::Identity() * params_.icp_edge_weight);
+            edge->setInformation(Eigen::Matrix3d::Identity() * params_.optimizer.edge_weight.icp);
 
             optimizer.addEdge(edge);
         }
@@ -263,7 +276,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
     optimizer.setVerbose(params_.verbose);
 
     optimizer.initializeOptimization();
-    optimizer.optimize(params_.optimizer_steps);
+    optimizer.optimize(params_.optimizer.steps);
 
     geom::Poses optimized_poses;
 
@@ -274,6 +287,8 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
             optimized_poses.push_back(toPose(se2));
         }
     }
+
+    VERIFY(poses.size() == optimized_poses.size());
 
     return optimized_poses;
 }
@@ -318,6 +333,101 @@ Cloud Builder::mergeClouds(const Clouds& clouds) const {
     }
 
     return merged_cloud;
+}
+
+Cloud Builder::applyKNNFilter(const Clouds& clouds) const {
+    const auto get_point = [](const DataPoints& data_points, size_t i) {
+        DataPoints data_points_i(data_points.featureLabels, data_points.descriptorLabels, 1);
+        data_points_i.features.col(0) = data_points.features.col(i);
+
+        if (data_points_i.descriptors.rows() > 0) {
+            data_points_i.descriptors.col(0) = data_points.descriptors.col(i);
+        }
+
+        return data_points_i;
+    };
+
+    VERIFY(clouds.size() > 0);
+
+    RCLCPP_INFO(rclcpp::get_logger(""), "builder.cpp::applyKNNFilter: start");
+
+    std::vector<DataPoints> data_points_arr;
+
+    for (const Cloud& cloud : clouds) {
+        data_points_arr.push_back(toDataPoints(applyVoxelGridFilter(cloud, 0.02)));
+    }
+
+    const int data_points_count = data_points_arr.size();
+
+    RCLCPP_INFO(rclcpp::get_logger(""), "builder.cpp::applyKNNFilter: build datapoints arr");
+
+    PointMatcherSupport::Parametrizable::Parameters kd_tree_params = {
+        {"knn", "1"}, {"epsilon", "0"}};
+
+    std::vector<std::shared_ptr<Matcher::Matcher>> kd_trees;
+
+    for (const DataPoints& data_points : data_points_arr) {
+        std::shared_ptr<Matcher::Matcher> kd_tree =
+            Matcher::get().MatcherRegistrar.create("KDTreeMatcher", kd_tree_params);
+        kd_tree->init(data_points);
+        kd_trees.push_back(kd_tree);
+    }
+
+    RCLCPP_INFO(rclcpp::get_logger(""), "builder.cpp::applyKNNFilter: build kd trees");
+
+    DataPoints filtered_data_points(data_points_arr[0].createSimilarEmpty(0));
+
+    RCLCPP_INFO(rclcpp::get_logger(""), "builder.cpp::applyKNNFilter: start filtering");
+
+    for (int i = 0; i < data_points_arr.size(); i++) {
+        std::string log = std::to_string(i) + " of " + std::to_string(data_points_arr.size()) + " iterations";
+        RCLCPP_INFO(rclcpp::get_logger(""), log.c_str());
+
+        for (size_t k = 0; k < data_points_arr[i].getNbPoints(); k++) {
+            DataPoints data_points_k = get_point(data_points_arr[i], k);
+
+            size_t count = 0;
+
+            int from_j = std::max(0, i - params_.filter.knn.max_neighboring_clouds);
+            int to_j = std::min(data_points_count - 1, i + params_.filter.knn.max_neighboring_clouds);
+            int j = from_j;
+
+            while (j <= to_j && count != params_.filter.knn.min_neighboring_clouds) {
+                if (i == j) {
+                    j++;
+                    continue;
+                }
+
+                Matcher::Matches matches = kd_trees[j]->findClosests(data_points_k);
+
+                if (matches.dists.size() > 0 && matches.dists(0, 0) <= params_.filter.knn.max_dist) {
+                    count++;
+                }
+
+                j++;
+            }
+
+            if (count == params_.filter.knn.min_neighboring_clouds) {
+                filtered_data_points.concatenate(data_points_k);
+            }
+        }
+    }
+
+    RCLCPP_INFO(rclcpp::get_logger(""), "builder.cpp::applyKNNFilter: done filtering");
+
+    return filtered_data_points.features;
+}
+
+Cloud Builder::applyVoxelGridFilter(const Cloud& cloud, double cell_size) const {
+    PointMatcherSupport::Parametrizable::Parameters params;
+    params["vSizeX"] = std::to_string(cell_size);
+    params["vSizeY"] = std::to_string(cell_size);
+    params["vSizeZ"] = std::to_string(cell_size);
+
+    std::shared_ptr<Matcher::DataPointsFilter> voxelGridFilter =
+        Matcher::get().DataPointsFilterRegistrar.create("VoxelGridDataPointsFilter", params);
+    auto data_points = voxelGridFilter->filter(toDataPoints(cloud));
+    return data_points.features;
 }
 
 }  // namespace truck::lidar_map

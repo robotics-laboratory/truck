@@ -259,7 +259,8 @@ void SimulatorNode::publishSimulationStateMessage(const TruckState& truck_state)
 void SimulatorNode::publishLaserScanMessage(const TruckState& truck_state) {
     sensor_msgs::msg::LaserScan scan_msg;
     scan_msg.header.frame_id = "lidar_link";
-    scan_msg.header.stamp = truck_state.time();
+    // scan_msg.header.stamp = truck_state.time();
+    scan_msg.header.stamp = now();
     scan_msg.angle_min = cache_.lidar_config.angle_min;
     scan_msg.angle_max = cache_.lidar_config.angle_max;
     scan_msg.angle_increment = cache_.lidar_config.angle_increment;
@@ -298,7 +299,7 @@ void SimulatorNode::publishSimulationState() {
     publishTime(truck_state);
     publishSimulatorLocalizationMessage(truck_state);
     publishHardwareOdometryMessage(truck_state);
-    publishTransformMessage(truck_state);
+    // publishTransformMessage(truck_state);
     publishTelemetryMessage(truck_state);
     publishSimulationStateMessage(truck_state);
     publishLaserScanMessage(truck_state);
