@@ -513,10 +513,12 @@ RUN wget -qO - https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.t
 
 ### INSTALL G2O
 
+ARG CMAKE_VERSION="3.16"
 ARG G2O_HASH="b1ba729aa569267e179fa2e237db0b3ad5169e2e"
 
 RUN git clone https://github.com/RainerKuemmerle/g2o.git \
     && cd g2o && git checkout ${G2O_HASH} \
+    && cp cmake_modules/FindG2O.cmake /usr/share/cmake-${CMAKE_VERSION}/Modules/FindG2O.cmake \
     && mkdir -p build && cd build \
     && cmake .. \
         -DBUILD_WITH_MARCH_NATIVE=OFF \

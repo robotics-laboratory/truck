@@ -37,7 +37,8 @@ TEST(Navigation, mesh) {
     const viewer::ViewerParams viewer_params{
         .path = "test/data/mesh.png", .color_rgb = {}, .thickness = {}};
 
-    const mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
+    const mesh::MeshParams mesh_params{
+        .dist = 1.4, .offset = 1.6, .filter = {.enabled = true, .search_radius = .8}};
     const mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
     const mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
@@ -58,16 +59,19 @@ TEST(Navigation, graph) {
     const viewer::ViewerParams viewer_params{
         .path = "test/data/graph.png", .color_rgb = {}, .thickness = {}};
 
-    const mesh::MeshParams mesh_params{.dist = 1.4, .offset = 1.6, .filter = {}};
+    const mesh::MeshParams mesh_params{
+        .dist = 1.4, .offset = 1.6, .filter = {.enabled = true, .search_radius = .8}};
     const mesh::MeshBuilder mesh_builder = mesh::MeshBuilder(mesh_params);
     const mesh::MeshBuild mesh_build = mesh_builder.build(polygons);
 
     const graph::GraphParams graph_params{
-        .mode = graph::GraphParams::Mode::searchRadius, .search_radius = 3.6};
+        .mode = graph::GraphParams::Mode::searchRadius,
+        .search_radius = 3.6,
+        .safe_zone_radius = 1.0};
     const graph::GraphBuilder graph_builder = graph::GraphBuilder(graph_params);
     const graph::Graph graph = graph_builder.build(mesh_build.mesh, polygons);
 
-    const geom::Polyline path = search::toPolyline(graph, search::findShortestPath(graph, 28, 306));
+    const geom::Polyline path = search::toPolyline(graph, search::findShortestPath(graph, 28, 148));
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
