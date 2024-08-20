@@ -92,9 +92,10 @@ bool operator<(const std_msgs::msg::Header& a, const std_msgs::msg::Header& b) {
 
 }  // namespace
 
-void syncOdomWithCloud(
-    std::vector<nav_msgs::msg::Odometry>& odom_msgs,
-    std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs) {
+std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::LaserScan>>
+syncOdomWithCloud(
+    const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
+    const std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs) {
     VERIFY(!odom_msgs.empty());
     VERIFY(!laser_scan_msgs.empty());
 
@@ -123,8 +124,7 @@ void syncOdomWithCloud(
         laser_scan_id++;
     }
 
-    odom_msgs = std::move(odom_msgs_synced);
-    laser_scan_msgs = std::move(laser_scan_msgs_synced);
+    return {odom_msgs_synced, laser_scan_msgs_synced};
 }
 
 void writeToMCAP(

@@ -14,9 +14,10 @@ std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
 std::vector<sensor_msgs::msg::LaserScan> loadLaserScanTopic(
     const std::string& mcap_path, const std::string& laser_scan_topic);
 
-void syncOdomWithCloud(
-    std::vector<nav_msgs::msg::Odometry>& odom_msgs,
-    std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs);
+std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::LaserScan>>
+syncOdomWithCloud(
+    const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
+    const std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs);
 
 void writeToMCAP(
     const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name);

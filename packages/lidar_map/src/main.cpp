@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
     std::string output_folder_path;
 
     {
-        po::options_description desc("Options and arguments");
+        po::options_description desc("Executable for constructing 2D LiDAR map");
         desc.add_options()("help,h", "show this help message and exit")(
             "input,i",
             po::value<std::string>(&input_mcap_path)->required(),
@@ -147,13 +147,14 @@ int main(int argc, char* argv[]) {
 
         Builder builder = Builder(builder_params);
 
-        auto odom_msgs = loadOdomTopic(input_mcap_path, kTopicOdom);
-        auto laser_scan_msgs = loadLaserScanTopic(input_mcap_path, kTopicLaserScan);
+        const auto odom_msgs = loadOdomTopic(input_mcap_path, kTopicOdom);
+        const auto laser_scan_msgs = loadLaserScanTopic(input_mcap_path, kTopicLaserScan);
 
-        syncOdomWithCloud(odom_msgs, laser_scan_msgs);
+        const auto [synced_odom_msgs, synced_laser_scan_msgs] =
+            syncOdomWithCloud(odom_msgs, laser_scan_msgs);
 
-        const auto all_poses = toPoses(odom_msgs);
-        const auto all_clouds = toClouds(laser_scan_msgs);
+        const auto all_poses = toPoses(synced_odom_msgs);
+        const auto all_clouds = toClouds(synced_laser_scan_msgs);
 
         const auto [poses, clouds] = builder.filterByPosesProximity(all_poses, all_clouds);
 
@@ -164,7 +165,7 @@ int main(int argc, char* argv[]) {
 
         if (enable_test) {
             const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
-            ComplexPolygon vector_map = Map::fromGeoJson(map_path).polygons()[0];
+            const ComplexPolygon vector_map = Map::fromGeoJson(map_path).polygons()[0];
 
             writeToMCAP(output_folder_path, lidar_map, "/map/lidar", vector_map, "/map/vector");
             std::cout << calculateMetrics(lidar_map, vector_map);

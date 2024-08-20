@@ -27,7 +27,7 @@ namespace {
 
 void normalize(Cloud& cloud) {
     for (size_t i = 0; i < cloud.cols(); i++) {
-        const double scalar = cloud.col(i)(2);
+        const auto scalar = cloud.col(i)(2);
         cloud.col(i) /= scalar;
     }
 }
@@ -35,7 +35,7 @@ void normalize(Cloud& cloud) {
 void normalize(DataPoints& data_points) {
     auto& matrix = data_points.features;
     for (size_t i = 0; i < matrix.cols(); i++) {
-        const double scalar = matrix.col(i)(2);
+        const auto scalar = matrix.col(i)(2);
         matrix.col(i) /= scalar;
     }
 }
@@ -129,20 +129,9 @@ Eigen::Matrix3f transformationMatrix(const geom::Pose& pose) {
  * - T_iw = (T_wi).inv(): 3x3 transformation matrix of world relatively to pose_i
  */
 Eigen::Matrix3f transformationMatrix(const geom::Pose& pose_i, const geom::Pose& pose_j) {
-    const double theta_i = pose_i.dir.angle().radians();
-    const double theta_j = pose_j.dir.angle().radians();
-    const double dtheta = theta_j - theta_i;
-
-    const double dx = pose_j.pos.x - pose_i.pos.x;
-    const double dy = pose_j.pos.y - pose_i.pos.y;
-
-    const double cos_theta_i = std::cos(theta_i);
-    const double sin_theta_i = std::sin(theta_i);
-
-    const double tx = dx * cos_theta_i + dy * sin_theta_i;
-    const double ty = -1.0 * dx * sin_theta_i + dy * cos_theta_i;
-
-    return transformationMatrix({geom::Vec2(tx, ty), geom::AngleVec2::fromRadians(dtheta)});
+    const Eigen::Matrix3f T_wj = transformationMatrix(pose_j);
+    const Eigen::Matrix3f T_wi = transformationMatrix(pose_i);
+    return T_wi.inverse() * T_wj;
 }
 
 }  // namespace
