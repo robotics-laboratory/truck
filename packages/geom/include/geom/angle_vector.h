@@ -20,11 +20,13 @@ class AngleVec2 {
 
     AngleVec2(Angle a) : vec_(Vec2::fromAngle(a)), angle_(a) {}
 
-    AngleVec2(double rad) : vec_(Vec2::fromAngle(Angle(rad))), angle_(Angle(rad)) {}
-
     constexpr operator Angle() const noexcept { return angle(); }
 
     constexpr operator Vec2() const noexcept { return vec(); }
+
+    static AngleVec2 fromRadians(double rad) noexcept {
+        return {Vec2::fromAngle(Angle(rad)), Angle(rad)};
+    }
 
     static AngleVec2 fromVectorUnsafe(Vec2 v) noexcept { return {v, Angle::fromVector(v.x, v.y)}; }
 

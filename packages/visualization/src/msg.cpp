@@ -8,7 +8,7 @@ namespace truck::visualization {
 namespace msg {
 
 visualization_msgs::msg::Marker toMarker(
-    const geom::ComplexPolygon& complex_polygon, const std::string& frame_id,
+    const geom::ComplexPolygon& complex_polygon, std::string frame_id,
     std::vector<float> rgba_color, float z_lev) {
     visualization_msgs::msg::Marker msg;
     msg.header.frame_id = frame_id;

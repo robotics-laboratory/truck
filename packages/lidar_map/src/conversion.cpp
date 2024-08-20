@@ -10,8 +10,18 @@ constexpr bool isBigendian() { return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__; }
 
 }  // namespace
 
+geom::Poses toPoses(const std::vector<nav_msgs::msg::Odometry>& odom_msgs) {
+    geom::Poses poses;
+
+    for (const auto& odom_msg : odom_msgs) {
+        poses.push_back(geom::toPose(odom_msg));
+    }
+
+    return poses;
+}
+
 Cloud toCloud(const sensor_msgs::msg::LaserScan& scan) {
-    Limits range_limit{scan.range_min, scan.range_max};
+    const Limits range_limit{scan.range_min, scan.range_max};
 
     auto is_valid = [&](double range) { return std::isfinite(range) && range_limit.isMet(range); };
 
@@ -48,7 +58,9 @@ Clouds toClouds(const std::vector<sensor_msgs::msg::LaserScan>& scans) {
     return clouds;
 }
 
-sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, const std::string& frame_id) {
+namespace msg {
+
+sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string frame_id) {
     sensor_msgs::msg::PointCloud2 result;
 
     result.header.frame_id = frame_id;
@@ -81,5 +93,7 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, const std::strin
 
     return result;
 }
+
+}  // namespace msg
 
 }  // namespace truck::lidar_map

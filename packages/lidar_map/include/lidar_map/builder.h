@@ -7,6 +7,8 @@
 namespace truck::lidar_map {
 
 struct BuilderParams {
+    std::string icp_config;
+
     double icp_edge_max_dist = 0.6;
     double poses_min_dist = 0.5;
 
@@ -20,7 +22,7 @@ struct BuilderParams {
 
 class Builder {
   public:
-    Builder(const BuilderParams& params, const ICP& icp);
+    Builder(const BuilderParams& params);
 
     std::pair<geom::Poses, Clouds> filterByPosesProximity(
         const geom::Poses& poses, const Clouds& clouds) const;

@@ -24,16 +24,6 @@ Pose toPose(const geometry_msgs::msg::Pose& p) { return Pose{toVec2(p), toYawDir
 
 Pose toPose(const nav_msgs::msg::Odometry& odom) { return toPose(odom.pose.pose); }
 
-Poses toPoses(const std::vector<nav_msgs::msg::Odometry>& odom_msgs) {
-    Poses poses;
-
-    for (const auto& odom_msg : odom_msgs) {
-        poses.push_back(toPose(odom_msg));
-    }
-
-    return poses;
-}
-
 Vec2 toVec2(const geometry_msgs::msg::Vector3& v) { return {v.x, v.y}; }
 
 Transform toTransform(const geometry_msgs::msg::Transform& t) {

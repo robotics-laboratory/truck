@@ -7,7 +7,6 @@
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <boost/program_options.hpp>
-#include <fstream>
 #include <nav_msgs/msg/odometry.hpp>
 #include <numeric>
 #include <sensor_msgs/msg/laser_scan.hpp>
@@ -137,11 +136,8 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        std::ifstream icp_config(kPkgPathLidarMap + "/config/icp.yaml");
-        ICP icp;
-        icp.loadFromYaml(icp_config);
-
         const BuilderParams builder_params{
+            .icp_config = kPkgPathLidarMap + "/config/icp.yaml",
             .icp_edge_max_dist = 0.6,
             .poses_min_dist = 0.5,
             .odom_edge_weight = 1.0,
@@ -149,7 +145,7 @@ int main(int argc, char* argv[]) {
             .optimizer_steps = 10,
             .verbose = false};
 
-        Builder builder = Builder(builder_params, icp);
+        Builder builder = Builder(builder_params);
 
         auto odom_msgs = loadOdomTopic(input_mcap_path, kTopicOdom);
         auto laser_scan_msgs = loadLaserScanTopic(input_mcap_path, kTopicLaserScan);

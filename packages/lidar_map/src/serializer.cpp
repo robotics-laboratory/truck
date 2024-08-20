@@ -132,7 +132,7 @@ void writeToMCAP(
     const rclcpp::Time time;
     std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
     writer->open(mcap_path);
-    writer->write(toPointCloud2(cloud, "world"), cloud_topic_name, time);
+    writer->write(msg::toPointCloud2(cloud), cloud_topic_name, time);
 }
 
 void writeToMCAP(
@@ -141,8 +141,8 @@ void writeToMCAP(
     const rclcpp::Time time;
     std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
     writer->open(mcap_path);
-    writer->write(toPointCloud2(cloud, "world"), cloud_topic_name, time);
-    writer->write(visualization::msg::toMarker(map, "world"), map_topic_name, time);
+    writer->write(msg::toPointCloud2(cloud), cloud_topic_name, time);
+    writer->write(visualization::msg::toMarker(map), map_topic_name, time);
 }
 
 }  // namespace truck::lidar_map

@@ -12,6 +12,8 @@
 #include <g2o/types/slam2d/edge_se2.h>
 #include <g2o/types/slam2d/vertex_se2.h>
 
+#include <fstream>
+
 namespace truck::lidar_map {
 
 namespace bg = boost::geometry;
@@ -83,7 +85,8 @@ g2o::SE2 toSE2(const Eigen::Matrix3f& tf_matrix) {
  */
 geom::Pose toPose(const g2o::SE2& se2) {
     return {
-        {se2.translation().x(), se2.translation().y()}, {geom::AngleVec2(se2.rotation().angle())}};
+        {se2.translation().x(), se2.translation().y()},
+        {geom::AngleVec2::fromRadians(se2.rotation().angle())}};
 }
 
 /**
@@ -139,12 +142,15 @@ Eigen::Matrix3f transformationMatrix(const geom::Pose& pose_i, const geom::Pose&
     const double tx = dx * cos_theta_i + dy * sin_theta_i;
     const double ty = -1.0 * dx * sin_theta_i + dy * cos_theta_i;
 
-    return transformationMatrix({geom::Vec2(tx, ty), geom::AngleVec2(dtheta)});
+    return transformationMatrix({geom::Vec2(tx, ty), geom::AngleVec2::fromRadians(dtheta)});
 }
 
 }  // namespace
 
-Builder::Builder(const BuilderParams& params, const ICP& icp) : icp_(icp), params_(params) {}
+Builder::Builder(const BuilderParams& params) : params_(params) {
+    std::ifstream icp_config_stream(params_.icp_config);
+    icp_.loadFromYaml(icp_config_stream);
+}
 
 /**
  * Returns a subset of given poses and clouds via removing too close poses
