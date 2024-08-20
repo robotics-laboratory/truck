@@ -1,8 +1,8 @@
-#include <icp_odometry/conversion.h>
+#include "lidar_map/conversion.h"
 
-#include "common/math.h"
+#include <common/math.h>
 
-namespace truck::icp_odometry {
+namespace truck::lidar_map {
 
 namespace {
 
@@ -10,22 +10,25 @@ constexpr bool isBigendian() { return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__; }
 
 }  // namespace
 
-DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
-    Limits range_limit{scan.range_min, scan.range_max};
+geom::Poses toPoses(const std::vector<nav_msgs::msg::Odometry>& odom_msgs) {
+    geom::Poses poses;
 
-    DataPoints::Labels feature_labels;
-    feature_labels.push_back(DataPoints::Label("x", 1));
-    feature_labels.push_back(DataPoints::Label("y", 1));
-    feature_labels.push_back(DataPoints::Label("w", 1));
+    for (const auto& odom_msg : odom_msgs) {
+        poses.push_back(geom::toPose(odom_msg));
+    }
 
-    const DataPoints::Labels descriptor_labels;
+    return poses;
+}
+
+Cloud toCloud(const sensor_msgs::msg::LaserScan& scan) {
+    const Limits range_limit{scan.range_min, scan.range_max};
 
     auto is_valid = [&](double range) { return std::isfinite(range) && range_limit.isMet(range); };
 
     const size_t point_count = std::count_if(
         scan.ranges.begin(), scan.ranges.end(), [&](float range) { return is_valid(range); });
 
-    DataPoints result(feature_labels, descriptor_labels, point_count);
+    Cloud cloud(3, point_count);
 
     for (size_t i = 0, j = 0; i < scan.ranges.size(); ++i) {
         const double range = scan.ranges[i];
@@ -36,22 +39,33 @@ DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& scan) {
 
         const double angle = scan.angle_min + i * scan.angle_increment;
 
-        result.features(0, j) = range * std::cos(angle);
-        result.features(1, j) = range * std::sin(angle);
-        result.features(2, j) = 1.0f;
+        cloud(0, j) = range * std::cos(angle);
+        cloud(1, j) = range * std::sin(angle);
+        cloud(2, j) = 1.0;
         j++;
     }
 
-    return result;
+    return cloud;
 }
 
-sensor_msgs::msg::PointCloud2 toPointCloud2(
-    const std_msgs::msg::Header& header, const DataPoints& data_points) {
+Clouds toClouds(const std::vector<sensor_msgs::msg::LaserScan>& scans) {
+    Clouds clouds;
+
+    for (const auto& scan : scans) {
+        clouds.push_back(toCloud(scan));
+    }
+
+    return clouds;
+}
+
+namespace msg {
+
+sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string frame_id) {
     sensor_msgs::msg::PointCloud2 result;
 
-    result.header = header;
+    result.header.frame_id = frame_id;
     result.height = 1;
-    result.width = data_points.features.cols();
+    result.width = cloud.cols();
     result.fields.resize(3);
 
     result.fields[0].name = "x";
@@ -75,9 +89,11 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(
     result.is_dense = true;
 
     result.data.resize(result.row_step * result.height);
-    std::memcpy(result.data.data(), data_points.features.data(), result.data.size());
+    std::memcpy(result.data.data(), cloud.data(), result.data.size());
 
     return result;
 }
 
-}  // namespace truck::icp_odometry
+}  // namespace msg
+
+}  // namespace truck::lidar_map

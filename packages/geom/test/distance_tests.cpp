@@ -24,3 +24,66 @@ TEST(Distance, line_point) {
     ASSERT_GEOM_EQUAL(distance(a, l), std::sqrt(2.0), 1e-9);
     ASSERT_GEOM_EQUAL(distance(b, l), std::sqrt(2.0), 1e-9);
 }
+
+TEST(Distance, segment_point) {
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {-2, 0};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 4.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {-2, 2};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 8.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {0, 2};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 4.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {1, 2};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 4.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {2, 2};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 4.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {4, 2};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 8.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {4, 0};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 4.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {1, -1};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 1.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {0, 0};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 0.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {1, 0};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 0.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {2, 0};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 0.0, 1e-9);
+    }
+    {
+        const Segment s = {{0, 0}, {2, 0}};
+        const Vec2 p = {3, 2};
+        ASSERT_GEOM_EQUAL(distanceSq(p, s), 5.0, 1e-9);
+    }
+}
