@@ -304,12 +304,18 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) 
 
 Cloud Builder::mergeClouds(const Clouds& clouds) const {
     VERIFY(!clouds.empty());
-    Cloud merged_cloud = clouds[0];
+    size_t points_count = 0;
 
-    for (size_t i = 1; i < clouds.size(); i++) {
-        Cloud tmp = Cloud(3, merged_cloud.cols() + clouds[i].cols());
-        tmp << merged_cloud, clouds[i];
-        merged_cloud = tmp;
+    for (const auto& cloud : clouds) {
+        points_count += cloud.cols();
+    }
+
+    Cloud merged_cloud(3, points_count);
+    size_t last_point_id = 0;
+
+    for (const auto& cloud : clouds) {
+        merged_cloud.block(0, last_point_id, cloud.rows(), cloud.cols()) = cloud;
+        last_point_id += cloud.cols();
     }
 
     return merged_cloud;

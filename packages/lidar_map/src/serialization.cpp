@@ -1,4 +1,4 @@
-#include "lidar_map/serializer.h"
+#include "lidar_map/serialization.h"
 
 #include "common/exception.h"
 #include "geom/msg.h"
@@ -130,19 +130,19 @@ syncOdomWithCloud(
 void writeToMCAP(
     const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name) {
     const rclcpp::Time time;
-    std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
-    writer->open(mcap_path);
-    writer->write(msg::toPointCloud2(cloud), cloud_topic_name, time);
+    rosbag2_cpp::Writer writer = rosbag2_cpp::Writer();
+    writer.open(mcap_path);
+    writer.write(msg::toPointCloud2(cloud), cloud_topic_name, time);
 }
 
 void writeToMCAP(
     const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name,
     const geom::ComplexPolygon& map, const std::string& map_topic_name) {
     const rclcpp::Time time;
-    std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
-    writer->open(mcap_path);
-    writer->write(msg::toPointCloud2(cloud), cloud_topic_name, time);
-    writer->write(visualization::msg::toMarker(map), map_topic_name, time);
+    rosbag2_cpp::Writer writer = rosbag2_cpp::Writer();
+    writer.open(mcap_path);
+    writer.write(msg::toPointCloud2(cloud), cloud_topic_name, time);
+    writer.write(visualization::msg::toMarker(map), map_topic_name, time);
 }
 
 }  // namespace truck::lidar_map

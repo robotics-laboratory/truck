@@ -29,7 +29,8 @@ set(G2O_LIBRARIES ${G2O_SOLVER_EIGEN} ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY}
 )
 
 add_library(
-  ${PROJECT_NAME} SHARED src/builder.cpp src/serializer.cpp src/conversion.cpp
+  ${PROJECT_NAME} SHARED src/builder.cpp src/serialization.cpp
+                         src/conversion.cpp
 )
 
 ament_target_dependencies(
