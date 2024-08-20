@@ -39,21 +39,27 @@ struct Metrics {
  *  q90: 90th quantile
  */
 Metrics calculateMetrics(const Cloud& cloud, const ComplexPolygon& complex_polygon) {
-    std::vector<double> min_dists;
+    std::vector<double> min_dists_squared;
     const auto& segments = complex_polygon.segments();
 
     for (size_t i = 0; i < cloud.cols(); i++) {
         const Vec2 cloud_point = {cloud.col(i)(0), cloud.col(i)(1)};
-        double min_dist = distance(cloud_point, segments[0]);
+        double min_dist_squared = distanceSq(cloud_point, segments[0]);
 
         for (size_t j = 1; j < segments.size(); j++) {
-            min_dist = std::min(min_dist, distance(cloud_point, segments[j]));
+            min_dist_squared = std::min(min_dist_squared, distanceSq(cloud_point, segments[j]));
         }
 
-        min_dists.push_back(min_dist);
+        min_dists_squared.push_back(min_dist_squared);
     }
 
-    const size_t count = min_dists.size();
+    const size_t count = min_dists_squared.size();
+    std::vector<double> min_dists(count, 0);
+
+    for (size_t i = 0; i < count; i++) {
+        min_dists[i] = std::sqrt(min_dists_squared[i]);
+    }
+
     std::sort(min_dists.begin(), min_dists.end());
 
     auto get_quantile = [&](double q) {
