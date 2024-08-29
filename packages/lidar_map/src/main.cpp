@@ -145,11 +145,10 @@ int main(int argc, char* argv[]) {
         const BuilderParams builder_params{
             .icp_config = kPkgPathLidarMap + "/config/icp.yaml",
             .icp_edge_max_dist = 0.6,
-            .poses_min_dist = 0.5,
             .odom_edge_weight = 1.0,
             .icp_edge_weight = 3.0,
             .optimizer_steps = 10,
-            .verbose = false};
+            .verbose = true};
 
         Builder builder = Builder(builder_params);
 
@@ -162,12 +161,15 @@ int main(int argc, char* argv[]) {
         const auto all_poses = toPoses(synced_odom_msgs);
         const auto all_clouds = toClouds(synced_laser_scan_msgs);
 
-        const auto [poses, clouds] = builder.filterByPosesProximity(all_poses, all_clouds);
+        const auto [poses, clouds] = builder.filterByPosesProximity(all_poses, all_clouds, 0.5);
 
         const auto poses_optimized = builder.optimizePoses(poses, clouds);
 
         const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
-        const auto lidar_map = builder.mergeClouds(clouds_tf);
+
+        const auto clouds_tf_filtered = builder.applyGridFilter(clouds_tf, 0.02);
+        const auto lidar_map =
+            builder.mergeCloudsByPointsSimilarity(clouds_tf_filtered, 6, 0.002, 20);
 
         if (enable_test) {
             const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;

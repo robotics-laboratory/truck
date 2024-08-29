@@ -10,7 +10,6 @@ struct BuilderParams {
     std::string icp_config;
 
     double icp_edge_max_dist = 0.6;
-    double poses_min_dist = 0.5;
 
     double odom_edge_weight = 1.0;
     double icp_edge_weight = 3.0;
@@ -25,13 +24,19 @@ class Builder {
     Builder(const BuilderParams& params);
 
     std::pair<geom::Poses, Clouds> filterByPosesProximity(
-        const geom::Poses& poses, const Clouds& clouds) const;
+        const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const;
 
     geom::Poses optimizePoses(const geom::Poses& poses, const Clouds& clouds);
 
     Clouds transformClouds(const geom::Poses& poses, const Clouds& clouds) const;
 
     Cloud mergeClouds(const Clouds& clouds) const;
+
+    Cloud mergeCloudsByPointsSimilarity(
+        const Clouds& clouds, int sim_points_min_count, double sim_points_max_dist,
+        int clouds_range = -1) const;
+
+    Clouds applyGridFilter(const Clouds& clouds, double cell_size) const;
 
   private:
     ICP icp_;

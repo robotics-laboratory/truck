@@ -146,7 +146,7 @@ Builder::Builder(const BuilderParams& params) : params_(params) {
  * Next pose will be added, if it's far enough from a previous one
  */
 std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
-    const geom::Poses& poses, const Clouds& clouds) const {
+    const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const {
     VERIFY(!poses.empty());
     VERIFY(poses.size() == clouds.size());
 
@@ -165,7 +165,7 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
 
         const double dist = geom::distance(pose.pos, query_points.front());
 
-        if (dist < params_.poses_min_dist) {
+        if (dist < poses_min_dist) {
             continue;
         }
 
@@ -302,6 +302,9 @@ Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) 
     return clouds_tf;
 }
 
+/**
+ * Merge clouds column-wise
+ */
 Cloud Builder::mergeClouds(const Clouds& clouds) const {
     VERIFY(!clouds.empty());
     size_t points_count = 0;
@@ -319,6 +322,118 @@ Cloud Builder::mergeClouds(const Clouds& clouds) const {
     }
 
     return merged_cloud;
+}
+
+/**
+ * Merge clouds column-wise with filtering by pose similarity
+ *
+ * Parameters:
+ * - clouds: clouds which should be merged
+ * - sim_points_max_dist: max dist for considering points similar to each other
+ * - sim_points_min_count: min number of similar points relatively to the current point
+ *   that must be found to include current point into the final cloud
+ * - clouds_range: clouds range in which similar points are searched
+ *
+ * Description:
+ * Loop through all clouds, for each j-th point of i-th cloud
+ * we should find at least "sim_points_min_count" points among neighboring clouds of i-th cloud
+ * which are less than "sim_points_max_dist" meters away from j-th point of i-th cloud
+ *
+ * Neighboring clouds of i-th cloud are in range [i - "clouds_range", i + "clouds_range")
+ *
+ * If "clouds_range" = -1, than neighboring clouds range is unlimited
+ */
+Cloud Builder::mergeCloudsByPointsSimilarity(
+    const Clouds& clouds, int sim_points_min_count, double sim_points_max_dist,
+    int clouds_range) const {
+    VERIFY(!clouds.empty());
+
+    auto get_data_point_by_id = [](const DataPoints& data_points, size_t id) {
+        DataPoints data_point(data_points.createSimilarEmpty(1));
+        data_point.features.col(0) = data_points.features.col(id);
+        return data_point;
+    };
+
+    if (params_.verbose) {
+        std::cout << "mergeCloudsByPointsSimilarity: init\n";
+    }
+
+    std::vector<std::shared_ptr<Matcher::Matcher>> kd_tree_arr;
+    PointMatcherSupport::Parametrizable::Parameters kd_tree_params = {
+        {"knn", "1"}, {"epsilon", "0"}};
+
+    const auto data_points_arr = toDataPoints(clouds);
+
+    for (const auto& data_points : data_points_arr) {
+        auto kd_tree = Matcher::get().MatcherRegistrar.create("KDTreeMatcher", kd_tree_params);
+        kd_tree->init(data_points);
+        kd_tree_arr.push_back(kd_tree);
+    }
+
+    const int clouds_count = clouds.size();
+
+    DataPoints data_points_filtered(data_points_arr[0].createSimilarEmpty());
+
+    for (int cloud_id = 0; cloud_id < clouds_count; cloud_id++) {
+        if (params_.verbose) {
+            std::cout << "mergeCloudsByPointsSimilarity: " << cloud_id << " of " << clouds_count
+                      << " iterations\n";
+        }
+
+        const int points_count = clouds[cloud_id].cols();
+
+        for (int point_id = 0; point_id < points_count; point_id++) {
+            int sim_points_cur_count = 0;
+
+            const auto data_point = get_data_point_by_id(data_points_arr[cloud_id], point_id);
+
+            const int start_neighbor_cloud_id =
+                (clouds_range == -1) ? 0 : std::max(0, cloud_id - clouds_range);
+
+            const int end_neighbor_cloud_id = (clouds_range == -1)
+                                                  ? clouds_count
+                                                  : std::min(clouds_count, cloud_id + clouds_range);
+
+            for (int neighbor_cloud_id = start_neighbor_cloud_id;
+                 neighbor_cloud_id < end_neighbor_cloud_id;
+                 neighbor_cloud_id++) {
+                if (sim_points_cur_count == sim_points_min_count) {
+                    data_points_filtered.concatenate(data_point);
+                    break;
+                }
+
+                const auto dist =
+                    kd_tree_arr[neighbor_cloud_id]->findClosests(data_point).dists(0, 0);
+
+                if (dist < sim_points_max_dist) {
+                    sim_points_cur_count++;
+                }
+            }
+        }
+    }
+
+    return data_points_filtered.features;
+}
+
+Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
+    const std::string cell_size_str = std::to_string(cell_size);
+    PointMatcherSupport::Parametrizable::Parameters grid_filter_params = {
+        {"vSizeX", cell_size_str},
+        {"vSizeY", cell_size_str},
+        {"vSizeZ", cell_size_str},
+    };
+
+    std::shared_ptr<Matcher::DataPointsFilter> grid_filter =
+        Matcher::get().DataPointsFilterRegistrar.create(
+            "VoxelGridDataPointsFilter", grid_filter_params);
+
+    Clouds clouds_filtered;
+
+    for (const auto& cloud : clouds) {
+        clouds_filtered.push_back(grid_filter->filter(toDataPoints(cloud)).features);
+    }
+
+    return clouds_filtered;
 }
 
 }  // namespace truck::lidar_map
