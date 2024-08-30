@@ -18,6 +18,7 @@
   <depend>libpointmatcher</depend>
   <depend>map</depend>
   <depend>G2O</depend>
+  <depend>PCL</depend>
   <depend>ament_index_cpp</depend>
   <depend>visualization</depend>
   <depend>Boost</depend>
