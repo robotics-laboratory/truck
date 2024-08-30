@@ -7,6 +7,8 @@
 
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writer.hpp>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
 
 namespace truck::lidar_map {
 
@@ -143,6 +145,42 @@ void writeToMCAP(
     writer.open(mcap_path);
     writer.write(msg::toPointCloud2(cloud), cloud_topic_name, time);
     writer.write(visualization::msg::toMarker(map), map_topic_name, time);
+}
+
+Cloud loadPCD(const std::string& pcd_path) {
+    Cloud cloud;
+    pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
+
+    if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_path, pcl_cloud) == -1) {
+        return cloud;
+    }
+
+    const size_t points_count = pcl_cloud.points.size();
+    cloud = Cloud(3, points_count);
+
+    for (size_t i = 0; i < points_count; i++) {
+        cloud(0, i) = pcl_cloud.points[i].x;
+        cloud(1, i) = pcl_cloud.points[i].y;
+        cloud(2, i) = pcl_cloud.points[i].z;
+    }
+
+    return cloud;
+}
+
+void writeToPCD(const std::string& pcd_path, const Cloud& cloud) {
+    pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
+    pcl_cloud.width = cloud.cols();
+    pcl_cloud.height = 1;
+    pcl_cloud.is_dense = false;
+    pcl_cloud.resize(pcl_cloud.width * pcl_cloud.height);
+
+    for (size_t i = 0; i < cloud.cols(); i++) {
+        pcl_cloud.points[i].x = cloud(0, i);
+        pcl_cloud.points[i].y = cloud(1, i);
+        pcl_cloud.points[i].z = 1.0;
+    }
+
+    pcl::io::savePCDFileASCII(pcd_path, pcl_cloud);
 }
 
 }  // namespace truck::lidar_map
