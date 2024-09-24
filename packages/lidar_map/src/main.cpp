@@ -3,6 +3,8 @@
 #include "lidar_map/builder.h"
 #include "lidar_map/conversion.h"
 #include "lidar_map/serialization.h"
+#include "tools/progress_bar.h"
+#include "tools/benchmark.h"
 #include "map/map.h"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -10,6 +12,8 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <numeric>
 #include <sensor_msgs/msg/laser_scan.hpp>
+
+extern tools::BenchmarkManager benchmarkManager;
 
 using namespace truck::lidar_map;
 using namespace truck::map;
@@ -107,6 +111,8 @@ int main(int argc, char* argv[]) {
     std::string input_mcap_path;
     std::string output_folder_path;
 
+    benchmarkManager.startTimer("Lidar map builder");
+
     {
         po::options_description desc("Executable for constructing 2D LiDAR map");
         desc.add_options()("help,h", "show this help message and exit")(
@@ -168,8 +174,8 @@ int main(int argc, char* argv[]) {
         const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
 
         const auto clouds_tf_filtered = builder.applyGridFilter(clouds_tf, 0.02);
-        const auto lidar_map =
-            builder.mergeCloudsByPointsSimilarity(clouds_tf_filtered, 6, 0.002, 20);
+        const auto lidar_map = builder.mergeCloudsByPointsSimilarity(
+            poses_optimized, clouds_tf_filtered, 6, 0.002, 20);
 
         if (enable_test) {
             const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
@@ -181,6 +187,10 @@ int main(int argc, char* argv[]) {
             writeToMCAP(output_folder_path, lidar_map, "/map/lidar");
         }
     }
+
+    benchmarkManager.stopTimer();
+
+    benchmarkManager.displayStatistics();
 
     return 0;
 }

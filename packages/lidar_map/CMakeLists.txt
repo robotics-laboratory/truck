@@ -13,6 +13,7 @@ find_package(map REQUIRED)
 find_package(G2O REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(visualization REQUIRED)
+find_package(tools REQUIRED)
 find_package(
   Boost
   COMPONENTS thread
@@ -44,6 +45,7 @@ ament_target_dependencies(
   libpointmatcher
   G2O
   visualization
+  tools
   Boost
 )
 
@@ -67,6 +69,7 @@ ament_export_dependencies(
   libpointmatcher
   G2O
   visualization
+  tools
   Boost
 )
 
@@ -91,6 +94,7 @@ ament_target_dependencies(
   nav_msgs
   sensor_msgs
   ament_index_cpp
+  tools
   Boost
 )
 

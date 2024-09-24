@@ -3,6 +3,8 @@
 #include "common/exception.h"
 #include "geom/boost/point.h"
 #include "geom/distance.h"
+#include "tools/progress_bar.h"
+#include "tools/benchmark.h"
 
 #include <boost/geometry.hpp>
 #include <g2o/core/block_solver.h>
@@ -14,11 +16,17 @@
 
 #include <fstream>
 
+extern tools::BenchmarkManager benchmarkManager;
+
 namespace truck::lidar_map {
 
 namespace bg = boost::geometry;
 
 using RTree = bg::index::rtree<geom::Vec2, bg::index::rstar<16>>;
+
+using IndexPoint = std::pair<geom::Vec2, size_t>;
+using IndexPoints = std::vector<IndexPoint>;
+using IndexedRTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
 using BlockSolverType = g2o::BlockSolver<g2o::BlockSolverTraits<3, 3>>;
 using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>;
@@ -150,32 +158,56 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
     VERIFY(!poses.empty());
     VERIFY(poses.size() == clouds.size());
 
-    geom::Poses filtered_poses;
-    Clouds filtered_clouds;
+    geom::Poses filtered_poses = {poses[0]};
+    Clouds filtered_clouds = {clouds[0]};
 
-    RTree rtree;
-    rtree.insert(poses[0].pos);
-
+    size_t last_added_pose_index = 0;
     for (size_t i = 1; i < poses.size(); i++) {
-        const auto& pose = poses[i];
-        const auto& cloud = clouds[i];
-
-        std::vector<geom::Vec2> query_points;
-        rtree.query(bg::index::nearest(pose.pos, 1), std::back_inserter(query_points));
-
-        const double dist = geom::distance(pose.pos, query_points.front());
+        const double dist = geom::distance(poses[i].pos, poses[last_added_pose_index].pos);
 
         if (dist < poses_min_dist) {
             continue;
         }
 
-        filtered_poses.push_back(pose);
-        filtered_clouds.push_back(cloud);
-
-        rtree.insert(pose.pos);
+        filtered_poses.push_back(poses[i]);
+        filtered_clouds.push_back(clouds[i]);
+        last_added_pose_index = i;
     }
 
     return {filtered_poses, filtered_clouds};
+}
+/**
+ * For each pose in vector it finds maximum another poses_max_num poses in same vector
+ * and each pose has to be not farther than poses_max_dist
+ */
+std::vector<std::vector<size_t>> Builder::nearestPosesToEachPose(
+    const geom::Poses& poses, double poses_max_dist, uint32_t poses_max_num) const {
+    std::vector<std::vector<size_t>> result;
+
+    IndexedRTree rtree;
+
+    for (size_t i = 0; i < poses.size(); ++i) {
+        rtree.insert({poses[i].pos, i});
+    }
+
+    for (size_t i = 0; i < poses.size(); i++) {
+        const auto& pose = poses[i];
+
+        IndexPoints index_points;
+        rtree.query(bg::index::nearest(pose.pos, poses_max_num), std::back_inserter(index_points));
+
+        std::vector<size_t> filtered_indexes;
+        for (const auto& index_point : index_points) {
+            float distance = bg::distance(index_point.first, pose.pos);
+            if (index_point.second != i && distance <= poses_max_dist) {
+                filtered_indexes.push_back(index_point.second);
+            }
+        }
+
+        result.push_back(filtered_indexes);
+    }
+
+    return result;
 }
 
 /**
@@ -190,6 +222,7 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
  * - set of optimized poses in a world frame
  */
 geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& clouds) {
+    benchmarkManager.startTimer("Graph optimization");
     g2o::SparseOptimizer optimizer;
 
     auto solver = new g2o::OptimizationAlgorithmLevenberg(
@@ -224,6 +257,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
 
     auto data_points_clouds = toDataPoints(clouds);
 
+    benchmarkManager.startTimer("Adding ICP edges to optimization graph");
     // Add ICP edges
     for (size_t i = 0; i < poses.size(); i++) {
         for (size_t j = i + 1; j < poses.size(); j++) {
@@ -251,14 +285,19 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
             optimizer.addEdge(edge);
         }
     }
+    benchmarkManager.stopTimer();
 
     auto* fixed_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer.vertex(0));
     fixed_vertex->setFixed(true);
 
     optimizer.setVerbose(params_.verbose);
 
+    benchmarkManager.startTimer("Optimizing poses");
+
     optimizer.initializeOptimization();
     optimizer.optimize(params_.optimizer_steps);
+
+    benchmarkManager.stopTimer();
 
     geom::Poses optimized_poses;
 
@@ -269,6 +308,8 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
             optimized_poses.push_back(toPose(se2));
         }
     }
+
+    benchmarkManager.stopTimer();
 
     return optimized_poses;
 }
@@ -344,19 +385,18 @@ Cloud Builder::mergeClouds(const Clouds& clouds) const {
  * If "clouds_range" = -1, than neighboring clouds range is unlimited
  */
 Cloud Builder::mergeCloudsByPointsSimilarity(
-    const Clouds& clouds, int sim_points_min_count, double sim_points_max_dist,
-    int clouds_range) const {
-    VERIFY(!clouds.empty());
+    const geom::Poses& poses, const Clouds& clouds, int sim_points_min_count,
+    double sim_points_max_dist, int clouds_range) const {
+    VERIFY(!poses.empty());
+    VERIFY(poses.size() == clouds.size());
+
+    benchmarkManager.startTimer("Merging clouds by points similarity");
 
     auto get_data_point_by_id = [](const DataPoints& data_points, size_t id) {
         DataPoints data_point(data_points.createSimilarEmpty(1));
         data_point.features.col(0) = data_points.features.col(id);
         return data_point;
     };
-
-    if (params_.verbose) {
-        std::cout << "mergeCloudsByPointsSimilarity: init\n";
-    }
 
     std::vector<std::shared_ptr<Matcher::Matcher>> kd_tree_arr;
     PointMatcherSupport::Parametrizable::Parameters kd_tree_params = {
@@ -374,10 +414,15 @@ Cloud Builder::mergeCloudsByPointsSimilarity(
 
     DataPoints data_points_filtered(data_points_arr[0].createSimilarEmpty());
 
+    auto nearestPosesToEachPose = Builder::nearestPosesToEachPose(poses, 3, 15);
+
+    Output out_enabled(params_.verbose);
+    tools::ProgressBar progressBar(
+        clouds_count, out_enabled, "Merging clouds by points similarity");
+
     for (int cloud_id = 0; cloud_id < clouds_count; cloud_id++) {
         if (params_.verbose) {
-            std::cout << "mergeCloudsByPointsSimilarity: " << cloud_id << " of " << clouds_count
-                      << " iterations\n";
+            ++progressBar;
         }
 
         const int points_count = clouds[cloud_id].cols();
@@ -387,18 +432,8 @@ Cloud Builder::mergeCloudsByPointsSimilarity(
 
             const auto data_point = get_data_point_by_id(data_points_arr[cloud_id], point_id);
 
-            const int start_neighbor_cloud_id =
-                (clouds_range == -1) ? 0 : std::max(0, cloud_id - clouds_range);
-
-            const int end_neighbor_cloud_id = (clouds_range == -1)
-                                                  ? clouds_count
-                                                  : std::min(clouds_count, cloud_id + clouds_range);
-
-            for (int neighbor_cloud_id = start_neighbor_cloud_id;
-                 neighbor_cloud_id < end_neighbor_cloud_id;
-                 neighbor_cloud_id++) {
+            for (const auto& neighbor_cloud_id : nearestPosesToEachPose[cloud_id]) {
                 if (sim_points_cur_count == sim_points_min_count) {
-                    data_points_filtered.concatenate(data_point);
                     break;
                 }
 
@@ -409,8 +444,14 @@ Cloud Builder::mergeCloudsByPointsSimilarity(
                     sim_points_cur_count++;
                 }
             }
+
+            if (sim_points_cur_count == sim_points_min_count) {
+                data_points_filtered.concatenate(data_point);
+            }
         }
     }
+
+    benchmarkManager.stopTimer();
 
     return data_points_filtered.features;
 }
