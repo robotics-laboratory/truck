@@ -20,6 +20,7 @@
   <depend>G2O</depend>
   <depend>ament_index_cpp</depend>
   <depend>visualization</depend>
+  <depend>tools</depend>
   <depend>Boost</depend>
 
   <export>
