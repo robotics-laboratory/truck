@@ -33,11 +33,11 @@ class ProgressBar {
         std::chrono::steady_clock, std::chrono::duration<long, std::ratio<1, 1000000000>>>
         start_time_point;
 
-    std::string GetTitleString();
-    std::string GetBarString();
-    std::string GetTimeString();
-    void UpdateVisual();
+    std::string getTitleString();
+    std::string getBarString();
+    std::string getTimeString();
+    void updateVisual();
 
-    float GetProgressFraction();
+    float getProgressFraction();
 };
 }  // namespace tools

@@ -38,20 +38,20 @@ ProgressBar::ProgressBar(uint32_t max_count, std::ostream& os, const std::string
     start_time_point = std::chrono::steady_clock::now();
 }
 
-std::string ProgressBar::GetTitleString() {
+std::string ProgressBar::getTitleString() {
     std::ostringstream ss;
     ss << title_ << ": " << count_ << " / " << max_count_;
     return ss.str();
 }
 
-std::string ProgressBar::GetTimeString() {
+std::string ProgressBar::getTimeString() {
     auto now = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start_time_point).count();
     uint32_t hours = elapsed / 3600;
     uint32_t minutes = elapsed / 60;
     uint32_t seconds = elapsed % 60;
 
-    uint64_t elapsed_left = count_ != 0 ? elapsed / GetProgressFraction() - elapsed : 0;
+    uint64_t elapsed_left = count_ != 0 ? elapsed / getProgressFraction() - elapsed : 0;
     uint32_t hours_left = elapsed_left / 3600;
     uint32_t minutes_left = elapsed_left / 60;
     uint32_t seconds_left = elapsed_left % 60;
@@ -62,8 +62,8 @@ std::string ProgressBar::GetTimeString() {
     return "[elapsed: " + elapsed_timer + " left: " + left_timer + "]";
 }
 
-std::string ProgressBar::GetBarString() {
-    float fraction = GetProgressFraction();
+std::string ProgressBar::getBarString() {
+    float fraction = getProgressFraction();
     std::ostringstream ss;
     ss << ' ' << std::setw(3) << static_cast<int>(fraction * 100) << "."
        << static_cast<int>(fraction * 1000) % 10 << std::right << "% ";
@@ -76,13 +76,13 @@ std::string ProgressBar::GetBarString() {
 
 void ProgressBar::operator++() {
     ++count_;
-    UpdateVisual();
+    updateVisual();
 }
 
-void ProgressBar::UpdateVisual() {
+void ProgressBar::updateVisual() {
     ClearLines(os_, 2);
-    os_ << GetTitleString() << "\n" << GetBarString() << " " << GetTimeString() << std::endl;
+    os_ << getTitleString() << "\n" << getBarString() << " " << getTimeString() << std::endl;
 }
 
-float ProgressBar::GetProgressFraction() { return static_cast<float>(count_) / max_count_; }
+float ProgressBar::getProgressFraction() { return static_cast<float>(count_) / max_count_; }
 }  // namespace tools
