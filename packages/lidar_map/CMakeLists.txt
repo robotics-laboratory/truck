@@ -69,7 +69,6 @@ ament_export_dependencies(
   libpointmatcher
   G2O
   visualization
-  tools
   Boost
 )
 
@@ -94,7 +93,6 @@ ament_target_dependencies(
   nav_msgs
   sensor_msgs
   ament_index_cpp
-  tools
   Boost
 )
 
