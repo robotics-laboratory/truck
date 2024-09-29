@@ -415,8 +415,8 @@ Clouds Builder::applyDynamicFilter(
 
     for (size_t cloud_id = 0; cloud_id < clouds.size(); cloud_id++) {
         if (params_.verbose) {
-            std::cout << "[LOG] applyDynamicFilter():"
-                      << " iteration " << cloud_id << " of " << clouds.size() << ".\n";
+            std::cout << "[LOG] applyDynamicFilter(): "
+                      << "iteration " << cloud_id << " of " << clouds.size() << ".\n";
         }
 
         const std::vector<size_t> nearest_clouds_ids = findNearestIdsInsideBox(
@@ -452,8 +452,8 @@ Clouds Builder::applyDynamicFilter(
 
     for (size_t i = 0; i < clouds.size(); i++) {
         if (clouds_skeletons[i].size() == 0) {
-            std::cout << "[WARNING] applyDynamicFilter():"
-                      << " one of filtered cloud is now empty, "
+            std::cout << "[WARNING] applyDynamicFilter(): "
+                      << "one of filtered cloud is now empty, "
                       << "because of too strong filtering params, try to change them, "
                       << "for now this function will return default clouds.\n";
             return clouds_base;
