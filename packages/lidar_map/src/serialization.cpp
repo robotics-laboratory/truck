@@ -6,7 +6,8 @@
 #include "visualization/msg.h"
 
 #include <rosbag2_cpp/reader.hpp>
-#include <rosbag2_cpp/writer.hpp>
+#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 namespace truck::lidar_map {
 
@@ -127,22 +128,80 @@ syncOdomWithCloud(
     return {odom_msgs_synced, laser_scan_msgs_synced};
 }
 
-void writeToMCAP(
-    const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name) {
-    const rclcpp::Time time;
-    rosbag2_cpp::Writer writer = rosbag2_cpp::Writer();
-    writer.open(mcap_path);
-    writer.write(msg::toPointCloud2(cloud), cloud_topic_name, time);
+BagWriter::BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency) :
+    frame_name_(frame_name), freqency_(freqency) {
+    writer_.open(mcap_path);
 }
 
-void writeToMCAP(
-    const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name,
-    const geom::ComplexPolygon& map, const std::string& map_topic_name) {
-    const rclcpp::Time time;
-    rosbag2_cpp::Writer writer = rosbag2_cpp::Writer();
-    writer.open(mcap_path);
-    writer.write(msg::toPointCloud2(cloud), cloud_topic_name, time);
-    writer.write(visualization::msg::toMarker(map), map_topic_name, time);
+namespace {
+
+rclcpp::Time getTime(double seconds = 0.0) {
+    auto nanoseconds = (seconds - static_cast<int32_t>(seconds)) * 1e9;
+    return {static_cast<int32_t>(seconds), static_cast<uint32_t>(nanoseconds)};
+}
+
+}  // namespace
+
+void BagWriter::addVectorMap(
+    const geom::ComplexPolygon& vector_map, const std::string& topic_name) {
+    writer_.write(visualization::msg::toMarker(vector_map, frame_name_), topic_name, getTime());
+}
+
+void BagWriter::addLidarMap(const Cloud& lidar_map, const std::string& topic_name) {
+    writer_.write(msg::toPointCloud2(lidar_map, frame_name_), topic_name, getTime());
+}
+
+void BagWriter::addOptimizationStep(
+    const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
+    const std::string& merged_clouds_topic_name) {
+    addPoses(poses, poses_topic_name);
+    addMergedClouds(merged_clouds, merged_clouds_topic_name);
+    id_++;
+}
+
+void BagWriter::addPoses(const geom::Poses& poses, const std::string& topic_name) {
+    auto get_color = [](double a = 1.0, double r = 0.0, double g = 0.0, double b = 1.0) {
+        std_msgs::msg::ColorRGBA color;
+        color.a = a;
+        color.r = r;
+        color.g = g;
+        color.b = b;
+        return color;
+    };
+
+    auto get_scale = [](double x = 1.2, double y = 0.2, double z = 0.2) {
+        geometry_msgs::msg::Vector3 scale;
+        scale.x = x;
+        scale.y = y;
+        scale.z = z;
+        return scale;
+    };
+
+    visualization_msgs::msg::MarkerArray msg_array;
+
+    for (size_t i = 0; i < poses.size(); i++) {
+        const geom::Pose& pose = poses[i];
+
+        visualization_msgs::msg::Marker msg;
+        msg.header.frame_id = frame_name_;
+        msg.id = i;
+        msg.type = visualization_msgs::msg::Marker::ARROW;
+        msg.action = visualization_msgs::msg::Marker::ADD;
+        msg.color = get_color();
+        msg.pose.position.x = pose.pos.x;
+        msg.pose.position.y = pose.pos.y;
+        msg.pose.orientation = geom::msg::toQuaternion(pose.dir);
+        msg.scale = get_scale();
+
+        msg_array.markers.push_back(msg);
+    }
+
+    writer_.write(msg_array, topic_name, getTime(id_ * freqency_));
+}
+
+void BagWriter::addMergedClouds(const Cloud& merged_clouds, const std::string& topic_name) {
+    writer_.write(
+        msg::toPointCloud2(merged_clouds, frame_name_), topic_name, getTime(id_ * freqency_));
 }
 
 }  // namespace truck::lidar_map

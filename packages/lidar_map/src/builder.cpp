@@ -9,7 +9,6 @@
 #include <boost/geometry.hpp>
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
-#include <g2o/core/sparse_optimizer.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
 #include <g2o/types/slam2d/edge_se2.h>
 #include <g2o/types/slam2d/vertex_se2.h>
@@ -174,23 +173,18 @@ std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
 }
 
 /**
- * Optimize clouds' poses via optimization
+ * Initialize pose graph
  *
  * Input:
- * - set of poses in a world frame
- * - set of clouds which located in corresponding poses
- * - points coordinates of each cloud (clouds[i]) are given in a corresponding frame (poses[i])
- *
- * Output:
- * - set of optimized poses in a world frame
+ * - 'poses': set of clouds' poses in a world frame
+ * - 'clouds': set of clouds in correspondig local frames
  */
-geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& clouds) {
-    g2o::SparseOptimizer optimizer;
-
+void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
     auto solver = new g2o::OptimizationAlgorithmLevenberg(
         g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
 
-    optimizer.setAlgorithm(solver);
+    optimizer_.clear();
+    optimizer_.setAlgorithm(solver);
 
     std::vector<g2o::VertexSE2*> vertices;
 
@@ -200,7 +194,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
         vertex->setId(i);
         vertex->setEstimate(toSE2(poses[i]));
 
-        optimizer.addVertex(vertex);
+        optimizer_.addVertex(vertex);
         vertices.push_back(vertex);
     }
 
@@ -214,7 +208,7 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
         edge->setMeasurement(toSE2(tf_matrix_odom));
         edge->setInformation(Eigen::Matrix3d::Identity() * params_.odom_edge_weight);
 
-        optimizer.addEdge(edge);
+        optimizer_.addEdge(edge);
     }
 
     auto data_points_clouds = toDataPoints(clouds);
@@ -243,22 +237,32 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
             edge->setMeasurement(toSE2(tf_matrix_final));
             edge->setInformation(Eigen::Matrix3d::Identity() * params_.icp_edge_weight);
 
-            optimizer.addEdge(edge);
+            optimizer_.addEdge(edge);
         }
     }
 
-    auto* fixed_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer.vertex(0));
+    auto* fixed_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer_.vertex(0));
     fixed_vertex->setFixed(true);
 
-    optimizer.setVerbose(params_.verbose);
+    optimizer_.setVerbose(params_.verbose);
+    optimizer_.initializeOptimization();
+}
 
-    optimizer.initializeOptimization();
-    optimizer.optimize(params_.optimizer_steps);
+/**
+ * Do pose graph optimization
+ *
+ * This functions should be called only after 'initPoseGraph()' function
+ *
+ * Output:
+ * - set of optimized clouds' poses in a world frame
+ */
+geom::Poses Builder::optimizePoseGraph(size_t iterations) {
+    optimizer_.optimize(iterations);
 
     geom::Poses optimized_poses;
 
-    for (size_t i = 0; i < poses.size(); i++) {
-        auto* optimized_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer.vertex(i));
+    for (size_t i = 0; i < optimizer_.vertices().size(); i++) {
+        auto* optimized_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer_.vertex(i));
         if (optimized_vertex) {
             const g2o::SE2 se2 = optimized_vertex->estimate();
             optimized_poses.push_back(toPose(se2));
