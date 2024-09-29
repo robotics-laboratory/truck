@@ -23,20 +23,21 @@ class Builder {
   public:
     Builder(const BuilderParams& params);
 
-    std::pair<geom::Poses, Clouds> filterByPosesProximity(
+    std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(
         const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const;
 
     geom::Poses optimizePoses(const geom::Poses& poses, const Clouds& clouds);
 
-    Clouds transformClouds(const geom::Poses& poses, const Clouds& clouds) const;
+    Clouds transformClouds(
+        const geom::Poses& poses, const Clouds& clouds, bool inverse = false) const;
 
     Cloud mergeClouds(const Clouds& clouds) const;
 
-    Cloud mergeCloudsByPointsSimilarity(
-        const Clouds& clouds, int sim_points_min_count, double sim_points_max_dist,
-        int clouds_range = -1) const;
-
     Clouds applyGridFilter(const Clouds& clouds, double cell_size) const;
+
+    Clouds applyDynamicFilter(
+        const geom::Poses& poses, const Clouds& clouds_base, double clouds_search_rad,
+        size_t min_sim_points_count, double max_sim_points_dist) const;
 
   private:
     ICP icp_;

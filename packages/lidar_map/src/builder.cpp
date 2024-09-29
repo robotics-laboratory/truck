@@ -2,6 +2,8 @@
 
 #include "common/exception.h"
 #include "geom/boost/point.h"
+#include "geom/boost/box.h"
+#include "geom/bounding_box.h"
 #include "geom/distance.h"
 
 #include <boost/geometry.hpp>
@@ -18,7 +20,9 @@ namespace truck::lidar_map {
 
 namespace bg = boost::geometry;
 
-using RTree = bg::index::rtree<geom::Vec2, bg::index::rstar<16>>;
+using IndexPoint = std::pair<geom::Vec2, size_t>;
+using IndexPoints = std::vector<IndexPoint>;
+using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
 using BlockSolverType = g2o::BlockSolver<g2o::BlockSolverTraits<3, 3>>;
 using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>;
@@ -142,37 +146,28 @@ Builder::Builder(const BuilderParams& params) : params_(params) {
 }
 
 /**
- * Returns a subset of given poses and clouds via removing too close poses
+ * Returns a subset of given poses and corresponding clouds via removing poses which are too close
  * Next pose will be added, if it's far enough from a previous one
  */
-std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
+std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
     const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const {
     VERIFY(!poses.empty());
     VERIFY(poses.size() == clouds.size());
 
-    geom::Poses filtered_poses;
-    Clouds filtered_clouds;
+    geom::Poses filtered_poses = {poses[0]};
+    Clouds filtered_clouds = {clouds[0]};
 
-    RTree rtree;
-    rtree.insert(poses[0].pos);
-
+    size_t last_added_pose_index = 0;
     for (size_t i = 1; i < poses.size(); i++) {
-        const auto& pose = poses[i];
-        const auto& cloud = clouds[i];
-
-        std::vector<geom::Vec2> query_points;
-        rtree.query(bg::index::nearest(pose.pos, 1), std::back_inserter(query_points));
-
-        const double dist = geom::distance(pose.pos, query_points.front());
+        const double dist = geom::distance(poses[i].pos, poses[last_added_pose_index].pos);
 
         if (dist < poses_min_dist) {
             continue;
         }
 
-        filtered_poses.push_back(pose);
-        filtered_clouds.push_back(cloud);
-
-        rtree.insert(pose.pos);
+        filtered_poses.push_back(poses[i]);
+        filtered_clouds.push_back(clouds[i]);
+        last_added_pose_index = i;
     }
 
     return {filtered_poses, filtered_clouds};
@@ -183,7 +178,7 @@ std::pair<geom::Poses, Clouds> Builder::filterByPosesProximity(
  *
  * Input:
  * - set of poses in a world frame
- * - set of clouds which located in correspondig poses
+ * - set of clouds which located in corresponding poses
  * - points coordinates of each cloud (clouds[i]) are given in a corresponding frame (poses[i])
  *
  * Output:
@@ -274,24 +269,27 @@ geom::Poses Builder::optimizePoses(const geom::Poses& poses, const Clouds& cloud
 }
 
 /**
- * Transform points coordinates of each cloud from corresponding local frame to a common world frame
+ * Transform points' coordinates of each cloud
  *
  * Input:
- * - set of poses in a world frame
- * - set of clouds which located in correspondig poses
- * - points coordinates of each cloud (clouds[i]) are given in a corresponding frame (poses[i])
+ * - 'poses': set of clouds' poses in a world frame
+ * - 'clouds': set of clouds in a world frame / corresponding local frames
+ * - 'inverse' (false): from corresponding local frames to a common world frame
+ * - 'inverse' (true): from a common world frame to corresponding local frames
  *
  * Output:
- * - set of clouds in a world frame
+ * - set of clouds in a world frame / corresponding local frames
  */
-Clouds Builder::transformClouds(const geom::Poses& poses, const Clouds& clouds) const {
+Clouds Builder::transformClouds(
+    const geom::Poses& poses, const Clouds& clouds, bool inverse) const {
     VERIFY(!poses.empty());
     VERIFY(poses.size() == clouds.size());
 
     Clouds clouds_tf;
 
     for (size_t i = 0; i < clouds.size(); i++) {
-        const Eigen::Matrix3f tf_matrix = transformationMatrix(poses[i]);
+        Eigen::Matrix3f tf_matrix = transformationMatrix(poses[i]);
+        tf_matrix = (inverse == true) ? tf_matrix.inverse() : tf_matrix;
 
         Cloud cloud_tf = tf_matrix * clouds[i];
         normalize(cloud_tf);
@@ -324,97 +322,167 @@ Cloud Builder::mergeClouds(const Clouds& clouds) const {
     return merged_cloud;
 }
 
+namespace {
+
+std::vector<size_t> findNearestIdsInsideBox(
+    const RTree& rtree, const IndexPoint& query_index_point, double search_rad) {
+    IndexPoints index_points;
+
+    const geom::Vec2& query_point = query_index_point.first;
+    const size_t query_index = query_index_point.second;
+
+    const geom::BoundingBox bbox(
+        {query_point.x - search_rad, query_point.y - search_rad},
+        {query_point.x + search_rad, query_point.y + search_rad});
+
+    rtree.query(bg::index::intersects(bbox), std::back_inserter(index_points));
+
+    std::vector<size_t> ids;
+
+    for (const auto& index_point : index_points) {
+        if (index_point.second != query_index) {
+            ids.push_back(index_point.second);
+        }
+    }
+
+    return ids;
+}
+
+geom::Vec2 findNearestPoint(const RTree& rtree, const geom::Vec2& point) {
+    IndexPoints index_points;
+    rtree.query(bg::index::nearest(point, 1), std::back_inserter(index_points));
+    return index_points.back().first;
+}
+
+RTree toRTree(const geom::Poses& poses) {
+    RTree rtree;
+    for (size_t i = 0; i < poses.size(); i++) {
+        rtree.insert({poses[i].pos, i});
+    }
+    return rtree;
+}
+
+RTree toRTree(const Cloud& cloud) {
+    RTree rtree;
+    for (size_t i = 0; i < cloud.cols(); i++) {
+        const geom::Vec2 cloud_point = {cloud(0, i), cloud(1, i)};
+        rtree.insert({cloud_point, i});
+    }
+    return rtree;
+}
+
+}  // namespace
+
 /**
- * Merge clouds column-wise with filtering by pose similarity
+ * Down-sample clouds by removing rare (dynamic) points
  *
- * Parameters:
- * - clouds: clouds which should be merged
- * - sim_points_max_dist: max dist for considering points similar to each other
- * - sim_points_min_count: min number of similar points relatively to the current point
- *   that must be found to include current point into the final cloud
- * - clouds_range: clouds range in which similar points are searched
+ * Input:
+ * - 'poses': set of clouds' poses in a world frame
+ * - 'clouds_base': set of clouds in corresponding local frames
  *
- * Description:
- * Loop through all clouds, for each j-th point of i-th cloud
- * we should find at least "sim_points_min_count" points among neighboring clouds of i-th cloud
- * which are less than "sim_points_max_dist" meters away from j-th point of i-th cloud
+ * Output:
+ * - set of filtered clouds in corresponding local frames
  *
- * Neighboring clouds of i-th cloud are in range [i - "clouds_range", i + "clouds_range")
+ * In every i-th cloud we look through every j-th point, let's refer to it as a reference point
  *
- * If "clouds_range" = -1, than neighboring clouds range is unlimited
+ * Reference point will not be deleted from i-th cloud if the following condition is met:
+ * - for a reference point, we must find at least 'min_sim_points_count' similar points
+ *   among nearest clouds which are located in 'clouds_search_rad' radius reletively to i-th cloud.
+ *   Point is considered similar to a reference point if it's located no further than
+ *   'max_sim_points_dist' meters away from a reference point
  */
-Cloud Builder::mergeCloudsByPointsSimilarity(
-    const Clouds& clouds, int sim_points_min_count, double sim_points_max_dist,
-    int clouds_range) const {
-    VERIFY(!clouds.empty());
+Clouds Builder::applyDynamicFilter(
+    const geom::Poses& poses, const Clouds& clouds_base, double clouds_search_rad,
+    size_t min_sim_points_count, double max_sim_points_dist) const {
+    VERIFY(!poses.empty());
+    VERIFY(poses.size() == clouds_base.size());
 
-    auto get_data_point_by_id = [](const DataPoints& data_points, size_t id) {
-        DataPoints data_point(data_points.createSimilarEmpty(1));
-        data_point.features.col(0) = data_points.features.col(id);
-        return data_point;
-    };
+    // Make a transformation of clouds' points from corresponding local frames
+    // defined by clouds' poses into a world frame
+    const Clouds clouds = transformClouds(poses, clouds_base, false);
 
-    if (params_.verbose) {
-        std::cout << "mergeCloudsByPointsSimilarity: init\n";
+    // Build rtree for poses
+    const RTree poses_rtree = toRTree(poses);
+
+    // Build rtree for every cloud
+    std::vector<RTree> clouds_rtrees;
+    for (const auto& cloud : clouds) {
+        clouds_rtrees.push_back(toRTree(cloud));
     }
 
-    std::vector<std::shared_ptr<Matcher::Matcher>> kd_tree_arr;
-    PointMatcherSupport::Parametrizable::Parameters kd_tree_params = {
-        {"knn", "1"}, {"epsilon", "0"}};
+    using CloudSkeleton = std::vector<size_t>;
+    std::vector<CloudSkeleton> clouds_skeletons(clouds.size());
 
-    const auto data_points_arr = toDataPoints(clouds);
-
-    for (const auto& data_points : data_points_arr) {
-        auto kd_tree = Matcher::get().MatcherRegistrar.create("KDTreeMatcher", kd_tree_params);
-        kd_tree->init(data_points);
-        kd_tree_arr.push_back(kd_tree);
-    }
-
-    const int clouds_count = clouds.size();
-
-    DataPoints data_points_filtered(data_points_arr[0].createSimilarEmpty());
-
-    for (int cloud_id = 0; cloud_id < clouds_count; cloud_id++) {
+    for (size_t cloud_id = 0; cloud_id < clouds.size(); cloud_id++) {
         if (params_.verbose) {
-            std::cout << "mergeCloudsByPointsSimilarity: " << cloud_id << " of " << clouds_count
-                      << " iterations\n";
+            std::cout << "[LOG] applyDynamicFilter():"
+                      << " iteration " << cloud_id << " of " << clouds.size() << ".\n";
         }
 
-        const int points_count = clouds[cloud_id].cols();
+        const std::vector<size_t> nearest_clouds_ids = findNearestIdsInsideBox(
+            poses_rtree, {poses[cloud_id].pos, cloud_id}, clouds_search_rad);
 
-        for (int point_id = 0; point_id < points_count; point_id++) {
-            int sim_points_cur_count = 0;
+        for (size_t point_id = 0; point_id < clouds[cloud_id].cols(); point_id++) {
+            const geom::Vec2 cur_point = {
+                clouds[cloud_id](0, point_id), clouds[cloud_id](1, point_id)};
 
-            const auto data_point = get_data_point_by_id(data_points_arr[cloud_id], point_id);
+            size_t cur_sim_points_count = 0;
 
-            const int start_neighbor_cloud_id =
-                (clouds_range == -1) ? 0 : std::max(0, cloud_id - clouds_range);
-
-            const int end_neighbor_cloud_id = (clouds_range == -1)
-                                                  ? clouds_count
-                                                  : std::min(clouds_count, cloud_id + clouds_range);
-
-            for (int neighbor_cloud_id = start_neighbor_cloud_id;
-                 neighbor_cloud_id < end_neighbor_cloud_id;
-                 neighbor_cloud_id++) {
-                if (sim_points_cur_count == sim_points_min_count) {
-                    data_points_filtered.concatenate(data_point);
+            for (size_t neighbor_cloud_id : nearest_clouds_ids) {
+                if (cur_sim_points_count == min_sim_points_count) {
                     break;
                 }
 
-                const auto dist =
-                    kd_tree_arr[neighbor_cloud_id]->findClosests(data_point).dists(0, 0);
+                const geom::Vec2 neighbor_cloud_point =
+                    findNearestPoint(clouds_rtrees[neighbor_cloud_id], cur_point);
 
-                if (dist < sim_points_max_dist) {
-                    sim_points_cur_count++;
+                if (geom::distance(cur_point, neighbor_cloud_point) < max_sim_points_dist) {
+                    cur_sim_points_count++;
                 }
+            }
+
+            if (cur_sim_points_count == min_sim_points_count) {
+                clouds_skeletons[cloud_id].push_back(point_id);
             }
         }
     }
 
-    return data_points_filtered.features;
+    // Output
+    Clouds filtered_clouds;
+
+    for (size_t i = 0; i < clouds.size(); i++) {
+        if (clouds_skeletons[i].size() == 0) {
+            std::cout << "[WARNING] applyDynamicFilter():"
+                      << " one of filtered cloud is now empty, "
+                      << "because of too strong filtering params, try to change them, "
+                      << "for now this function will return default clouds.\n";
+            return clouds_base;
+        }
+
+        Cloud filtered_cloud(3, clouds_skeletons[i].size());
+
+        size_t last_point_id = 0;
+        for (size_t point_id : clouds_skeletons[i]) {
+            filtered_cloud.block(0, last_point_id, 3, 1) = clouds[i].col(point_id);
+            last_point_id++;
+        }
+
+        filtered_clouds.push_back(filtered_cloud);
+    }
+
+    // Make a transformation of clouds' points from a world frame
+    // into corresponding local frames defined by clouds' poses
+    return transformClouds(poses, filtered_clouds, true);
 }
 
+/**
+ * Down-sample clouds by taking a spatial average of clouds's points
+ *
+ * As we work in 2D case, we divide the plane into a regular grid of rectangles,
+ * sampling rate is adjusted by setting the grid cell size along each dimension
+ *
+ * The set of points which lie within the bounds of a grid cell are combined into one output point
+ */
 Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
     const std::string cell_size_str = std::to_string(cell_size);
     PointMatcherSupport::Parametrizable::Parameters grid_filter_params = {

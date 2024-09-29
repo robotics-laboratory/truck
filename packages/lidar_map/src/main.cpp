@@ -161,15 +161,12 @@ int main(int argc, char* argv[]) {
         const auto all_poses = toPoses(synced_odom_msgs);
         const auto all_clouds = toClouds(synced_laser_scan_msgs);
 
-        const auto [poses, clouds] = builder.filterByPosesProximity(all_poses, all_clouds, 0.5);
+        const auto [poses, clouds] = builder.sliceDataByPosesProximity(all_poses, all_clouds, 0.5);
 
         const auto poses_optimized = builder.optimizePoses(poses, clouds);
 
         const auto clouds_tf = builder.transformClouds(poses_optimized, clouds);
-
-        const auto clouds_tf_filtered = builder.applyGridFilter(clouds_tf, 0.02);
-        const auto lidar_map =
-            builder.mergeCloudsByPointsSimilarity(clouds_tf_filtered, 6, 0.002, 20);
+        const auto lidar_map = builder.mergeClouds(clouds_tf);
 
         if (enable_test) {
             const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
