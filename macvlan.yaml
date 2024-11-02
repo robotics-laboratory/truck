@@ -1,0 +1,20 @@
+# Use together with main docker-compose.yaml file:
+# docker compose -f docker-compose.yaml -f macvlan.yaml up -d
+
+services:
+  truck:
+    networks:
+      default:
+      macvlan:
+
+networks:
+  macvlan:
+    name: "${CONTAINER_NAME:-truck-${USER}}-macvlan"
+    driver: macvlan
+    driver_opts:
+      parent: eth0
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.1
+          ip_range: 192.168.1.55/32  # TODO: Use user ID or dynamic address
