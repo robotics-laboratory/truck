@@ -2,7 +2,7 @@
 # Platform arm64 means nvidia jetson arm64.
 # Image may be not compatible with other arm machines.
 
-FROM --platform=linux/arm64 nvcr.io/nvidia/l4t-base:r35.1.0 AS truck-base-arm64
+FROM --platform=linux/arm64 nvcr.io/nvidia/l4t-base:r36.2.0 AS truck-base-arm64
 
 ENV CUDA_HOME="/usr/local/cuda"
 ENV PATH="/usr/local/cuda/bin:${PATH}"
@@ -14,13 +14,13 @@ ENV FLAGS="-O3 -Wall -march=armv8.2-a+simd+crypto+predres -mtune=cortex-a57"
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends \
-        deepstream-6.1 \
+        deepstream-6.4 \
         nvidia-cuda-dev \
         nvidia-cudnn8-dev \
         nvidia-tensorrt-dev \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-# INSTALL JETSON STATS
+### INSTALL JETSON STATS
 
 RUN apt-get update -q \
     && apt-get install -yq --no-install-recommends python3-pip \
@@ -28,7 +28,11 @@ RUN apt-get update -q \
     && pip3 install --no-cache-dir -U jetson-stats \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
+<<<<<<< Updated upstream
 FROM --platform=linux/amd64 ubuntu:20.04 AS truck-base-amd64
+=======
+FROM --platform=linux/amd64 ubuntu:jammy-20240911.1 AS truck-base-amd64
+>>>>>>> Stashed changes
 
 ENV FLAGS="-O3 -Wall"
 
@@ -40,14 +44,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"]
 
-ENV GCC_VERSION=9
+ENV GCC_VERSION=11
 
-ENV CC="gcc-9"
-ENV CXX="g++-9"
+ENV CC="gcc-${GCC_VERSION}"
+ENV CXX="g++-${GCC_VERSION}"
 ENV CFLAGS="${FLAGS}"
 ENV CXXFLAGS="${FLAGS}"
 
-# print build info
 RUN echo "Build info:" \
     && echo "  TARGETARCH=${TARGETARCH}" \
     && echo "  CC=${CC}" \
@@ -161,7 +164,7 @@ RUN apt-get update -yq \
         v4l-utils \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV LIBRS_VERSION=2.55.1
+ENV LIBRS_VERSION=2.56.2
 
 FROM --platform=linux/arm64 truck-common AS truck-cuda-arm64
 
@@ -214,7 +217,7 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
         -DBUILD_TESTS=OFF \
     && make -j$(nproc) install && rm -rf /tmp/*
 
-# INSTALL PYTORCH
+### INSTALL PYTORCH
 
 RUN pip3 install --no-cache-dir \
     Cython \
@@ -222,14 +225,16 @@ RUN pip3 install --no-cache-dir \
     numpy \
     pillow
 
-ENV PYTORCH_WHL="torch-1.13.0a0+340c4120.nv22.06-cp38-cp38-linux_aarch64.whl"
-ENV PYTORCH_URL="https://developer.download.nvidia.com/compute/redist/jp/v50/pytorch/${PYTORCH_WHL}"
+    https://nvidia.box.com/shared/static/zvultzsmd4iuheykxy17s4l2n91ylpl8.whl
+
+ENV PYTORCH_WHL="torch-2.5.0a0+872d972e41.nv24.08.17622132-cp310-cp310-linux_aarch64.whl"
+ENV PYTORCH_URL="https://developer.download.nvidia.com/compute/redist/jp/v61/pytorch/${PYTORCH_WHL}"
 
 RUN wget --no-check-certificate -qO ${PYTORCH_WHL} ${PYTORCH_URL} \
     && pip3 install --no-cache-dir ${PYTORCH_WHL} \
     && rm -rf /tmp/*
 
-ENV PYTORCH_PATH="/usr/local/lib/python3.8/dist-packages/torch"
+ENV PYTORCH_PATH="/usr/local/lib/python3.10/dist-packages/torch"
 ENV LD_LIBRARY_PATH="${PYTORCH_PATH}/lib:${LD_LIBRARY_PATH}"
 
 ### INSTALL REALSENSE2
@@ -251,7 +256,7 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
 
 FROM --platform=linux/amd64 truck-common AS truck-cuda-amd64
 
-# INSTALL OPENCV
+### INSTALL OPENCV
 
 RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
     && wget -qO - https://github.com/opencv/opencv_contrib/archive/refs/tags/${OPENCV_VERSION}.tar.gz | tar -xz \
@@ -296,14 +301,14 @@ RUN wget -qO - https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSI
         -DBUILD_TESTS=OFF \
     && make -j$(nproc) install && rm -rf /tmp/*
 
-# INSTALL PYTORCH
+### INSTALL PYTORCH
 
-ENV TORCH_VERSION=1.13.0
+ENV TORCH_VERSION=2.5.0
 
 RUN pip3 install --no-cache-dir \
     torch==${TORCH_VERSION}
 
-ENV PYTORCH_PATH="/usr/local/lib/python3.8/dist-packages/torch"
+ENV PYTORCH_PATH="/usr/local/lib/python3.10/dist-packages/torch"
 ENV LD_LIBRARY_PATH="${PYTORCH_PATH}/lib:${LD_LIBRARY_PATH}"
 
 ### INSTALL REALSENSE2
@@ -335,267 +340,280 @@ RUN wget -qO - https://github.com/IntelRealSense/librealsense/archive/refs/tags/
     && make -j$(($(nproc)-1)) install \
     && rm -rf /tmp/*
 
-FROM truck-cuda-${TARGETARCH} AS truck-ros
+# FROM truck-cuda-${TARGETARCH} AS truck-ros
 
-ENV ROS_VERSION=2
-ENV ROS_DISTRO=iron
-ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
-ENV ROS_PYTHON_VERSION=3
+# ENV ROS_VERSION=2
+# ENV ROS_DISTRO=iron
+# ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+# ENV ROS_PYTHON_VERSION=3
 
-RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
+# RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
+#     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
 
-ENV RMW_IMPLEMENTATION="rmw_cyclonedds_cpp"
+# ENV RMW_IMPLEMENTATION="rmw_cyclonedds_cpp"
 
-RUN apt-get update -q \
-    && apt remove -yq python-is-python2 \
-    && apt-get install -yq --no-install-recommends \
-        libpcl-dev \
-        locales \
-        python3-colcon-common-extensions \
-        python3-flake8-docstrings \
-        python-is-python3 \
-        python3-pip \
-        python3-pytest-cov \
-        python3-rosinstall-generator \
-        ros-dev-tools \
-    && rm -rf /var/lib/apt/lists/* && apt-get clean
+# RUN apt-get update -q \
+#     && apt remove -yq python-is-python2 \
+#     && apt-get install -yq --no-install-recommends \
+#         libpcl-dev \
+#         locales \
+#         python3-colcon-common-extensions \
+#         python3-flake8-docstrings \
+#         python-is-python3 \
+#         python3-pip \
+#         python3-pytest-cov \
+#         python3-rosinstall-generator \
+#         ros-dev-tools \
+#     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ENV LANG=en_US.UTF-8
-ENV PYTHONIOENCODING=utf-8
+# ENV LANG=en_US.UTF-8
+# ENV PYTHONIOENCODING=utf-8
 
-RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+# RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
-RUN pip3 install --no-cache-dir -U \
-   flake8-blind-except \
-   flake8-builtins \
-   flake8-class-newline \
-   flake8-comprehensions \
-   flake8-deprecated \
-   flake8-import-order \
-   flake8-quotes \
-   "pytest>=5.3" \
-   pytest-repeat \
-   pytest-rerunfailures
+# RUN pip3 install --no-cache-dir -U \
+#    flake8-blind-except \
+#    flake8-builtins \
+#    flake8-class-newline \
+#    flake8-comprehensions \
+#    flake8-deprecated \
+#    flake8-import-order \
+#    flake8-quotes \
+#    "pytest>=5.3" \
+#    pytest-repeat \
+#    pytest-rerunfailures
 
-ENV ROS_TMP=/tmp/${ROS_DISTRO}
+# ENV ROS_TMP=/tmp/${ROS_DISTRO}
 
-RUN mkdir -p ${ROS_ROOT} \
-    && mkdir -p ${ROS_TMP} && cd ${ROS_TMP} \
-    && rosinstall_generator \
-    --rosdistro ${ROS_DISTRO} \
-    --exclude librealsense2 libpointmatcher libnabo \
-    --deps \
-        compressed_depth_image_transport \
-        compressed_image_transport \
-        cv_bridge \
-        foxglove_bridge \
-        foxglove_msgs \
-        image_geometry \
-        image_transport \
-        imu_filter_madgwick \
-        imu_complementary_filter\
-        geometry2 \
-        launch_yaml \
-        laser_geometry \
-        pcl_conversions \
-        realsense2_camera \
-        rmw_cyclonedds_cpp \
-        robot_localization \
-        ros_base \
-        sensor_msgs \
-        sensor_msgs_py \
-        std_msgs \
-        vision_opencv \
-        visualization_msgs \
-    > ${ROS_ROOT}/ros2.rosinstall \
-    && vcs import ${ROS_TMP} < ${ROS_ROOT}/ros2.rosinstall
+# RUN mkdir -p ${ROS_ROOT} \
+#     && mkdir -p ${ROS_TMP} && cd ${ROS_TMP} \
+#     && rosinstall_generator \
+#     --rosdistro ${ROS_DISTRO} \
+#     --exclude librealsense2 libpointmatcher libnabo \
+#     --deps \
+#         compressed_depth_image_transport \
+#         compressed_image_transport \
+#         cv_bridge \
+#         foxglove_bridge \
+#         foxglove_msgs \
+#         image_geometry \
+#         image_transport \
+#         imu_filter_madgwick \
+#         imu_complementary_filter\
+#         geometry2 \
+#         launch_yaml \
+#         laser_geometry \
+#         pcl_conversions \
+#         realsense2_camera \
+#         rmw_cyclonedds_cpp \
+#         robot_localization \
+#         ros_base \
+#         sensor_msgs \
+#         sensor_msgs_py \
+#         std_msgs \
+#         vision_opencv \
+#         visualization_msgs \
+#     > ${ROS_ROOT}/ros2.rosinstall \
+#     && vcs import ${ROS_TMP} < ${ROS_ROOT}/ros2.rosinstall
 
-RUN apt-get update -q \
-    && rosdep init \
-    && rosdep update \
-    && rosdep install -qy --ignore-src  \
-        --rosdistro ${ROS_DISTRO} \
-        --from-paths ${ROS_TMP} \
-        --skip-keys fastcdr \
-        --skip-keys rti-connext-dds-6.0.1 \
-        --skip-keys urdfdom_headers \
-        --skip-keys librealsense2 \
-        --skip-keys libopencv-dev \
-        --skip-keys libopencv-contrib-dev \
-        --skip-keys libopencv-imgproc-dev \
-        --skip-keys libpcl-dev \
-        --skip-keys python3-opencv \
-    && rm -rf /var/lib/apt/lists/* && apt-get clean
+# RUN apt-get update -q \
+#     && rosdep init \
+#     && rosdep update \
+#     && rosdep install -qy --ignore-src  \
+#         --rosdistro ${ROS_DISTRO} \
+#         --from-paths ${ROS_TMP} \
+#         --skip-keys fastcdr \
+#         --skip-keys rti-connext-dds-6.0.1 \
+#         --skip-keys urdfdom_headers \
+#         --skip-keys librealsense2 \
+#         --skip-keys libopencv-dev \
+#         --skip-keys libopencv-contrib-dev \
+#         --skip-keys libopencv-imgproc-dev \
+#         --skip-keys libpcl-dev \
+#         --skip-keys python3-opencv \
+#     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-# Pay attention that we disable pedantic warnings here!
-# The reason is that foxglove_bridge has such warnings.
-RUN cd ${ROS_TMP} \
-    && colcon build \
-        --merge-install \
-        --install-base ${ROS_ROOT} \
-        --cmake-args \
-            -DCMAKE_CXX_FLAGS="-Wno-error=pedantic" \
-            -DBUILD_TESTING=OFF \
-    && rm -rf /tmp/*
+# # Pay attention that we disable pedantic warnings here!
+# # The reason is that foxglove_bridge has such warnings.
+# RUN cd ${ROS_TMP} \
+#     && colcon build \
+#         --merge-install \
+#         --install-base ${ROS_ROOT} \
+#         --cmake-args \
+#             -DCMAKE_CXX_FLAGS="-Wno-error=pedantic" \
+#             -DBUILD_TESTING=OFF \
+#     && rm -rf /tmp/*
 
-RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
-    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc \
-    && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
-    && printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc
+# RUN printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
+#     && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc \
+#     && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
+#     && printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc
 
-ENV SLLIDAR_COMMIT=a64c75979d52ada7f646bc9505f6133c69e195ee
+# ENV SLLIDAR_COMMIT=a64c75979d52ada7f646bc9505f6133c69e195ee
 
-RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
-    && cd sllidar_ros2 \
-    && git checkout ${SLLIDAR_COMMIT} \
-    && source ${ROS_ROOT}/setup.bash \
-    && colcon build \
-        --merge-install \
-        --install-base ${ROS_ROOT} \
-        --cmake-args -DBUILD_TESTING=OFF \
-    && rm -rf /tmp/*
+# RUN git clone https://github.com/Slamtec/sllidar_ros2.git \
+#     && cd sllidar_ros2 \
+#     && git checkout ${SLLIDAR_COMMIT} \
+#     && source ${ROS_ROOT}/setup.bash \
+#     && colcon build \
+#         --merge-install \
+#         --install-base ${ROS_ROOT} \
+#         --cmake-args -DBUILD_TESTING=OFF \
+#     && rm -rf /tmp/*
 
-FROM truck-ros AS truck-dev
+# FROM truck-ros AS truck-dev
 
-ARG TARGETPLATFORM  # Automatically set by docker buildx
+# ARG TARGETPLATFORM  # Automatically set by docker buildx
 
-ENV MEDIAMTX_VERSION="1.0.0"
+# ENV MEDIAMTX_VERSION="1.0.0"
 
-RUN declare -A map \
-    && map["linux/amd64"]="linux_amd64" \
-    && map["linux/arm64"]="linux_arm64v8" \
-    && wget -qO - https://github.com/aler9/mediamtx/releases/download/v${MEDIAMTX_VERSION}/mediamtx_v${MEDIAMTX_VERSION}_${map[$TARGETPLATFORM]}.tar.gz | tar -xz -C /usr/bin mediamtx
+# RUN declare -A map \
+#     && map["linux/amd64"]="linux_amd64" \
+#     && map["linux/arm64"]="linux_arm64v8" \
+#     && wget -qO - https://github.com/aler9/mediamtx/releases/download/v${MEDIAMTX_VERSION}/mediamtx_v${MEDIAMTX_VERSION}_${map[$TARGETPLATFORM]}.tar.gz | tar -xz -C /usr/bin mediamtx
 
-### INSTALL LIBPOINTMATCHER
+# ### INSTALL LIBPOINTMATCHER
 
-RUN apt-get update -q && \
-    apt-get install -yq --no-install-recommends \
-        libtbb-dev \
-        libproj-dev \
-        libsuitesparse-dev \
-    && rm -rf /var/lib/apt/lists/* && apt-get clean
+# RUN apt-get update -q && \
+#     apt-get install -yq --no-install-recommends \
+#         libtbb-dev \
+#         libproj-dev \
+#         libsuitesparse-dev \
+#     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-ARG LIBNABO_VERSION="1.0.7"
+# ARG LIBNABO_VERSION="1.0.7"
 
-RUN wget -qO - https://github.com/ethz-asl/libnabo/archive/refs/tags/${LIBNABO_VERSION}.tar.gz | tar -xz \
-    && cd libnabo-${LIBNABO_VERSION} && mkdir -p build && cd build \
-    && cmake .. \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DLIBNABO_BUILD_TESTS=OFF \
-        -DLIBNABO_BUILD_EXAMPLES=OFF \
-        -DLIBNABO_BUILD_PYTHON=OFF \
-    && make -j$(nproc) install \
-    && rm -rf /tmp/*
+# RUN wget -qO - https://github.com/ethz-asl/libnabo/archive/refs/tags/${LIBNABO_VERSION}.tar.gz | tar -xz \
+#     && cd libnabo-${LIBNABO_VERSION} && mkdir -p build && cd build \
+#     && cmake .. \
+#         -DCMAKE_BUILD_TYPE=Release \
+#         -DLIBNABO_BUILD_TESTS=OFF \
+#         -DLIBNABO_BUILD_EXAMPLES=OFF \
+#         -DLIBNABO_BUILD_PYTHON=OFF \
+#     && make -j$(nproc) install \
+#     && rm -rf /tmp/*
 
-ARG LIBPOINTMATCHER_VERSION="1.3.1"
+# ARG LIBPOINTMATCHER_VERSION="1.3.1"
 
-RUN wget -qO - https://github.com/ethz-asl/libpointmatcher/archive/refs/tags/${LIBPOINTMATCHER_VERSION}.tar.gz | tar -xz \
-    && cd libpointmatcher-${LIBPOINTMATCHER_VERSION} && mkdir -p build && cd build \
-    && cmake .. \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_TESTS=OFF \
-        -DPOINTMATCHER_BUILD_EXAMPLES=OFF \
-        -DPOINTMATCHER_BUILD_EVALUATIONS=OFF \
-    && make -j$(nproc) install \
-    && rm -rf /tmp/*
+# RUN wget -qO - https://github.com/ethz-asl/libpointmatcher/archive/refs/tags/${LIBPOINTMATCHER_VERSION}.tar.gz | tar -xz \
+#     && cd libpointmatcher-${LIBPOINTMATCHER_VERSION} && mkdir -p build && cd build \
+#     && cmake .. \
+#         -DCMAKE_BUILD_TYPE=Release \
+#         -DBUILD_TESTS=OFF \
+#         -DPOINTMATCHER_BUILD_EXAMPLES=OFF \
+#         -DPOINTMATCHER_BUILD_EVALUATIONS=OFF \
+#     && make -j$(nproc) install \
+#     && rm -rf /tmp/*
 
-### INSTALL CGAL
+# ### INSTALL CGAL
 
-ARG CGAL_VERSION="5.6"
+# ARG CGAL_VERSION="5.6"
 
-RUN wget -qO - https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.tar.gz | tar -xz \
-    && cd cgal-${CGAL_VERSION} && mkdir -p build && cd build \
-    && cmake .. \
-        -DCMAKE_BUILD_TYPE=Release \
-    && make -j$(nproc) install \
-    && rm -rf /tmp/*
+# RUN wget -qO - https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.tar.gz | tar -xz \
+#     && cd cgal-${CGAL_VERSION} && mkdir -p build && cd build \
+#     && cmake .. \
+#         -DCMAKE_BUILD_TYPE=Release \
+#     && make -j$(nproc) install \
+#     && rm -rf /tmp/*
 
-### INSTALL G2O
+# ### INSTALL G2O
 
-ARG CMAKE_VERSION="3.16"
-ARG G2O_HASH="b1ba729aa569267e179fa2e237db0b3ad5169e2e"
+# ARG CMAKE_VERSION="3.16"
+# ARG G2O_HASH="b1ba729aa569267e179fa2e237db0b3ad5169e2e"
 
-RUN git clone https://github.com/RainerKuemmerle/g2o.git \
-    && cd g2o && git checkout ${G2O_HASH} \
-    && cp cmake_modules/FindG2O.cmake /usr/share/cmake-${CMAKE_VERSION}/Modules/FindG2O.cmake \
-    && mkdir -p build && cd build \
-    && cmake .. \
-        -DBUILD_WITH_MARCH_NATIVE=OFF \
-        -DG2O_BUILD_APPS=OFF \
-        -DG2O_BUILD_EXAMPLES=OFF \
-        -DG2O_USE_OPENGL=OFF \
-    && make -j$(nproc) install \
-    && rm -rf /tmp/*
+# RUN git clone https://github.com/RainerKuemmerle/g2o.git \
+#     && cd g2o && git checkout ${G2O_HASH} \
+#     && cp cmake_modules/FindG2O.cmake /usr/share/cmake-${CMAKE_VERSION}/Modules/FindG2O.cmake \
+#     && mkdir -p build && cd build \
+#     && cmake .. \
+#         -DBUILD_WITH_MARCH_NATIVE=OFF \
+#         -DG2O_BUILD_APPS=OFF \
+#         -DG2O_BUILD_EXAMPLES=OFF \
+#         -DG2O_USE_OPENGL=OFF \
+#     && make -j$(nproc) install \
+#     && rm -rf /tmp/*
 
-### INSTALL GTSAM
+# ### INSTALL GTSAM
 
-ARG GTSAM_VERSION="4.1.1"
+# ARG GTSAM_VERSION="4.1.1"
 
-RUN wget -qO - https://github.com/borglab/gtsam/archive/refs/tags/${GTSAM_VERSION}.tar.gz | tar -xz \
-    && cd gtsam-${GTSAM_VERSION} && mkdir -p build && cd build \
-    && cmake .. \
-        -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF \
-        -DGTSAM_WITH_TBB=OFF \
-        -DGTSAM_USE_SYSTEM_EIGEN=ON \
-        -DGTSAM_BUILD_TESTS=OFF \
-        -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
-    && make -j$(nproc) install \
-    && rm -rf /tmp/*
+# RUN wget -qO - https://github.com/borglab/gtsam/archive/refs/tags/${GTSAM_VERSION}.tar.gz | tar -xz \
+#     && cd gtsam-${GTSAM_VERSION} && mkdir -p build && cd build \
+#     && cmake .. \
+#         -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF \
+#         -DGTSAM_WITH_TBB=OFF \
+#         -DGTSAM_USE_SYSTEM_EIGEN=ON \
+#         -DGTSAM_BUILD_TESTS=OFF \
+#         -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
+#     && make -j$(nproc) install \
+#     && rm -rf /tmp/*
 
+<<<<<<< Updated upstream
 ### INSTALL DEV PKGS
+=======
+# ### INSTALL LIVOX SDK2
 
-COPY requirements.txt /tmp/requirements.txt
+# ARG LIVOX_VERSION="1.2.5"
 
-RUN python3 -m pip install --no-cache-dir --ignore-installed -r /tmp/requirements.txt \
-    && rm /tmp/requirements.txt
+# RUN wget -qO - https://github.com/Livox-SDK/Livox-SDK2/archive/refs/tags/v${LIVOX_VERSION}.tar.gz | tar -xz \
+#     && cd Livox-SDK2-${LIVOX_VERSION} && mkdir build && cd build \
+#     && cmake .. && make -j$(nproc) && make install \
+#     && rm -rf /tmp/*
 
-ENV CLANG_VERSION=16
-ENV CXX="clang++-${CLANG_VERSION}"
-ENV CC="clang-${CLANG_VERSION}"
-ENV FLAGS="${FLAGS}"
-ENV CFLAGS="${FLAGS} -std=c17"
-ENV CXXFLAGS="${FLAGS}  -fsized-deallocation -stdlib=libstdc++ -std=c++2b"
+# ### INSTALL DEV PKGS
+>>>>>>> Stashed changes
 
-# print build info
-RUN echo "Build info:" \
-    && echo "  TARGETARCH=${TARGETARCH}" \
-    && echo "  CC=${CC}" \
-    && echo "  CXX=${CXX}" \
-    && echo "  CFLAGS=${CFLAGS}" \
-    && echo "  CXXFLAGS=${CXXFLAGS}"
+# COPY requirements.txt /tmp/requirements.txt
 
-RUN wget https://apt.llvm.org/llvm.sh \
-    && chmod +x llvm.sh \
-    && sudo ./llvm.sh ${CLANG_VERSION}
+# RUN python3 -m pip install --no-cache-dir --ignore-installed -r /tmp/requirements.txt \
+#     && rm /tmp/requirements.txt
 
-RUN apt-get update -q \
-    && apt-get install -yq --no-install-recommends \
-        clang-${CLANG_VERSION} \
-        clang-format-${CLANG_VERSION} \
-        clang-tidy-${CLANG_VERSION} \
-        htop \
-        libpugixml-dev \
-        libfmt-dev \
-        less \
-        lldb-${CLANG_VERSION} \
-        tmux \
-        vim \
-    && rm -rf /var/lib/apt/lists/* && apt-get clean
+# ENV CLANG_VERSION=16
+# ENV CXX="clang++-${CLANG_VERSION}"
+# ENV CC="clang-${CLANG_VERSION}"
+# ENV FLAGS="${FLAGS}"
+# ENV CFLAGS="${FLAGS} -std=c17"
+# ENV CXXFLAGS="${FLAGS}  -fsized-deallocation -stdlib=libstdc++ -std=c++2b"
 
-RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
-    && printf "export CXX='${CXX}'\n" >> /root/.bashrc \
-    && printf "export CFLAGS='${CFLAGS}'\n" >> /root/.bashrc \
-    && printf "export CXXFLAGS='${CXXFLAGS}'\n" >> /root/.bashrc \
-    && printf "export RCUTILS_LOGGING_BUFFERED_STREAM=1\n" >> /root/.bashrc \
-    && printf "export RCUTILS_CONSOLE_OUTPUT_FORMAT='[{severity}:{time}] {message}'\n" >> /root/.bashrc \
-    && printf "export TRUCK_SIMULATION=false\n" >> /root/.bashrc \
-    && printf "source /usr/share/bash-completion/completions/git\n" >> /root/.bashrc \
-    && printf "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash\n" >> /root/.bashrc \
-    && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
+# # print build info
+# RUN echo "Build info:" \
+#     && echo "  TARGETARCH=${TARGETARCH}" \
+#     && echo "  CC=${CC}" \
+#     && echo "  CXX=${CXX}" \
+#     && echo "  CFLAGS=${CFLAGS}" \
+#     && echo "  CXXFLAGS=${CXXFLAGS}"
 
-### SETUP ENTRYPOINT
+# RUN wget https://apt.llvm.org/llvm.sh \
+#     && chmod +x llvm.sh \
+#     && sudo ./llvm.sh ${CLANG_VERSION}
 
-WORKDIR /truck
-ENTRYPOINT ["/bin/bash", "-lc"]
-CMD ["trap : TERM INT; sleep infinity & wait"]
+# RUN apt-get update -q \
+#     && apt-get install -yq --no-install-recommends \
+#         clang-${CLANG_VERSION} \
+#         clang-format-${CLANG_VERSION} \
+#         clang-tidy-${CLANG_VERSION} \
+#         htop \
+#         libpugixml-dev \
+#         libfmt-dev \
+#         less \
+#         lldb-${CLANG_VERSION} \
+#         tmux \
+#         vim \
+#     && rm -rf /var/lib/apt/lists/* && apt-get clean
+
+# RUN printf "export CC='${CC}'\n" >> /root/.bashrc \
+#     && printf "export CXX='${CXX}'\n" >> /root/.bashrc \
+#     && printf "export CFLAGS='${CFLAGS}'\n" >> /root/.bashrc \
+#     && printf "export CXXFLAGS='${CXXFLAGS}'\n" >> /root/.bashrc \
+#     && printf "export RCUTILS_LOGGING_BUFFERED_STREAM=1\n" >> /root/.bashrc \
+#     && printf "export RCUTILS_CONSOLE_OUTPUT_FORMAT='[{severity}:{time}] {message}'\n" >> /root/.bashrc \
+#     && printf "export TRUCK_SIMULATION=false\n" >> /root/.bashrc \
+#     && printf "source /usr/share/bash-completion/completions/git\n" >> /root/.bashrc \
+#     && printf "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash\n" >> /root/.bashrc \
+#     && ln -sf /usr/bin/clang-format-${CLANG_VERSION} /usr/bin/clang-format
+
+# ### SETUP ENTRYPOINT
+
+# WORKDIR /truck
+# ENTRYPOINT ["/bin/bash", "-lc"]
+# CMD ["trap : TERM INT; sleep infinity & wait"]

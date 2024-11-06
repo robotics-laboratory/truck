@@ -1,7 +1,11 @@
 services:
   truck:
     container_name: "${CONTAINER_NAME:-truck-${USER}}"
+<<<<<<< Updated upstream
     image: "registry.robotics-lab.ru/truck:0.11.1"
+=======
+    image: "registry.robotics-lab.ru/truck:0.13.0"
+>>>>>>> Stashed changes
     privileged: true
     runtime: "${DOCKER_RUNTIME:-runc}"
     build:
@@ -10,12 +14,12 @@ services:
       x-bake:
         platforms:
           - linux/arm64
-          - linux/amd64
+          # - linux/amd64
         cache-from:
           - type=registry,ref=registry.robotics-lab.ru/truck:cache-arm64
           - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64
         cache-to:
-          # - type=registry,ref=registry.robotics-lab.ru/truck:cache-arm64
+          - type=registry,ref=registry.robotics-lab.ru/truck:cache-arm64
           # - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64
     ports:
       - "${FOXGLOVE_PORT:-8765}:8765"
