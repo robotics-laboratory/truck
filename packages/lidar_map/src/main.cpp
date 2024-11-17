@@ -42,7 +42,7 @@ Metrics calculateMetrics(const Cloud& cloud, const ComplexPolygon& complex_polyg
     std::vector<double> min_dists_squared;
     const auto& segments = complex_polygon.segments();
 
-    for (size_t i = 0; i < cloud.cols(); i++) {
+    for (int i = 0; i < cloud.cols(); i++) {
         const Vec2 cloud_point = {cloud.col(i)(0), cloud.col(i)(1)};
         double min_dist_squared = distanceSq(cloud_point, segments[0]);
 

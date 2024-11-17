@@ -8,6 +8,8 @@
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writer.hpp>
 
+#include <optional>
+
 namespace truck::lidar_map {
 
 namespace {

@@ -17,7 +17,7 @@ using CGAL_K = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 namespace bg = boost::geometry;
 
-using IndexPoint = std::pair<geom::Vec2, size_t>;
+using IndexPoint = std::pair<geom::Vec2, ::std::size_t>;
 using IndexPoints = std::vector<IndexPoint>;
 using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
@@ -95,7 +95,7 @@ MeshBuild MeshBuilder::build(const geom::ComplexPolygons& polygons) const {
 }
 
 void MeshBuilder::buildSkeleton(MeshBuild& mesh_build, const geom::ComplexPolygon& polygon) const {
-    const boost::shared_ptr<CGAL::Straight_skeleton_2<CGAL_K>> cgal_skeleton_ptr =
+    const std::shared_ptr<CGAL::Straight_skeleton_2<CGAL_K>> cgal_skeleton_ptr =
         CGAL::create_interior_straight_skeleton_2(toCGALPolygonWithHoles(polygon));
 
     for (const auto& cgal_edge_it : cgal_skeleton_ptr->halfedge_handles()) {
@@ -141,15 +141,15 @@ void MeshBuilder::buildMesh(MeshBuild& mesh_build, double dist) const {
 
 void MeshBuilder::applyMeshFilter(MeshBuild& mesh_build, double search_radius) const {
     RTree rtree;
-    const size_t points_count = mesh_build.mesh.size();
+    const ::std::size_t points_count = mesh_build.mesh.size();
 
-    for (size_t i = 0; i < points_count; ++i) {
+    for (::std::size_t i = 0; i < points_count; ++i) {
         rtree.insert(IndexPoint(mesh_build.mesh[i], i));
     }
 
     std::vector<bool> points_to_remove_mask(points_count, false);
 
-    for (size_t i = 0; i < points_count; ++i) {
+    for (::std::size_t i = 0; i < points_count; ++i) {
         if (points_to_remove_mask[i]) {
             continue;
         }
@@ -166,7 +166,7 @@ void MeshBuilder::applyMeshFilter(MeshBuild& mesh_build, double search_radius) c
 
     std::vector<geom::Vec2> mesh_filtered;
 
-    for (size_t i = 0; i < points_count; ++i) {
+    for (::std::size_t i = 0; i < points_count; ++i) {
         if (points_to_remove_mask[i]) {
             continue;
         }
