@@ -90,5 +90,5 @@
         "shared_mutex": "cpp",
         "pointers": "cpp"
     },
-    "cmake.sourceDirectory": "${workspaceFolder}/packages/truck_gazebo"
+    "cmake.sourceDirectory": "/home/apmilko/truck/packages/collision"
 }
