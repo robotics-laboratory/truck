@@ -42,6 +42,9 @@ void LivoxLidarCallback::LidarInfoChangeCallback(
     if (lidar_device == nullptr) {
         std::cout << "found lidar not defined in the user-defined config, ip: "
                   << IpNumToString(handle) << std::endl;
+        // Don't register unknown lidars and skip calling SetLivoxLidarWorkMode
+        return;
+
         // add lidar device
         uint8_t index = 0;
         int8_t ret = lds_lidar->cache_index_.GetFreeIndex(kLivoxLidarType, handle, index);
