@@ -28,7 +28,8 @@ RUN apt-get update -q \
     && pip3 install --no-cache-dir -U jetson-stats \
     && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-FROM --platform=linux/amd64 ubuntu:20.04 AS truck-base-amd64
+# Do not use "20.04" tag because it can be re-published and reset docker cache
+FROM --platform=linux/amd64 ubuntu:focal-20240530 AS truck-base-amd64
 
 ENV FLAGS="-O3 -Wall"
 
@@ -541,6 +542,25 @@ RUN wget -qO - https://github.com/borglab/gtsam/archive/refs/tags/${GTSAM_VERSIO
         -DGTSAM_BUILD_TESTS=OFF \
         -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
     && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
+### INSTALL LIVOX SDK2
+
+ARG LIVOX_VERSION="1.2.5"
+
+RUN wget -qO - https://github.com/Livox-SDK/Livox-SDK2/archive/refs/tags/v${LIVOX_VERSION}.tar.gz | tar -xz \
+    && cd Livox-SDK2-${LIVOX_VERSION} && mkdir build && cd build \
+    && cmake .. && make -j$(nproc) && make install \
+    && rm -rf /tmp/*
+
+### INSTALL RAPIDJSON
+
+ARG RAPIDJSON_VERSION="1.1.0"
+
+RUN wget -qO - https://github.com/Tencent/rapidjson/archive/refs/tags/v${RAPIDJSON_VERSION}.tar.gz | tar -xz \
+    && cd rapidjson-${RAPIDJSON_VERSION} && mkdir build && cd build \
+    && cmake .. -DRAPIDJSON_BUILD_DOC=OFF -DRAPIDJSON_BUILD_EXAMPLES=OFF -DRAPIDJSON_BUILD_TESTS=OFF \
+    && make -j$(nproc) && make install \
     && rm -rf /tmp/*
 
 ### INSTALL DEV PKGS
