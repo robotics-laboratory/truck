@@ -5,10 +5,10 @@ services:
   truck:
     networks:
       default:
-      macvlan:
+      lidar-net:
 
 networks:
-  macvlan:
+  lidar-net:
     name: "${CONTAINER_NAME:-truck-${USER}}-lidar-net"
     driver: macvlan
     driver_opts:
