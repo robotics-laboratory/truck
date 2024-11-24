@@ -39,14 +39,6 @@ find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(RapidJSON)
 
-# check apr
-find_package(PkgConfig)
-pkg_check_modules(APR apr-1)
-if(APR_FOUND)
-  message(${APR_INCLUDE_DIRS})
-  message(${APR_LIBRARIES})
-endif(APR_FOUND)
-
 # generate custom msg headers
 set(LIVOX_INTERFACES livox_interfaces2)
 rosidl_generate_interfaces(
@@ -109,7 +101,7 @@ target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
 # include file direcotry
 target_include_directories(
   ${PROJECT_NAME}
-  PUBLIC ${APR_INCLUDE_DIRS} ${LIVOX_LIDAR_SDK_INCLUDE_DIR}
+  PUBLIC ${LIVOX_LIDAR_SDK_INCLUDE_DIR}
          ${LIVOX_INTERFACES_INCLUDE_DIRECTORIES} # for custom msgs
          src
 )
@@ -118,7 +110,7 @@ target_include_directories(
 target_link_libraries(
   ${PROJECT_NAME} ${LIVOX_LIDAR_SDK_LIBRARY}
   ${LIVOX_INTERFACE_TARGET} # for custom msgs
-  ${PPT_LIBRARY} ${Boost_LIBRARY} ${APR_LIBRARIES}
+  ${PPT_LIBRARY} ${Boost_LIBRARY}
 )
 
 rclcpp_components_register_node(
