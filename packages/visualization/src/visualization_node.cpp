@@ -487,6 +487,7 @@ void VisualizationNode::publishMap() const {
     visualization_msgs::msg::Marker msg;
     msg.header.stamp = now();
     msg.header.frame_id = "world";
+    // msg.header.frame_id = "odom_ekf";
     msg.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
     msg.action = visualization_msgs::msg::Marker::ADD;
     msg.color = color::gray(0.6);
