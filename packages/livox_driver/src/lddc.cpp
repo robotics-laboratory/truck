@@ -121,8 +121,6 @@ void Lddc::PollingLidarPointCloudData(uint8_t index, LidarDevice* lidar) {
             PublishPointcloud2(p_queue, index);
         } else if (kLivoxCustomMsg == transfer_format_) {
             PublishCustomPointcloud(p_queue, index);
-        } else if (kPclPxyziMsg == transfer_format_) {
-            PublishPclMsg(p_queue, index);
         }
     }
 }
@@ -171,33 +169,6 @@ void Lddc::PublishCustomPointcloud(LidarDataQueue* queue, uint8_t index) {
         FillPointsToCustomMsg(livox_msg, pkg);
         PublishCustomPointData(livox_msg, index);
     }
-}
-
-/* for pcl::pxyzi */
-void Lddc::PublishPclMsg(LidarDataQueue* queue, uint8_t index) {
-    static bool first_log = true;
-    if (first_log) {
-        std::cout << "error: message type 'pcl::PointCloud' is NOT supported in ROS2, "
-                  << "please modify the 'xfer_format' field in the launch file" << std::endl;
-    }
-    first_log = false;
-    return;
-
-    while (!QueueIsEmpty(queue)) {
-        StoragePacket pkg;
-        QueuePop(queue, &pkg);
-        if (pkg.points.empty()) {
-            printf("Publish point cloud failed, the pkg points is empty.\n");
-            continue;
-        }
-
-        PointCloud cloud;
-        uint64_t timestamp = 0;
-        InitPclMsg(pkg, cloud, timestamp);
-        FillPointsToPclMsg(pkg, cloud);
-        PublishPclData(index, timestamp, cloud);
-    }
-    return;
 }
 
 void Lddc::InitPointcloud2MsgHeader(PointCloud2& cloud) {
@@ -321,24 +292,6 @@ void Lddc::PublishCustomPointData(const CustomMsg& livox_msg, const uint8_t inde
     if (kOutputToRos == output_type_) {
         publisher_ptr->publish(livox_msg);
     }
-}
-
-void Lddc::InitPclMsg(const StoragePacket& pkg, PointCloud& cloud, uint64_t& timestamp) {
-    std::cout << "warning: pcl::PointCloud is not supported in ROS2, "
-              << "please check code logic" << std::endl;
-    return;
-}
-
-void Lddc::FillPointsToPclMsg(const StoragePacket& pkg, PointCloud& pcl_msg) {
-    std::cout << "warning: pcl::PointCloud is not supported in ROS2, "
-              << "please check code logic" << std::endl;
-    return;
-}
-
-void Lddc::PublishPclData(const uint8_t index, const uint64_t timestamp, const PointCloud& cloud) {
-    std::cout << "warning: pcl::PointCloud is not supported in ROS2, "
-              << "please check code logic" << std::endl;
-    return;
 }
 
 void Lddc::InitImuMsg(const ImuData& imu_data, ImuMsg& imu_msg, uint64_t& timestamp) {

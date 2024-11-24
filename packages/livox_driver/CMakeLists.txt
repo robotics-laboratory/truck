@@ -13,8 +13,6 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
-list(INSERT CMAKE_MODULE_PATH 0 "${PROJECT_SOURCE_DIR}/cmake/modules")
-
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
@@ -36,7 +34,6 @@ message(STATUS "${PROJECT_NAME} version: ${LIVOX_ROS_DRIVER2_VERSION}")
 # dependencies manually. find_package(<dependency> REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
-find_package(PCL REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
@@ -72,10 +69,6 @@ find_library(
 find_path(LIVOX_LIDAR_SDK_INCLUDE_DIR NAMES "livox_lidar_api.h"
                                             "livox_lidar_def.h" REQUIRED
 )
-
-# PCL library
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
 
 # livox ros2 driver target
 ament_auto_add_library(
@@ -116,20 +109,16 @@ target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
 # include file direcotry
 target_include_directories(
   ${PROJECT_NAME}
-  PUBLIC ${PCL_INCLUDE_DIRS} ${APR_INCLUDE_DIRS} ${LIVOX_LIDAR_SDK_INCLUDE_DIR}
+  PUBLIC ${APR_INCLUDE_DIRS} ${LIVOX_LIDAR_SDK_INCLUDE_DIR}
          ${LIVOX_INTERFACES_INCLUDE_DIRECTORIES} # for custom msgs
          src
 )
 
 # link libraries
 target_link_libraries(
-  ${PROJECT_NAME}
-  ${LIVOX_LIDAR_SDK_LIBRARY}
+  ${PROJECT_NAME} ${LIVOX_LIDAR_SDK_LIBRARY}
   ${LIVOX_INTERFACE_TARGET} # for custom msgs
-  ${PPT_LIBRARY}
-  ${Boost_LIBRARY}
-  ${PCL_LIBRARIES}
-  ${APR_LIBRARIES}
+  ${PPT_LIBRARY} ${Boost_LIBRARY} ${APR_LIBRARIES}
 )
 
 rclcpp_components_register_node(
@@ -147,4 +136,4 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_auto_package(INSTALL_TO_SHARE config launch)
+ament_auto_package(INSTALL_TO_SHARE launch)
