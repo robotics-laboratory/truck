@@ -2,6 +2,8 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include <std_srvs/srv/empty.hpp>
+#include <tf2_msgs/msg/tf_message.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include "truck_msgs/msg/navigation_route.hpp"
@@ -27,23 +29,45 @@ class RouteFollowerNode : public rclcpp::Node {
     RouteFollowerNode();
 
   private:
-    void publishTrajectory(motion::Trajectory& trajectory);
+    void InitializeGreedyPlanner();
+    void InitializeParams();
+
     void onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg);
+    void onOdometry(nav_msgs::msg::Odometry::SharedPtr msg);
+    void onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+    void onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
+
+    std::optional<geom::Transform> getLatestTranform(
+    const std::string& source, const std::string& target);
+
+    void onReset(
+        const std_srvs::srv::Empty::Request::SharedPtr, std_srvs::srv::Empty::Response::SharedPtr);
+
+    void publishTrajectory(motion::Trajectory& trajectory);
 
     speed::GreedyPlanner::Params speed_params_{};
-
-    struct Slots {
-        rclcpp::Subscription<truck_msgs::msg::NavigationRoute>::SharedPtr route = nullptr;
-    } slot_;
-
-    struct Signals {
-        rclcpp::Publisher<truck_msgs::msg::Trajectory>::SharedPtr trajectory = nullptr;
-    } signal_;
 
     struct Parameters {
         std::chrono::duration<double> period = 0.1s;
         double safety_margin = 0.3;
     } params_;
+
+    struct Services {
+        rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset = nullptr;
+    } service_;
+
+    struct Slots {
+        rclcpp::Subscription<truck_msgs::msg::NavigationRoute>::SharedPtr route = nullptr;
+        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
+        rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr grid = nullptr;
+        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
+        rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
+    } slot_;
+
+    struct Signals {
+        rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr distance_transform = nullptr;
+        rclcpp::Publisher<truck_msgs::msg::Trajectory>::SharedPtr trajectory = nullptr;
+    } signal_;
 
     struct State {
         nav_msgs::msg::Odometry::SharedPtr odometry = nullptr;
@@ -54,6 +78,8 @@ class RouteFollowerNode : public rclcpp::Node {
     } state_;
 
     std::unique_ptr<model::Model> model_ = nullptr;
+    std::unique_ptr<collision::StaticCollisionChecker> checker_ = nullptr;
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
 };
 
 }  // namespace truck::route_follower

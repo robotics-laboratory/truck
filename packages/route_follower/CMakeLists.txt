@@ -9,6 +9,7 @@ find_package(truck_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(speed REQUIRED)
 find_package(collision REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 
@@ -24,6 +25,8 @@ ament_target_dependencies(
   collision
   tf2
   tf2_ros
+  std_srvs
+  visualization_msgs
 )
 
 install(TARGETS ${PROJECT_NAME}_node DESTINATION lib/${PROJECT_NAME})
