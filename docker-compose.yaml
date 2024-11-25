@@ -9,14 +9,14 @@ services:
       context: .
       x-bake:
         platforms:
-          # - linux/arm64
+          - linux/arm64
           - linux/amd64
         cache-from:
           - type=registry,ref=registry.robotics-lab.ru/truck:cache-arm64
           - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64
         cache-to:
           # - type=registry,ref=registry.robotics-lab.ru/truck:cache-arm64
-          - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64
+          # - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64
     ports:
       - "${FOXGLOVE_PORT:-8765}:8765"
       - "${VIDEO_STREAMING_PORT:-8889}:8889"
