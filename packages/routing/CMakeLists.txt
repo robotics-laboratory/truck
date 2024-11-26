@@ -11,6 +11,7 @@ find_package(truck_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Boost REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 add_executable(${PROJECT_NAME}_node src/main.cpp src/routing_node.cpp)
 
@@ -23,6 +24,7 @@ ament_target_dependencies(
   nav_msgs
   geometry_msgs
   Boost
+  tf2_ros
 )
 
 install(TARGETS ${PROJECT_NAME}_node DESTINATION lib/${PROJECT_NAME})

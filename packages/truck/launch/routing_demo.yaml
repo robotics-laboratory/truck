@@ -1,12 +1,11 @@
 launch:
-- arg: { name: "map_config", default: "$(find-pkg-share map)/data/map_6.geojson" }
+- arg: { name: "simulation", default: "$(env TRUCK_SIMULATION)" }
+
+- let: { name: "env", value: "simulator", if: "$(var simulation)" }
+- let: { name: "env", value: "truck", unless: "$(var simulation)" }
 
 - include:
-    file: $(find-pkg-share simulator_2d)/launch/simulator_pipeline.yaml
-    arg:
-      - { name: "map_config", value: "$(var map_config)" }
+    file: $(find-pkg-share truck)/launch/$(var env).yaml
 
 - include:
     file: $(find-pkg-share routing)/launch/routing.yaml
-    arg:
-      - { name: "map_config", value: "$(var map_config)" }
