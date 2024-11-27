@@ -161,7 +161,24 @@ void RouteFollowerNode::onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_st
 }
 
 void RouteFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg) {
-    RCLCPP_INFO(this->get_logger(), "POSTING_TRAJECTORY!!!");
+    if (!state_.odometry || !state_.distance_transform) {
+        return;
+    }
+
+    const auto source = std::string{"world"};
+    const auto target = state_.odometry->header.frame_id;
+
+    const auto tf_opt = getLatestTranform(source, target);
+    if (!tf_opt) {
+        RCLCPP_WARN(
+            this->get_logger(),
+            "Ignore grid, there is no transform from '%s' -> '%s'!",
+            source.c_str(),
+            target.c_str());
+        return;
+    }
+
+    // RCLCPP_INFO(this->get_logger(), "POSTING_TRAJECTORY!!!");
 
     motion::Trajectory trajectory;
     std::optional<geom::Vec2> prev = std::nullopt;
@@ -171,8 +188,8 @@ void RouteFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPt
 
         if (prev.has_value()) {
             trajectory.states.emplace_back();
-            trajectory.states.back().pose =
-                geom::Pose{.pos = *prev, .dir = geom::AngleVec2::fromVector(curr - *prev)};
+            trajectory.states.back().pose = tf_opt->apply(
+                geom::Pose{.pos = *prev, .dir = geom::AngleVec2::fromVector(curr - *prev)});
         }
 
         prev = curr;
@@ -180,15 +197,17 @@ void RouteFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPt
 
     trajectory.states.emplace_back();
     trajectory.states.back().pose =
-        geom::Pose{.pos = *prev, .dir = trajectory.states.back().pose.dir};
+        tf_opt->apply(geom::Pose{.pos = *prev, .dir = trajectory.states.back().pose.dir});
+
+    trajectory.fillDistance();
 
     this->publishTrajectory(trajectory);
 }
 
 void RouteFollowerNode::publishTrajectory(motion::Trajectory& trajectory) {
-    if (!state_.odometry || !state_.distance_transform) {
-        return;
-    }
+    // for (const auto& state : trajectory.states) {
+    //     RCLCPP_INFO(this->get_logger(), "(%.2f, %.2f)\n", state.pose.pos.x, state.pose.pos.y);
+    // }
 
     checker_->reset(*state_.distance_transform);
 
@@ -200,6 +219,13 @@ void RouteFollowerNode::publishTrajectory(motion::Trajectory& trajectory) {
         state.collision = collision;
         state.margin = margin;
     }
+
+    // RCLCPP_INFO(
+    //     this->get_logger(),
+    //     "speed_params_.acceleration.max: %f\n"
+    //     "speed_params_.acceleration.min: %f\n",
+    //     speed_params_.acceleration.max,
+    //     speed_params_.acceleration.min);
 
     speed::GreedyPlanner(speed_params_, *model_)
         .setScheduledVelocity(state_.scheduled_velocity)
