@@ -11,6 +11,7 @@
 #include "speed/greedy_planner.h"
 #include "collision/collision_checker.h"
 #include "geom/localization.h"
+#include "geom/transform.h"
 
 #include <rclcpp/time.hpp>
 #include <tf2_ros/qos.hpp>
@@ -30,7 +31,7 @@ class RouteFollowerNode : public rclcpp::Node {
 
   private:
     void InitializeGreedyPlanner();
-    void InitializeParams();
+    void InitializeTopics();
 
     void onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg);
     void onOdometry(nav_msgs::msg::Odometry::SharedPtr msg);
@@ -38,7 +39,7 @@ class RouteFollowerNode : public rclcpp::Node {
     void onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
 
     std::optional<geom::Transform> getLatestTranform(
-    const std::string& source, const std::string& target);
+        const std::string& source, const std::string& target);
 
     void onReset(
         const std_srvs::srv::Empty::Request::SharedPtr, std_srvs::srv::Empty::Response::SharedPtr);

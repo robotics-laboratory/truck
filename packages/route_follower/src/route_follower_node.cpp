@@ -23,14 +23,40 @@ Limits<double> velocityLimits(const model::Model& model, double velocity, double
         std::min(vel.max, vel.clamp(velocity) + model.baseMaxAcceleration() * time)};
 }
 
+template<typename It>
+motion::Trajectory makeTrajectory(It begin, It end) {
+    motion::Trajectory trajectory;
+    std::optional<geom::Vec2> prev = std::nullopt;
+
+    for (auto it = begin; it != end; ++it) {
+        geom::Vec2 curr = geom::toVec2(*it);
+
+        if (prev.has_value()) {
+            trajectory.states.emplace_back();
+            trajectory.states.back().pose = tf_opt->apply(
+                geom::Pose{.pos = *prev, .dir = geom::AngleVec2::fromVector(curr - *prev)});
+        }
+
+        prev = curr;
+    }
+
+    trajectory.states.emplace_back();
+    trajectory.states.back().pose =
+        tf_opt->apply(geom::Pose{.pos = *prev, .dir = trajectory.states.back().pose.dir});
+
+    trajectory.fillDistance();
+
+    return trajectory;
+}
+
 }  // namespace
 
 RouteFollowerNode::RouteFollowerNode() : Node("route_follower") {
     InitializeGreedyPlanner();
-    InitializeParams();
+    InitializeTopics();
 }
 
-void RouteFollowerNode::InitializeParams() {
+void RouteFollowerNode::InitializeTopics() {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
     slot_.route = this->create_subscription<truck_msgs::msg::NavigationRoute>(
@@ -38,8 +64,8 @@ void RouteFollowerNode::InitializeParams() {
         rclcpp::QoS(1).reliability(qos),
         std::bind(&RouteFollowerNode::onRoute, this, _1));
 
-    signal_.trajectory = this->create_publisher<truck_msgs::msg::Trajectory>(
-        "/motion/trajectory", 10);  // TODO: what does `10` mean?
+    signal_.trajectory =
+        this->create_publisher<truck_msgs::msg::Trajectory>("/motion/trajectory", 10);
 }
 
 void RouteFollowerNode::InitializeGreedyPlanner() {
@@ -68,7 +94,6 @@ void RouteFollowerNode::InitializeGreedyPlanner() {
         speed_params_.acceleration.min,
         speed_params_.acceleration.max);
 
-    // TODO: change service name
     service_.reset = this->create_service<std_srvs::srv::Empty>(
         "/reset_path", std::bind(&RouteFollowerNode::onReset, this, _1, _2));
 
@@ -178,37 +203,11 @@ void RouteFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPt
         return;
     }
 
-    // RCLCPP_INFO(this->get_logger(), "POSTING_TRAJECTORY!!!");
-
-    motion::Trajectory trajectory;
-    std::optional<geom::Vec2> prev = std::nullopt;
-
-    for (const geometry_msgs::msg::Point& p : msg->data) {
-        geom::Vec2 curr = geom::toVec2(p);
-
-        if (prev.has_value()) {
-            trajectory.states.emplace_back();
-            trajectory.states.back().pose = tf_opt->apply(
-                geom::Pose{.pos = *prev, .dir = geom::AngleVec2::fromVector(curr - *prev)});
-        }
-
-        prev = curr;
-    }
-
-    trajectory.states.emplace_back();
-    trajectory.states.back().pose =
-        tf_opt->apply(geom::Pose{.pos = *prev, .dir = trajectory.states.back().pose.dir});
-
-    trajectory.fillDistance();
-
+    motion::Trajectory trajectory = makeTrajectory(msg->data);
     this->publishTrajectory(trajectory);
 }
 
 void RouteFollowerNode::publishTrajectory(motion::Trajectory& trajectory) {
-    // for (const auto& state : trajectory.states) {
-    //     RCLCPP_INFO(this->get_logger(), "(%.2f, %.2f)\n", state.pose.pos.x, state.pose.pos.y);
-    // }
-
     checker_->reset(*state_.distance_transform);
 
     bool collision = false;
@@ -219,13 +218,6 @@ void RouteFollowerNode::publishTrajectory(motion::Trajectory& trajectory) {
         state.collision = collision;
         state.margin = margin;
     }
-
-    // RCLCPP_INFO(
-    //     this->get_logger(),
-    //     "speed_params_.acceleration.max: %f\n"
-    //     "speed_params_.acceleration.min: %f\n",
-    //     speed_params_.acceleration.max,
-    //     speed_params_.acceleration.min);
 
     speed::GreedyPlanner(speed_params_, *model_)
         .setScheduledVelocity(state_.scheduled_velocity)
