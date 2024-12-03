@@ -30,28 +30,32 @@ class RouteFollowerNode : public rclcpp::Node {
     RouteFollowerNode();
 
   private:
-    void InitializeGreedyPlanner();
-    void InitializeTopics();
-
     void onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg);
     void onOdometry(nav_msgs::msg::Odometry::SharedPtr msg);
     void onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg);
     void onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
 
-    std::optional<geom::Transform> getLatestTranform(
-        const std::string& source, const std::string& target);
-
     void onReset(
         const std_srvs::srv::Empty::Request::SharedPtr, std_srvs::srv::Empty::Response::SharedPtr);
 
-    void publishTrajectory(motion::Trajectory& trajectory);
+    void publishGridCostMap();
+    void publishTrajectory();
+    void publishFullState();
 
-    speed::GreedyPlanner::Params speed_params_{};
+    std::optional<geom::Transform> getLatestTranform(
+        const std::string& source, const std::string& target);
+
 
     struct Parameters {
         std::chrono::duration<double> period = 0.1s;
         double safety_margin = 0.3;
     } params_;
+
+    speed::GreedyPlanner::Params speed_params_{};
+
+      struct Timers {
+        rclcpp::TimerBase::SharedPtr main = nullptr;
+    } timer_;
 
     struct Services {
         rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset = nullptr;
@@ -75,6 +79,7 @@ class RouteFollowerNode : public rclcpp::Node {
         std::optional<geom::Localization> localization = std::nullopt;
         nav_msgs::msg::OccupancyGrid::SharedPtr grid = nullptr;
         std::shared_ptr<collision::Map> distance_transform = nullptr;
+        motion::Trajectory trajectory;
         double scheduled_velocity = 0;
     } state_;
 

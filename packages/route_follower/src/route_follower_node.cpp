@@ -24,7 +24,7 @@ Limits<double> velocityLimits(const model::Model& model, double velocity, double
 }
 
 template<typename It>
-motion::Trajectory makeTrajectory(It begin, It end) {
+motion::Trajectory makeTrajectory(It begin, It end, const geom::Transform& tf) {
     motion::Trajectory trajectory;
     std::optional<geom::Vec2> prev = std::nullopt;
 
@@ -33,7 +33,7 @@ motion::Trajectory makeTrajectory(It begin, It end) {
 
         if (prev.has_value()) {
             trajectory.states.emplace_back();
-            trajectory.states.back().pose = tf_opt->apply(
+            trajectory.states.back().pose = tf.apply(
                 geom::Pose{.pos = *prev, .dir = geom::AngleVec2::fromVector(curr - *prev)});
         }
 
@@ -42,7 +42,7 @@ motion::Trajectory makeTrajectory(It begin, It end) {
 
     trajectory.states.emplace_back();
     trajectory.states.back().pose =
-        tf_opt->apply(geom::Pose{.pos = *prev, .dir = trajectory.states.back().pose.dir});
+        tf.apply(geom::Pose{.pos = *prev, .dir = trajectory.states.back().pose.dir});
 
     trajectory.fillDistance();
 
@@ -52,11 +52,6 @@ motion::Trajectory makeTrajectory(It begin, It end) {
 }  // namespace
 
 RouteFollowerNode::RouteFollowerNode() : Node("route_follower") {
-    InitializeGreedyPlanner();
-    InitializeTopics();
-}
-
-void RouteFollowerNode::InitializeTopics() {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
     slot_.route = this->create_subscription<truck_msgs::msg::NavigationRoute>(
@@ -66,9 +61,7 @@ void RouteFollowerNode::InitializeTopics() {
 
     signal_.trajectory =
         this->create_publisher<truck_msgs::msg::Trajectory>("/motion/trajectory", 10);
-}
 
-void RouteFollowerNode::InitializeGreedyPlanner() {
     params_ = {
         .period = std::chrono::duration<double>(this->declare_parameter("period", 0.1)),
         .safety_margin = this->declare_parameter("safety_margin", 0.3),
@@ -114,11 +107,11 @@ void RouteFollowerNode::InitializeGreedyPlanner() {
     slot_.tf_static = this->create_subscription<tf2_msgs::msg::TFMessage>(
         "/tf_static", tf2_ros::StaticListenerQoS(100), static_tf_callback);
 
+    timer_.main = this->create_wall_timer(
+        params_.period, std::bind(&RouteFollowerNode::publishFullState, this));
+
     signal_.distance_transform =
         this->create_publisher<nav_msgs::msg::OccupancyGrid>("/grid/distance_transform", 1);
-
-    signal_.trajectory =
-        this->create_publisher<truck_msgs::msg::Trajectory>("/motion/trajectory", 10);
 
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
@@ -127,6 +120,86 @@ void RouteFollowerNode::InitializeGreedyPlanner() {
 
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_buffer_->setUsingDedicatedThread(true);
+}
+
+void RouteFollowerNode::publishFullState() {
+    publishTrajectory();
+    publishGridCostMap();
+}
+
+void RouteFollowerNode::publishTrajectory() {
+    checker_->reset(*state_.distance_transform);
+
+    bool collision = false;
+    for (auto& state : state_.trajectory.states) {
+        const double margin = checker_->distance(state.pose);
+        collision |= margin < params_.safety_margin;
+
+        state.collision = collision;
+        state.margin = margin;
+    }
+
+    speed::GreedyPlanner(speed_params_, *model_)
+        .setScheduledVelocity(state_.scheduled_velocity)
+        .fill(state_.trajectory);
+
+    // dirty way to drop invalid trajectories and get error message
+    try {
+        state_.trajectory.throwIfInvalid(motion::TrajectoryValidations::enableAll(), *model_);
+    } catch (const std::exception& e) {
+        RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 5000, "%s", e.what());
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Drop invalid trajectory!");
+
+        state_.trajectory = motion::Trajectory{};
+    }
+
+    const double latency = params_.period.count();
+    const auto limits = velocityLimits(*model_, state_.localization->velocity, latency);
+
+    if (!state_.trajectory.empty()) {
+        const auto scheduled_state = state_.trajectory.byTime(latency);
+        state_.scheduled_velocity = limits.clamp(scheduled_state.velocity);
+    } else {
+        state_.scheduled_velocity = 0.0;
+    }
+
+    signal_.trajectory->publish(
+        motion::msg::toTrajectory(state_.odometry->header, state_.trajectory));
+}
+
+void RouteFollowerNode::publishGridCostMap() {
+    if (!state_.distance_transform) {
+        return;
+    }
+
+    if (!signal_.distance_transform->get_subscription_count()) {
+        return;
+    }
+
+    constexpr double k_max_distance = 10.0;
+    const auto msg = state_.distance_transform->makeCostMap(state_.grid->header, k_max_distance);
+    signal_.distance_transform->publish(msg);
+}
+
+void RouteFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg) {
+    if (!state_.odometry || !state_.distance_transform) {
+        return;
+    }
+
+    const auto source = std::string{"world"};
+    const auto target = state_.odometry->header.frame_id;
+
+    const auto tf_opt = getLatestTranform(source, target);
+    if (!tf_opt) {
+        RCLCPP_WARN(
+            this->get_logger(),
+            "Ignore grid, there is no transform from '%s' -> '%s'!",
+            source.c_str(),
+            target.c_str());
+        return;
+    }
+
+    state_.trajectory = makeTrajectory(msg->data.begin(), msg->data.end(), *tf_opt);
 }
 
 void RouteFollowerNode::onReset(
@@ -138,15 +211,6 @@ void RouteFollowerNode::onReset(
 void RouteFollowerNode::onOdometry(nav_msgs::msg::Odometry::SharedPtr odometry) {
     state_.localization = geom::toLocalization(*odometry);
     state_.odometry = odometry;
-}
-
-std::optional<geom::Transform> RouteFollowerNode::getLatestTranform(
-    const std::string& source, const std::string& target) {
-    try {
-        return geom::toTransform(tf_buffer_->lookupTransform(target, source, rclcpp::Time(0)));
-    } catch (const tf2::TransformException& ex) {
-        return std::nullopt;
-    }
 }
 
 void RouteFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
@@ -185,64 +249,12 @@ void RouteFollowerNode::onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_st
     }
 }
 
-void RouteFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg) {
-    if (!state_.odometry || !state_.distance_transform) {
-        return;
-    }
-
-    const auto source = std::string{"world"};
-    const auto target = state_.odometry->header.frame_id;
-
-    const auto tf_opt = getLatestTranform(source, target);
-    if (!tf_opt) {
-        RCLCPP_WARN(
-            this->get_logger(),
-            "Ignore grid, there is no transform from '%s' -> '%s'!",
-            source.c_str(),
-            target.c_str());
-        return;
-    }
-
-    motion::Trajectory trajectory = makeTrajectory(msg->data);
-    this->publishTrajectory(trajectory);
-}
-
-void RouteFollowerNode::publishTrajectory(motion::Trajectory& trajectory) {
-    checker_->reset(*state_.distance_transform);
-
-    bool collision = false;
-    for (auto& state : trajectory.states) {
-        const double margin = checker_->distance(state.pose);
-        collision |= margin < params_.safety_margin;
-
-        state.collision = collision;
-        state.margin = margin;
-    }
-
-    speed::GreedyPlanner(speed_params_, *model_)
-        .setScheduledVelocity(state_.scheduled_velocity)
-        .fill(trajectory);
-
-    // dirty way to drop invalid trajectories and get error message
+std::optional<geom::Transform> RouteFollowerNode::getLatestTranform(
+    const std::string& source, const std::string& target) {
     try {
-        trajectory.throwIfInvalid(motion::TrajectoryValidations::enableAll(), *model_);
-    } catch (const std::exception& e) {
-        RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 5000, "%s", e.what());
-        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Drop invalid trajectory!");
-
-        trajectory = motion::Trajectory{};
+        return geom::toTransform(tf_buffer_->lookupTransform(target, source, rclcpp::Time(0)));
+    } catch (const tf2::TransformException& ex) {
+        return std::nullopt;
     }
-
-    const double latency = params_.period.count();
-    const auto limits = velocityLimits(*model_, state_.localization->velocity, latency);
-
-    if (!trajectory.empty()) {
-        const auto scheduled_state = trajectory.byTime(latency);
-        state_.scheduled_velocity = limits.clamp(scheduled_state.velocity);
-    } else {
-        state_.scheduled_velocity = 0.0;
-    }
-
-    signal_.trajectory->publish(motion::msg::toTrajectory(state_.odometry->header, trajectory));
 }
 }  // namespace truck::route_follower
