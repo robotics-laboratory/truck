@@ -45,7 +45,6 @@ class RouteFollowerNode : public rclcpp::Node {
     std::optional<geom::Transform> getLatestTranform(
         const std::string& source, const std::string& target);
 
-
     struct Parameters {
         std::chrono::duration<double> period = 0.1s;
         double safety_margin = 0.3;
@@ -53,7 +52,7 @@ class RouteFollowerNode : public rclcpp::Node {
 
     speed::GreedyPlanner::Params speed_params_{};
 
-      struct Timers {
+    struct Timers {
         rclcpp::TimerBase::SharedPtr main = nullptr;
     } timer_;
 
