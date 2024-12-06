@@ -1,0 +1,42 @@
+rosbag2_bagfile_information:
+  version: 7
+  storage_identifier: mcap
+  duration:
+    nanoseconds: 0
+  starting_time:
+    nanoseconds_since_epoch: 0
+  message_count: 3
+  topics_with_message_count:
+    - topic_metadata:
+        name: cloud_3
+        type: sensor_msgs/msg/PointCloud2
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 1
+    - topic_metadata:
+        name: cloud_2
+        type: sensor_msgs/msg/PointCloud2
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 1
+    - topic_metadata:
+        name: cloud_1
+        type: sensor_msgs/msg/PointCloud2
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 1
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - default_conf.mcap_0.mcap
+  files:
+    - path: default_conf.mcap_0.mcap
+      starting_time:
+        nanoseconds_since_epoch: 0
+      duration:
+        nanoseconds: 0
+      message_count: 3
+  custom_data: ~
