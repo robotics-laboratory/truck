@@ -41,4 +41,8 @@ class BagWriter {
     rosbag2_cpp::Writer writer_;
 };
 
+Cloud loadPCD(const std::string& pcd_path);
+
+void writeToPCD(const std::string& pcd_path, const Cloud& cloud);
+
 }  // namespace truck::lidar_map
