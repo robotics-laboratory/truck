@@ -96,8 +96,21 @@ int EncoderTimer::init() {
     LL_TIM_IC_SetPolarity(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_IC_POLARITY_RISING);
 
     LL_DMA_SetMemoryAddress(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel, (uint32_t)(raw_buffer.data()));
-    LL_DMA_SetPeriphAddress(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel,(uint32_t) &(const_cast<TIM_TypeDef *>(common_timer_handle)->CCR1));
-    LL_DMA_SetDataLength(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel,max_data_size);
+    switch (type) {
+        case EncoderType::ID_0:
+            LL_DMA_SetPeriphAddress(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel, (uint32_t) &(const_cast<TIM_TypeDef *>(common_timer_handle)->CCR1));
+            break;
+        case EncoderType::ID_1:
+            LL_DMA_SetPeriphAddress(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel, (uint32_t) &(const_cast<TIM_TypeDef *>(common_timer_handle)->CCR2));
+            break;
+        case EncoderType::ID_2:
+            LL_DMA_SetPeriphAddress(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel, (uint32_t) &(const_cast<TIM_TypeDef *>(common_timer_handle)->CCR3));
+            break;
+        case EncoderType::ID_3:
+            LL_DMA_SetPeriphAddress(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel, (uint32_t) &(const_cast<TIM_TypeDef *>(common_timer_handle)->CCR4));
+            break;
+    }
+    LL_DMA_SetDataLength(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel, max_data_size);
 
     switch (timer_channel) {
         case LL_TIM_CHANNEL_CH1: {
@@ -129,7 +142,6 @@ int EncoderTimer::init() {
     LL_TIM_CC_EnableChannel(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel);
     LL_DMA_EnableChannel(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel);
     LL_TIM_EnableCounter(const_cast<TIM_TypeDef*>(common_timer_handle));
-    printf("TIM1 enable\r\n");
     return 0;
 }
 
@@ -187,20 +199,14 @@ uint32_t EncoderTimer::get_data_size() {
 }
 
 uint32_t EncoderTimer::get_data(std::vector<int> &output_data) {
-//    if (!buffer_overwrite && (get_data_size() < (prev_get_it - raw_buffer.begin()))) {
-//        // Error because buffer overwrite wasnt detected in DMA IRQ, but data in buffer overwritten
-//        return 1;
-//    }
     output_data.clear();
     int buffer_size = 0;
     if (buffer_overwrite) {
-        printf("overflow\r\n");
         buffer_size = get_data_size() + (raw_buffer.end() - prev_get_it);
         buffer_overwrite = false;
     } else {
         buffer_size = get_data_size() - (prev_get_it - raw_buffer.begin());
     }
-//    printf("d_s %d; buff %d; irq %d\r\n", get_data_size(), buffer_size, dma_complete_irq[0]);
 
     for (int i = 0; i < buffer_size; ++i) {
         output_data.push_back(*prev_get_it - last_cnt_value);

@@ -3,10 +3,12 @@
 
 #include <cstdint>
 #include <unordered_map>
-#include "stm32g4xx_ll_tim.h"
-#include "stm32g4xx_ll_dma.h"
 #include <array>
 #include <vector>
+#include <limits>
+
+#include "stm32g4xx_ll_tim.h"
+#include "stm32g4xx_ll_dma.h"
 
 enum class EncoderType : uint8_t {
   ID_0,
@@ -21,9 +23,9 @@ class EncoderTimer {
   static bool is_common_tim_initialized;
   const TIM_TypeDef *common_timer_handle = TIM2;
   const DMA_TypeDef *common_dma_handler = DMA1;
-  static constexpr uint32_t APB1_CLOCK = 144000000;
+  static constexpr uint32_t APB1_CLOCK = F_CPU;
   static constexpr uint32_t TIM_PRESCALER = 143;
-  static constexpr uint32_t TIM_AUTORELOAD = 4294967296-1;
+  static constexpr uint32_t TIM_AUTORELOAD = UINT32_MAX;
   static constexpr uint32_t max_data_size = 50;
   uint32_t last_cnt_value = 0;
   volatile bool &buffer_overwrite;
@@ -32,13 +34,12 @@ class EncoderTimer {
   uint32_t timer_channel;
   uint32_t dma_channel;
 
-//  GPIO_TypeDef *input_port;
-//  uint32_t *input_pin;
-
   EncoderTimer(EncoderType id);
   ~EncoderTimer() {};
   EncoderTimer(const EncoderTimer &obj) = delete;
   EncoderTimer &operator=(const EncoderTimer &obj) = delete;
+
+  uint32_t get_data_size();
 
  public:
   static EncoderTimer &get_instance(EncoderType id) {
@@ -51,7 +52,6 @@ class EncoderTimer {
   }
 
   int init();
-  uint32_t get_data_size();
   uint32_t get_data(std::vector<int> &output_data);
   constexpr float get_tick_len_micros() {
     return (1000000.0f) / (APB1_CLOCK / (TIM_PRESCALER+1));

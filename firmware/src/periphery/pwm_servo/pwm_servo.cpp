@@ -9,9 +9,11 @@ PWMServo::PWMServo(PWMServoType id) {
     switch (id) {
         case PWMServoType::PWM_SERVO_1: {
             timer_channel = LL_TIM_CHANNEL_CH3;
+            break;
         }
         case PWMServoType::PWM_SERVO_2: {
             timer_channel = LL_TIM_CHANNEL_CH4;
+            break;
         }
     }
     init();
@@ -21,13 +23,19 @@ int32_t PWMServo::init() {
     int32_t status = 0;
     if (!is_initialized) {
         static LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {0};
+        TIM_OC_InitStruct.OCMode = LL_TIM_OCMODE_PWM1;
+        TIM_OC_InitStruct.OCState = LL_TIM_OCSTATE_DISABLE;
+        TIM_OC_InitStruct.OCNState = LL_TIM_OCSTATE_DISABLE;
+        TIM_OC_InitStruct.CompareValue = 0;
+        TIM_OC_InitStruct.OCPolarity = LL_TIM_OCPOLARITY_HIGH;
+
         if (!is_common_tim_initialized) {
             LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
 
             LL_TIM_InitTypeDef TIM_InitStruct = {0};
 
             LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
-            TIM_InitStruct.Prescaler = 9-1;//TIM_PRESCALER;
+            TIM_InitStruct.Prescaler = TIM_PRESCALER;
             TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
             TIM_InitStruct.Autoreload = TIM_AUTORELOAD;
             TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
@@ -35,12 +43,6 @@ int32_t PWMServo::init() {
             LL_TIM_DisableARRPreload(const_cast<TIM_TypeDef*>(common_timer_handle));
             LL_TIM_SetTriggerOutput(const_cast<TIM_TypeDef*>(common_timer_handle), LL_TIM_TRGO_RESET);
             LL_TIM_DisableMasterSlaveMode(const_cast<TIM_TypeDef*>(common_timer_handle));
-
-            TIM_OC_InitStruct.OCMode = LL_TIM_OCMODE_PWM1;
-            TIM_OC_InitStruct.OCState = LL_TIM_OCSTATE_DISABLE;
-            TIM_OC_InitStruct.OCNState = LL_TIM_OCSTATE_DISABLE;
-            TIM_OC_InitStruct.CompareValue = 0;
-            TIM_OC_InitStruct.OCPolarity = LL_TIM_OCPOLARITY_HIGH;
 
             is_common_tim_initialized = true;
         }
