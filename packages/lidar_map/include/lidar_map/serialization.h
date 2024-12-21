@@ -5,6 +5,7 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
+#include <rosbag2_cpp/writer.hpp>
 
 namespace truck::lidar_map {
 
@@ -19,11 +20,29 @@ syncOdomWithCloud(
     const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
     const std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs);
 
-void writeToMCAP(
-    const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name);
+class BagWriter {
+  public:
+    BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency);
 
-void writeToMCAP(
-    const std::string& mcap_path, const Cloud& cloud, const std::string& cloud_topic_name,
-    const geom::ComplexPolygon& map, const std::string& map_topic_name);
+    void addVectorMap(const geom::ComplexPolygon& vector_map, const std::string& topic_name);
+    void addLidarMap(const Cloud& lidar_map, const std::string& topic_name);
+    void addOptimizationStep(
+        const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
+        const std::string& merged_clouds_topic_name);
+
+  private:
+    void addPoses(const geom::Poses& poses, const std::string& topic_name);
+    void addMergedClouds(const Cloud& merged_clouds, const std::string& topic_name);
+
+    size_t id_ = 0;
+    const std::string frame_name_;
+    const double freqency_;
+
+    rosbag2_cpp::Writer writer_;
+};
+
+Cloud loadPCD(const std::string& pcd_path);
+
+void writeToPCD(const std::string& pcd_path, const Cloud& cloud);
 
 }  // namespace truck::lidar_map
