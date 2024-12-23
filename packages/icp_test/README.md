@@ -5,8 +5,9 @@
 1. Считывание двух файлов в облка точек
 2. Инициализация алгоритма icp с помощью конфига
 3. Поворот одного облака относительно другого
-4. Вывод вектора смещения и поворота
-5. Запись исходных облаков и повернутого в .mcap файл
+4. Вывод вектора $`v = ICP(cloud_1, cloud_2), v = (x, y, z, roll, pitch, yaw) \in R^6`$
+5. Вывод ошибки (ResidualError)
+6. Запись исходных облаков и повернутого в .mcap файл
 
 ###  Подробнее про [конфиг](https://github.com/robotics-laboratory/truck/blob/agkolomnikova-test/packages/icp_test/conf/icp_config.yaml)
 
