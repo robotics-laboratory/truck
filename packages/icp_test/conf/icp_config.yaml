@@ -1,9 +1,9 @@
-readingDataPointsFilters:
+readingDataPointsFilters: # Секция, которая применяется к входным облакам
   - RandomSamplingDataPointsFilter: 
       prob: 0.7  # 70% данных будут случайно выбраны
       seed: 42
 
-referenceDataPointsFilters:
+referenceDataPointsFilters: # Секция которая применяется к целевым облакам
   - SamplingSurfaceNormalDataPointsFilter:
       knn: 10   # Количество ближайших соседей для выборки нормалей поверхности
 
@@ -19,14 +19,14 @@ errorMinimizer:
   PointToPlaneErrorMinimizer:
    force2D: 0            # Так как все облака находятся в одной плоскости
 
-transformationCheckers:
+transformationCheckers: # Фильтр оценивает, насколько сильно изменились параметры трансформации
   - CounterTransformationChecker:
       maxIterationCount: 50  # Максимальное количество итераций для проверки преобразования
 
   - DifferentialTransformationChecker:
       minDiffRotErr: 0.001   # Минимальная допустимая ошибка вращения для проверки преобразования
       minDiffTransErr: 0.001   # Минимальная допустимая ошибка трансляции для проверки преобразования
-      smoothLength: 4          # Длина сглаживания для вычисления изменений трансформации
+      smoothLength: 4          # При оценке изменений будут учитываться последние 4 итерации
 
 inspector:
   VTKFileInspector:
