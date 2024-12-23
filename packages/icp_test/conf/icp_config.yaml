@@ -9,6 +9,10 @@ referenceDataPointsFilters: # Секция которая применяется
 
   - ObservationDirectionDataPointsFilter: 
       center: [0.0, 0.0, 0.0]  # Центр фрейма (для нужного направелния нормалей)
+      
+  - OrientNormalsDataPointsFilter: 
+      towardCenter: 1
+
 
 matcher:
   KDTreeMatcher:
