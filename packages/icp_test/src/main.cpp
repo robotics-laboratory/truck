@@ -47,7 +47,7 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const DP& dataPoints, std::string fr
     result.data.resize(result.row_step * result.height);
     std::cout << "dataPoints.features.rows(): " << dataPoints.features.rows() << '\n';
     std::cout << "dataPoints.features.cols(): " << dataPoints.features.cols() << '\n';
-    for (size_t i = 0; i <dataPoints.features.cols(); ++i) {
+    for (size_t i = 0; i < dataPoints.features.cols(); ++i) {
        
         float* point_data = reinterpret_cast<float*>(result.data.data() + i * result.point_step);
         point_data[0] = dataPoints.features(0, i);
@@ -130,11 +130,8 @@ int main() {
     std::string filePath2 = "/truck/packages/icp_test/files/cloud_2.pcd"; 
     DP cloud_2 = pcdToPointMatcherData(filePath2);
 	PM::ICP icp;
-    // std::ifstream icp_config_stream("/truck/packages/icp_test/conf/icp_config.yaml");
-    std::ifstream icp_config_stream("/truck/packages/icp_test/conf/icp_config_truck.yaml");
-
+    std::ifstream icp_config_stream("/truck/packages/icp_test/conf/icp_config.yaml");
     icp.loadFromYaml(icp_config_stream);
-    // icp.setDefault();
 
     std::cout << "cloud_1 rows: " << cloud_1.features.rows() 
     << " cloud_1 cols: " << cloud_1.features.cols()
@@ -180,6 +177,6 @@ int main() {
     std::vector<DP> clouds = {cloud_1, cloud_2, cloud_3};
     std::vector<std::string> topics = {"cloud_1", "cloud_2", "cloud_3"};
     std::vector<std::string> colors = {"red", "green", "blue"};
-    writecloudsToMCAP("/truck/packages/icp_test/results/truck_conf.mcap", clouds, topics, colors);
+    writecloudsToMCAP("/truck/packages/icp_test/results/final1.mcap", clouds, topics, colors);
     return 0;
 }

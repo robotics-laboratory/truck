@@ -11,11 +11,13 @@
 
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
-  <depend>visualization_msgs</depend>
   <depend>rosbag2_cpp</depend>
-  <depend>pcl</depend>
+  <depend>libpointmatcher</depend>
+  <depend>pcl_conversions</depend> <!-- Если вы используете конверсии между PCL и ROS -->
   <depend>std_msgs</depend>
-
+  
+  <!-- Удалил visualization_msgs, если они не используются в коде -->
+  
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
