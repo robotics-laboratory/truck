@@ -9,6 +9,7 @@
 #include <boost/geometry.hpp>
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
+#include <g2o/core/optimizable_graph.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
 #include <g2o/types/slam2d/edge_se2.h>
 #include <g2o/types/slam2d/vertex_se2.h>
@@ -27,6 +28,13 @@ using BlockSolverType = g2o::BlockSolver<g2o::BlockSolverTraits<3, 3>>;
 using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>;
 
 namespace {
+
+struct EdgeInfo {
+    int id;
+    g2o::EdgeSE2* edge;
+    Eigen::Vector3d error; // Вектор ошибки
+};
+
 
 void normalize(Cloud& cloud) {
     for (size_t i = 0; i < cloud.cols(); i++) {
@@ -185,6 +193,7 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
 
     optimizer_.clear();
     optimizer_.setAlgorithm(solver);
+    optimizer_.setComputeBatchStatistics(true);
 
     std::vector<g2o::VertexSE2*> vertices;
 
@@ -266,6 +275,20 @@ geom::Poses Builder::optimizePoseGraph(size_t iterations) {
         if (optimized_vertex) {
             const g2o::SE2 se2 = optimized_vertex->estimate();
             optimized_poses.push_back(toPose(se2));
+        }
+    }
+
+    // Collecting information about ICP edges
+    std::cout << "activeEdges().size() = " << optimizer_.activeEdges().size() << '\n';
+    for (std::vector<g2o::OptimizableGraph::Edge*>::const_iterator it = optimizer_.activeEdges().begin(); 
+    it != optimizer_.activeEdges().end(); ++it) {
+        const g2o::OptimizableGraph::Edge* e = *it;   
+        const g2o::EdgeSE2* edge_se2 = dynamic_cast<const g2o::EdgeSE2*>(e);
+        const number_t* info = edge_se2->informationData();
+        if (info[0] == params_.icp_edge_weight) {
+            const g2o::OptimizableGraph::Vertex* fromEdge = dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
+            const g2o::OptimizableGraph::Vertex*  toEdge = dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
+            std::cout << "chi2 = " << e->chi2() << "\tfromEdge id = " << fromEdge->id() << "\ttoEdge id = " << toEdge->id() <<'\n';
         }
     }
 
