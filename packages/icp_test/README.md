@@ -12,7 +12,7 @@
 ###  Подробнее про [конфиг](https://github.com/robotics-laboratory/truck/blob/agkolomnikova-test/packages/icp_test/conf/icp_config.yaml)
 
 #### Проблемы, с которыми столкнулись:
-1. При запуске icp для одной и той же пары облаков [ошибка](https://github.com/robotics-laboratory/truck/blob/563ac15d2b89ac422f15432f2057068e4a0945cb/packages/icp_test/src/main.cpp#L118) выдавала разные значения - для этого стали использовать параметр [seed](https://github.com/robotics-laboratory/truck/blob/563ac15d2b89ac422f15432f2057068e4a0945cb/packages/icp_test/src/main.cpp#L118) в фильтрах (пока не работает из-за ошибки в контейнерах)
+1. При запуске icp для одной и той же пары облаков [ошибка](https://github.com/robotics-laboratory/truck/blob/563ac15d2b89ac422f15432f2057068e4a0945cb/packages/icp_test/src/main.cpp#L118) выдавала разные значения - для этого нужно детерминировать конфиг секцию referenceDataPointsFilters (пока в работе)
 2. Также [ошибка](https://github.com/robotics-laboratory/truck/blob/563ac15d2b89ac422f15432f2057068e4a0945cb/packages/icp_test/src/main.cpp#L118) выдавала большие значения на "хорошем" метчинге - решили выбрать определенный порог, превышая который ошибка будет давать понять, что облака точно склеились неудовлетворительно
 
 #### Важные замечания по конфигу:
