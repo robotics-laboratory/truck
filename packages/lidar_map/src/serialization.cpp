@@ -46,9 +46,7 @@ std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
     const std::string& mcap_path, const std::string& odom_topic) {
     std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
     reader->open(mcap_path);
-
     std::vector<nav_msgs::msg::Odometry> data;
-
     while (true) {
         auto msg = readNextMessage<nav_msgs::msg::Odometry>(reader, odom_topic);
 
@@ -58,7 +56,6 @@ std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
 
         data.push_back(*msg);
     }
-
     return data;
 }
 

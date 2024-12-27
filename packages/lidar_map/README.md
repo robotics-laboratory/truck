@@ -23,7 +23,8 @@ ros2 run lidar_map lidar_map_executable \
 If you building 2D LiDAR map based on simulated data, then you can measure its quality by comparing it with corresponding ground truth vector map. Assign `--test` argument with the name of one of the existing vector maps located in the `packages/map/data` folder:
 ```console
 ros2 run lidar_map lidar_map_executable \
-  --input data/rides/ride_sim_map_7.mcap \
-  --output data/clouds/sim_map_7 \
+  --input /truck/packages/lidar_map/data/input.mcap\
+  --output packages/lidar_map/data/output.mcap \
   --test map_7.geojson
 ```
+ros2 run lidar_map lidar_map_executable --input /root/truck/packages/lidar_map/data/input.mcap --output packages/lidar_map/data/output.mcap

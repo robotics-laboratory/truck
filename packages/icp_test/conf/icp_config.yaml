@@ -7,10 +7,38 @@ referenceDataPointsFilters: # Секция которая применяется
   - SamplingSurfaceNormalDataPointsFilter:
       knn: 10   # Количество ближайших соседей для выборки нормалей поверхности
 
+  - ObservationDirectionDataPointsFilter: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      
+  - OrientNormalsDataPointsFilter: 
+      towardCenter: 1
+
+
 matcher:
   KDTreeMatcher:
     knn: 1                # Количество ближайших соседей для сопоставления (будет найден только один ближайший сосед)
     epsilon: 2            # Учет ошибки
+
+
+outlierFilters:
+  - MaxDistOutlierFilter:
+      maxDist: 30  # Максимальное расстояние от точки до ближайшей точки в облаке. Точки, которые находятся дальше maxDist, будут считаться выбросами.
+
+  - MedianDistOutlierFilter:
+      factor: 30  # Умножитель для медианного расстояния. Точки, которые находятся дальше factor * медианное расстояние, будут отфильтрованы как выбросы.
+
+  - MinDistOutlierFilter:
+      minDist: 0.01  # Минимальное расстояние до ближайшей точки. Точки, которые находятся ближе minDist, будут считаться выбросами.
+
+#   - TrimmedDistOutlierFilter:
+#       ratio: 0.99  # Доля точек, которые будут отфильтрованы. Например, 10% точек с наибольшими расстояниями будут удалены.
+
+#   - VarTrimmedDistOutlierFilter:
+#        minRatio: 0.001  # Минимальная доля точек, которые должны быть оставлены после фильтрации. Устанавливает нижний предел для отфильтрованных точек.
+#        maxRatio: 0.99  # Максимальная доля точек, которые могут быть удалены. Устанавливает верхний предел для отфильтрованных точек.
+#        lambda: 0.1  # Параметр, который влияет на жесткость фильтрации. Чем больше значение, тем более агрессивно фильтр будет удалять выбросы.
 
 errorMinimizer:
   PointToPlaneErrorMinimizer:
@@ -27,7 +55,7 @@ transformationCheckers: # Фильтр оценивает, насколько с
 
 inspector:
   VTKFileInspector:
-     baseFileName : packages/icp_test/inspector/icp_test
+     baseFileName : packages/icp_test/inspector/icp_test4
      dumpDataLinks : 1          # Флаг для сохранения ссылок на данные
      dumpReading : 1            # Флаг для сохранения данных чтения
      dumpReference : 1          # Флаг для сохранения эталонных данных
