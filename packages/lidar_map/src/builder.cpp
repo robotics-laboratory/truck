@@ -305,8 +305,8 @@ void Builder::writeICPEdgeInfoToJson(const std::string& filename) {
     for (const auto& edge_info : icp_edge_info_list) {
         json_data.push_back(
             {{"from_edge", edge_info.from_edge},
-            {"to_edge", edge_info.to_edge},
-            {"error_val", edge_info.error_val}});
+             {"to_edge", edge_info.to_edge},
+             {"error_val", edge_info.error_val}});
     }
 
     std::ofstream file(filename);

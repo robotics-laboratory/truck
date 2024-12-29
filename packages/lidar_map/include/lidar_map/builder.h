@@ -24,7 +24,7 @@ struct ICPEdgeInfo {
 class Builder {
   public:
     std::vector<ICPEdgeInfo> icp_edge_info_list;
-    
+
     Builder(const BuilderParams& params);
 
     std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(
