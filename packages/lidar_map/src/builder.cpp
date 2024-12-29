@@ -12,7 +12,8 @@
 #include <g2o/solvers/dense/linear_solver_dense.h>
 #include <g2o/types/slam2d/edge_se2.h>
 #include <g2o/types/slam2d/vertex_se2.h>
-#include <nlohmann/json.hpp> 
+
+#include <nlohmann/json.hpp>
 
 #include <fstream>
 
@@ -272,14 +273,18 @@ geom::Poses Builder::optimizePoseGraph(size_t iterations) {
     }
 
     // Collecting information about ICP edges
-    for (std::vector<g2o::OptimizableGraph::Edge*>::const_iterator it = optimizer_.activeEdges().begin(); 
-    it != optimizer_.activeEdges().end(); ++it) {
-        const g2o::OptimizableGraph::Edge* e = *it;   
+    for (std::vector<g2o::OptimizableGraph::Edge*>::const_iterator it =
+             optimizer_.activeEdges().begin();
+         it != optimizer_.activeEdges().end();
+         ++it) {
+        const g2o::OptimizableGraph::Edge* e = *it;
         const g2o::EdgeSE2* edge_se2 = dynamic_cast<const g2o::EdgeSE2*>(e);
         const number_t* info = edge_se2->informationData();
         if (info[0] == params_.icp_edge_weight) {
-            const g2o::OptimizableGraph::Vertex* fromEdge = dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
-            const g2o::OptimizableGraph::Vertex*  toEdge = dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
+            const g2o::OptimizableGraph::Vertex* fromEdge =
+                dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
+            const g2o::OptimizableGraph::Vertex* toEdge =
+                dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
             ICPEdgeInfo edge_info;
             edge_info.from_edge = fromEdge->id();
             edge_info.to_edge = toEdge->id();
@@ -298,11 +303,10 @@ void Builder::writeICPEdgeInfoToJson(const std::string& filename) {
     nlohmann::json json_data;
 
     for (const auto& edge_info : icp_edge_info_list) {
-        json_data.push_back({
-            {"from_edge", edge_info.from_edge},
+        json_data.push_back(
+            {{"from_edge", edge_info.from_edge},
             {"to_edge", edge_info.to_edge},
-            {"error_val", edge_info.error_val}
-        });
+            {"error_val", edge_info.error_val}});
     }
 
     std::ofstream file(filename);
