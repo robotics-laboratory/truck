@@ -210,6 +210,7 @@ int main(int argc, char* argv[]) {
 
             const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
+            builder.writeICPEdgeInfoToJson(output_folder_path + "/icp_edge_info.json");
 
             if (enable_test) {
                 const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
