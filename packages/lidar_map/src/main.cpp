@@ -212,7 +212,7 @@ int main(int argc, char* argv[]) {
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
             if (enable_log) {
-               builder.writeICPEdgesInfoToJSON(output_folder_path + "/icp_edge_info.json");
+                builder.writeICPEdgesInfoToJSON(output_folder_path + "/icp_edge_info.json");
             }       
 
             if (enable_test) {

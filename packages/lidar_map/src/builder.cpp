@@ -287,13 +287,8 @@ const ICPEdgesInfo Builder::calculateICPEdgesInfo() {
                 dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
             const g2o::OptimizableGraph::Vertex* toEdge =
                 dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
-            icp_edge_info_list.push_back(
-            ICPEdgeInfo{
-                .from_edge = fromEdge->id(),
-                .to_edge = toEdge->id(),
-                .error_val = e->chi2()
-            }
-            );
+            icp_edge_info_list.push_back(ICPEdgeInfo{
+                .from_edge = fromEdge->id(), .to_edge = toEdge->id(), .error_val = e->chi2()});
         }
     }
     return icp_edge_info_list;
