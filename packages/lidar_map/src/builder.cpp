@@ -14,7 +14,6 @@
 #include <g2o/types/slam2d/vertex_se2.h>
 
 #include <nlohmann/json.hpp>
-
 #include <fstream>
 
 namespace truck::lidar_map {
@@ -271,11 +270,15 @@ geom::Poses Builder::optimizePoseGraph(size_t iterations) {
         }
     }
 
-    // Collecting information about ICP edges
-    for (std::vector<g2o::OptimizableGraph::Edge*>::const_iterator it =
-             optimizer_.activeEdges().begin();
-         it != optimizer_.activeEdges().end();
-         ++it) {
+    return optimized_poses;
+}
+
+/**
+ * Collecting information about ICP edges
+ */
+const ICPEdgesInfo Builder::calculateICPEdgesInfo() {
+    ICPEdgesInfo icp_edge_info_list;
+    for (auto it = optimizer_.activeEdges().begin(); it != optimizer_.activeEdges().end(); ++it) {
         const g2o::OptimizableGraph::Edge* e = *it;
         const g2o::EdgeSE2* edge_se2 = dynamic_cast<const g2o::EdgeSE2*>(e);
         const number_t* info = edge_se2->informationData();
@@ -284,36 +287,37 @@ geom::Poses Builder::optimizePoseGraph(size_t iterations) {
                 dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
             const g2o::OptimizableGraph::Vertex* toEdge =
                 dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
-            ICPEdgeInfo edge_info;
-            edge_info.from_edge = fromEdge->id();
-            edge_info.to_edge = toEdge->id();
-            edge_info.error_val = e->chi2();
-            icp_edge_info_list.push_back(edge_info);
+            icp_edge_info_list.push_back(
+            ICPEdgeInfo{
+                .from_edge = fromEdge->id(),
+                .to_edge = toEdge->id(),
+                .error_val = e->chi2()
+            }
+            );
         }
     }
-
-    return optimized_poses;
+    return icp_edge_info_list;
 }
+
 
 /**
  * Writing information about icp edges to a json file
  */
-void Builder::writeICPEdgeInfoToJson(const std::string& filename) {
+const void Builder::writeICPEdgesInfoToJSON(const std::string& json_path) {
     nlohmann::json json_data;
-
+    const ICPEdgesInfo icp_edge_info_list = calculateICPEdgesInfo();
     for (const auto& edge_info : icp_edge_info_list) {
         json_data.push_back(
             {{"from_edge", edge_info.from_edge},
              {"to_edge", edge_info.to_edge},
              {"error_val", edge_info.error_val}});
     }
-
-    std::ofstream file(filename);
+    std::ofstream file(json_path);
     if (file.is_open()) {
         file << json_data.dump(4);
         file.close();
     } else {
-        std::cerr << "Error when opening a file for writing: " << filename << std::endl;
+        std::cerr << "Error when opening a file for writing: " << json_path << std::endl;
     }
 }
 
