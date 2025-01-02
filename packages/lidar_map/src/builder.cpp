@@ -297,9 +297,8 @@ const ICPEdgesInfo Builder::calculateICPEdgesInfo() {
 /**
  * Writing information about icp edges to a json file
  */
-const void Builder::writeICPEdgesInfoToJSON(const std::string& json_path) {
+const void Builder::writeICPEdgesInfoToJSON(const std::string& json_path, const ICPEdgesInfo icp_edge_info_list) {
     nlohmann::json json_data;
-    const ICPEdgesInfo icp_edge_info_list = calculateICPEdgesInfo();
     for (const auto& edge_info : icp_edge_info_list) {
         json_data.push_back(
             {{"from_edge", edge_info.from_edge},

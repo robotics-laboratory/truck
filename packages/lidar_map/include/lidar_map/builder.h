@@ -36,7 +36,7 @@ class Builder {
 
     const ICPEdgesInfo calculateICPEdgesInfo();
 
-    const void writeICPEdgesInfoToJSON(const std::string& json_path);
+    const void writeICPEdgesInfoToJSON(const std::string& json_path, const ICPEdgesInfo icp_edge_info_list);
 
     Clouds transformClouds(
         const geom::Poses& poses, const Clouds& clouds, bool inverse = false) const;

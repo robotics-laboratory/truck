@@ -212,7 +212,9 @@ int main(int argc, char* argv[]) {
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
             if (enable_log) {
-                builder.writeICPEdgesInfoToJSON(output_folder_path + "/icp_edge_info.json");
+                const ICPEdgesInfo icp_edge_info_list = builder.calculateICPEdgesInfo();
+                const std::string icp_edge_info_path = output_folder_path + "/icp_edge_info.json";
+                builder.writeICPEdgesInfoToJSON(icp_edge_info_path, icp_edge_info_list);
             }
 
             if (enable_test) {
