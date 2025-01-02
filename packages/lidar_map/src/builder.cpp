@@ -294,7 +294,6 @@ const ICPEdgesInfo Builder::calculateICPEdgesInfo() {
     return icp_edge_info_list;
 }
 
-
 /**
  * Writing information about icp edges to a json file
  */

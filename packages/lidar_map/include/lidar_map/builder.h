@@ -25,7 +25,6 @@ using ICPEdgesInfo = std::vector<ICPEdgeInfo>;
 
 class Builder {
   public:
-
     Builder(const BuilderParams& params);
 
     std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(
