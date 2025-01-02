@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) {
 
             if (enable_log) {
                 builder.writeICPEdgesInfoToJSON(output_folder_path + "/icp_edge_info.json");
-            }       
+            }
 
             if (enable_test) {
                 const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
