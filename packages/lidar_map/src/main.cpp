@@ -211,6 +211,12 @@ int main(int argc, char* argv[]) {
             const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
+            if (enable_log) {
+                const ICPEdgesInfo icp_edge_info_list = builder.calculateICPEdgesInfo();
+                const std::string icp_edge_info_path = output_folder_path + "/icp_edge_info.json";
+                builder.writeICPEdgesInfoToJSON(icp_edge_info_path, icp_edge_info_list);
+            }
+
             if (enable_test) {
                 const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
                 const ComplexPolygon vector_map = Map::fromGeoJson(map_path).polygons()[0];
