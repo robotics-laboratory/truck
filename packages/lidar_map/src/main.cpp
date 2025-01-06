@@ -214,7 +214,8 @@ int main(int argc, char* argv[]) {
 
             if (enable_log) {
                 const ICPEdgesInfo icp_edges_info = builder.calculateICPEdgesInfo();
-                const std::string icp_edges_info_path = output_folder_path + "/" + kICPEdgesInfoJSON;
+                const std::string icp_edges_info_path = 
+                    output_folder_path + "/" + kICPEdgesInfoJSON;
                 builder.writeICPEdgesInfoToJSON(icp_edges_info_path, icp_edges_info);
             }
 
