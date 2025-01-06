@@ -55,22 +55,21 @@ std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
         if (!msg.has_value()) {
             break;
         }
-
         data.push_back(*msg);
     }
 
     return data;
 }
 
-std::vector<sensor_msgs::msg::LaserScan> loadLaserScanTopic(
+std::vector<sensor_msgs::msg::PointCloud2> loadLaserScanTopic(
     const std::string& mcap_path, const std::string& laser_scan_topic) {
     std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
     reader->open(mcap_path);
 
-    std::vector<sensor_msgs::msg::LaserScan> data;
+    std::vector<sensor_msgs::msg::PointCloud2> data;
 
     while (true) {
-        auto msg = readNextMessage<sensor_msgs::msg::LaserScan>(reader, laser_scan_topic);
+        auto msg = readNextMessage<sensor_msgs::msg::PointCloud2>(reader, laser_scan_topic);
 
         if (!msg.has_value()) {
             break;
@@ -98,10 +97,10 @@ bool operator<(const std_msgs::msg::Header& a, const std_msgs::msg::Header& b) {
 
 }  // namespace
 
-std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::LaserScan>>
+std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::PointCloud2>>
 syncOdomWithCloud(
     const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
-    const std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs) {
+    const std::vector<sensor_msgs::msg::PointCloud2>& laser_scan_msgs) {
     VERIFY(!odom_msgs.empty());
     VERIFY(!laser_scan_msgs.empty());
 
@@ -112,7 +111,7 @@ syncOdomWithCloud(
     size_t laser_scan_id = 0;
 
     std::vector<nav_msgs::msg::Odometry> odom_msgs_synced;
-    std::vector<sensor_msgs::msg::LaserScan> laser_scan_msgs_synced;
+    std::vector<sensor_msgs::msg::PointCloud2> laser_scan_msgs_synced;
 
     while (laser_scan_id < laser_scan_count) {
         while (odom_id < odom_count
