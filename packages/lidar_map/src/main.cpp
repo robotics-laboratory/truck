@@ -100,7 +100,7 @@ const std::string kTopicLaserScan = "/lidar/scan";
 const std::string kTopicOdom = "/ekf/odometry/filtered";
 const std::string kPkgPathMap = ament_index_cpp::get_package_share_directory("map");
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
-const std::string kICPEdgesInfoJSON = "/icp_edges_info.json";
+const std::string kICPEdgesInfoJSON = "icp_edges_info.json";
 
 int main(int argc, char* argv[]) {
     bool enable_test = false;
@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
 
             if (enable_log) {
                 const ICPEdgesInfo icp_edges_info = builder.calculateICPEdgesInfo();
-                const std::string icp_edges_info_path = output_folder_path + kICPEdgesInfoJSON;
+                const std::string icp_edges_info_path = output_folder_path + "/" + kICPEdgesInfoJSON;
                 builder.writeICPEdgesInfoToJSON(icp_edges_info_path, icp_edges_info);
             }
 
