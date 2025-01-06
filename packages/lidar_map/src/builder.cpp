@@ -12,7 +12,7 @@
 #include <g2o/solvers/dense/linear_solver_dense.h>
 #include <g2o/types/slam2d/edge_se2.h>
 #include <g2o/types/slam2d/vertex_se2.h>
-
+#include <nlohmann/json.hpp>
 #include <fstream>
 
 namespace truck::lidar_map {
@@ -270,6 +270,48 @@ geom::Poses Builder::optimizePoseGraph(size_t iterations) {
     }
 
     return optimized_poses;
+}
+
+/**
+ * Collecting information about ICP edges
+ */
+ICPEdgesInfo Builder::calculateICPEdgesInfo() const {
+    ICPEdgesInfo icp_edges_info;
+    for (auto it = optimizer_.activeEdges().begin(); it != optimizer_.activeEdges().end(); ++it) {
+        const g2o::OptimizableGraph::Edge* edge = *it;
+        const g2o::EdgeSE2* edge_se2 = dynamic_cast<const g2o::EdgeSE2*>(edge);
+        const number_t* info = edge_se2->informationData();
+        if (info[0] == params_.icp_edge_weight) {
+            const g2o::OptimizableGraph::Vertex* from_edge =
+                dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
+            const g2o::OptimizableGraph::Vertex* to_edge =
+                dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
+            icp_edges_info.push_back(ICPEdgeInfo{
+                .from_edge = from_edge->id(), .to_edge = to_edge->id(), .error_val = edge->chi2()});
+        }
+    }
+    return icp_edges_info;
+}
+
+/**
+ * Writing information about icp edges to a json file
+ */
+void Builder::writeICPEdgesInfoToJSON(
+    const std::string& json_path, const ICPEdgesInfo& icp_edges_info) const {
+    nlohmann::json json_data;
+    for (const auto& icp_edge_info : icp_edges_info) {
+        json_data.push_back(
+            {{"from_edge", icp_edge_info.from_edge},
+             {"to_edge", icp_edge_info.to_edge},
+             {"error_val", icp_edge_info.error_val}});
+    }
+    std::ofstream file(json_path);
+    if (file.is_open()) {
+        file << json_data.dump(4);
+        file.close();
+    } else {
+        std::cerr << "Error when opening a file for writing: " << json_path << std::endl;
+    }
 }
 
 /**
