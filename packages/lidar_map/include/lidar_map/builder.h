@@ -34,10 +34,10 @@ class Builder {
 
     geom::Poses optimizePoseGraph(size_t iterations);
 
-    const ICPEdgesInfo calculateICPEdgesInfo();
+    ICPEdgesInfo calculateICPEdgesInfo() const;
 
-    const void writeICPEdgesInfoToJSON(
-        const std::string& json_path, const ICPEdgesInfo icp_edge_info_list);
+    void writeICPEdgesInfoToJSON(
+        const std::string& json_path, const ICPEdgesInfo& icp_edges_info) const;
 
     Clouds transformClouds(
         const geom::Poses& poses, const Clouds& clouds, bool inverse = false) const;

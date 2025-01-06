@@ -12,7 +12,6 @@
 #include <g2o/solvers/dense/linear_solver_dense.h>
 #include <g2o/types/slam2d/edge_se2.h>
 #include <g2o/types/slam2d/vertex_se2.h>
-
 #include <nlohmann/json.hpp>
 #include <fstream>
 
@@ -276,35 +275,35 @@ geom::Poses Builder::optimizePoseGraph(size_t iterations) {
 /**
  * Collecting information about ICP edges
  */
-const ICPEdgesInfo Builder::calculateICPEdgesInfo() {
-    ICPEdgesInfo icp_edge_info_list;
+ICPEdgesInfo Builder::calculateICPEdgesInfo() const {
+    ICPEdgesInfo icp_edges_info;
     for (auto it = optimizer_.activeEdges().begin(); it != optimizer_.activeEdges().end(); ++it) {
-        const g2o::OptimizableGraph::Edge* e = *it;
-        const g2o::EdgeSE2* edge_se2 = dynamic_cast<const g2o::EdgeSE2*>(e);
+        const g2o::OptimizableGraph::Edge* edge = *it;
+        const g2o::EdgeSE2* edge_se2 = dynamic_cast<const g2o::EdgeSE2*>(edge);
         const number_t* info = edge_se2->informationData();
         if (info[0] == params_.icp_edge_weight) {
-            const g2o::OptimizableGraph::Vertex* fromEdge =
+            const g2o::OptimizableGraph::Vertex* from_edge =
                 dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
-            const g2o::OptimizableGraph::Vertex* toEdge =
+            const g2o::OptimizableGraph::Vertex* to_edge =
                 dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
-            icp_edge_info_list.push_back(ICPEdgeInfo{
-                .from_edge = fromEdge->id(), .to_edge = toEdge->id(), .error_val = e->chi2()});
+            icp_edges_info.push_back(ICPEdgeInfo{
+                .from_edge = from_edge->id(), .to_edge = to_edge->id(), .error_val = edge->chi2()});
         }
     }
-    return icp_edge_info_list;
+    return icp_edges_info;
 }
 
 /**
  * Writing information about icp edges to a json file
  */
-const void Builder::writeICPEdgesInfoToJSON(
-    const std::string& json_path, const ICPEdgesInfo icp_edge_info_list) {
+void Builder::writeICPEdgesInfoToJSON(
+    const std::string& json_path, const ICPEdgesInfo& icp_edges_info) const {
     nlohmann::json json_data;
-    for (const auto& edge_info : icp_edge_info_list) {
+    for (const auto& icp_edge_info : icp_edges_info) {
         json_data.push_back(
-            {{"from_edge", edge_info.from_edge},
-             {"to_edge", edge_info.to_edge},
-             {"error_val", edge_info.error_val}});
+            {{"from_edge", icp_edge_info.from_edge},
+             {"to_edge", icp_edge_info.to_edge},
+             {"error_val", icp_edge_info.error_val}});
     }
     std::ofstream file(json_path);
     if (file.is_open()) {
