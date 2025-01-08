@@ -170,7 +170,6 @@ int main(int argc, char* argv[]) {
             const auto all_clouds = toClouds(synced_laser_scan_msgs);
 
             std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 3.0);
-
         }
 
         // 2. Construct and optimize pose graph
