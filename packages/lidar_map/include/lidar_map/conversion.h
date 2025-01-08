@@ -3,8 +3,6 @@
 #include "lidar_map/common.h"
 #include "geom/msg.h"
 #include "geom/pose.h"
-
-#include <sensor_msgs/msg/laser_scan.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
 namespace truck::lidar_map {
