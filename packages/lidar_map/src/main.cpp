@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
 
             const auto all_poses = toPoses(synced_odom_msgs);
             const auto all_clouds = toClouds(synced_laser_scan_msgs);
-    
+
             std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 3.0);
 
         }
@@ -202,9 +202,9 @@ int main(int argc, char* argv[]) {
             if (enable_log) {
                 log_optimization_step();
             }
-    
+
             clouds = builder.applyDynamicFilter(poses, clouds, 12.0, 1, 0.05);
-    
+
             if (enable_log) {
                 log_optimization_step();
             }
