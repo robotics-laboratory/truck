@@ -60,7 +60,7 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string fram
     result.header.frame_id = frame_id;
     result.height = 1;
     result.width = cloud.cols();
-    result.fields.resize(3);
+    result.fields.resize(4);
 
     result.fields[0].name = "x";
     result.fields[0].offset = 0;
@@ -76,6 +76,11 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string fram
     result.fields[2].offset = 8;
     result.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32;
     result.fields[2].count = 1;
+
+    result.fields[3].name = "w";
+    result.fields[3].offset = 8;
+    result.fields[3].datatype = sensor_msgs::msg::PointField::FLOAT32;
+    result.fields[3].count = 1;
 
     result.point_step = 16;
     result.row_step = result.point_step * result.width;
