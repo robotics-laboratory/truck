@@ -77,7 +77,7 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string fram
     result.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32;
     result.fields[2].count = 1;
 
-    result.point_step = 12;
+    result.point_step = 16;
     result.row_step = result.point_step * result.width;
     result.is_bigendian = isBigendian();
     result.is_dense = true;

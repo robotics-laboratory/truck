@@ -110,18 +110,14 @@ Eigen::Matrix4f transformationMatrix(const geom::Pose& pose) {
     // Rotation
     tf_matrix(0, 0) = cos_dtheta;
     tf_matrix(0, 1) = -1.0 * sin_dtheta;
-    tf_matrix(0, 2) = 0;
     tf_matrix(1, 0) = sin_dtheta;
     tf_matrix(1, 1) = cos_dtheta;
-    tf_matrix(1, 2) = 0;
-    tf_matrix(2, 0) = 0;
-    tf_matrix(2, 1) = 0;
     tf_matrix(2, 2) = 1;
 
     // Translation
-    tf_matrix(0, 2) = pose.pos.x;
-    tf_matrix(1, 2) = pose.pos.y;
-    tf_matrix(2, 2) = 0;
+    tf_matrix(0, 3) = pose.pos.x;
+    tf_matrix(1, 3) = pose.pos.y;
+    tf_matrix(3, 3) = 1;
 
     return tf_matrix;
 }
