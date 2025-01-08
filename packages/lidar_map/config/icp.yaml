@@ -1,5 +1,5 @@
 readingDataPointsFilters:
-  - RandomSamplingDataPointsFilter: 
+  - RandomSamplingDataPointsFilter:
       prob: 0.7 # 70% данных будут случайно выбраны
       seed: 42
 
@@ -7,12 +7,12 @@ referenceDataPointsFilters: # Секция которая применяется
   - SamplingSurfaceNormalDataPointsFilter:
       knn: 10 # Количество ближайших соседей для выборки нормалей поверхности
 
-  - ObservationDirectionDataPointsFilter: 
+  - ObservationDirectionDataPointsFilter:
       x: 0.0
       y: 0.0
       z: 0.0
-      
-  - OrientNormalsDataPointsFilter: 
+  
+  - OrientNormalsDataPointsFilter:
       towardCenter: 1
 
 matcher:

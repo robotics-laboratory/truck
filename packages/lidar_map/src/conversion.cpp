@@ -2,7 +2,6 @@
 #include <common/math.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-
 namespace truck::lidar_map {
 
 namespace {

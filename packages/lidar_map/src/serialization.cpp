@@ -55,6 +55,7 @@ std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
         if (!msg.has_value()) {
             break;
         }
+
         data.push_back(*msg);
     }
 

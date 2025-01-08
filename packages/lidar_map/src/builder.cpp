@@ -79,7 +79,7 @@ g2o::SE2 toSE2(const geom::Pose& pose) {
  */
 g2o::SE2 toSE2(const Eigen::Matrix4f& tf_matrix) {
     const double tx = tf_matrix(0, 3);
-    const double ty = tf_matrix(1, 3); 
+    const double ty = tf_matrix(1, 3);
     const double dtheta = std::atan2(tf_matrix(1, 0), tf_matrix(0, 0));
     return {tx, ty, dtheta};
 }
