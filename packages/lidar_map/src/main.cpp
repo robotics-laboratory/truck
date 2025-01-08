@@ -169,73 +169,53 @@ int main(int argc, char* argv[]) {
             const auto all_poses = toPoses(synced_odom_msgs);
             const auto all_clouds = toClouds(synced_laser_scan_msgs);
             std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 3.0);
-            bag_writer.addLidarMap(clouds[0], "/one_test_cloud");
+           
         }
 
         // 2. Construct and optimize pose graph
         {
-            // auto log_optimization_step = [&]() {
-            //     auto tf_merged_clouds = builder.mergeClouds(builder.transformClouds(poses, clouds));
-            //     bag_writer.addOptimizationStep(
-            //         poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
-            // };
+            auto log_optimization_step = [&]() {
+                auto tf_merged_clouds = builder.mergeClouds(builder.transformClouds(poses, clouds));
+                bag_writer.addOptimizationStep(
+                    poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
+            };
 
-            // builder.initPoseGraph(poses, clouds);
+            builder.initPoseGraph(poses, clouds);
 
-            // if (enable_log) {
-            //     log_optimization_step();
-            // }
+            if (enable_log) {
+                log_optimization_step();
+            }
 
-            // const size_t optimization_steps = 10;
+            const size_t optimization_steps = 10;
 
-            // for (size_t i = 0; i < optimization_steps; i++) {
-            //     poses = builder.optimizePoseGraph(1);
+            for (size_t i = 0; i < optimization_steps; i++) {
+                poses = builder.optimizePoseGraph(1);
 
-            //     if (enable_log) {
-            //         log_optimization_step();
-            //     }
-            // }
+                if (enable_log) {
+                    log_optimization_step();
+                }
+            }
 
-            // clouds = builder.applyGridFilter(clouds, 0.08);
+            clouds = builder.applyGridFilter(clouds, 0.08);
 
-            // if (enable_log) {
-            //     log_optimization_step();
-            // }
+            if (enable_log) {
+                log_optimization_step();
+            }
+            clouds = builder.applyDynamicFilter(poses, clouds, 12.0, 1, 0.05);
+            if (enable_log) {
+                log_optimization_step();
+            }
 
-            // clouds = builder.applyDynamicFilter(poses, clouds, 12.0, 1, 0.05);
-
-            // if (enable_log) {
-            //     log_optimization_step();
-            // }
-
-
-            // // Вывод первых 10 элементов clouds
-            // std::cout << "First 10 Clouds:\n";
-            // for (size_t i = 0; i < std::min(size_t(10), clouds.size()); ++i) {
-            //     std::cout << "Cloud " << i << ":\n" << clouds[i] << "\n";
-            // }
-
-            // // Вывод первых 10 элементов poses
-            // std::cout << "\nFirst 10 Poses:\n";
-            // for (size_t i = 0; i < std::min(size_t(10), poses.size()); ++i) {
-            //     std::cout << "Pose " << i << ": " << poses[i] << "\n";
-            // }
-
-            const auto lidar_map = builder.mergeClouds(
-                builder.transformClouds(
-                    std::vector<decltype(poses)::value_type>(poses.begin(), poses.begin() + 2),
-                    std::vector<Cloud>(clouds.begin(), clouds.begin() + 2)
-                )
-            );
+            const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
-            // if (enable_test) {
-            //     const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
-            //     const ComplexPolygon vector_map = Map::fromGeoJson(map_path).polygons()[0];
+            if (enable_test) {
+                const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
+                const ComplexPolygon vector_map = Map::fromGeoJson(map_path).polygons()[0];
 
-            //     bag_writer.addVectorMap(vector_map, "/map/vector");
-            //     std::cout << calculateMetrics(lidar_map, vector_map);
-            // }
+                bag_writer.addVectorMap(vector_map, "/map/vector");
+                std::cout << calculateMetrics(lidar_map, vector_map);
+            }
         }
     }
 }

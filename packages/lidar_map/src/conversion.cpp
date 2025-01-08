@@ -78,7 +78,7 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string fram
     result.fields[2].count = 1;
 
     result.fields[3].name = "w";
-    result.fields[3].offset = 8;
+    result.fields[3].offset = 12;
     result.fields[3].datatype = sensor_msgs::msg::PointField::FLOAT32;
     result.fields[3].count = 1;
 

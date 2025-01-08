@@ -43,45 +43,46 @@ void normalize(DataPoints& data_points) {
     }
 }
 
-// DataPoints toDataPoints(const Cloud& cloud) {
-//     DataPoints::Labels feature_labels;
-//     feature_labels.push_back(DataPoints::Label("x", 1));
-//     feature_labels.push_back(DataPoints::Label("y", 1));
-//     feature_labels.push_back(DataPoints::Label("w", 1));
+DataPoints toDataPoints(const Cloud& cloud) {
+    DataPoints::Labels feature_labels;
+    feature_labels.push_back(DataPoints::Label("x", 1));
+    feature_labels.push_back(DataPoints::Label("y", 1));
+    feature_labels.push_back(DataPoints::Label("z", 1));
+    feature_labels.push_back(DataPoints::Label("w", 1));
 
-//     DataPoints::Labels descriptor_labels;
+    DataPoints::Labels descriptor_labels;
 
-//     DataPoints data_points(feature_labels, descriptor_labels, cloud.cols());
-//     data_points.features = cloud;
-//     return data_points;
-// }
+    DataPoints data_points(feature_labels, descriptor_labels, cloud.cols());
+    data_points.features = cloud;
+    return data_points;
+}
 
-// std::vector<DataPoints> toDataPoints(const Clouds& clouds) {
-//     std::vector<DataPoints> data_points_array;
+std::vector<DataPoints> toDataPoints(const Clouds& clouds) {
+    std::vector<DataPoints> data_points_array;
 
-//     for (const auto& cloud : clouds) {
-//         data_points_array.push_back(toDataPoints(cloud));
-//     }
+    for (const auto& cloud : clouds) {
+        data_points_array.push_back(toDataPoints(cloud));
+    }
 
-//     return data_points_array;
-// }
+    return data_points_array;
+}
 
 /**
  * Returns g2o::SE2 constructed from pose
  */
-// g2o::SE2 toSE2(const geom::Pose& pose) {
-//     return {pose.pos.x, pose.pos.y, pose.dir.angle().radians()};
-// }
+g2o::SE2 toSE2(const geom::Pose& pose) {
+    return {pose.pos.x, pose.pos.y, pose.dir.angle().radians()};
+}
 
 /**
- * Returns g2o::SE2 constructed from 3x3 transformation matrix
+ * Returns g2o::SE2 constructed from 4x4 transformation matrix
  */
-// g2o::SE2 toSE2(const Eigen::Matrix3f& tf_matrix) {
-//     const double tx = tf_matrix(0, 2);
-//     const double ty = tf_matrix(1, 2);
-//     const double dtheta = std::atan2(tf_matrix(1, 0), tf_matrix(0, 0));
-//     return {tx, ty, dtheta};
-// }
+g2o::SE2 toSE2(const Eigen::Matrix4f& tf_matrix) {
+    const double tx = tf_matrix(0, 3);
+    const double ty = tf_matrix(1, 3); 
+    const double dtheta = std::atan2(tf_matrix(1, 0), tf_matrix(0, 0));
+    return {tx, ty, dtheta};
+}
 
 /**
  * Returns pose constructed from g2o::SE2
@@ -181,74 +182,74 @@ std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
  * - 'poses': set of clouds' poses in a world frame
  * - 'clouds': set of clouds in correspondig local frames
  */
-// void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
-//     auto solver = new g2o::OptimizationAlgorithmLevenberg(
-//         g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
+    auto solver = new g2o::OptimizationAlgorithmLevenberg(
+        g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
 
-//     optimizer_.clear();
-//     optimizer_.setAlgorithm(solver);
+    optimizer_.clear();
+    optimizer_.setAlgorithm(solver);
 
-//     std::vector<g2o::VertexSE2*> vertices;
+    std::vector<g2o::VertexSE2*> vertices;
 
-//     // Add vertices
-//     for (size_t i = 0; i < poses.size(); i++) {
-//         auto* vertex = new g2o::VertexSE2();
-//         vertex->setId(i);
-//         vertex->setEstimate(toSE2(poses[i]));
+    // Add vertices
+    for (size_t i = 0; i < poses.size(); i++) {
+        auto* vertex = new g2o::VertexSE2();
+        vertex->setId(i);
+        vertex->setEstimate(toSE2(poses[i]));
 
-//         optimizer_.addVertex(vertex);
-//         vertices.push_back(vertex);
-//     }
+        optimizer_.addVertex(vertex);
+        vertices.push_back(vertex);
+    }
 
-//     // Add odometry edges
-//     for (size_t i = 1; i < poses.size(); i++) {
-//         const Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i - 1], poses[i]);
+    // Add odometry edges
+    for (size_t i = 1; i < poses.size(); i++) {
+        const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i - 1], poses[i]);
 
-//         auto* edge = new g2o::EdgeSE2();
-//         edge->setVertex(0, vertices[i - 1]);
-//         edge->setVertex(1, vertices[i]);
-//         edge->setMeasurement(toSE2(tf_matrix_odom));
-//         edge->setInformation(Eigen::Matrix3d::Identity() * params_.odom_edge_weight);
+        auto* edge = new g2o::EdgeSE2();
+        edge->setVertex(0, vertices[i - 1]);
+        edge->setVertex(1, vertices[i]);
+        edge->setMeasurement(toSE2(tf_matrix_odom));
+        edge->setInformation(Eigen::Matrix3d::Identity() * params_.odom_edge_weight);
 
-//         optimizer_.addEdge(edge);
-//     }
+        optimizer_.addEdge(edge);
+    }
 
-//     auto data_points_clouds = toDataPoints(clouds);
+    auto data_points_clouds = toDataPoints(clouds);
 
-//     // Add ICP edges
-//     for (size_t i = 0; i < poses.size(); i++) {
-//         for (size_t j = i + 1; j < poses.size(); j++) {
-//             if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
-//                 continue;
-//             }
+    // Add ICP edges
+    for (size_t i = 0; i < poses.size(); i++) {
+        for (size_t j = i + 1; j < poses.size(); j++) {
+            if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
+                continue;
+            }
 
-//             const Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
+            const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
 
-//             const auto& reference_cloud = data_points_clouds[i];
+            const auto& reference_cloud = data_points_clouds[i];
 
-//             auto reading_cloud = data_points_clouds[j];
-//             icp_.transformations.apply(reading_cloud, tf_matrix_odom);
-//             normalize(reading_cloud);
+            auto reading_cloud = data_points_clouds[j];
+            icp_.transformations.apply(reading_cloud, tf_matrix_odom);
+            normalize(reading_cloud);
 
-//             const Eigen::Matrix3f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
-//             const Eigen::Matrix3f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
+            const Eigen::Matrix4f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
+            const Eigen::Matrix4f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
 
-//             auto* edge = new g2o::EdgeSE2();
-//             edge->setVertex(0, vertices[i]);
-//             edge->setVertex(1, vertices[j]);
-//             edge->setMeasurement(toSE2(tf_matrix_final));
-//             edge->setInformation(Eigen::Matrix3d::Identity() * params_.icp_edge_weight);
+            auto* edge = new g2o::EdgeSE2();
+            edge->setVertex(0, vertices[i]);
+            edge->setVertex(1, vertices[j]);
+            edge->setMeasurement(toSE2(tf_matrix_final));
+            edge->setInformation(Eigen::Matrix3d::Identity() * params_.icp_edge_weight);
 
-//             optimizer_.addEdge(edge);
-//         }
-//     }
+            optimizer_.addEdge(edge);
+        }
+    }
 
-//     auto* fixed_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer_.vertex(0));
-//     fixed_vertex->setFixed(true);
+    auto* fixed_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer_.vertex(0));
+    fixed_vertex->setFixed(true);
 
-//     optimizer_.setVerbose(params_.verbose);
-//     optimizer_.initializeOptimization();
-// }
+    optimizer_.setVerbose(params_.verbose);
+    optimizer_.initializeOptimization();
+}
 
 /**
  * Do pose graph optimization
@@ -258,21 +259,21 @@ std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
  * Output:
  * - set of optimized clouds' poses in a world frame
  */
-// geom::Poses Builder::optimizePoseGraph(size_t iterations) {
-//     optimizer_.optimize(iterations);
+geom::Poses Builder::optimizePoseGraph(size_t iterations) {
+    optimizer_.optimize(iterations);
 
-//     geom::Poses optimized_poses;
+    geom::Poses optimized_poses;
 
-//     for (size_t i = 0; i < optimizer_.vertices().size(); i++) {
-//         auto* optimized_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer_.vertex(i));
-//         if (optimized_vertex) {
-//             const g2o::SE2 se2 = optimized_vertex->estimate();
-//             optimized_poses.push_back(toPose(se2));
-//         }
-//     }
+    for (size_t i = 0; i < optimizer_.vertices().size(); i++) {
+        auto* optimized_vertex = dynamic_cast<g2o::VertexSE2*>(optimizer_.vertex(i));
+        if (optimized_vertex) {
+            const g2o::SE2 se2 = optimized_vertex->estimate();
+            optimized_poses.push_back(toPose(se2));
+        }
+    }
 
-//     return optimized_poses;
-// }
+    return optimized_poses;
+}
 
 /**
  * Transform points' coordinates of each cloud
@@ -397,14 +398,11 @@ Clouds Builder::applyDynamicFilter(
     size_t min_sim_points_count, double max_sim_points_dist) const {
     VERIFY(!poses.empty());
     VERIFY(poses.size() == clouds_base.size());
-
     // Make a transformation of clouds' points from corresponding local frames
     // defined by clouds' poses into a world frame
     const Clouds clouds = transformClouds(poses, clouds_base, false);
-
     // Build rtree for poses
     const RTree poses_rtree = toRTree(poses);
-
     // Build rtree for every cloud
     std::vector<RTree> clouds_rtrees;
     for (const auto& cloud : clouds) {
@@ -460,11 +458,11 @@ Clouds Builder::applyDynamicFilter(
             return clouds_base;
         }
 
-        Cloud filtered_cloud(3, clouds_skeletons[i].size());
+        Cloud filtered_cloud(4, clouds_skeletons[i].size());
 
         size_t last_point_id = 0;
         for (size_t point_id : clouds_skeletons[i]) {
-            filtered_cloud.block(0, last_point_id, 3, 1) = clouds[i].col(point_id);
+            filtered_cloud.block(0, last_point_id, 4, 1) = clouds[i].col(point_id);
             last_point_id++;
         }
 
@@ -484,25 +482,25 @@ Clouds Builder::applyDynamicFilter(
  *
  * The set of points which lie within the bounds of a grid cell are combined into one output point
  */
-// Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
-//     const std::string cell_size_str = std::to_string(cell_size);
-//     PointMatcherSupport::Parametrizable::Parameters grid_filter_params = {
-//         {"vSizeX", cell_size_str},
-//         {"vSizeY", cell_size_str},
-//         {"vSizeZ", cell_size_str},
-//     };
+Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
+    const std::string cell_size_str = std::to_string(cell_size);
+    PointMatcherSupport::Parametrizable::Parameters grid_filter_params = {
+        {"vSizeX", cell_size_str},
+        {"vSizeY", cell_size_str},
+        {"vSizeZ", cell_size_str},
+    };
 
-//     std::shared_ptr<Matcher::DataPointsFilter> grid_filter =
-//         Matcher::get().DataPointsFilterRegistrar.create(
-//             "VoxelGridDataPointsFilter", grid_filter_params);
+    std::shared_ptr<Matcher::DataPointsFilter> grid_filter =
+        Matcher::get().DataPointsFilterRegistrar.create(
+            "VoxelGridDataPointsFilter", grid_filter_params);
 
-//     Clouds clouds_filtered;
+    Clouds clouds_filtered;
 
-//     for (const auto& cloud : clouds) {
-//         clouds_filtered.push_back(grid_filter->filter(toDataPoints(cloud)).features);
-//     }
+    for (const auto& cloud : clouds) {
+        clouds_filtered.push_back(grid_filter->filter(toDataPoints(cloud)).features);
+    }
 
-//     return clouds_filtered;
-// }
+    return clouds_filtered;
+}
 
 }  // namespace truck::lidar_map
