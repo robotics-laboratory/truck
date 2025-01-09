@@ -4,8 +4,27 @@ readingDataPointsFilters:
       seed: 42
 
 referenceDataPointsFilters: # Секция которая применяется к целевым облакам
-  - SamplingSurfaceNormalDataPointsFilter:
-      knn: 10 # Количество ближайших соседей для выборки нормалей поверхности
+  - RandomSamplingDataPointsFilter: 
+      prob: 0.8  # 70% данных будут случайно выбраны
+      seed: 42
+      randomSamplingMethod: 1
+
+  - SurfaceNormalDataPointsFilter:
+      knn: 50
+      epsilon: 0.0
+      keepNormals: 1
+      keepDensities: 0
+      keepEigenValues: 0
+      keepEigenVectors: 0
+      keepMatchedIds: 0
+
+  - ObservationDirectionDataPointsFilter: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+
+  - OrientNormalsDataPointsFilter: 
+      towardCenter: 1
 
   - ObservationDirectionDataPointsFilter:
       x: 0.0

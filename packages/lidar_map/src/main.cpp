@@ -208,12 +208,7 @@ int main(int argc, char* argv[]) {
                 log_optimization_step();
             }
 
-            const auto lidar_map = builder.mergeClouds(
-                builder.transformClouds(
-                    std::vector<decltype(poses)::value_type>(poses.begin(), poses.begin() + 2),
-                    std::vector<Cloud>(clouds.begin(), clouds.begin() + 2)
-                )
-            );
+            const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
             if (enable_test) {
