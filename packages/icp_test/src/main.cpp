@@ -125,9 +125,9 @@ void getResidualError(const DP &dpref, const DP &dppointcloud_out, PM::ICP &icp)
 
 
 int main() {
-    std::string filePath1 = "/truck/packages/icp_test/files/cloud_1.pcd"; 
+    std::string filePath1 = "/root/truck/packages/icp_test/files/cloud_1.pcd"; 
     DP cloud_1 = pcdToPointMatcherData(filePath1);
-    std::string filePath2 = "/truck/packages/icp_test/files/cloud_2.pcd"; 
+    std::string filePath2 = "/root/truck/packages/icp_test/files/cloud_2.pcd"; 
     DP cloud_2 = pcdToPointMatcherData(filePath2);
 	PM::ICP icp;
     std::ifstream icp_config_stream("/root/truck/packages/icp_test/conf/icp_config.yaml");
@@ -176,6 +176,6 @@ int main() {
     std::vector<DP> clouds = {cloud_1, cloud_2, cloud_3};
     std::vector<std::string> topics = {"cloud_1", "cloud_2", "cloud_3"};
     std::vector<std::string> colors = {"red", "green", "blue"};
-    writecloudsToMCAP("/root/truck/packages/icp_test/results/outlier.mcap", clouds, topics, colors);
+    writecloudsToMCAP("/root/truck/packages/icp_test/results/a6.mcap", clouds, topics, colors);
     return 0;
 }

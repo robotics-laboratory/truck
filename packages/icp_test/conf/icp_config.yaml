@@ -1,64 +1,69 @@
-readingDataPointsFilters: # Секция, которая применяется к входным облакам
-  - RandomSamplingDataPointsFilter: 
-      prob: 0.7  # 70% данных будут случайно выбраны
+readingDataPointsFilters:
+  - RandomSamplingDataPointsFilter:
+      prob: 0.7 # 70% данных будут случайно выбраны
       seed: 42
 
 referenceDataPointsFilters: # Секция которая применяется к целевым облакам
-  - SamplingSurfaceNormalDataPointsFilter:
-      knn: 10   # Количество ближайших соседей для выборки нормалей поверхности
+  - RandomSamplingDataPointsFilter: 
+      prob: 0.9  # 70% данных будут случайно выбраны
+      seed: 42
+      randomSamplingMethod: 1
+
+  - SurfaceNormalDataPointsFilter:
+      knn: 50
+      epsilon: 0.0
+      keepNormals: 1
+      keepDensities: 0
+      keepEigenValues: 0
+      keepEigenVectors: 0
+      keepMatchedIds: 0
 
   - ObservationDirectionDataPointsFilter: 
       x: 0.0
       y: 0.0
       z: 0.0
-      
+  
   - OrientNormalsDataPointsFilter: 
       towardCenter: 1
 
+  - ObservationDirectionDataPointsFilter:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+
+  - OrientNormalsDataPointsFilter:
+      towardCenter: 1
 
 matcher:
   KDTreeMatcher:
-    knn: 1                # Количество ближайших соседей для сопоставления (будет найден только один ближайший сосед)
-    epsilon: 2            # Учет ошибки
-
+    knn: 1 # Количество ближайших соседей для сопоставления (будет найден только один ближайший сосед)
+    epsilon: 2 # Учет ошибки
 
 outlierFilters:
   - MaxDistOutlierFilter:
-      maxDist: 30  # Максимальное расстояние от точки до ближайшей точки в облаке. Точки, которые находятся дальше maxDist, будут считаться выбросами.
+      maxDist: 30 # Максимальное расстояние от точки до ближайшей точки в облаке.
 
   - MedianDistOutlierFilter:
-      factor: 30  # Умножитель для медианного расстояния. Точки, которые находятся дальше factor * медианное расстояние, будут отфильтрованы как выбросы.
+      factor: 30 # Умножитель для медианного расстояния.
 
   - MinDistOutlierFilter:
-      minDist: 0.01  # Минимальное расстояние до ближайшей точки. Точки, которые находятся ближе minDist, будут считаться выбросами.
-
-#   - TrimmedDistOutlierFilter:
-#       ratio: 0.99  # Доля точек, которые будут отфильтрованы. Например, 10% точек с наибольшими расстояниями будут удалены.
-
-#   - VarTrimmedDistOutlierFilter:
-#        minRatio: 0.001  # Минимальная доля точек, которые должны быть оставлены после фильтрации. Устанавливает нижний предел для отфильтрованных точек.
-#        maxRatio: 0.99  # Максимальная доля точек, которые могут быть удалены. Устанавливает верхний предел для отфильтрованных точек.
-#        lambda: 0.1  # Параметр, который влияет на жесткость фильтрации. Чем больше значение, тем более агрессивно фильтр будет удалять выбросы.
+      minDist: 0.01  # Минимальное расстояние до ближайшей точки.
 
 errorMinimizer:
   PointToPlaneErrorMinimizer:
-   force2D: 1            # Так как все облака находятся в одной плоскости
+   force2D: 1 # Так как все облака находятся в одной плоскости
 
 transformationCheckers: # Фильтр оценивает, насколько сильно изменились параметры трансформации
   - CounterTransformationChecker:
-      maxIterationCount: 50  # Максимальное количество итераций для проверки преобразования
+      maxIterationCount: 40 # Максимальное количество итераций для проверки преобразования
 
   - DifferentialTransformationChecker:
-      minDiffRotErr: 0.001   # Минимальная допустимая ошибка вращения для проверки преобразования
-      minDiffTransErr: 0.001   # Минимальная допустимая ошибка трансляции для проверки преобразования
-      smoothLength: 4          # При оценке изменений будут учитываться последние 4 итерации
+      minDiffRotErr: 0.001 # Минимальная допустимая ошибка вращения для проверки преобразования
+      minDiffTransErr: 0.001 # Минимальная допустимая ошибка трансляции для проверки преобразования
+      smoothLength: 4 # При оценке изменений будут учитываться последние 4 итерации
 
 inspector:
-  VTKFileInspector:
-     baseFileName : packages/icp_test/inspector/icp_test4
-     dumpDataLinks : 1          # Флаг для сохранения ссылок на данные
-     dumpReading : 1            # Флаг для сохранения данных чтения
-     dumpReference : 1          # Флаг для сохранения эталонных данных
+   NullInspector
 
 logger:
-   FileLogger: 
+   FileLogger
