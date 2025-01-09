@@ -23,7 +23,7 @@ referenceDataPointsFilters: # Секция которая применяется
       y: 0.0
       z: 0.0
 
-  - OrientNormalsDataPointsFilter: 
+  - OrientNormalsDataPointsFilter:
       towardCenter: 1
 
   - ObservationDirectionDataPointsFilter:
