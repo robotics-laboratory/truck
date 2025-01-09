@@ -4,7 +4,7 @@ readingDataPointsFilters:
       seed: 42
 
 referenceDataPointsFilters: # Секция которая применяется к целевым облакам
-  - RandomSamplingDataPointsFilter: 
+  - RandomSamplingDataPointsFilter:
       prob: 0.8  # 70% данных будут случайно выбраны
       seed: 42
       randomSamplingMethod: 1
@@ -18,7 +18,7 @@ referenceDataPointsFilters: # Секция которая применяется
       keepEigenVectors: 0
       keepMatchedIds: 0
 
-  - ObservationDirectionDataPointsFilter: 
+  - ObservationDirectionDataPointsFilter:
       x: 0.0
       y: 0.0
       z: 0.0
@@ -30,9 +30,6 @@ referenceDataPointsFilters: # Секция которая применяется
       x: 0.0
       y: 0.0
       z: 0.0
-
-  - OrientNormalsDataPointsFilter:
-      towardCenter: 1
 
 matcher:
   KDTreeMatcher:
