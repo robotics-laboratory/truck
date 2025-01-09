@@ -36,12 +36,15 @@ errorMinimizer:
 
 transformationCheckers: # Фильтр оценивает, насколько сильно изменились параметры трансформации
   - CounterTransformationChecker:
-      maxIterationCount: 50 # Максимальное количество итераций для проверки преобразования
+      maxIterationCount: 40 # Максимальное количество итераций для проверки преобразования
 
   - DifferentialTransformationChecker:
       minDiffRotErr: 0.001 # Минимальная допустимая ошибка вращения для проверки преобразования
       minDiffTransErr: 0.001 # Минимальная допустимая ошибка трансляции для проверки преобразования
       smoothLength: 4 # При оценке изменений будут учитываться последние 4 итерации
+
+inspector:
+   NullInspector
 
 logger:
    FileLogger

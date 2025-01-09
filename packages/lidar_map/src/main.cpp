@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
     {
         const BuilderParams builder_params{
             .icp_config = kPkgPathLidarMap + "/config/icp.yaml",
-            .icp_edge_max_dist = 0.6,
+            .icp_edge_max_dist = 3,
             .odom_edge_weight = 1.0,
             .icp_edge_weight = 3.0,
             .verbose = true};
@@ -208,7 +208,12 @@ int main(int argc, char* argv[]) {
                 log_optimization_step();
             }
 
-            const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
+            const auto lidar_map = builder.mergeClouds(
+                builder.transformClouds(
+                    std::vector<decltype(poses)::value_type>(poses.begin(), poses.begin() + 2),
+                    std::vector<Cloud>(clouds.begin(), clouds.begin() + 2)
+                )
+            );
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
             if (enable_test) {
