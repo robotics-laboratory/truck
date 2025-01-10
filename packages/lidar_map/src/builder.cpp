@@ -220,18 +220,21 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
                 continue;
             }
-
+            std::cout << "1\n";
             const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
 
             const auto& reference_cloud = data_points_clouds[i];
-
+            std::cout << "3\n";
             auto reading_cloud = data_points_clouds[j];
+            std::cout << "4\n";
             icp_.transformations.apply(reading_cloud, tf_matrix_odom);
+            std::cout << "5\n";
             normalize(reading_cloud);
-
+            std::cout << "6\n";
             const Eigen::Matrix4f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
+            std::cout << "7\n";
             const Eigen::Matrix4f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
-
+            std::cout << "8\n";
             auto* edge = new g2o::EdgeSE2();
             edge->setVertex(0, vertices[i]);
             edge->setVertex(1, vertices[j]);
@@ -291,6 +294,7 @@ Clouds Builder::transformClouds(
     VERIFY(poses.size() == clouds.size());
 
     Clouds clouds_tf;
+
     for (size_t i = 0; i < clouds.size(); i++) {
         Eigen::Matrix4f tf_matrix = transformationMatrix(poses[i]);
         tf_matrix = (inverse == true) ? tf_matrix.inverse() : tf_matrix;
@@ -300,6 +304,7 @@ Clouds Builder::transformClouds(
 
         clouds_tf.push_back(cloud_tf);
     }
+
     return clouds_tf;
 }
 
@@ -313,12 +318,15 @@ Cloud Builder::mergeClouds(const Clouds& clouds) const {
     for (const auto& cloud : clouds) {
         points_count += cloud.cols();
     }
+
     Cloud merged_cloud(4, points_count);
     size_t last_point_id = 0;
+
     for (const auto& cloud : clouds) {
         merged_cloud.block(0, last_point_id, cloud.rows(), cloud.cols()) = cloud;
         last_point_id += cloud.cols();
     }
+
     return merged_cloud;
 }
 
@@ -396,11 +404,14 @@ Clouds Builder::applyDynamicFilter(
     size_t min_sim_points_count, double max_sim_points_dist) const {
     VERIFY(!poses.empty());
     VERIFY(poses.size() == clouds_base.size());
+
     // Make a transformation of clouds' points from corresponding local frames
     // defined by clouds' poses into a world frame
     const Clouds clouds = transformClouds(poses, clouds_base, false);
+
     // Build rtree for poses
     const RTree poses_rtree = toRTree(poses);
+
     // Build rtree for every cloud
     std::vector<RTree> clouds_rtrees;
     for (const auto& cloud : clouds) {

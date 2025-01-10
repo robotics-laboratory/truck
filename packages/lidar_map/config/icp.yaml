@@ -5,7 +5,7 @@ readingDataPointsFilters:
 
 referenceDataPointsFilters: # Секция которая применяется к целевым облакам
   - RandomSamplingDataPointsFilter:
-      prob: 0.8  # 70% данных будут случайно выбраны
+      prob: 0.8  # 80% данных будут случайно выбраны
       seed: 42
       randomSamplingMethod: 1
 
