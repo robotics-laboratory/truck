@@ -30,7 +30,7 @@ namespace {
 
 void normalize(Cloud& cloud) {
     for (size_t i = 0; i < cloud.cols(); i++) {
-        const auto scalar = cloud.col(i)(2);
+        const auto scalar = cloud.col(i)(3);
         cloud.col(i) /= scalar;
     }
 }
@@ -38,7 +38,7 @@ void normalize(Cloud& cloud) {
 void normalize(DataPoints& data_points) {
     auto& matrix = data_points.features;
     for (size_t i = 0; i < matrix.cols(); i++) {
-        const auto scalar = matrix.col(i)(2);
+        const auto scalar = matrix.col(i)(3);
         matrix.col(i) /= scalar;
     }
 }
@@ -47,6 +47,7 @@ DataPoints toDataPoints(const Cloud& cloud) {
     DataPoints::Labels feature_labels;
     feature_labels.push_back(DataPoints::Label("x", 1));
     feature_labels.push_back(DataPoints::Label("y", 1));
+    feature_labels.push_back(DataPoints::Label("z", 1));
     feature_labels.push_back(DataPoints::Label("w", 1));
 
     DataPoints::Labels descriptor_labels;
@@ -74,11 +75,11 @@ g2o::SE2 toSE2(const geom::Pose& pose) {
 }
 
 /**
- * Returns g2o::SE2 constructed from 3x3 transformation matrix
+ * Returns g2o::SE2 constructed from 4x4 transformation matrix
  */
-g2o::SE2 toSE2(const Eigen::Matrix3f& tf_matrix) {
-    const double tx = tf_matrix(0, 2);
-    const double ty = tf_matrix(1, 2);
+g2o::SE2 toSE2(const Eigen::Matrix4f& tf_matrix) {
+    const double tx = tf_matrix(0, 3);
+    const double ty = tf_matrix(1, 3);
     const double dtheta = std::atan2(tf_matrix(1, 0), tf_matrix(0, 0));
     return {tx, ty, dtheta};
 }
@@ -93,19 +94,19 @@ geom::Pose toPose(const g2o::SE2& se2) {
 }
 
 /**
- * Returns 3x3 transformation matrix of pose relatively to a world
+ * Returns 4x4 transformation matrix of pose relatively to a world
  *
  * Pose is given in a world frame
  *
  * Translation is taken from pose.pos
  * Rotation is taken from pose.dir
  */
-Eigen::Matrix3f transformationMatrix(const geom::Pose& pose) {
+Eigen::Matrix4f transformationMatrix(const geom::Pose& pose) {
     const double dtheta = pose.dir.angle().radians();
     const double cos_dtheta = std::cos(dtheta);
     const double sin_dtheta = std::sin(dtheta);
 
-    Eigen::Matrix3f tf_matrix = Eigen::Matrix3f::Identity();
+    Eigen::Matrix4f tf_matrix = Eigen::Matrix4f::Identity();
 
     // Rotation
     tf_matrix(0, 0) = cos_dtheta;
@@ -114,26 +115,26 @@ Eigen::Matrix3f transformationMatrix(const geom::Pose& pose) {
     tf_matrix(1, 1) = cos_dtheta;
 
     // Translation
-    tf_matrix(0, 2) = pose.pos.x;
-    tf_matrix(1, 2) = pose.pos.y;
+    tf_matrix(0, 3) = pose.pos.x;
+    tf_matrix(1, 3) = pose.pos.y;
 
     return tf_matrix;
 }
 
 /**
- * Returns 3x3 transformation matrix of pose_j relatively to pose_i (T_ij)
+ * Returns 4x4 transformation matrix of pose_j relatively to pose_i (T_ij)
  *
  * Poses pose_i and pose_j are given in a world frame
  *
- * Translation and rotation is taken from 3x3 transformation matrix T_ij where:
+ * Translation and rotation is taken from 4x4 transformation matrix T_ij where:
  * - T_ij = T_iw * T_wj
- * - T_wj: 3x3 transformation matrix of pose_j relatively to a world
- * - T_wi: 3x3 transformation matrix of pose_i relatively to a world
- * - T_iw = (T_wi).inv(): 3x3 transformation matrix of world relatively to pose_i
+ * - T_wj: 4x4 transformation matrix of pose_j relatively to a world
+ * - T_wi: 4x4 transformation matrix of pose_i relatively to a world
+ * - T_iw = (T_wi).inv(): 4x4 transformation matrix of world relatively to pose_i
  */
-Eigen::Matrix3f transformationMatrix(const geom::Pose& pose_i, const geom::Pose& pose_j) {
-    const Eigen::Matrix3f T_wj = transformationMatrix(pose_j);
-    const Eigen::Matrix3f T_wi = transformationMatrix(pose_i);
+Eigen::Matrix4f transformationMatrix(const geom::Pose& pose_i, const geom::Pose& pose_j) {
+    const Eigen::Matrix4f T_wj = transformationMatrix(pose_j);
+    const Eigen::Matrix4f T_wi = transformationMatrix(pose_i);
     return T_wi.inverse() * T_wj;
 }
 
@@ -200,7 +201,7 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
 
     // Add odometry edges
     for (size_t i = 1; i < poses.size(); i++) {
-        const Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i - 1], poses[i]);
+        const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i - 1], poses[i]);
 
         auto* edge = new g2o::EdgeSE2();
         edge->setVertex(0, vertices[i - 1]);
@@ -220,17 +221,14 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
                 continue;
             }
 
-            const Eigen::Matrix3f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
+            const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
 
             const auto& reference_cloud = data_points_clouds[i];
-
             auto reading_cloud = data_points_clouds[j];
             icp_.transformations.apply(reading_cloud, tf_matrix_odom);
             normalize(reading_cloud);
-
-            const Eigen::Matrix3f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
-            const Eigen::Matrix3f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
-
+            const Eigen::Matrix4f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
+            const Eigen::Matrix4f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
             auto* edge = new g2o::EdgeSE2();
             edge->setVertex(0, vertices[i]);
             edge->setVertex(1, vertices[j]);
@@ -334,7 +332,7 @@ Clouds Builder::transformClouds(
     Clouds clouds_tf;
 
     for (size_t i = 0; i < clouds.size(); i++) {
-        Eigen::Matrix3f tf_matrix = transformationMatrix(poses[i]);
+        Eigen::Matrix4f tf_matrix = transformationMatrix(poses[i]);
         tf_matrix = (inverse == true) ? tf_matrix.inverse() : tf_matrix;
 
         Cloud cloud_tf = tf_matrix * clouds[i];
@@ -357,7 +355,7 @@ Cloud Builder::mergeClouds(const Clouds& clouds) const {
         points_count += cloud.cols();
     }
 
-    Cloud merged_cloud(3, points_count);
+    Cloud merged_cloud(4, points_count);
     size_t last_point_id = 0;
 
     for (const auto& cloud : clouds) {
@@ -505,11 +503,11 @@ Clouds Builder::applyDynamicFilter(
             return clouds_base;
         }
 
-        Cloud filtered_cloud(3, clouds_skeletons[i].size());
+        Cloud filtered_cloud(4, clouds_skeletons[i].size());
 
         size_t last_point_id = 0;
         for (size_t point_id : clouds_skeletons[i]) {
-            filtered_cloud.block(0, last_point_id, 3, 1) = clouds[i].col(point_id);
+            filtered_cloud.block(0, last_point_id, 4, 1) = clouds[i].col(point_id);
             last_point_id++;
         }
 

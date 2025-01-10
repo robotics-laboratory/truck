@@ -9,12 +9,12 @@ using ICP = Matcher::ICP;
 using DataPoints = Matcher::DataPoints;
 
 /**
- * 3xn eigen matrix of 2D point cloud in homogeneous coordinates
+ * 4xn eigen matrix of 3D point cloud in homogeneous coordinates
  */
-using Cloud = Eigen::Matrix3Xf;
+using Cloud = Eigen::Matrix4Xf;
 
 /**
- * 3xn eigen matrices of 2D point clouds in homogeneous coordinates
+ * 4xn eigen matrices of 3D point clouds in homogeneous coordinates
  */
 using Clouds = std::vector<Cloud>;
 

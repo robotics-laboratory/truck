@@ -1,33 +1,63 @@
 readingDataPointsFilters:
-   - RandomSamplingDataPointsFilter
+  - RandomSamplingDataPointsFilter:
+      prob: 0.7 # 70% данных будут случайно выбраны
+      seed: 42
 
-referenceDataPointsFilters:
-   - SamplingSurfaceNormalDataPointsFilter
+referenceDataPointsFilters: # Секция которая применяется к целевым облакам
+  - RandomSamplingDataPointsFilter:
+      prob: 0.8  # 80% данных будут случайно выбраны
+      seed: 42
+      randomSamplingMethod: 1
+
+  - SurfaceNormalDataPointsFilter:
+      knn: 50
+      epsilon: 0.0
+      keepNormals: 1
+      keepDensities: 0
+      keepEigenValues: 0
+      keepEigenVectors: 0
+      keepMatchedIds: 0
+
+  - ObservationDirectionDataPointsFilter:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+
+  - OrientNormalsDataPointsFilter:
+      towardCenter: 1
+
+  - ObservationDirectionDataPointsFilter:
+      x: 0.0
+      y: 0.0
+      z: 0.0
 
 matcher:
- KDTreeMatcher:
-   knn: 1
-   epsilon: 3.16
+  KDTreeMatcher:
+    knn: 1 # Количество ближайших соседей для сопоставления (будет найден только один ближайший сосед)
+    epsilon: 2 # Учет ошибки
 
 outlierFilters:
-   - TrimmedDistOutlierFilter:
-      ratio: 0.85
-   - RobustOutlierFilter:
-      robustFct: cauchy
-      tuning: 1.0
-      distanceType: point2plane
+  - MaxDistOutlierFilter:
+      maxDist: 30 # Максимальное расстояние от точки до ближайшей точки в облаке.
+
+  - MedianDistOutlierFilter:
+      factor: 30 # Умножитель для медианного расстояния.
+
+  - MinDistOutlierFilter:
+      minDist: 0.01  # Минимальное расстояние до ближайшей точки.
 
 errorMinimizer:
-   PointToPlaneErrorMinimizer:
-      force2D: 1
+  PointToPlaneErrorMinimizer:
+   force2D: 1 # Так как все облака находятся в одной плоскости
 
-transformationCheckers:
+transformationCheckers: # Фильтр оценивает, насколько сильно изменились параметры трансформации
   - CounterTransformationChecker:
-      maxIterationCount: 40
+      maxIterationCount: 40 # Максимальное количество итераций для проверки преобразования
+
   - DifferentialTransformationChecker:
-      minDiffRotErr: 0.001
-      minDiffTransErr: 0.01
-      smoothLength: 3
+      minDiffRotErr: 0.001 # Минимальная допустимая ошибка вращения для проверки преобразования
+      minDiffTransErr: 0.001 # Минимальная допустимая ошибка трансляции для проверки преобразования
+      smoothLength: 4 # При оценке изменений будут учитываться последние 4 итерации
 
 inspector:
    NullInspector

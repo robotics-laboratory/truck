@@ -4,7 +4,7 @@
 #include "geom/complex_polygon.h"
 
 #include <nav_msgs/msg/odometry.hpp>
-#include <sensor_msgs/msg/laser_scan.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 #include <rosbag2_cpp/writer.hpp>
 
 namespace truck::lidar_map {
@@ -12,13 +12,13 @@ namespace truck::lidar_map {
 std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
     const std::string& mcap_path, const std::string& odom_topic);
 
-std::vector<sensor_msgs::msg::LaserScan> loadLaserScanTopic(
+std::vector<sensor_msgs::msg::PointCloud2> loadLaserScanTopic(
     const std::string& mcap_path, const std::string& laser_scan_topic);
 
-std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::LaserScan>>
+std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::PointCloud2>>
 syncOdomWithCloud(
     const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
-    const std::vector<sensor_msgs::msg::LaserScan>& laser_scan_msgs);
+    const std::vector<sensor_msgs::msg::PointCloud2>& laser_scan_msgs);
 
 class BagWriter {
   public:

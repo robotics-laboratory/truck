@@ -96,7 +96,7 @@ std::ostream& operator<<(std::ostream& out, const Metrics& m) noexcept {
 
 }  // namespace
 
-const std::string kTopicLaserScan = "/lidar/scan";
+const std::string kTopicLaserScan = "/livox/lidar";
 const std::string kTopicOdom = "/ekf/odometry/filtered";
 const std::string kPkgPathMap = ament_index_cpp::get_package_share_directory("map");
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
     {
         const BuilderParams builder_params{
             .icp_config = kPkgPathLidarMap + "/config/icp.yaml",
-            .icp_edge_max_dist = 0.6,
+            .icp_edge_max_dist = 3,
             .odom_edge_weight = 1.0,
             .icp_edge_weight = 3.0,
             .verbose = true};
