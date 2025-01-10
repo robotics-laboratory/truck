@@ -220,7 +220,7 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
                 continue;
             }
-            
+
             const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
 
             const auto& reference_cloud = data_points_clouds[i];
