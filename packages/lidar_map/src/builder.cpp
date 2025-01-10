@@ -220,21 +220,15 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
                 continue;
             }
-            std::cout << "1\n";
+            
             const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
 
             const auto& reference_cloud = data_points_clouds[i];
-            std::cout << "3\n";
             auto reading_cloud = data_points_clouds[j];
-            std::cout << "4\n";
             icp_.transformations.apply(reading_cloud, tf_matrix_odom);
-            std::cout << "5\n";
             normalize(reading_cloud);
-            std::cout << "6\n";
             const Eigen::Matrix4f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
-            std::cout << "7\n";
             const Eigen::Matrix4f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
-            std::cout << "8\n";
             auto* edge = new g2o::EdgeSE2();
             edge->setVertex(0, vertices[i]);
             edge->setVertex(1, vertices[j]);
