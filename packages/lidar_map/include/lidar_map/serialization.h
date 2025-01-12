@@ -50,6 +50,10 @@ class MCAPWriter {
 
     void writeCloud(const Cloud& cloud);
 
+    void writeCloudWithAttributes(
+        const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
+        const double percent);
+
     void writePoses(const geom::Poses& poses);
 
     static void writeCloud(

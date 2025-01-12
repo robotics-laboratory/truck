@@ -23,6 +23,13 @@ Parameters:
 
 4. `--json-log`: path to json file for saving map logs (optional)
 
+5. `--icp-log`: pathto NON-EXISTING folder for saving ICP log file (normals and outliers) (optional)
+
+6. `--cloud-number`: Cloud number for visualizing normals and outliers for icp-log (optional)
+
+7. `--percentage`: Percentage of normals rendered [0;100] for icp-log (optional)
+
+
 Run the executable `lidar_map_executable` with the assigned `--mcap-input` and `--mcap-output` arguments:
 ```console
 ros2 run lidar_map lidar_map_executable
@@ -39,10 +46,15 @@ You can now specify logging options separately:
 
 2. `.json` file: contains poses with ICP and odom edges on each iteration of the graph
 
+3. `icp-log.mcap` file contains normals and outliers for {cloud-number} cloud, percentage of normals will be shown = {percentage}
+
 ```console
 ros2 run lidar_map lidar_map_executable
   --mcap-input data/rides/ride_atrium_XX_YY_ZZ.mcap
   --mcap-output data/clouds/cloud_atrium_XX_YY_ZZ
   --mcap-log data/logs/mcap/cloud_atrium_XX_YY_ZZ_log
   --json-log data/logs/json/cloud_atrium_XX_YY_ZZ_log.json
+  --icp-log /root/truck/packages/lidar_map/data/results/f_normals
+  --cloud-number 3
+  --percentage 90
 ```

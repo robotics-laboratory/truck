@@ -179,7 +179,8 @@ std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
  * - 'poses': set of clouds' poses in a world frame
  * - 'clouds': set of clouds in correspondig local frames
  */
-void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
+void Builder::initPoseGraph(
+    const geom::Poses& poses, const Clouds& clouds, const bool get_clouds_with_attributes) {
     auto solver = new g2o::OptimizationAlgorithmLevenberg(
         g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
 
@@ -229,6 +230,13 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             icp_.transformations.apply(reading_cloud, tf_matrix_odom);
             normalize(reading_cloud);
             const Eigen::Matrix4f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
+
+            if (get_clouds_with_attributes) {
+                auto cloud_with_attributes =
+                    getCloudWithAttributes(reference_cloud, reading_cloud, clouds[i]);
+                clouds_with_attributes.push_back(cloud_with_attributes);
+            }
+
             const Eigen::Matrix4f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
             auto* edge = new g2o::EdgeSE2();
             edge->setVertex(0, vertices[i]);
@@ -369,6 +377,41 @@ Cloud Builder::mergeClouds(const Clouds& clouds) const {
     }
 
     return merged_cloud;
+}
+
+/**
+ * Get outliers and normals for a cloud
+ */
+CloudWithAttributes Builder::getCloudWithAttributes(
+    const DataPoints& reference_dp, const DataPoints& reading_dp, const Cloud& cloud) {
+    CloudWithAttributes cloud_with_attributes;
+    cloud_with_attributes.cloud = cloud;
+
+    DataPoints data_points_cloud(reference_dp);
+    icp_.referenceDataPointsFilters.apply(data_points_cloud);
+    BOOST_AUTO(normals, data_points_cloud.getDescriptorViewByName("normals"));
+    CloudAttributes attributes;
+    Eigen::Matrix3Xf normals_matrix(normals.cols(), normals.rows());
+    for (size_t i = 0; i < normals.cols(); i++) {
+        normals_matrix.row(i) = normals.row(i);
+    }
+
+    attributes.normals = normals_matrix;
+    icp_.matcher->init(data_points_cloud);
+    Matcher::Matches matches = icp_.matcher->findClosests(reading_dp);
+    Matcher::OutlierWeights outlierWeights =
+        icp_.outlierFilters.compute(reading_dp, data_points_cloud, matches);
+    Cloud outliers(4, outlierWeights.cols());
+    for (size_t i = 0; i < outlierWeights.cols(); i++) {
+        outliers(0, i) = reading_dp.features(0, i);
+        outliers(1, i) = reading_dp.features(1, i);
+        outliers(2, i) = reading_dp.features(2, i);
+        outliers(3, i) = outlierWeights(0, i);
+    }
+
+    attributes.outliers = outliers;
+    cloud_with_attributes.attributes = attributes;
+    return cloud_with_attributes;
 }
 
 namespace {

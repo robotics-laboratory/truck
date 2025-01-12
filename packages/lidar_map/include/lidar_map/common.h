@@ -18,4 +18,14 @@ using Cloud = Eigen::Matrix4Xf;
  */
 using Clouds = std::vector<Cloud>;
 
+struct CloudAttributes {
+    Eigen::Matrix3Xf normals;
+    Cloud outliers;
+};
+
+struct CloudWithAttributes {
+    Cloud cloud;
+    CloudAttributes attributes;
+};
+
 }  // namespace truck::lidar_map
