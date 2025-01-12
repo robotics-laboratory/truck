@@ -100,7 +100,7 @@ const std::string kTopicLaserScan = "/livox/lidar";
 const std::string kTopicOdom = "/ekf/odometry/filtered";
 const std::string kPkgPathMap = ament_index_cpp::get_package_share_directory("map");
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
-const std::string kICPEdgesInfoJSON = "icp_edges_info.json";
+const std::string kposeGraphInfoJSON = "pose_graph_info.json";
 
 int main(int argc, char* argv[]) {
     bool enable_test = false;
@@ -194,6 +194,10 @@ int main(int argc, char* argv[]) {
 
                 if (enable_log) {
                     log_optimization_step();
+                    const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
+                    const std::string pose_graph_info_path =
+                        output_folder_path + "/" + kposeGraphInfoJSON;
+                    builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, i);
                 }
             }
 
@@ -209,15 +213,14 @@ int main(int argc, char* argv[]) {
                 log_optimization_step();
             }
 
-            const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
+           const auto lidar_map = builder.mergeClouds(
+                builder.transformClouds(
+                    std::vector<decltype(poses)::value_type>(poses.begin(), poses.begin() + 10),
+                    std::vector<Cloud>(clouds.begin(), clouds.begin() + 10)
+                )
+            );
+            
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
-
-            if (enable_log) {
-                const ICPEdgesInfo icp_edges_info = builder.calculateICPEdgesInfo();
-                const std::string icp_edges_info_path =
-                    output_folder_path + "/" + kICPEdgesInfoJSON;
-                builder.writeICPEdgesInfoToJSON(icp_edges_info_path, icp_edges_info);
-            }
 
             if (enable_test) {
                 const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
