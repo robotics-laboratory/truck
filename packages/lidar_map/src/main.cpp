@@ -15,9 +15,95 @@ using namespace truck::geom;
 
 namespace po = boost::program_options;
 
+<<<<<<< HEAD
 const std::string kInputTopicPointCloud = "/livox/lidar";
 const std::string kInputTopicOdom = "/ekf/odometry/filtered";
 const std::string kOutputTopicLidarMap = "/lidar_map";
+=======
+namespace {
+
+struct Metrics {
+    double mean;
+    double rmse;
+    double q95;
+    double q90;
+};
+
+/**
+ * Metrics for calculations lidar map quality
+ *
+ * Error is calculated as distance from point cloud point
+ * to the nearest segment of vector map.
+ *
+ * Error aggregation is done by next metrics:
+ *  mean: mean error
+ *  rmse: root mean squared error
+ *  q95: 95th quantile
+ *  q90: 90th quantile
+ */
+Metrics calculateMetrics(const Cloud& cloud, const ComplexPolygon& complex_polygon) {
+    std::vector<double> min_dists_squared;
+    const auto& segments = complex_polygon.segments();
+
+    for (int i = 0; i < cloud.cols(); i++) {
+        const Vec2 cloud_point = {cloud.col(i)(0), cloud.col(i)(1)};
+        double min_dist_squared = distanceSq(cloud_point, segments[0]);
+
+        for (size_t j = 1; j < segments.size(); j++) {
+            min_dist_squared = std::min(min_dist_squared, distanceSq(cloud_point, segments[j]));
+        }
+
+        min_dists_squared.push_back(min_dist_squared);
+    }
+
+    const size_t count = min_dists_squared.size();
+    std::vector<double> min_dists(count, 0);
+
+    for (size_t i = 0; i < count; i++) {
+        min_dists[i] = std::sqrt(min_dists_squared[i]);
+    }
+
+    std::sort(min_dists.begin(), min_dists.end());
+
+    auto get_quantile = [&](double q) {
+        const auto id = static_cast<size_t>(q * (count - 1));
+        return min_dists[id];
+    };
+
+    Metrics metrics = {
+        .mean = std::accumulate(
+            min_dists.begin(),
+            min_dists.end(),
+            0.0,
+            [&](double a, double b) { return a + b / count; }),
+
+        .rmse = std::sqrt(std::accumulate(
+            min_dists.begin(),
+            min_dists.end(),
+            0.0,
+            [&](double a, double b) { return a + (b * b) / count; })),
+
+        .q95 = get_quantile(0.95),
+        .q90 = get_quantile(0.90)};
+
+    return metrics;
+}
+
+std::ostream& operator<<(std::ostream& out, const Metrics& m) noexcept {
+    return out << "Metrics:\n"
+               << "  mean = " << m.mean << "\n"
+               << "  rmse = " << m.rmse << "\n"
+               << "  q95 = " << m.q95 << "\n"
+               << "  q90 = " << m.q90 << "\n";
+}
+
+}  // namespace
+
+const std::string notebookPath = "/notebook";
+const std::string kTopicLaserScan = "/livox/lidar";
+const std::string kTopicOdom = "/ekf/odometry/filtered";
+const std::string kPkgPathMap = ament_index_cpp::get_package_share_directory("map");
+>>>>>>> f86400c (add notebook + fix formatting)
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
 
 int main(int argc, char* argv[]) {
@@ -168,7 +254,7 @@ int main(int argc, char* argv[]) {
                 log_optimization_step();
                 const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
                 const std::string pose_graph_info_path =
-                    output_folder_path + "/" + kposeGraphInfoJSON;
+                    notebookPath + "/" + kposeGraphInfoJSON;
                 builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, 0);
             }
 
@@ -179,7 +265,7 @@ int main(int argc, char* argv[]) {
                     log_optimization_step();
                     const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
                     const std::string pose_graph_info_path =
-                        output_folder_path + "/" + kposeGraphInfoJSON;
+                        notebookPath + "/" + kposeGraphInfoJSON;
                     builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, i + 1);
                 }
             }
@@ -196,7 +282,7 @@ int main(int argc, char* argv[]) {
                 log_optimization_step();
             }
 
-           const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
+            const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
             
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
