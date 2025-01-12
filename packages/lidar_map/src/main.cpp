@@ -162,6 +162,50 @@ int main(int argc, char* argv[]) {
             if (enable_json_log) {
                 const auto pose_graph_info = builder.calculatePoseGraphInfo();
                 writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i);
+    
+            const size_t optimization_steps = 10;
+            if (enable_log) {
+                log_optimization_step();
+                const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
+                const std::string pose_graph_info_path =
+                    output_folder_path + "/" + kposeGraphInfoJSON;
+                builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, 0);
+            }
+
+            for (size_t i = 0; i < optimization_steps; i++) {
+                poses = builder.optimizePoseGraph(1);
+
+                if (enable_log) {
+                    log_optimization_step();
+                    const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
+                    const std::string pose_graph_info_path =
+                        output_folder_path + "/" + kposeGraphInfoJSON;
+                    builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, i + 1);
+                }
+            }
+
+            clouds = builder.applyGridFilter(clouds, 0.08);
+
+            if (enable_log) {
+                log_optimization_step();
+            }
+
+            clouds = builder.applyDynamicFilter(poses, clouds, 12.0, 1, 0.05);
+
+            if (enable_log) {
+                log_optimization_step();
+            }
+
+           const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
+            
+            bag_writer.addLidarMap(lidar_map, "/map/lidar");
+
+            if (enable_test) {
+                const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
+                const ComplexPolygon vector_map = Map::fromGeoJson(map_path).polygons()[0];
+
+                bag_writer.addVectorMap(vector_map, "/map/vector");
+                std::cout << calculateMetrics(lidar_map, vector_map);
             }
         }
 
