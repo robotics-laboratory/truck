@@ -1,9 +1,10 @@
 import json
 import os
 
-import imageio.v2 as imageio
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+import imageio.v2 as imageio
+
 
 def draw_pose_graph(json_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
@@ -66,6 +67,7 @@ def draw_pose_graph(json_path, output_dir):
     with imageio.get_writer(gif_file, mode="I", duration=1) as writer:
         for image_file in image_files:
             writer.append_data(imageio.imread(image_file))
+
 
 if __name__ == "__main__":
     draw_pose_graph("pose_graph_info.json", "pose_graph_res")
