@@ -252,7 +252,8 @@ int main(int argc, char* argv[]) {
             if (enable_log) {
                 log_optimization_step();
                 const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
-                const std::string pose_graph_info_path = output_folder_path + "/" + kposeGraphInfoJSON;
+                const std::string pose_graph_info_path =
+                    output_folder_path + "/" + kposeGraphInfoJSON;
                 builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, 0);
             }
 
@@ -262,7 +263,8 @@ int main(int argc, char* argv[]) {
                 if (enable_log) {
                     log_optimization_step();
                     const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
-                    const std::string pose_graph_info_path = output_folder_path + "/" + kposeGraphInfoJSON;
+                    const std::string pose_graph_info_path =
+                        output_folder_path + "/" + kposeGraphInfoJSON;
                     builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, i + 1);
                 }
             }
@@ -280,7 +282,7 @@ int main(int argc, char* argv[]) {
             }
 
             const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
-            
+
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
             if (enable_test) {

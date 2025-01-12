@@ -1,8 +1,9 @@
-import imageio.v2 as imageio
 import json
+import os
+
+import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 
 def draw_pose_graph(json_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
@@ -35,7 +36,7 @@ def draw_pose_graph(json_path, output_dir):
                 head_width=0.05,
                 head_length=0.1,
                 fc="black",
-                ec="black"
+                ec="black",
             )
 
         for edge in edges:
