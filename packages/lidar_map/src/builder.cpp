@@ -285,13 +285,20 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
             dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
         if (info[0] == params_.icp_edge_weight) {
             pose_graph_info.edges.push_back(EdgeInfo{
-                .from_edge = from_edge->id(), .to_edge = to_edge->id(), .error_val = edge->chi2(), .type = "icp"});
+                .from_edge = from_edge->id(),
+                .to_edge = to_edge->id(),
+                .error_val = edge->chi2(),
+                .type = "icp"});
         } else {
             pose_graph_info.edges.push_back(EdgeInfo{
-                .from_edge = from_edge->id(), .to_edge = to_edge->id(), .error_val = edge->chi2(), .type = "odometry"});
+                .from_edge = from_edge->id(),
+                .to_edge = to_edge->id(),
+                .error_val = edge->chi2(),
+                .type = "odometry"});
         }
     }
-    for (auto it = optimizer_.activeVertices().begin(); it != optimizer_.activeVertices().end(); ++it) {
+    for (auto it = optimizer_.activeVertices().begin(); it != optimizer_.activeVertices().end();
+        ++it) {
         const g2o::OptimizableGraph::Vertex* vertex = *it;
         const g2o::VertexSE2* vertex_se2 = dynamic_cast<const g2o::VertexSE2*>(vertex);
         Eigen::Vector3d estimate;
@@ -338,7 +345,6 @@ void Builder::writePoseGraphInfoToJSON(
     }
 
     json_data[std::to_string(iteration)] = current_iteration_data;
-
 
     std::ofstream output_file(json_path);
     if (output_file.is_open()) {
