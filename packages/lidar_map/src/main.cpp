@@ -188,6 +188,13 @@ int main(int argc, char* argv[]) {
             }
 
             const size_t optimization_steps = 10;
+            if (enable_log) {
+                log_optimization_step();
+                const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
+                const std::string pose_graph_info_path =
+                    output_folder_path + "/" + kposeGraphInfoJSON;
+                builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, 0);
+            }
 
             for (size_t i = 0; i < optimization_steps; i++) {
                 poses = builder.optimizePoseGraph(1);
@@ -197,7 +204,7 @@ int main(int argc, char* argv[]) {
                     const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
                     const std::string pose_graph_info_path =
                         output_folder_path + "/" + kposeGraphInfoJSON;
-                    builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, i);
+                    builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, i + 1);
                 }
             }
 
@@ -213,12 +220,7 @@ int main(int argc, char* argv[]) {
                 log_optimization_step();
             }
 
-           const auto lidar_map = builder.mergeClouds(
-                builder.transformClouds(
-                    std::vector<decltype(poses)::value_type>(poses.begin(), poses.begin() + 10),
-                    std::vector<Cloud>(clouds.begin(), clouds.begin() + 10)
-                )
-            );
+           const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
             
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
