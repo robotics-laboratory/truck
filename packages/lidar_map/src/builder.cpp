@@ -329,8 +329,12 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
         }
     }
     for (auto it = optimizer_.activeVertices().begin(); it != optimizer_.activeVertices().end();
+<<<<<<< HEAD
         ++it) {
 >>>>>>> f86400c (add notebook + fix formatting)
+=======
+         ++it) {
+>>>>>>> 2432599 (fix formatting)
         const g2o::OptimizableGraph::Vertex* vertex = *it;
         const g2o::VertexSE2* vertex_se2 = dynamic_cast<const g2o::VertexSE2*>(vertex);
         Eigen::Vector3d estimate;

@@ -99,7 +99,6 @@ std::ostream& operator<<(std::ostream& out, const Metrics& m) noexcept {
 
 }  // namespace
 
-const std::string notebookPath = "/notebook";
 const std::string kTopicLaserScan = "/livox/lidar";
 const std::string kTopicOdom = "/ekf/odometry/filtered";
 const std::string kPkgPathMap = ament_index_cpp::get_package_share_directory("map");
@@ -253,8 +252,7 @@ int main(int argc, char* argv[]) {
             if (enable_log) {
                 log_optimization_step();
                 const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
-                const std::string pose_graph_info_path =
-                    notebookPath + "/" + kposeGraphInfoJSON;
+                const std::string pose_graph_info_path = output_folder_path + "/" + kposeGraphInfoJSON;
                 builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, 0);
             }
 
@@ -264,8 +262,7 @@ int main(int argc, char* argv[]) {
                 if (enable_log) {
                     log_optimization_step();
                     const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
-                    const std::string pose_graph_info_path =
-                        notebookPath + "/" + kposeGraphInfoJSON;
+                    const std::string pose_graph_info_path = output_folder_path + "/" + kposeGraphInfoJSON;
                     builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, i + 1);
                 }
             }
