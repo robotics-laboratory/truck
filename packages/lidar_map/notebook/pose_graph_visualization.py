@@ -1,9 +1,9 @@
 import json
 import os
 
-import numpy as np
-import matplotlib.pyplot as plt
 import imageio.v2 as imageio
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def draw_pose_graph(json_path, output_dir):
