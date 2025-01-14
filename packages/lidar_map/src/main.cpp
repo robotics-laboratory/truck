@@ -100,12 +100,10 @@ const std::string kTopicLaserScan = "/livox/lidar";
 const std::string kTopicOdom = "/ekf/odometry/filtered";
 const std::string kPkgPathMap = ament_index_cpp::get_package_share_directory("map");
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
-const std::string kICPEdgesInfoJSON = "icp_edges_info.json";
+const std::string kposeGraphInfoJSON = "pose_graph_info.json";
 
 int main(int argc, char* argv[]) {
-    bool enable_test = false;
     bool enable_log = false;
-    std::string vector_map_file;
     std::string input_mcap_path;
     std::string output_folder_path;
 
@@ -118,9 +116,6 @@ int main(int argc, char* argv[]) {
             "output,o",
             po::value<std::string>(&output_folder_path)->required(),
             "path to folder where to store .mcap file with 2D LiDAR map (folder shouldn't exist)")(
-            "test,t",
-            po::value<std::string>(&vector_map_file),
-            "enable test mode and set vector map (only for simulated data)")(
             "log,l", po::bool_switch(&enable_log), "enable logging");
 
         po::variables_map vm;
@@ -130,10 +125,6 @@ int main(int argc, char* argv[]) {
             if (vm.count("help")) {
                 std::cout << desc << "\n";
                 return 0;
-            }
-
-            if (vm.count("test")) {
-                enable_test = true;
             }
 
             po::notify(vm);
@@ -211,21 +202,6 @@ int main(int argc, char* argv[]) {
 
             const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
-
-            if (enable_log) {
-                const ICPEdgesInfo icp_edges_info = builder.calculateICPEdgesInfo();
-                const std::string icp_edges_info_path =
-                    output_folder_path + "/" + kICPEdgesInfoJSON;
-                builder.writeICPEdgesInfoToJSON(icp_edges_info_path, icp_edges_info);
-            }
-
-            if (enable_test) {
-                const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
-                const ComplexPolygon vector_map = Map::fromGeoJson(map_path).polygons()[0];
-
-                bag_writer.addVectorMap(vector_map, "/map/vector");
-                std::cout << calculateMetrics(lidar_map, vector_map);
-            }
         }
     }
 }

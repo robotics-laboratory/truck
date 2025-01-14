@@ -24,7 +24,6 @@ class BagWriter {
   public:
     BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency);
 
-    void addVectorMap(const geom::ComplexPolygon& vector_map, const std::string& topic_name);
     void addLidarMap(const Cloud& lidar_map, const std::string& topic_name);
     void addOptimizationStep(
         const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,

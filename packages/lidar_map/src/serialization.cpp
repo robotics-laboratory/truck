@@ -147,10 +147,6 @@ rclcpp::Time getTime(double seconds = 0.0) {
 
 }  // namespace
 
-void BagWriter::addVectorMap(
-    const geom::ComplexPolygon& vector_map, const std::string& topic_name) {
-    writer_.write(visualization::msg::toMarker(vector_map, frame_name_), topic_name, getTime());
-}
 
 void BagWriter::addLidarMap(const Cloud& lidar_map, const std::string& topic_name) {
     writer_.write(msg::toPointCloud2(lidar_map, frame_name_), topic_name, getTime());
