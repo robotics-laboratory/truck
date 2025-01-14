@@ -15,9 +15,7 @@ def parse_json_and_extract_icp_errors(json_path, iteration):
 
     for edge in edges:
         if edge.get("type") == "icp":
-            icp_errors.append(
-                (edge["error_val"], edge["from_edge"], edge["to_edge"])
-            )
+            icp_errors.append((edge["error_val"], edge["from_edge"], edge["to_edge"]))
 
     return icp_errors
 
@@ -49,7 +47,9 @@ def plot_icp_errors_interactive(icp_errors, iteration):
 
 
 def plot_icp_errors_histogram(icp_errors, iteration):
-    sorted_icp_errors = sorted(icp_errors, key=lambda x: (min(x[1], x[2]), max(x[1], x[2])))
+    sorted_icp_errors = sorted(
+        icp_errors, key=lambda x: (min(x[1], x[2]), max(x[1], x[2]))
+    )
     errors = [error[0] for error in sorted_icp_errors]
     edge_indices = list(range(1, len(errors) + 1))
 
