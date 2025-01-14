@@ -17,7 +17,7 @@ def parse_json_and_extract_icp_errors(json_path):
             if edge.get("type") == "icp":
                 icp_errors.append(
                     (edge["error_val"], edge["from_edge"], edge["to_edge"])
-                    )
+                )
 
     return icp_errors
 
@@ -35,7 +35,9 @@ def plot_icp_errors_interactive(icp_errors):
         y="Error",
         title="ICP Errors",
         labels={"Length": "Length of Edge", "Error": "ICP Error"},
-        text="Error", color="Error", color_continuous_scale=px.colors.sequential.Blues
+        text="Error",
+        color="Error",
+        color_continuous_scale=px.colors.sequential.Blues,
     )
 
     fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
