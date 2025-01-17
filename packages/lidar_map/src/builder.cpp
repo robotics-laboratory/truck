@@ -88,9 +88,11 @@ g2o::SE2 toSE2(const Eigen::Matrix4f& tf_matrix) {
  * Returns pose constructed from g2o::SE2
  */
 geom::Pose toPose(const g2o::SE2& se2) {
+    double angle = se2.rotation().angle();
+    double rotated_angle = angle + M_PI;
     return {
         {se2.translation().x(), se2.translation().y()},
-        {geom::AngleVec2::fromRadians(se2.rotation().angle())}};
+        {geom::AngleVec2::fromRadians(rotated_angle)}};
 }
 
 /**
