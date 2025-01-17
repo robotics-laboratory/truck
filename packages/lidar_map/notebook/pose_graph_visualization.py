@@ -57,10 +57,10 @@ def draw_pose_graph(json_path, output_dir):
         image_file = os.path.join(
             output_dir, f"pose_graph_iteration_{last_iteration}.png"
         )
-        plt.savefig(image_file)   
+        plt.savefig(image_file)
         plt.close()
 
-    
+
 def parse_json_and_extract_icp_errors(json_path, iteration):
     with open(json_path, "r") as file:
         data = json.load(file)
@@ -121,10 +121,10 @@ def create_combined_images(icp_output_dir, pose_graph_output_dir, res_output_dir
             pose_graph_image = Image.open(pose_graph_image_path)
 
             combined_image = Image.new(
-                'RGB',
+                "RGB",
                 (
                     icp_image.width + pose_graph_image.width,
-                    max(icp_image.height, pose_graph_image.height)
+                    max(icp_image.height, pose_graph_image.height),
                 )
             )
             combined_image.paste(icp_image, (0, 0))
@@ -134,10 +134,9 @@ def create_combined_images(icp_output_dir, pose_graph_output_dir, res_output_dir
             )
             combined_image.save(combined_image_path)
 
-       
+    
 def create_gif_from_combined_images(combined_output_dir, gif_output_path):
     images = []
-    
     for filename in sorted(os.listdir(combined_output_dir)):
         if filename.endswith(".png"):
             image_path = os.path.join(combined_output_dir, filename)
@@ -163,7 +162,7 @@ if __name__ == "__main__":
         icp_errors = parse_json_and_extract_icp_errors(json_path, iteration)
         if icp_errors:
             plot_icp_errors_histogram(icp_errors, iteration, icp_output_dir)
-       
+
     draw_pose_graph(json_path, pose_graph_output_dir)
     create_combined_images(icp_output_dir, pose_graph_output_dir, res_output_dir)
     combined_output_dir = os.path.join(res_output_dir, "combine")
