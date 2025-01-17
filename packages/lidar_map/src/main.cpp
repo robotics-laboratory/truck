@@ -214,8 +214,6 @@ int main(int argc, char* argv[]) {
                 log_optimization_step();
             }
 
-            clouds = builder.applyDynamicFilter(poses, clouds, 12.0, 1, 0.05);
-
             if (enable_log) {
                 log_optimization_step();
             }
