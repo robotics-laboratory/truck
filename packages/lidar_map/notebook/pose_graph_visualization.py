@@ -6,8 +6,8 @@ import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from PIL import Image
 import plotly.express as px
+from PIL import Image
 
 
 def draw_pose_graph(json_path, output_dir):
@@ -26,7 +26,7 @@ def draw_pose_graph(json_path, output_dir):
             y = vertex["y"]
             theta = vertex["theta"]
             plt.plot(x, y, "ko")
-            plt.text(x, y, str(vertex["id"]), fontsize=9, ha='right', va='bottom')
+            plt.text(x, y, str(vertex["id"]), fontsize=9, ha="right", va="bottom")
             arrow_length = 2
             plt.arrow(
                 x,
@@ -54,7 +54,9 @@ def draw_pose_graph(json_path, output_dir):
         plt.ylim(-85, 60)
         plt.title(f"Pose Graph Iteration {last_iteration}")
         plt.grid()
-        image_file = os.path.join(output_dir, f"pose_graph_iteration_{last_iteration}.png")
+        image_file = os.path.join(
+            output_dir, f"pose_graph_iteration_{last_iteration}.png"
+        )
         plt.savefig(image_file)   
         plt.close()
 
@@ -94,9 +96,11 @@ def plot_icp_errors_histogram(icp_errors, iteration, output_dir):
 
     fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
     fig.update_layout(height=600, width=600)
-    fig.update_yaxes(range=[0, 0.02]) 
+    fig.update_yaxes(range=[0, 0.02])
     fig.update_layout(height=600)
-    output_file = os.path.join(output_dir, f"icp_errors_histogram_iteration_{iteration}.png")
+    output_file = os.path.join(
+        output_dir, f"icp_errors_histogram_iteration_{iteration}.png"
+    )
     fig.write_image(output_file)
 
 
@@ -106,19 +110,31 @@ def create_combined_images(icp_output_dir, pose_graph_output_dir, res_output_dir
 
     iterations = [f"iteration_{i}" for i in range(len(os.listdir(icp_output_dir)))]
     for iteration in iterations:
-        icp_image_path = os.path.join(icp_output_dir, f"icp_errors_histogram_{iteration}.png")
-        pose_graph_image_path = os.path.join(pose_graph_output_dir, f"pose_graph_{iteration}.png")
+        icp_image_path = os.path.join(
+            icp_output_dir, f"icp_errors_histogram_{iteration}.png"
+        )
+        pose_graph_image_path = os.path.join(
+            pose_graph_output_dir, f"pose_graph_{iteration}.png"
+        )
         if os.path.exists(icp_image_path) and os.path.exists(pose_graph_image_path):
             icp_image = Image.open(icp_image_path)
             pose_graph_image = Image.open(pose_graph_image_path)
 
-            combined_image = Image.new('RGB', (icp_image.width + pose_graph_image.width, max(icp_image.height, pose_graph_image.height)))
+            combined_image = Image.new(
+                'RGB',
+                (
+                    icp_image.width + pose_graph_image.width,
+                    max(icp_image.height, pose_graph_image.height)
+                )
+            )
             combined_image.paste(icp_image, (0, 0))
             combined_image.paste(pose_graph_image, (icp_image.width, 0))
-            combined_image_path = os.path.join(combined_output_dir, f"combined_{iteration}.png")
+            combined_image_path = os.path.join(
+                combined_output_dir, f"combined_{iteration}.png"
+            )
             combined_image.save(combined_image_path)
 
-            
+       
 def create_gif_from_combined_images(combined_output_dir, gif_output_path):
     images = []
     
@@ -131,10 +147,9 @@ def create_gif_from_combined_images(combined_output_dir, gif_output_path):
 
 
 if __name__ == "__main__":
-    res_output_dir = "res1"
-    json_path = "pose_graph_info_20.json"
-    
-    
+    res_output_dir = "res"
+    json_path = "pose_graph_info.json"
+
     icp_output_dir = f"{res_output_dir}/icp_errors"
     pose_graph_output_dir = f"{res_output_dir}/pose_graph_res"
     os.makedirs(res_output_dir, exist_ok=True)
@@ -148,7 +163,7 @@ if __name__ == "__main__":
         icp_errors = parse_json_and_extract_icp_errors(json_path, iteration)
         if icp_errors:
             plot_icp_errors_histogram(icp_errors, iteration, icp_output_dir)
-            
+       
     draw_pose_graph(json_path, pose_graph_output_dir)
     create_combined_images(icp_output_dir, pose_graph_output_dir, res_output_dir)
     combined_output_dir = os.path.join(res_output_dir, "combine")
