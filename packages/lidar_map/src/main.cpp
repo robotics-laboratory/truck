@@ -210,6 +210,7 @@ int main(int argc, char* argv[]) {
             }
         };
 
+<<<<<<< HEAD
         // TODO (apmilko): fix clouds orientation
         rotate_poses_by_angle_PI(poses);
     }
@@ -225,6 +226,9 @@ int main(int argc, char* argv[]) {
             mcap_writer.writeCloud(lidar_map_on_iteration);
             mcap_writer.writePoses(poses);
             mcap_writer.update();
+=======
+            std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 8.0);
+>>>>>>> f88457c (change min_dist)
         }
 
         if (enable_json_log) {
