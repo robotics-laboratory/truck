@@ -125,7 +125,7 @@ def create_combined_images(icp_output_dir, pose_graph_output_dir, res_output_dir
                 (
                     icp_image.width + pose_graph_image.width,
                     max(icp_image.height, pose_graph_image.height),
-                )
+                ),
             )
             combined_image.paste(icp_image, (0, 0))
             combined_image.paste(pose_graph_image, (icp_image.width, 0))
@@ -134,7 +134,7 @@ def create_combined_images(icp_output_dir, pose_graph_output_dir, res_output_dir
             )
             combined_image.save(combined_image_path)
 
-    
+
 def create_gif_from_combined_images(combined_output_dir, gif_output_path):
     images = []
     for filename in sorted(os.listdir(combined_output_dir)):
