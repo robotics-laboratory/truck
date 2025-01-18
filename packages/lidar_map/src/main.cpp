@@ -17,111 +17,39 @@ using namespace truck::geom;
 
 namespace po = boost::program_options;
 
-namespace {
-
-struct Metrics {
-    double mean;
-    double rmse;
-    double q95;
-    double q90;
-};
-
-/**
- * Metrics for calculations lidar map quality
- *
- * Error is calculated as distance from point cloud point
- * to the nearest segment of vector map.
- *
- * Error aggregation is done by next metrics:
- *  mean: mean error
- *  rmse: root mean squared error
- *  q95: 95th quantile
- *  q90: 90th quantile
- */
-Metrics calculateMetrics(const Cloud& cloud, const ComplexPolygon& complex_polygon) {
-    std::vector<double> min_dists_squared;
-    const auto& segments = complex_polygon.segments();
-
-    for (int i = 0; i < cloud.cols(); i++) {
-        const Vec2 cloud_point = {cloud.col(i)(0), cloud.col(i)(1)};
-        double min_dist_squared = distanceSq(cloud_point, segments[0]);
-
-        for (size_t j = 1; j < segments.size(); j++) {
-            min_dist_squared = std::min(min_dist_squared, distanceSq(cloud_point, segments[j]));
-        }
-
-        min_dists_squared.push_back(min_dist_squared);
-    }
-
-    const size_t count = min_dists_squared.size();
-    std::vector<double> min_dists(count, 0);
-
-    for (size_t i = 0; i < count; i++) {
-        min_dists[i] = std::sqrt(min_dists_squared[i]);
-    }
-
-    std::sort(min_dists.begin(), min_dists.end());
-
-    auto get_quantile = [&](double q) {
-        const auto id = static_cast<size_t>(q * (count - 1));
-        return min_dists[id];
-    };
-
-    Metrics metrics = {
-        .mean = std::accumulate(
-            min_dists.begin(),
-            min_dists.end(),
-            0.0,
-            [&](double a, double b) { return a + b / count; }),
-
-        .rmse = std::sqrt(std::accumulate(
-            min_dists.begin(),
-            min_dists.end(),
-            0.0,
-            [&](double a, double b) { return a + (b * b) / count; })),
-
-        .q95 = get_quantile(0.95),
-        .q90 = get_quantile(0.90)};
-
-    return metrics;
-}
-
-std::ostream& operator<<(std::ostream& out, const Metrics& m) noexcept {
-    return out << "Metrics:\n"
-               << "  mean = " << m.mean << "\n"
-               << "  rmse = " << m.rmse << "\n"
-               << "  q95 = " << m.q95 << "\n"
-               << "  q90 = " << m.q90 << "\n";
-}
-
-}  // namespace
-
 const std::string kTopicLaserScan = "/livox/lidar";
 const std::string kTopicOdom = "/ekf/odometry/filtered";
-const std::string kPkgPathMap = ament_index_cpp::get_package_share_directory("map");
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
-const std::string kposeGraphInfoJSON = "pose_graph_info.json";
 
 int main(int argc, char* argv[]) {
-    bool enable_test = false;
-    bool enable_log = false;
+    bool enable_mcap_log = false;
+    bool enable_json_log = false;
     std::string vector_map_file;
-    std::string input_mcap_path;
-    std::string output_folder_path;
+    std::string mcap_input_path;
+    std::string mcap_output_folder_path;
+    std::string mcap_log_folder_path;    // сюда сохраняем путь, который user написал после аргумента --mcap-log, именно этот путь нужно передать при создании экземпляра класса BagWriter
+    std::string json_log_path;
 
     {
         po::options_description desc("Executable for constructing 2D LiDAR map");
         desc.add_options()("help,h", "show this help message and exit")(
             "input,i",
-            po::value<std::string>(&input_mcap_path)->required(),
+            po::value<std::string>(&mcap_input_path)->required(),
             "path to .mcap file with ride bag")(
             "output,o",
-            po::value<std::string>(&output_folder_path)->required(),
+            po::value<std::string>(&mcap_output_folder_path)->required(),
             "path to folder where to store .mcap file with 2D LiDAR map (folder shouldn't exist)")(
-            "test,t",
-            po::value<std::string>(&vector_map_file),
-            "enable test mode and set vector map (only for simulated data)")(
-            "log,l", po::bool_switch(&enable_log), "enable logging");
+            "mcap-log,mcapl", po::value<std::string>(&mcap_log_folder_path)->default_value(""), 
+            "path to folder for mcap logs")(
+            "json-log,jsonl", po::value<std::string>(&json_log_path)->default_value(""),
+            "path to json log file");
+
+        if (!mcap_log_folder_path.empty()) {
+            enable_mcap_log = true;
+        }
+        if (!json_log_path.empty()) {
+            enable_json_log = true;
+        }
 
         po::variables_map vm;
         try {
@@ -130,10 +58,6 @@ int main(int argc, char* argv[]) {
             if (vm.count("help")) {
                 std::cout << desc << "\n";
                 return 0;
-            }
-
-            if (vm.count("test")) {
-                enable_test = true;
             }
 
             po::notify(vm);
@@ -154,15 +78,15 @@ int main(int argc, char* argv[]) {
 
         Builder builder = Builder(builder_params);
 
-        BagWriter bag_writer = BagWriter(output_folder_path, "world", 0.5);
+        BagWriter bag_writer = BagWriter(mcap_output_folder_path, "world", 0.5);
 
         Poses poses;
         Clouds clouds;
 
         // 1. Read data from input bag
         {
-            const auto odom_msgs = loadOdomTopic(input_mcap_path, kTopicOdom);
-            const auto laser_scan_msgs = loadLaserScanTopic(input_mcap_path, kTopicLaserScan);
+            const auto odom_msgs = loadOdomTopic(mcap_input_path, kTopicOdom);
+            const auto laser_scan_msgs = loadLaserScanTopic(mcap_input_path, kTopicLaserScan);
 
             const auto [synced_odom_msgs, synced_laser_scan_msgs] =
                 syncOdomWithCloud(odom_msgs, laser_scan_msgs);
@@ -171,6 +95,14 @@ int main(int argc, char* argv[]) {
             const auto all_clouds = toClouds(synced_laser_scan_msgs);
 
             std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 8.0);
+
+            const auto rotate_poses_by_angle_PI = [](auto& poses) {
+            for (auto& pose : poses) {
+                pose.dir += geom::fromRadians(M_PI);
+            }
+
+            rotate_poses_by_angle_PI(poses); // temporary fix
+            
         }
 
         // 2. Construct and optimize pose graph
@@ -183,52 +115,43 @@ int main(int argc, char* argv[]) {
 
             builder.initPoseGraph(poses, clouds);
 
-            if (enable_log) {
-                log_optimization_step();
+            if (enable_mcap_log) {
+                const auto tf_merged_clouds = builder.mergeClouds(builder.transformClouds(poses, clouds));
+                bag_writer.addOptimizationStep(poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
             }
 
             const size_t optimization_steps = 10;
-            if (enable_log) {
-                log_optimization_step();
-                const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
-                const std::string pose_graph_info_path =
-                    output_folder_path + "/" + kposeGraphInfoJSON;
-                builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, 0);
+
+            if (enable_mcap_log) {
+                const auto tf_merged_clouds = builder.mergeClouds(builder.transformClouds(poses, clouds));
+                bag_writer.addOptimizationStep(poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
+            }
+
+            if (enable_json_log) {
+                const auto pose_graph_info = builder.calculatePoseGraphInfo();
+                writePoseGraphInfoToJSON(json_log_path, pose_graph_info, 0);
             }
 
             for (size_t i = 0; i < optimization_steps; i++) {
                 poses = builder.optimizePoseGraph(1);
 
-                if (enable_log) {
-                    log_optimization_step();
-                    const PoseGraphInfo pose_graph_info = builder.calculatePoseGraphInfo();
-                    const std::string pose_graph_info_path =
-                        output_folder_path + "/" + kposeGraphInfoJSON;
-                    builder.writePoseGraphInfoToJSON(pose_graph_info_path, pose_graph_info, i + 1);
+                if (enable_mcap_log) {
+                    const auto tf_merged_clouds = builder.mergeClouds(builder.transformClouds(poses, clouds));
+                    bag_writer.addOptimizationStep(poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
+                }
+                
+                if (enable_json_log) {
+                    const auto pose_graph_info = builder.calculatePoseGraphInfo();
+                    writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i + 1);
                 }
             }
 
             clouds = builder.applyGridFilter(clouds, 0.08);
 
-            if (enable_log) {
-                log_optimization_step();
-            }
-
-            if (enable_log) {
-                log_optimization_step();
-            }
-
             const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
 
             bag_writer.addLidarMap(lidar_map, "/map/lidar");
 
-            if (enable_test) {
-                const std::string map_path = kPkgPathMap + "/data/" + vector_map_file;
-                const ComplexPolygon vector_map = Map::fromGeoJson(map_path).polygons()[0];
-
-                bag_writer.addVectorMap(vector_map, "/map/vector");
-                std::cout << calculateMetrics(lidar_map, vector_map);
-            }
         }
     }
 }

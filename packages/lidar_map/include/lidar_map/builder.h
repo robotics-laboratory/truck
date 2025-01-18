@@ -7,14 +7,6 @@
 
 namespace truck::lidar_map {
 
-struct BuilderParams {
-    std::string icp_config;
-    double icp_edge_max_dist = 0.6;
-    double odom_edge_weight = 1.0;
-    double icp_edge_weight = 3.0;
-    bool verbose = true;
-};
-
 struct EdgeInfo {
     size_t from_edge;
     size_t to_edge;
@@ -22,7 +14,7 @@ struct EdgeInfo {
     std::string type;
 };
 
-struct VertexInfo {
+struct PoseInfo {
     size_t id;
     double x;
     double y;
@@ -30,13 +22,19 @@ struct VertexInfo {
 };
 
 using EdgesInfo = std::vector<EdgeInfo>;
-using VerticesInfo = std::vector<VertexInfo>;
+using VerticesInfo = std::vector<PoseInfo>;
 
 struct PoseGraphInfo {
     EdgesInfo edges;
     VerticesInfo vertices;
+};
 
-    PoseGraphInfo() : edges(), vertices() {}
+struct BuilderParams {
+    std::string icp_config;
+    double icp_edge_max_dist = 0.6;
+    double odom_edge_weight = 1.0;
+    double icp_edge_weight = 3.0;
+    bool verbose = true;
 };
 
 class Builder {
@@ -51,9 +49,6 @@ class Builder {
     geom::Poses optimizePoseGraph(size_t iterations);
 
     PoseGraphInfo calculatePoseGraphInfo() const;
-
-    void writePoseGraphInfoToJSON(
-        const std::string& json_path, const PoseGraphInfo& pose_graph_info, size_t iteration) const;
 
     Clouds transformClouds(
         const geom::Poses& poses, const Clouds& clouds, bool inverse = false) const;

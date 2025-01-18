@@ -88,11 +88,9 @@ g2o::SE2 toSE2(const Eigen::Matrix4f& tf_matrix) {
  * Returns pose constructed from g2o::SE2
  */
 geom::Pose toPose(const g2o::SE2& se2) {
-    double angle = se2.rotation().angle();
-    double rotated_angle = angle + M_PI;
     return {
         {se2.translation().x(), se2.translation().y()},
-        {geom::AngleVec2::fromRadians(rotated_angle)}};
+        {geom::AngleVec2::fromRadians(se2.rotation().angle())}};
 }
 
 /**
@@ -305,56 +303,10 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
         const g2o::VertexSE2* vertex_se2 = dynamic_cast<const g2o::VertexSE2*>(vertex);
         Eigen::Vector3d estimate;
         vertex_se2->getEstimateData(estimate.data());
-        pose_graph_info.vertices.push_back(VertexInfo{
+        pose_graph_info.vertices.push_back(PoseInfo{
             .id = vertex_se2->id(), .x = estimate[0], .y = estimate[1], .theta = estimate[2]});
     }
     return pose_graph_info;
-}
-
-/**
- * Writing information about icp edges to a json file
- */
-void Builder::writePoseGraphInfoToJSON(
-    const std::string& json_path, const PoseGraphInfo& pose_graph_info, size_t iteration) const {
-    nlohmann::json json_data;
-
-    std::ifstream input_file(json_path);
-    if (input_file.is_open()) {
-        input_file >> json_data;
-        input_file.close();
-    }
-
-    nlohmann::json current_iteration_data;
-
-    for (const auto& vertex : pose_graph_info.vertices) {
-        nlohmann::json vertex_json;
-        vertex_json["id"] = vertex.id;
-        vertex_json["x"] = vertex.x;
-        vertex_json["y"] = vertex.y;
-        vertex_json["theta"] = vertex.theta;
-
-        current_iteration_data["vertices"].push_back(vertex_json);
-    }
-
-    for (const auto& edge : pose_graph_info.edges) {
-        nlohmann::json edge_json;
-        edge_json["from_edge"] = edge.from_edge;
-        edge_json["to_edge"] = edge.to_edge;
-        edge_json["error_val"] = edge.error_val;
-        edge_json["type"] = edge.type;
-
-        current_iteration_data["edges"].push_back(edge_json);
-    }
-
-    json_data[std::to_string(iteration)] = current_iteration_data;
-
-    std::ofstream output_file(json_path);
-    if (output_file.is_open()) {
-        output_file << json_data.dump(4);
-        output_file.close();
-    } else {
-        std::cerr << "Error when opening a file for writing: " << json_path << std::endl;
-    }
 }
 
 /**

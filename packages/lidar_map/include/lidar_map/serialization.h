@@ -24,11 +24,12 @@ class BagWriter {
   public:
     BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency);
 
-    void addVectorMap(const geom::ComplexPolygon& vector_map, const std::string& topic_name);
     void addLidarMap(const Cloud& lidar_map, const std::string& topic_name);
     void addOptimizationStep(
         const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
         const std::string& merged_clouds_topic_name);
+    void writePoseGraphInfoToJSON(
+        const std::string& json_path, const PoseGraphInfo& pose_graph_info, size_t iteration) const;
 
   private:
     void addPoses(const geom::Poses& poses, const std::string& topic_name);
