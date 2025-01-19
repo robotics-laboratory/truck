@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
                     bag_writer.addOptimizationStep(
                         poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
                 }
-                
+
                 if (enable_json_log) {
                     const auto pose_graph_info = builder.calculatePoseGraphInfo();
                     writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i + 1);
