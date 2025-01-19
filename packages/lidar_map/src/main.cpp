@@ -41,10 +41,10 @@ int main(int argc, char* argv[]) {
             po::value<std::string>(&mcap_output_folder_path)->required(),
             "path to folder where to store .mcap file with 2D LiDAR map (folder shouldn't exist)")(
             "mcap-log,ml", 
-            po::value<std::string>(&mcap_log_folder_path)->default_value(""), 
+            po::value<std::string>(&mcap_log_folder_path)->default_value(""),
             "path to folder for mcap logs")(
             "json-log,jl",
-             po::value<std::string>(&json_log_path)->default_value(""),
+            po::value<std::string>(&json_log_path)->default_value(""),
             "path to json log file");
 
         po::variables_map vm;
@@ -104,8 +104,7 @@ int main(int argc, char* argv[]) {
                     pose.dir += truck::geom::Angle::fromRadians(M_PI);
                 }
             };
-            rotate_poses_by_angle_PI(poses); // temporary fix
-            
+            rotate_poses_by_angle_PI(poses);  // temporary fix
         }
 
         // 2. Construct and optimize pose graph
@@ -113,15 +112,19 @@ int main(int argc, char* argv[]) {
             builder.initPoseGraph(poses, clouds);
 
             if (enable_mcap_log) {
-                const auto tf_merged_clouds = builder.mergeClouds(builder.transformClouds(poses, clouds));
-                bag_writer.addOptimizationStep(poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
+                const auto tf_merged_clouds =
+                    builder.mergeClouds(builder.transformClouds(poses, clouds));
+                bag_writer.addOptimizationStep(
+                    poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
             }
 
             const size_t optimization_steps = 10;
 
             if (enable_mcap_log) {
-                const auto tf_merged_clouds = builder.mergeClouds(builder.transformClouds(poses, clouds));
-                bag_writer.addOptimizationStep(poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
+                const auto tf_merged_clouds =
+                    builder.mergeClouds(builder.transformClouds(poses, clouds));
+                bag_writer.addOptimizationStep(
+                    poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
             }
 
             if (enable_json_log) {
@@ -133,9 +136,11 @@ int main(int argc, char* argv[]) {
                 poses = builder.optimizePoseGraph(1);
 
                 if (enable_mcap_log) {
-                    const auto tf_merged_clouds = builder.mergeClouds(builder.transformClouds(poses, clouds));
-                    bag_writer.addOptimizationStep(poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
-                }
+                const auto tf_merged_clouds =
+                    builder.mergeClouds(builder.transformClouds(poses, clouds));
+                bag_writer.addOptimizationStep(
+                    poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
+            }
                 
                 if (enable_json_log) {
                     const auto pose_graph_info = builder.calculatePoseGraphInfo();

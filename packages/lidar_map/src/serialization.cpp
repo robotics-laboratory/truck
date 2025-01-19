@@ -187,7 +187,7 @@ BagWriter::BagWriter(const std::string& mcap_path, const std::string& frame_name
     frame_name_(frame_name), freqency_(freqency) {
     if (!mcap_path.empty()) {
         writer_.open(mcap_path);
-    }   
+    }
 }
 
 namespace {
@@ -199,7 +199,9 @@ rclcpp::Time getTime(double seconds = 0.0) {
 
 }  // namespace
 
-void BagWriter::writeCloud(const std::string& mcap_path, const Cloud& cloud, const std::string& frame_name, const std::string& topic_name) {
+void BagWriter::writeCloud(
+    const std::string& mcap_path, const Cloud& cloud, const std::string& frame_name,
+    const std::string& topic_name) {
     rosbag2_cpp::Writer writer;
     writer.open(mcap_path);
     writer.write(msg::toPointCloud2(cloud, frame_name), topic_name, getTime());

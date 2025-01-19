@@ -25,8 +25,8 @@ ros2 run lidar_map lidar_map_executable --help
 
 Run the executable `lidar_map_executable` with the assigned `--mcap-input` and `--mcap-output` arguments:
 ```console
-ros2 run lidar_map lidar_map_executable 
-  --mcap-input data/rides/ride_real_office.mcap 
+ros2 run lidar_map lidar_map_executable
+  --mcap-input data/rides/ride_real_office.mcap
   --mcap-output data/clouds/cloud_real_office
 ```
 
@@ -40,9 +40,9 @@ You can now specify logging options separately:
 2. .json file: Contains poses with edges and graphs for ICP edges for each iteration of the pose graph.
 
 ```console
-ros2 run lidar_map lidar_map_executable 
-  --mcap-input data/rides/ride_sim_map_7.mcap 
-  --mcap-output data/clouds/sim_map_7 
-  --mcap-log data/logs/mcap_logs 
+ros2 run lidar_map lidar_map_executable
+  --mcap-input data/rides/ride_sim_map_7.mcap
+  --mcap-output data/clouds/sim_map_7
+  --mcap-log data/logs/mcap_logs
   --json-log data/logs/json_log.json
 ```

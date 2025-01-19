@@ -28,7 +28,9 @@ class BagWriter {
   public:
     BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency);
 
-    static void writeCloud(const std::string& mcap_path, const Cloud& cloud, const std::string& frame_name, const std::string& topic_name);
+    static void writeCloud(
+        const std::string& mcap_path, const Cloud& cloud, const std::string& frame_name,
+        const std::string& topic_name);
     void addOptimizationStep(
         const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
         const std::string& merged_clouds_topic_name);

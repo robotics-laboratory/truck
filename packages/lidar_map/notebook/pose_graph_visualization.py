@@ -108,7 +108,7 @@ def create_combined_images(icp_output_dir, pose_graph_output_dir, res_output_dir
     combined_output_dir = os.path.join(res_output_dir, "combine")
     os.makedirs(combined_output_dir, exist_ok=True)
 
-    iterations = [f"iteration_{i}" for i in range(len(os.listdir(icp_output_dir)))]
+    iterations = [f"iteration_{i:02}" for i in range(len(os.listdir(icp_output_dir)))]
     for iteration in iterations:
         icp_image_path = os.path.join(
             icp_output_dir, f"icp_errors_histogram_{iteration}.png"
