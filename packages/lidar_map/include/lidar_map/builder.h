@@ -16,9 +16,7 @@ struct EdgeInfo {
 
 struct PoseInfo {
     size_t id;
-    double x;
-    double y;
-    double theta;
+    geom::Pose pose;
 };
 
 using EdgesInfo = std::vector<EdgeInfo>;

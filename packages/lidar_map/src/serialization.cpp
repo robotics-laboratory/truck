@@ -150,9 +150,9 @@ void writePoseGraphInfoToJSON(
     for (const auto& vertex : pose_graph_info.poses) {
         nlohmann::json vertex_json;
         vertex_json["id"] = vertex.id;
-        vertex_json["x"] = vertex.x;
-        vertex_json["y"] = vertex.y;
-        vertex_json["theta"] = vertex.theta;
+        vertex_json["x"] = vertex.pose.pos.x;
+        vertex_json["y"] = vertex.pose.pos.y;
+        vertex_json["theta"] = vertex.pose.dir.angle().radians();
 
         current_iteration_data["vertices"].push_back(vertex_json);
     }

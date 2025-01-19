@@ -281,19 +281,17 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
             dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
         const g2o::OptimizableGraph::Vertex* to_edge =
             dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
-        if (std::abs(from_edge->id() - to_edge->id()) != 1) {
-            pose_graph_info.edges.push_back(EdgeInfo{
-                .from_edge = from_edge->id(),
-                .to_edge = to_edge->id(),
-                .error_val = edge->chi2(),
-                .type = "icp"});
-        } else {
-            pose_graph_info.edges.push_back(EdgeInfo{
-                .from_edge = from_edge->id(),
-                .to_edge = to_edge->id(),
-                .error_val = edge->chi2(),
-                .type = "odometry"});
-        }
+
+        const bool is_icp_edge = std::abs(from_edge->id() - to_edge->id()) != 1;
+
+        EdgeInfo edge_info = {
+        .from_edge = from_edge->id(),
+        .to_edge = to_edge->id(),
+        .error_val = edge->chi2(),
+        .type = is_icp_edge ? "icp" : "odom"
+        };
+
+        pose_graph_info.edges.push_back(edge_info);
     }
     for (auto it = optimizer_.activeVertices().begin(); it != optimizer_.activeVertices().end();
          ++it) {
@@ -302,7 +300,9 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
         Eigen::Vector3d estimate;
         vertex_se2->getEstimateData(estimate.data());
         pose_graph_info.poses.push_back(PoseInfo{
-            .id = vertex_se2->id(), .x = estimate[0], .y = estimate[1], .theta = estimate[2]});
+            .id = vertex_se2->id(),
+            .pose = {.pos = geom::Vec2{estimate[0], estimate[1]}, .dir =truck::geom::Angle::fromRadians(estimate[2])}}
+        );
     }
     return pose_graph_info;
 }
