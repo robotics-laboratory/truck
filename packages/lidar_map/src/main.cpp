@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
             "mcap-output,mo",
             po::value<std::string>(&mcap_output_folder_path)->required(),
             "path to folder where to store .mcap file with 2D LiDAR map (folder shouldn't exist)")(
-            "mcap-log,ml", 
+            "mcap-log,ml",
             po::value<std::string>(&mcap_log_folder_path)->default_value(""),
             "path to folder for mcap logs")(
             "json-log,jl",
@@ -136,10 +136,10 @@ int main(int argc, char* argv[]) {
                 poses = builder.optimizePoseGraph(1);
 
                 if (enable_mcap_log) {
-                const auto tf_merged_clouds =
-                    builder.mergeClouds(builder.transformClouds(poses, clouds));
-                bag_writer.addOptimizationStep(
-                    poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
+                    const auto tf_merged_clouds =
+                        builder.mergeClouds(builder.transformClouds(poses, clouds));
+                    bag_writer.addOptimizationStep(
+                        poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
             }
                 
                 if (enable_json_log) {

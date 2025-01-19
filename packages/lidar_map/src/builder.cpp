@@ -288,8 +288,7 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
             .from_edge = from_edge->id(),
             .to_edge = to_edge->id(),
             .error_val = edge->chi2(),
-            .type = is_icp_edge ? "icp" : "odom"
-        };
+            .type = is_icp_edge ? "icp" : "odom"};
 
         pose_graph_info.edges.push_back(edge_info);
     }
@@ -303,9 +302,7 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
             .id = vertex_se2->id(),
             .pose = {
                 .pos = geom::Vec2{estimate[0], estimate[1]},
-                .dir =truck::geom::Angle::fromRadians(estimate[2])}
-            }
-        );
+                .dir =truck::geom::Angle::fromRadians(estimate[2])}});
     }
     return pose_graph_info;
 }
