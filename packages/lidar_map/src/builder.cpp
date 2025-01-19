@@ -277,12 +277,11 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
     for (auto it = optimizer_.activeEdges().begin(); it != optimizer_.activeEdges().end(); ++it) {
         const g2o::OptimizableGraph::Edge* edge = *it;
         const g2o::EdgeSE2* edge_se2 = dynamic_cast<const g2o::EdgeSE2*>(edge);
-        const number_t* info = edge_se2->informationData();
         const g2o::OptimizableGraph::Vertex* from_edge =
             dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
         const g2o::OptimizableGraph::Vertex* to_edge =
             dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
-        if (info[0] == params_.icp_edge_weight) {
+        if (std::abs(from_edge->id() - to_edge->id()) != 1) {
             pose_graph_info.edges.push_back(EdgeInfo{
                 .from_edge = from_edge->id(),
                 .to_edge = to_edge->id(),

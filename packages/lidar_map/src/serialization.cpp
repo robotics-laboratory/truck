@@ -185,7 +185,9 @@ void writePoseGraphInfoToJSON(
 
 BagWriter::BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency) :
     frame_name_(frame_name), freqency_(freqency) {
-    writer_.open(mcap_path);
+    if (!mcap_path.empty()) {
+        writer_.open(mcap_path);
+    }   
 }
 
 namespace {

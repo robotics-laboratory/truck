@@ -47,15 +47,6 @@ int main(int argc, char* argv[]) {
              po::value<std::string>(&json_log_path)->default_value(""),
             "path to json log file");
 
-        if (!mcap_log_folder_path.empty()) {
-            enable_mcap_log = true;
-        }
-        if (!json_log_path.empty()) {
-            enable_json_log = true;
-        }
-
-        std::cout << "!!!!" << json_log_path << '\n';
-
         po::variables_map vm;
         try {
             po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -70,6 +61,13 @@ int main(int argc, char* argv[]) {
             std::cerr << "ERROR: " << e.what() << "\n";
             std::cerr << desc << "\n";
             return 1;
+        }
+
+        if (!mcap_log_folder_path.empty()) {
+            enable_mcap_log = true;
+        }
+        if (!json_log_path.empty()) {
+            enable_json_log = true;
         }
     }
 
@@ -140,7 +138,6 @@ int main(int argc, char* argv[]) {
                 }
                 
                 if (enable_json_log) {
-                    std::cout << "123" << '\n';
                     const auto pose_graph_info = builder.calculatePoseGraphInfo();
                     writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i + 1);
                 }
