@@ -1,9 +1,14 @@
+#include "lpuart1.h"
+
 #include "stm32g4xx_ll_lpuart.h"
 #include "stm32g4xx_ll_gpio.h"
 #include "stm32g4xx_ll_bus.h"
 #include "stm32g4xx_ll_rcc.h"
 
-#include "lpuart1.h"
+extern "C" {
+extern int __io_putchar(int ch);
+extern int _write(int file, char *ptr, int len);
+}
 
 void lpuart1_init() {
     LL_LPUART_InitTypeDef LPUART_InitStruct = {0};
@@ -15,7 +20,7 @@ void lpuart1_init() {
     /* Init GPIO tx */
     GPIO_InitStruct.Pin = LL_GPIO_PIN_2;
     GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-    GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
     GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
     GPIO_InitStruct.Alternate = LL_GPIO_AF_12;
@@ -46,6 +51,7 @@ int __io_putchar(int ch) {
         /* Wait active flag TXE */
     }
     LL_LPUART_TransmitData8(LPUART1, *(uint8_t*)c);
+    return ch;
 }
 
 int _write(int file, char *ptr, int len) {
@@ -54,4 +60,13 @@ int _write(int file, char *ptr, int len) {
         __io_putchar(*ptr++);
     }
     return len;
+}
+
+void print_buffer(char *buffer, uint32_t size) {
+    for (uint32_t i = 0; i < size; ++i) {
+        while (!LL_LPUART_IsActiveFlag_TXE_TXFNF(LPUART1)) {
+            /* Wait active flag TXE */
+        }
+        LL_LPUART_TransmitData8(LPUART1, buffer[i]);
+    }
 }

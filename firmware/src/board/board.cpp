@@ -1,4 +1,4 @@
-#include <cstdint>
+#include "board.h"
 
 #include "stm32g4xx_ll_rcc.h"
 #include "stm32g4xx_ll_utils.h"
@@ -14,10 +14,6 @@
 static volatile uint32_t system_tick_counter = 0;
 
 extern "C" {
- void SysTick_Handler(void);
-}
-
-extern "C" {
 void vApplicationTickHook() {
     LL_TIM_ClearFlag_UPDATE(TIM6);
 }
@@ -29,6 +25,11 @@ void SysTick_Handler(void) {
 
 uint32_t board_get_tick(void) {
     return system_tick_counter;
+}
+
+void board_delay_ms(uint32_t delay_ms) {
+    uint32_t timeout_delay_ms = board_get_tick() + delay_ms;
+    while (board_get_tick() < timeout_delay_ms);
 }
 
 void rtos_tick_timer_init() {
@@ -54,6 +55,12 @@ void board_start_rtos_timer() {
     LL_TIM_ClearFlag_UPDATE(TIM6);
     LL_TIM_EnableIT_UPDATE(TIM6);
     LL_TIM_EnableCounter(TIM6);
+}
+
+extern "C" {
+void vPortSetupTimerInterrupt( void ) {
+    board_start_rtos_timer();
+}
 }
 
 static void system_clock_init() {
@@ -90,7 +97,9 @@ static void system_clock_init() {
     LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
     LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
 
-    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),15, 0));
+    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),10, 0));
+    NVIC_EnableIRQ(SysTick_IRQn);
+
     LL_Init1msTick(144000000);
     LL_SetSystemCoreClock(144000000);
     LL_SYSTICK_EnableIT();
@@ -108,4 +117,5 @@ void board_init() {
     rtos_tick_timer_init();
     lpuart1_init();
     usart2_init();
+    __enable_irq();
 }

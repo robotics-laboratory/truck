@@ -1,59 +1,107 @@
+#include "SensorPolling.h"
+
+#include <cstdio>
+#include <cstring>
+
 #include "FreeRTOS.h"
 #include "task.h"
+#include "COBS.h"
 
-#include "SensorPolling.h"
-#include <cstdio>
-#include "fdcan.h"
-#include "encoder_timer.h"
-#include "pwm_servo.h"
+#include "board.h"
+#include "usart2.h"
+
+#include "wheel_encoder.h"
+#include "ServoController.h"
+
+#define ENCODERS_SPEED_MSG_TAG           1
+#define SERVO_MEASURED_ANGLES_MSG_TAG    2
+
+#define SERVO_TARGET_ANGLES_MSG_TAG      3
+
+static uint8_t cobs_buffer[64] = {0};
+static uint8_t *msg_buff = &(cobs_buffer[1]);
+
+static uint8_t rx_cmd_buffer[64] = { 0 };
+volatile bool rx_data_available = false;
+
+static void send_cobs_buffer(uint32_t size) {
+    cobs::encode(cobs_buffer, size + 1);
+    cobs_buffer[size + 1] = 0x00;
+    usart_2_send_buffer(cobs_buffer, size + 2);
+}
+
+SensorPolling& SensorPolling::getInstance() {
+    static SensorPolling _instance;
+    return _instance;
+}
 
 void SensorPolling::task() {
-    float gyro_x, gyro_y, gyro_z;
-    float accel_x, accel_y, accel_z;
-    static EncoderTimer &enc = EncoderTimer::get_instance(EncoderType::ID_0);
-    enc.init();
-    int prev_len = 0;
-    static std::vector<int> enc_data;
-    enc_data.reserve(50);
+    static WheelEncoder &enc_left_front = WheelEncoder::get_instance(WheelType::LEFT_FRONT);
+    static WheelEncoder &enc_right_front = WheelEncoder::get_instance(WheelType::RIGHT_FRONT);
+    enc_left_front.init();
+    enc_right_front.init();
 
-    static PWMServo& pwm = PWMServo::get_instance(PWMServoType::PWM_SERVO_1);
-    float stepper_speed = 0.1;
-    uint32_t timeout = HAL_GetTick() + 2000;
+    static ServoController &SC = ServoController::getInstance();
+    volatile uint32_t last_msg_send = board_get_tick();
+
+    usart_2_set_memory_for_rx_data(rx_cmd_buffer, 64);
+
     while (true) {
-       imu.update_values();
-       imu.get_gyro_values(gyro_x, gyro_y, gyro_z);
-       imu.get_accel_values(accel_x, accel_y, accel_z);
-       gyro_updated = true;
-       accel_updated = true;
-       printf("Accel %d %d %d\n", (int)(accel_x*1000), (int)(accel_y*1000), (int)(accel_z*1000));
-       printf("Gyro %d %d %d\n", (int)(gyro_x*100), (int)(gyro_y*100), (int)(gyro_z*100));
-       uint8_t gyro_x_can = (uint8_t)(accel_x*1000);
-    //    fdcan.transmit(1, &gyro_x_can, 4);
-        if (HAL_GetTick() > timeout) {
-            timeout = HAL_GetTick() + 2000;
-            stepper_speed += 0.1;
-            if (stepper_speed >= 1.0) {
-                stepper_speed = 0.1;
-            }
+        if (board_get_tick() != last_msg_send) {
+            uint16_t left_angle = 0;
+            uint16_t right_angle = 0;
+            SC.get_angle(left_angle, right_angle);
+            msg_buff[0] = SERVO_MEASURED_ANGLES_MSG_TAG;
+            memcpy(&(msg_buff[1]), &left_angle, sizeof(left_angle));
+            memcpy(&(msg_buff[3]), &right_angle, sizeof(right_angle));
+            send_cobs_buffer(5);
+
+            float left_speed = enc_left_front.get_ticks_per_sec();
+            float right_speed = enc_right_front.get_ticks_per_sec();
+            msg_buff[0] = ENCODERS_SPEED_MSG_TAG;
+            memcpy(&(msg_buff[1]), &left_speed, sizeof(left_speed));
+            memcpy(&(msg_buff[5]), &right_speed, sizeof(right_speed));
+            send_cobs_buffer(9);
+
+            last_msg_send = board_get_tick();
         }
-        int us = 1000000 / (200 * stepper_speed * 4);
-        pwm.set_us_impulse(us);
-        enc.get_data(enc_data);
-        if (enc_data.size()) {
-            uint32_t sum = 0;
-            for (int t : enc_data) {
-                printf("%d ", t);
-                sum += t;
+
+        if (rx_data_available == true) {
+            uint8_t *rx_data = NULL;
+            uint32_t rx_bytes = 0;
+            usart_2_get_memory_for_rx_data(&rx_data, &rx_bytes);
+            if ((rx_bytes == 0) || (rx_bytes == 64)) {
+                // printf("Empty message\n");
+            } else {
+                uint8_t *rx_data_end = rx_data + rx_bytes;
+                uint8_t *curent_msg = rx_data;
+                do {
+                    uint32_t msg_size = 0;
+
+                    for (msg_size = 0; ((curent_msg + msg_size) < rx_data_end)
+                        && (curent_msg[msg_size] != 0); ++msg_size);
+
+                    if ((curent_msg + msg_size) < rx_data_end) {
+                        cobs::decode(curent_msg,  msg_size);
+                    }
+                    uint8_t *cmd_data = curent_msg + 1;
+                    uint8_t cmd_size = msg_size - 1;
+                    if ((cmd_data[0] == 3) && (cmd_size == 3)) {
+                        uint8_t left_servo_angle = 0;
+                        uint8_t right_servo_angle = 0;
+                        left_servo_angle = cmd_data[1];
+                        right_servo_angle = cmd_data[2];
+                        SC.set_angle(left_servo_angle, right_servo_angle);
+                        // printf("ang %d %d\n", left_servo_angle, right_servo_angle);
+                    } else {
+                        // printf("Incorrect request\n");
+                    }
+                    curent_msg += (msg_size + 1);
+                } while (curent_msg < rx_data_end);
             }
-            printf("-- %d\r\n", sum);
-            int speed = 1000000 * enc_data.size() / (20.0 * sum) * 100.0;
-            printf("enc - %d - size %d\r\n", (int)(speed), enc_data.size());
-            prev_len = (prev_len + enc_data.size()) % 50;
-        } else {
-//            printf("skip\r\n");
+            rx_data_available = false;
         }
-        printf("%d\r\n", enc.get_data_size());
-        vTaskDelay(pdMS_TO_TICKS(20));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 

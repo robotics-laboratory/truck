@@ -330,10 +330,9 @@ __weak void HAL_IncTick(void)
   *       implementations in user file.
   * @retval tick value
   */
-/*  TODO DIVIDE 5*/
 __weak uint32_t HAL_GetTick(void)
 {
-  return uwTick / 5;
+  return uwTick;
 }
 
 /**

@@ -9,8 +9,18 @@ bool EncoderTimer::is_common_tim_initialized = false;
 
 static volatile bool dma_complete_irq[4] = {false};
 
-int EncoderTimer::init() {
+EncoderTimer& EncoderTimer::get_instance(EncoderType id) {
+    static std::unordered_map<EncoderType, EncoderTimer *> instances;
+    auto it = instances.find(id);
+    if (it == instances.end()) {
+        instances[id] = new EncoderTimer(id);
+    }
+    return *instances[id];
+}
+
+uint32_t EncoderTimer::init() {
     raw_buffer.fill(0);
+
     if (is_common_tim_initialized == false) {
         LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
         LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
@@ -142,6 +152,7 @@ int EncoderTimer::init() {
     LL_TIM_CC_EnableChannel(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel);
     LL_DMA_EnableChannel(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel);
     LL_TIM_EnableCounter(const_cast<TIM_TypeDef*>(common_timer_handle));
+
     return 0;
 }
 

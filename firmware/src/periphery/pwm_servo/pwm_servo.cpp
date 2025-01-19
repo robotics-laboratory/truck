@@ -1,4 +1,5 @@
 #include "pwm_servo.h"
+
 #include "stm32g4xx_ll_gpio.h"
 #include "stm32g4xx_ll_bus.h"
 
@@ -16,11 +17,19 @@ PWMServo::PWMServo(PWMServoType id) {
             break;
         }
     }
-    init();
 }
 
-int32_t PWMServo::init() {
-    int32_t status = 0;
+PWMServo& PWMServo::get_instance(PWMServoType type) {
+    static std::unordered_map<PWMServoType, PWMServo *> instances;
+    auto it = instances.find(type);
+    if (it == instances.end()) {
+        instances[type] = new PWMServo(type);
+    }
+    return *instances[type];
+}
+
+uint32_t PWMServo::init() {
+    uint32_t status = 0;
     if (!is_initialized) {
         static LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {0};
         TIM_OC_InitStruct.OCMode = LL_TIM_OCMODE_PWM1;
@@ -52,25 +61,35 @@ int32_t PWMServo::init() {
         LL_TIM_OC_DisableFast(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel);
 
         LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
-        if (type_ == PWMServoType::PWM_SERVO_1) {
-            GPIO_InitStruct.Pin = LL_GPIO_PIN_0;
-        } else {
-            GPIO_InitStruct.Pin = LL_GPIO_PIN_1;
+
+        switch (type_) {
+            case PWMServoType::PWM_SERVO_1:
+                GPIO_InitStruct.Pin = LL_GPIO_PIN_0;
+                break;
+            case PWMServoType::PWM_SERVO_2:
+                GPIO_InitStruct.Pin = LL_GPIO_PIN_1;
+                break;
+            default:
+                status = 1;
+                break;
         }
+
         GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
         GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
         GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
         GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
         GPIO_InitStruct.Alternate = LL_GPIO_AF_2;
-        LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-        is_initialized = true;
+        if (status == 0) {
+            LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+            is_initialized = true;
+        }
     }
     return status;
 }
 
-int32_t PWMServo::set_us_impulse(uint32_t us) {
-    int32_t status = 0;
+uint32_t PWMServo::set_us_impulse(uint32_t us) {
+    uint32_t status = 0;
     if (is_initialized){
         if (us < TIM_AUTORELOAD) {
             LL_TIM_CC_EnableChannel(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel);
@@ -91,8 +110,8 @@ int32_t PWMServo::set_us_impulse(uint32_t us) {
     return status;
 }
 
-int32_t PWMServo::stop() {
-    int32_t status = 0;
+uint32_t PWMServo::stop() {
+    uint32_t status = 0;
     if (is_initialized) {
         LL_TIM_CC_DisableChannel(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel);
     } else {

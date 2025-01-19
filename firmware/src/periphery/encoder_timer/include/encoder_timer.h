@@ -42,16 +42,9 @@ class EncoderTimer {
   uint32_t get_data_size();
 
  public:
-  static EncoderTimer &get_instance(EncoderType id) {
-      static std::unordered_map<EncoderType, EncoderTimer *> instances;
-      auto it = instances.find(id);
-      if (it == instances.end()) {
-          instances[id] = new EncoderTimer(id);
-      }
-      return *instances[id];
-  }
+  static EncoderTimer &get_instance(EncoderType id);
 
-  int init();
+  uint32_t init();
   uint32_t get_data(std::vector<int> &output_data);
   constexpr float get_tick_len_micros() {
     return (1000000.0f) / (APB1_CLOCK / (TIM_PRESCALER+1));

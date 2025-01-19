@@ -28,10 +28,7 @@ class SensorPolling {
   SensorPolling &operator=(const SensorPolling &obj) = delete;
 
  public:
-  static SensorPolling &getInstance() {
-      static SensorPolling _instance;
-      return _instance;
-  }
+  static SensorPolling &getInstance();
 
   int32_t init();
   void start();

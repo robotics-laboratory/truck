@@ -4,9 +4,8 @@
 #include <unordered_map>
 #include "stm32g4xx_ll_tim.h"
 
-
 enum class PWMServoType : uint8_t {
-  PWM_SERVO_1,
+  PWM_SERVO_1 = 1,
   PWM_SERVO_2
 };
 
@@ -19,7 +18,6 @@ class PWMServo {
   static constexpr uint32_t TIM_PRESCALER = 143;
   static constexpr uint32_t TIM_AUTORELOAD = 20000;
   uint32_t timer_channel;
-  int32_t init();
 
   PWMServo(PWMServoType init_type);
   ~PWMServo() {};
@@ -27,19 +25,10 @@ class PWMServo {
   PWMServo &operator=(const PWMServo &obj) = delete;
 
  public:
-  static PWMServo &get_instance(PWMServoType type) {
-      static std::unordered_map<PWMServoType, PWMServo *> instances;
-      auto it = instances.find(type);
-      if (it == instances.end()) {
-          instances[type] = new PWMServo(type);
-      }
-      return *instances[type];
-  }
+  static PWMServo &get_instance(PWMServoType type);
 
-  int32_t set_us_impulse(uint32_t us);
-  int32_t stop();
-  bool initialized(){
-      return is_initialized;
-  }
+  uint32_t init();
+  uint32_t set_us_impulse(uint32_t us);
+  uint32_t stop();
 };
 #endif //TRUCK_HW_PERIPHERY_PWM_SERVO_INCLUDE_PWM_SERVO_H_

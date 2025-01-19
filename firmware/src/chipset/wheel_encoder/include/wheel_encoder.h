@@ -1,9 +1,11 @@
 
 #ifndef TRUCK_HW_CHIPSET_WHEEL_ENCODER_INCLUDE_WHEEL_ECNODER_H_
 #define TRUCK_HW_CHIPSET_WHEEL_ENCODER_INCLUDE_WHEEL_ECNODER_H_
+
 #include <cstdint>
-#include "encoder_timer.h"
 #include <unordered_map>
+
+#include "encoder_timer.h"
 
 enum class WheelType : uint8_t {
   LEFT_FRONT,
@@ -15,9 +17,8 @@ enum class WheelType : uint8_t {
 
 class WheelEncoder {
  private:
-  static constexpr float pi = 3.1415;
-  static constexpr float wheel_radius_mm = 30;
-  static constexpr uint32_t steps_per_turn = 50;
+  static constexpr uint32_t idle_timeout_ms = 100;
+  static constexpr float low_pass_coef = 0.1f;
 
   bool is_initialized = false;
   enum WheelType type;
@@ -25,8 +26,12 @@ class WheelEncoder {
   static constexpr uint32_t max_data_size = 50;
   std::vector<int> encoder_ticks;
 
-  float last_speed = 0.0f;
-//  const std::unordered_map<WheelType, EncoderType> wheel_encoder_map = {{std::pair<WheelType, EncoderType> (WheelType::LEFT_FRONT, EncoderType::ID_0)}};
+  float current_speed = 0.0f;
+  uint32_t last_tick_ts = 0;
+
+  ~WheelEncoder() {};
+  WheelEncoder(const WheelEncoder &obj) = delete;
+  WheelEncoder &operator=(const WheelEncoder &obj) = delete;
 
   static EncoderTimer &get_timer_instance(WheelType wheel_type_) {
       switch (wheel_type_) {
@@ -41,28 +46,15 @@ class WheelEncoder {
       }
   }
 
-  WheelEncoder(WheelType id) : encoder_timer_handle(get_timer_instance(id)) {
-      encoder_ticks.resize(max_data_size);
-      if (encoder_timer_handle.init() && (encoder_ticks.capacity() >= max_data_size)) {
-          is_initialized = true;
-      }
-  };
+  WheelEncoder(WheelType id) : encoder_timer_handle(get_timer_instance(id)) {};
 
-  ~WheelEncoder() {};
-  WheelEncoder(const WheelEncoder &obj) = delete;
-  WheelEncoder &operator=(const WheelEncoder &obj) = delete;
-
-  int init();
+  void low_pas_filter_apply(float raw_speed);
 
  public:
-  static WheelEncoder &get_instance(WheelType id) {
-      static std::unordered_map<WheelType, WheelEncoder *> instances;
-      auto it = instances.find(id);
-      if (it == instances.end()) {
-          instances[id] = new WheelEncoder(id);
-      }
-      return *instances[id];
-  }
-  int calculate_speed();
+  static WheelEncoder &get_instance(WheelType id);
+
+  uint32_t init(void);
+  float get_ticks_per_sec(void);
 };
+
 #endif //TRUCK_HW_CHIPSET_WHEEL_ENCODER_INCLUDE_WHEEL_ECNODER_H_

@@ -9,5 +9,6 @@ env.Append(
   LINKFLAGS=[
     "-mfloat-abi=hard",
     "-mfpu=fpv4-sp-d16",
+    "-T./firmware/STM32G431CBUx_FLASH.ld",
   ]
 )
