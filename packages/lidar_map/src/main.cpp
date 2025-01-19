@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
                         builder.mergeClouds(builder.transformClouds(poses, clouds));
                     bag_writer.addOptimizationStep(
                         poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
-            }
+                }
                 
                 if (enable_json_log) {
                     const auto pose_graph_info = builder.calculatePoseGraphInfo();

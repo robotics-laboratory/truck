@@ -302,7 +302,7 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
             .id = vertex_se2->id(),
             .pose = {
                 .pos = geom::Vec2{estimate[0], estimate[1]},
-                .dir =truck::geom::Angle::fromRadians(estimate[2])}});
+                .dir = truck::geom::Angle::fromRadians(estimate[2])}});
     }
     return pose_graph_info;
 }
