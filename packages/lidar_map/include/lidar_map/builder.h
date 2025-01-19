@@ -22,11 +22,11 @@ struct PoseInfo {
 };
 
 using EdgesInfo = std::vector<EdgeInfo>;
-using VerticesInfo = std::vector<PoseInfo>;
+using PosesInfo = std::vector<PoseInfo>;
 
 struct PoseGraphInfo {
     EdgesInfo edges;
-    VerticesInfo vertices;
+    PosesInfo poses;
 };
 
 struct BuilderParams {

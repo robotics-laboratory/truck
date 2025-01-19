@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lidar_map/builder.h"
 #include "lidar_map/common.h"
 #include "geom/complex_polygon.h"
 
@@ -20,16 +21,17 @@ syncOdomWithCloud(
     const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
     const std::vector<sensor_msgs::msg::PointCloud2>& laser_scan_msgs);
 
+void writePoseGraphInfoToJSON(
+    const std::string& json_path, const PoseGraphInfo& pose_graph_info, size_t iteration);
+
 class BagWriter {
   public:
     BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency);
 
-    void addLidarMap(const Cloud& lidar_map, const std::string& topic_name);
+    static void writeCloud(const std::string& mcap_path, const Cloud& cloud, const std::string& frame_name, const std::string& topic_name);
     void addOptimizationStep(
         const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
         const std::string& merged_clouds_topic_name);
-    void writePoseGraphInfoToJSON(
-        const std::string& json_path, const PoseGraphInfo& pose_graph_info, size_t iteration) const;
 
   private:
     void addPoses(const geom::Poses& poses, const std::string& topic_name);

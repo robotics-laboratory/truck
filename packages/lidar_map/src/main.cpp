@@ -1,3 +1,4 @@
+#include "cmath"
 #include "geom/distance.h"
 #include "geom/msg.h"
 #include "lidar_map/builder.h"
@@ -27,21 +28,23 @@ int main(int argc, char* argv[]) {
     std::string vector_map_file;
     std::string mcap_input_path;
     std::string mcap_output_folder_path;
-    std::string mcap_log_folder_path;    // сюда сохраняем путь, который user написал после аргумента --mcap-log, именно этот путь нужно передать при создании экземпляра класса BagWriter
+    std::string mcap_log_folder_path;
     std::string json_log_path;
 
     {
         po::options_description desc("Executable for constructing 2D LiDAR map");
         desc.add_options()("help,h", "show this help message and exit")(
-            "input,i",
+            "mcap-input,mi",
             po::value<std::string>(&mcap_input_path)->required(),
             "path to .mcap file with ride bag")(
-            "output,o",
+            "mcap-output,mo",
             po::value<std::string>(&mcap_output_folder_path)->required(),
             "path to folder where to store .mcap file with 2D LiDAR map (folder shouldn't exist)")(
-            "mcap-log,mcapl", po::value<std::string>(&mcap_log_folder_path)->default_value(""), 
+            "mcap-log,ml", 
+            po::value<std::string>(&mcap_log_folder_path)->default_value(""), 
             "path to folder for mcap logs")(
-            "json-log,jsonl", po::value<std::string>(&json_log_path)->default_value(""),
+            "json-log,jl",
+             po::value<std::string>(&json_log_path)->default_value(""),
             "path to json log file");
 
         if (!mcap_log_folder_path.empty()) {
@@ -50,6 +53,8 @@ int main(int argc, char* argv[]) {
         if (!json_log_path.empty()) {
             enable_json_log = true;
         }
+
+        std::cout << "!!!!" << json_log_path << '\n';
 
         po::variables_map vm;
         try {
@@ -78,7 +83,7 @@ int main(int argc, char* argv[]) {
 
         Builder builder = Builder(builder_params);
 
-        BagWriter bag_writer = BagWriter(mcap_output_folder_path, "world", 0.5);
+        BagWriter bag_writer = BagWriter(mcap_log_folder_path, "world", 0.5);
 
         Poses poses;
         Clouds clouds;
@@ -97,22 +102,16 @@ int main(int argc, char* argv[]) {
             std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 8.0);
 
             const auto rotate_poses_by_angle_PI = [](auto& poses) {
-            for (auto& pose : poses) {
-                pose.dir += geom::fromRadians(M_PI);
-            }
-
+                for (auto& pose : poses) {
+                    pose.dir += truck::geom::Angle::fromRadians(M_PI);
+                }
+            };
             rotate_poses_by_angle_PI(poses); // temporary fix
             
         }
 
         // 2. Construct and optimize pose graph
         {
-            auto log_optimization_step = [&]() {
-                auto tf_merged_clouds = builder.mergeClouds(builder.transformClouds(poses, clouds));
-                bag_writer.addOptimizationStep(
-                    poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
-            };
-
             builder.initPoseGraph(poses, clouds);
 
             if (enable_mcap_log) {
@@ -141,6 +140,7 @@ int main(int argc, char* argv[]) {
                 }
                 
                 if (enable_json_log) {
+                    std::cout << "123" << '\n';
                     const auto pose_graph_info = builder.calculatePoseGraphInfo();
                     writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i + 1);
                 }
@@ -150,8 +150,7 @@ int main(int argc, char* argv[]) {
 
             const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
 
-            bag_writer.addLidarMap(lidar_map, "/map/lidar");
-
+            BagWriter::writeCloud(mcap_output_folder_path, lidar_map, "world", "/map/lidar");
         }
     }
 }

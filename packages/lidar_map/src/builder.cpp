@@ -12,7 +12,6 @@
 #include <g2o/solvers/dense/linear_solver_dense.h>
 #include <g2o/types/slam2d/edge_se2.h>
 #include <g2o/types/slam2d/vertex_se2.h>
-#include <nlohmann/json.hpp>
 #include <fstream>
 
 namespace truck::lidar_map {
@@ -303,7 +302,7 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
         const g2o::VertexSE2* vertex_se2 = dynamic_cast<const g2o::VertexSE2*>(vertex);
         Eigen::Vector3d estimate;
         vertex_se2->getEstimateData(estimate.data());
-        pose_graph_info.vertices.push_back(PoseInfo{
+        pose_graph_info.poses.push_back(PoseInfo{
             .id = vertex_se2->id(), .x = estimate[0], .y = estimate[1], .theta = estimate[2]});
     }
     return pose_graph_info;

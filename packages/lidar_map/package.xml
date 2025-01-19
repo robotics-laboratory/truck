@@ -21,7 +21,6 @@
   <depend>PCL</depend>
   <depend>pcl_conversions</depend>
   <depend>ament_index_cpp</depend>
-  <depend>visualization</depend>
   <depend>Boost</depend>
 
   <export>

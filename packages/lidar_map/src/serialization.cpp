@@ -3,12 +3,11 @@
 #include "common/exception.h"
 #include "geom/msg.h"
 #include "lidar_map/conversion.h"
-#include "visualization/msg.h"
 
 #include <rosbag2_cpp/reader.hpp>
-#include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <rosbag2_cpp/writer.hpp>
+#include <nlohmann/json.hpp>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 
@@ -133,37 +132,11 @@ syncOdomWithCloud(
     return {odom_msgs_synced, laser_scan_msgs_synced};
 }
 
-BagWriter::BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency) :
-    frame_name_(frame_name), freqency_(freqency) {
-    writer_.open(mcap_path);
-}
-
-namespace {
-
-rclcpp::Time getTime(double seconds = 0.0) {
-    auto nanoseconds = (seconds - static_cast<int32_t>(seconds)) * 1e9;
-    return {static_cast<int32_t>(seconds), static_cast<uint32_t>(nanoseconds)};
-}
-
-}  // namespace
-
-void BagWriter::addLidarMap(const Cloud& lidar_map, const std::string& topic_name) {
-    writer_.write(msg::toPointCloud2(lidar_map, frame_name_), topic_name, getTime());
-}
-
-void BagWriter::addOptimizationStep(
-    const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
-    const std::string& merged_clouds_topic_name) {
-    addPoses(poses, poses_topic_name);
-    addMergedClouds(merged_clouds, merged_clouds_topic_name);
-    id_++;
-}
-
 /**
  * Writing information about icp edges to a json file
  */
-void Builder::writePoseGraphInfoToJSON(
-    const std::string& json_path, const PoseGraphInfo& pose_graph_info, size_t iteration) const {
+void writePoseGraphInfoToJSON(
+    const std::string& json_path, const PoseGraphInfo& pose_graph_info, size_t iteration) {
     nlohmann::json json_data;
 
     std::ifstream input_file(json_path);
@@ -174,7 +147,7 @@ void Builder::writePoseGraphInfoToJSON(
 
     nlohmann::json current_iteration_data;
 
-    for (const auto& vertex : pose_graph_info.vertices) {
+    for (const auto& vertex : pose_graph_info.poses) {
         nlohmann::json vertex_json;
         vertex_json["id"] = vertex.id;
         vertex_json["x"] = vertex.x;
@@ -193,8 +166,13 @@ void Builder::writePoseGraphInfoToJSON(
 
         current_iteration_data["edges"].push_back(edge_json);
     }
+    std::string formatted_iteration;
 
-    json_data[std::to_string(iteration)] = current_iteration_data;
+    if (iteration < 10) {
+        json_data["0" + std::to_string(iteration)] = current_iteration_data;
+    } else {
+        json_data[std::to_string(iteration)] = current_iteration_data;
+    }
 
     std::ofstream output_file(json_path);
     if (output_file.is_open()) {
@@ -205,6 +183,33 @@ void Builder::writePoseGraphInfoToJSON(
     }
 }
 
+BagWriter::BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency) :
+    frame_name_(frame_name), freqency_(freqency) {
+    writer_.open(mcap_path);
+}
+
+namespace {
+
+rclcpp::Time getTime(double seconds = 0.0) {
+    auto nanoseconds = (seconds - static_cast<int32_t>(seconds)) * 1e9;
+    return {static_cast<int32_t>(seconds), static_cast<uint32_t>(nanoseconds)};
+}
+
+}  // namespace
+
+void BagWriter::writeCloud(const std::string& mcap_path, const Cloud& cloud, const std::string& frame_name, const std::string& topic_name) {
+    rosbag2_cpp::Writer writer;
+    writer.open(mcap_path);
+    writer.write(msg::toPointCloud2(cloud, frame_name), topic_name, getTime());
+}
+
+void BagWriter::addOptimizationStep(
+    const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
+    const std::string& merged_clouds_topic_name) {
+    addPoses(poses, poses_topic_name);
+    addMergedClouds(merged_clouds, merged_clouds_topic_name);
+    id_++;
+}
 
 void BagWriter::addPoses(const geom::Poses& poses, const std::string& topic_name) {
     auto get_color = [](double a = 1.0, double r = 0.0, double g = 0.0, double b = 1.0) {
