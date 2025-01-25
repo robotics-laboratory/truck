@@ -8,14 +8,14 @@
 namespace truck::lidar_map {
 
 struct EdgeInfo {
-    size_t from_edge;
-    size_t to_edge;
+    int from_edge;
+    int to_edge;
     double error_val;
     std::string type;
 };
 
 struct PoseInfo {
-    size_t id;
+    int id;
     geom::Pose pose;
 };
 
@@ -44,7 +44,7 @@ class Builder {
 
     void initPoseGraph(const geom::Poses& poses, const Clouds& clouds);
 
-    geom::Poses optimizePoseGraph(size_t iterations);
+    geom::Poses optimizePoseGraph(size_t iterations = 1);
 
     PoseGraphInfo calculatePoseGraphInfo() const;
 
@@ -53,7 +53,7 @@ class Builder {
 
     Cloud mergeClouds(const Clouds& clouds) const;
 
-    Clouds applyGridFilter(const Clouds& clouds, double cell_size) const;
+    Clouds applyGridFilter(const Clouds& clouds, double cell_size = 0.1) const;
 
     Clouds applyDynamicFilter(
         const geom::Poses& poses, const Clouds& clouds_base, double clouds_search_rad,

@@ -256,6 +256,10 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
 geom::Poses Builder::optimizePoseGraph(size_t iterations) {
     optimizer_.optimize(iterations);
 
+    if (params_.verbose) {
+        std::cout << "[LOG] optimizePoseGraph(): finished" << std::endl;
+    }
+
     geom::Poses optimized_poses;
 
     for (size_t i = 0; i < optimizer_.vertices().size(); i++) {

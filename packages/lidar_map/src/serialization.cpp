@@ -17,6 +17,79 @@ namespace truck::lidar_map {
 
 namespace {
 
+bool operator<(const std_msgs::msg::Header& a, const std_msgs::msg::Header& b) {
+    if (a.stamp.sec < b.stamp.sec) {
+        return true;
+    }
+
+    if (a.stamp.sec > b.stamp.sec) {
+        return false;
+    }
+
+    return a.stamp.nanosec < b.stamp.nanosec;
+}
+
+}  // namespace
+
+std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::PointCloud2>>
+syncOdomWithPointCloud(
+    const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
+    const std::vector<sensor_msgs::msg::PointCloud2>& point_cloud_msgs) {
+    VERIFY(!odom_msgs.empty());
+    VERIFY(!point_cloud_msgs.empty());
+
+    const size_t odom_count = odom_msgs.size();
+    const size_t laser_scan_count = point_cloud_msgs.size();
+
+    size_t odom_id = 0;
+    size_t laser_scan_id = 0;
+
+    std::vector<nav_msgs::msg::Odometry> odom_msgs_synced;
+    std::vector<sensor_msgs::msg::PointCloud2> point_cloud_msgs_synced;
+
+    while (laser_scan_id < laser_scan_count) {
+        while (odom_id < odom_count
+               && odom_msgs[odom_id].header < point_cloud_msgs[laser_scan_id].header) {
+            odom_id++;
+        }
+
+        if (odom_id >= odom_count) {
+            break;
+        }
+
+        odom_msgs_synced.push_back(odom_msgs[odom_id]);
+        point_cloud_msgs_synced.push_back(point_cloud_msgs[laser_scan_id]);
+
+        laser_scan_id++;
+    }
+
+    return {odom_msgs_synced, point_cloud_msgs_synced};
+}
+
+namespace reader {
+
+Cloud readPCD(const std::string& pcd_path) {
+    Cloud cloud;
+    pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
+
+    if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_path, pcl_cloud) == -1) {
+        return cloud;
+    }
+
+    const size_t points_count = pcl_cloud.points.size();
+    cloud = Cloud(3, points_count);
+
+    for (size_t i = 0; i < points_count; i++) {
+        cloud(0, i) = pcl_cloud.points[i].x;
+        cloud(1, i) = pcl_cloud.points[i].y;
+        cloud(2, i) = pcl_cloud.points[i].z;
+    }
+
+    return cloud;
+}
+
+namespace {
+
 template<typename T>
 std::optional<T> readNextMessage(
     std::unique_ptr<rosbag2_cpp::Reader>& reader, const std::string& topic_name) {
@@ -41,7 +114,7 @@ std::optional<T> readNextMessage(
 
 }  // namespace
 
-std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
+std::vector<nav_msgs::msg::Odometry> readOdomTopic(
     const std::string& mcap_path, const std::string& odom_topic) {
     std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
     reader->open(mcap_path);
@@ -61,15 +134,15 @@ std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
     return data;
 }
 
-std::vector<sensor_msgs::msg::PointCloud2> loadLaserScanTopic(
-    const std::string& mcap_path, const std::string& laser_scan_topic) {
+std::vector<sensor_msgs::msg::PointCloud2> readPointCloudTopic(
+    const std::string& mcap_path, const std::string& point_cloud_topic) {
     std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
     reader->open(mcap_path);
 
     std::vector<sensor_msgs::msg::PointCloud2> data;
 
     while (true) {
-        auto msg = readNextMessage<sensor_msgs::msg::PointCloud2>(reader, laser_scan_topic);
+        auto msg = readNextMessage<sensor_msgs::msg::PointCloud2>(reader, point_cloud_topic);
 
         if (!msg.has_value()) {
             break;
@@ -81,56 +154,9 @@ std::vector<sensor_msgs::msg::PointCloud2> loadLaserScanTopic(
     return data;
 }
 
-namespace {
+}  // namespace reader
 
-bool operator<(const std_msgs::msg::Header& a, const std_msgs::msg::Header& b) {
-    if (a.stamp.sec < b.stamp.sec) {
-        return true;
-    }
-
-    if (a.stamp.sec > b.stamp.sec) {
-        return false;
-    }
-
-    return a.stamp.nanosec < b.stamp.nanosec;
-}
-
-}  // namespace
-
-std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::PointCloud2>>
-syncOdomWithCloud(
-    const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
-    const std::vector<sensor_msgs::msg::PointCloud2>& laser_scan_msgs) {
-    VERIFY(!odom_msgs.empty());
-    VERIFY(!laser_scan_msgs.empty());
-
-    const size_t odom_count = odom_msgs.size();
-    const size_t laser_scan_count = laser_scan_msgs.size();
-
-    size_t odom_id = 0;
-    size_t laser_scan_id = 0;
-
-    std::vector<nav_msgs::msg::Odometry> odom_msgs_synced;
-    std::vector<sensor_msgs::msg::PointCloud2> laser_scan_msgs_synced;
-
-    while (laser_scan_id < laser_scan_count) {
-        while (odom_id < odom_count
-               && odom_msgs[odom_id].header < laser_scan_msgs[laser_scan_id].header) {
-            odom_id++;
-        }
-
-        if (odom_id >= odom_count) {
-            break;
-        }
-
-        odom_msgs_synced.push_back(odom_msgs[odom_id]);
-        laser_scan_msgs_synced.push_back(laser_scan_msgs[laser_scan_id]);
-
-        laser_scan_id++;
-    }
-
-    return {odom_msgs_synced, laser_scan_msgs_synced};
-}
+namespace writer {
 
 /**
  * Writing information about icp edges to a json file
@@ -183,103 +209,6 @@ void writePoseGraphInfoToJSON(
     }
 }
 
-BagWriter::BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency) :
-    frame_name_(frame_name), freqency_(freqency) {
-    if (!mcap_path.empty()) {
-        writer_.open(mcap_path);
-    }
-}
-
-namespace {
-
-rclcpp::Time getTime(double seconds = 0.0) {
-    auto nanoseconds = (seconds - static_cast<int32_t>(seconds)) * 1e9;
-    return {static_cast<int32_t>(seconds), static_cast<uint32_t>(nanoseconds)};
-}
-
-}  // namespace
-
-void BagWriter::writeCloud(
-    const std::string& mcap_path, const Cloud& cloud, const std::string& frame_name,
-    const std::string& topic_name) {
-    rosbag2_cpp::Writer writer;
-    writer.open(mcap_path);
-    writer.write(msg::toPointCloud2(cloud, frame_name), topic_name, getTime());
-}
-
-void BagWriter::addOptimizationStep(
-    const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
-    const std::string& merged_clouds_topic_name) {
-    addPoses(poses, poses_topic_name);
-    addMergedClouds(merged_clouds, merged_clouds_topic_name);
-    id_++;
-}
-
-void BagWriter::addPoses(const geom::Poses& poses, const std::string& topic_name) {
-    auto get_color = [](double a = 1.0, double r = 0.0, double g = 0.0, double b = 1.0) {
-        std_msgs::msg::ColorRGBA color;
-        color.a = a;
-        color.r = r;
-        color.g = g;
-        color.b = b;
-        return color;
-    };
-
-    auto get_scale = [](double x = 1.2, double y = 0.2, double z = 0.2) {
-        geometry_msgs::msg::Vector3 scale;
-        scale.x = x;
-        scale.y = y;
-        scale.z = z;
-        return scale;
-    };
-
-    visualization_msgs::msg::MarkerArray msg_array;
-
-    for (size_t i = 0; i < poses.size(); i++) {
-        const geom::Pose& pose = poses[i];
-
-        visualization_msgs::msg::Marker msg;
-        msg.header.frame_id = frame_name_;
-        msg.id = i;
-        msg.type = visualization_msgs::msg::Marker::ARROW;
-        msg.action = visualization_msgs::msg::Marker::ADD;
-        msg.color = get_color();
-        msg.pose.position.x = pose.pos.x;
-        msg.pose.position.y = pose.pos.y;
-        msg.pose.orientation = geom::msg::toQuaternion(pose.dir);
-        msg.scale = get_scale();
-
-        msg_array.markers.push_back(msg);
-    }
-
-    writer_.write(msg_array, topic_name, getTime(id_ * freqency_));
-}
-
-void BagWriter::addMergedClouds(const Cloud& merged_clouds, const std::string& topic_name) {
-    writer_.write(
-        msg::toPointCloud2(merged_clouds, frame_name_), topic_name, getTime(id_ * freqency_));
-}
-
-Cloud loadPCD(const std::string& pcd_path) {
-    Cloud cloud;
-    pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
-
-    if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_path, pcl_cloud) == -1) {
-        return cloud;
-    }
-
-    const size_t points_count = pcl_cloud.points.size();
-    cloud = Cloud(3, points_count);
-
-    for (size_t i = 0; i < points_count; i++) {
-        cloud(0, i) = pcl_cloud.points[i].x;
-        cloud(1, i) = pcl_cloud.points[i].y;
-        cloud(2, i) = pcl_cloud.points[i].z;
-    }
-
-    return cloud;
-}
-
 void writeToPCD(const std::string& pcd_path, const Cloud& cloud) {
     pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
     pcl_cloud.width = cloud.cols();
@@ -295,5 +224,79 @@ void writeToPCD(const std::string& pcd_path, const Cloud& cloud) {
 
     pcl::io::savePCDFileASCII(pcd_path, pcl_cloud);
 }
+
+MCAPWriter::MCAPWriter(const MCAPWriterParams& params) : params_(params) {
+    if (!params.mcap_path.empty()) {
+        writer_.open(params.mcap_path);
+    }
+}
+
+void MCAPWriter::update() { msg_id_++; }
+
+namespace {
+
+rclcpp::Time getTime(double seconds = 0.0) {
+    auto nanoseconds = (seconds - static_cast<int32_t>(seconds)) * 1e9;
+    return {static_cast<int32_t>(seconds), static_cast<uint32_t>(nanoseconds)};
+}
+
+std_msgs::msg::ColorRGBA toColorRGBA(double a, double r, double g, double b) {
+    std_msgs::msg::ColorRGBA color;
+    color.a = a;
+    color.r = r;
+    color.g = g;
+    color.b = b;
+    return color;
+};
+
+geometry_msgs::msg::Vector3 toVector3(double x, double y, double z) {
+    geometry_msgs::msg::Vector3 scale;
+    scale.x = x;
+    scale.y = y;
+    scale.z = z;
+    return scale;
+};
+
+}  // namespace
+
+void MCAPWriter::writeCloud(const Cloud& cloud) {
+    writer_.write(
+        msg::toPointCloud2(cloud),
+        params_.cloud_topic_name,
+        getTime(msg_id_ * params_.topic_frequency));
+}
+
+void MCAPWriter::writePoses(const geom::Poses& poses) {
+    visualization_msgs::msg::MarkerArray msg_array;
+
+    for (size_t i = 0; i < poses.size(); i++) {
+        const geom::Pose& pose = poses[i];
+
+        visualization_msgs::msg::Marker msg;
+        msg.header.frame_id = params_.frame_name;
+        msg.id = i;
+        msg.type = visualization_msgs::msg::Marker::ARROW;
+        msg.action = visualization_msgs::msg::Marker::ADD;
+        msg.color = toColorRGBA(1, 0, 0, 1);
+        msg.pose.position.x = pose.pos.x;
+        msg.pose.position.y = pose.pos.y;
+        msg.pose.orientation = geom::msg::toQuaternion(pose.dir);
+        msg.scale = toVector3(1.2, 0.2, 0.2);
+
+        msg_array.markers.push_back(msg);
+    }
+
+    writer_.write(msg_array, params_.poses_topic_name, getTime(msg_id_ * params_.topic_frequency));
+}
+
+void MCAPWriter::writeCloud(
+    const std::string& mcap_path, const Cloud& cloud, const std::string& topic_name,
+    std::string frame_name) {
+    rosbag2_cpp::Writer writer;
+    writer.open(mcap_path);
+    writer.write(msg::toPointCloud2(cloud, frame_name), topic_name, getTime());
+}
+
+}  // namespace writer
 
 }  // namespace truck::lidar_map
