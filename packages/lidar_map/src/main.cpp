@@ -4,27 +4,26 @@
 #include "lidar_map/builder.h"
 #include "lidar_map/conversion.h"
 #include "lidar_map/serialization.h"
-#include "map/map.h"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <boost/program_options.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include <numeric>
 #include <sensor_msgs/msg/laser_scan.hpp>
 
 using namespace truck::lidar_map;
-using namespace truck::map;
 using namespace truck::geom;
 
 namespace po = boost::program_options;
 
-const std::string kTopicLaserScan = "/livox/lidar";
-const std::string kTopicOdom = "/ekf/odometry/filtered";
+const std::string kInputTopicPointCloud = "/livox/lidar";
+const std::string kInputTopicOdom = "/ekf/odometry/filtered";
+const std::string kOutputTopicLidarMap = "/lidar_map";
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
 
 int main(int argc, char* argv[]) {
     bool enable_mcap_log = false;
     bool enable_json_log = false;
+
     std::string vector_map_file;
     std::string mcap_input_path;
     std::string mcap_output_folder_path;
@@ -34,18 +33,18 @@ int main(int argc, char* argv[]) {
     {
         po::options_description desc("Executable for constructing 2D LiDAR map");
         desc.add_options()("help,h", "show this help message and exit")(
-            "mcap-input,mi",
+            "mcap-input",
             po::value<std::string>(&mcap_input_path)->required(),
-            "path to .mcap file with ride bag")(
-            "mcap-output,mo",
+            "path to .mcap file with a ride")(
+            "mcap-output",
             po::value<std::string>(&mcap_output_folder_path)->required(),
-            "path to folder where to store .mcap file with 2D LiDAR map (folder shouldn't exist)")(
-            "mcap-log,ml",
+            "path to NON-EXISTING folder for saving map")(
+            "mcap-log",
             po::value<std::string>(&mcap_log_folder_path)->default_value(""),
-            "path to folder for mcap logs")(
-            "json-log,jl",
+            "path to NON-EXISTING folder for saving map logs")(
+            "json-log",
             po::value<std::string>(&json_log_path)->default_value(""),
-            "path to json log file");
+            "path to json file for saving map logs");
 
         po::variables_map vm;
         try {
@@ -71,88 +70,92 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    const BuilderParams builder_params{
+        .icp_config = kPkgPathLidarMap + "/config/icp.yaml",
+        .icp_edge_max_dist = 3,
+        .odom_edge_weight = 1.0,
+        .icp_edge_weight = 3.0,
+        .verbose = true};
+
+    Builder builder = Builder(builder_params);
+
+    const size_t optimization_steps = 0;
+
+    writer::MCAPWriterParams mcap_writer_params = {
+        .mcap_path = mcap_log_folder_path,
+        .poses_topic_name = "/poses",
+        .cloud_topic_name = "/cloud",
+    };
+
+    writer::MCAPWriter mcap_writer(mcap_writer_params);
+
+    Poses poses;
+    Clouds clouds;
+
+    // 1. Read data from input bag
     {
-        const BuilderParams builder_params{
-            .icp_config = kPkgPathLidarMap + "/config/icp.yaml",
-            .icp_edge_max_dist = 3,
-            .odom_edge_weight = 1.0,
-            .icp_edge_weight = 3.0,
-            .verbose = true};
+        auto odom_msgs = reader::readOdomTopic(mcap_input_path, kInputTopicOdom);
 
-        Builder builder = Builder(builder_params);
+        auto point_cloud_msgs = reader::readPointCloudTopic(mcap_input_path, kInputTopicPointCloud);
 
-        BagWriter bag_writer = BagWriter(mcap_log_folder_path, "world", 0.5);
+        const auto [synced_odom_msgs, synced_point_cloud_msgs] =
+            syncOdomWithPointCloud(odom_msgs, point_cloud_msgs);
 
-        Poses poses;
-        Clouds clouds;
+        const auto all_poses = toPoses(synced_odom_msgs);
 
-        // 1. Read data from input bag
-        {
-            const auto odom_msgs = loadOdomTopic(mcap_input_path, kTopicOdom);
-            const auto laser_scan_msgs = loadLaserScanTopic(mcap_input_path, kTopicLaserScan);
+        const auto all_clouds = toClouds(synced_point_cloud_msgs);
 
-            const auto [synced_odom_msgs, synced_laser_scan_msgs] =
-                syncOdomWithCloud(odom_msgs, laser_scan_msgs);
+        std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 8.0);
 
-            const auto all_poses = toPoses(synced_odom_msgs);
-            const auto all_clouds = toClouds(synced_laser_scan_msgs);
+        const auto rotate_poses_by_angle_PI = [](auto& poses) {
+            for (auto& pose : poses) {
+                pose.dir += truck::geom::Angle::fromRadians(M_PI);
+            }
+        };
 
-            std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 8.0);
+        // TODO (apmilko): fix clouds orientation
+        rotate_poses_by_angle_PI(poses);
+    }
 
-            const auto rotate_poses_by_angle_PI = [](auto& poses) {
-                for (auto& pose : poses) {
-                    pose.dir += truck::geom::Angle::fromRadians(M_PI);
-                }
-            };
-            rotate_poses_by_angle_PI(poses);  // temporary fix
+    // 2. Construct and optimize pose graph
+    {
+        builder.initPoseGraph(poses, clouds);
+
+        if (enable_mcap_log) {
+            const Cloud lidar_map_on_iteration =
+                builder.mergeClouds(builder.transformClouds(poses, clouds));
+
+            mcap_writer.writeCloud(lidar_map_on_iteration);
+            mcap_writer.writePoses(poses);
+            mcap_writer.update();
         }
 
-        // 2. Construct and optimize pose graph
-        {
-            builder.initPoseGraph(poses, clouds);
+        if (enable_json_log) {
+            const auto pose_graph_info = builder.calculatePoseGraphInfo();
+            writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, 0);
+        }
+
+        for (size_t i = 1; i <= optimization_steps; i++) {
+            poses = builder.optimizePoseGraph();
 
             if (enable_mcap_log) {
-                const auto tf_merged_clouds =
+                const Cloud lidar_map_on_iteration =
                     builder.mergeClouds(builder.transformClouds(poses, clouds));
-                bag_writer.addOptimizationStep(
-                    poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
-            }
 
-            const size_t optimization_steps = 10;
-
-            if (enable_mcap_log) {
-                const auto tf_merged_clouds =
-                    builder.mergeClouds(builder.transformClouds(poses, clouds));
-                bag_writer.addOptimizationStep(
-                    poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
+                mcap_writer.writeCloud(lidar_map_on_iteration);
+                mcap_writer.writePoses(poses);
+                mcap_writer.update();
             }
 
             if (enable_json_log) {
                 const auto pose_graph_info = builder.calculatePoseGraphInfo();
-                writePoseGraphInfoToJSON(json_log_path, pose_graph_info, 0);
+                writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i);
             }
-
-            for (size_t i = 0; i < optimization_steps; i++) {
-                poses = builder.optimizePoseGraph(1);
-
-                if (enable_mcap_log) {
-                    const auto tf_merged_clouds =
-                        builder.mergeClouds(builder.transformClouds(poses, clouds));
-                    bag_writer.addOptimizationStep(
-                        poses, "/opt/poses", tf_merged_clouds, "/opt/clouds");
-                }
-
-                if (enable_json_log) {
-                    const auto pose_graph_info = builder.calculatePoseGraphInfo();
-                    writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i + 1);
-                }
-            }
-
-            clouds = builder.applyGridFilter(clouds, 0.08);
-
-            const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
-
-            BagWriter::writeCloud(mcap_output_folder_path, lidar_map, "world", "/map/lidar");
         }
+
+        clouds = builder.applyGridFilter(clouds);
+
+        const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
+        writer::MCAPWriter::writeCloud(mcap_output_folder_path, lidar_map, kOutputTopicLidarMap);
     }
 }
