@@ -4,8 +4,23 @@
 #include "lidar_map/common.h"
 
 #include <g2o/core/sparse_optimizer.h>
+#include <g2o/core/hyper_graph.h>
 
 namespace truck::lidar_map {
+
+class EdgeData : public g2o::HyperGraph::Data {
+  public:
+    EdgeData(int value) : _value(value) {}
+
+    bool read(std::istream& is) override { return true; }
+
+    bool write(std::ostream& os) const override { return true; }
+
+    int getValue() const { return _value; }
+
+  private:
+    int _value;
+};
 
 struct EdgeInfo {
     int from_edge;

@@ -194,7 +194,7 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
         vertex->setId(i);
         vertex->setEstimate(toSE2(poses[i]));
 
-        optimizer_.addVertex(vertex);
+        optimizer_.addVertex(vertex, 0);
         vertices.push_back(vertex);
     }
 
@@ -207,6 +207,8 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
         edge->setVertex(1, vertices[i]);
         edge->setMeasurement(toSE2(tf_matrix_odom));
         edge->setInformation(Eigen::Matrix3d::Identity() * params_.odom_edge_weight);
+        auto* userData = new EdgeData(0);
+        edge->setUserData(userData);
 
         optimizer_.addEdge(edge);
     }
@@ -233,6 +235,8 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             edge->setVertex(1, vertices[j]);
             edge->setMeasurement(toSE2(tf_matrix_final));
             edge->setInformation(Eigen::Matrix3d::Identity() * params_.icp_edge_weight);
+            auto* userData = new EdgeData(1);
+            edge->setUserData(userData);
 
             optimizer_.addEdge(edge);
         }
@@ -286,7 +290,9 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
         const g2o::OptimizableGraph::Vertex* to_edge =
             dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
 
-        const bool is_icp_edge = std::abs(from_edge->id() - to_edge->id()) != 1;
+        EdgeData* myDataPtr =
+            dynamic_cast<EdgeData*>(const_cast<g2o::HyperGraph::Data*>(edge->userData()));
+        const bool is_icp_edge = (myDataPtr != nullptr && myDataPtr->getValue() == 1);
 
         EdgeInfo edge_info = {
             .from_edge = from_edge->id(),
