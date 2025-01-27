@@ -1,3 +1,4 @@
+#include "geom/common.h"
 #include "geom/pose.h"
 
 #include "common/exception.h"
@@ -17,6 +18,11 @@ Pose interpolate(const Pose& a, const Pose& b, double t) noexcept {
     const Vec2 pos = interpolate(a.pos, b.pos, t);
     const AngleVec2 dir = interpolate(a.dir, b.dir, t);
     return {pos, dir};
+}
+
+template<>
+Pose lerp<Pose>(const Pose& a, const Pose& b, double t) {
+    return interpolate(a, b, t);
 }
 
 }  // namespace truck::geom
