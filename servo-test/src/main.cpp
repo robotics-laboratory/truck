@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP32Servo.h>
 #include "encoder.hpp"
+#include "adc.hpp"
 
 TLE5012 tle;
 
@@ -20,7 +21,7 @@ void setup() {
     Serial.begin(2000000);
     Serial.println("start");
     tle.init();
-
+    adc_init();
     uint16_t tmp;
 
     // uint8_t data[4] = {0x50, 0x81, 0x08, 0x04};
