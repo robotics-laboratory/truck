@@ -1,48 +1,13 @@
 #pragma once
+
 #include "geom/pose.h"
 #include "geom/distance.h"
+#include "geom/interpolation.h"
+#include "geom/motion_state.h"
 #include "common/exception.h"
 #include <optional>
 
 namespace truck::geom {
-
-template<typename T>
-struct Interpolator {
-    T operator()(const T& from, const T& to, double t) const { return lerp<T>(from, to, t); }
-};
-
-// struct LinearPoseInterpolator {
-//     Pose operator()(const Pose& from, const Pose& to, double t) const {
-//         return interpolate(from, to, t);
-//     }
-// };
-
-struct MotionState {
-    Vec2 position;
-    Angle yaw;
-    double curvature = 0;
-
-    Pose pose() const { return Pose{.pos = position, .dir = yaw}; }
-};
-
-template<>
-MotionState lerp<MotionState>(const MotionState& from, const MotionState& to, double t) {
-    return {
-        .position = lerp(from.position, to.position, t),
-        .yaw = lerp(from.yaw, to.yaw, t),
-        .curvature = lerp(from.curvature, to.curvature, t),
-    };
-}
-
-double distanceSq(const MotionState& a, const MotionState& b) noexcept {
-    return distanceSq(a.position, b.position);
-}
-
-double distance(const MotionState& a, const MotionState& b) noexcept {
-    return distance(a.position, b.position);
-}
-
-std::vector<MotionState> BuildBezier3(...);
 
 struct PolylineIdx {
     size_t seg_n = 0;
@@ -74,7 +39,7 @@ class PolylineIndex {
     P At(const PolylineIdx idx) const {
         const auto& a = points_[idx.seg_n];
         const auto& b = points_[idx.seg_n + 1];
-        return Interpolator<P>{}(a, b, idx.t);
+        return LinearInterpolator<P>{}(a, b, idx.t);
     }
 
     AdvanceResult<P> AdvanceFromBegin(double dist) const {
