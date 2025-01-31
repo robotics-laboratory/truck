@@ -215,7 +215,9 @@ void BagWriter::addOptimizationStep(
     addMergedClouds(merged_clouds, merged_clouds_topic_name);
     id_++;
 }
-void BagWriter::writeCloudWithAttributes(const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes) {
+void BagWriter::writeCloudWithAttributes(
+    const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
+    const double percent) {
     rosbag2_cpp::Writer writer;
     writer.open(mcap_path);
     writer.write(msg::toPointCloud2(cloud_with_attributes.cloud, "world"), "cloud", getTime());
@@ -229,7 +231,7 @@ void BagWriter::writeCloudWithAttributes(const std::string& mcap_path, const Clo
         return color;
     };
 
-     auto get_scale = [](double x = 1.2, double y = 0.1, double z = 0.1) {
+    auto get_scale = [](double x = 1.2, double y = 0.1, double z = 0.1) {
         geometry_msgs::msg::Vector3 scale;
         scale.x = x;
         scale.y = y;
@@ -238,8 +240,9 @@ void BagWriter::writeCloudWithAttributes(const std::string& mcap_path, const Clo
     };
 
     visualization_msgs::msg::MarkerArray msg_array;
-
-    for (size_t i = 0; i < cloud_with_attributes.cloud.cols(); i++) {
+    size_t points_count = cloud_with_attributes.cloud.cols();
+    size_t step = static_cast<size_t>(points_count / (points_count * (1 - (percent / 100))));
+    for (size_t i = 0; i < points_count; i += step) {
         visualization_msgs::msg::Marker msg_;
         msg_.header.frame_id = frame_name_;
         msg_.id = i;
@@ -251,8 +254,10 @@ void BagWriter::writeCloudWithAttributes(const std::string& mcap_path, const Clo
         msg_.pose.position.y = cloud_with_attributes.cloud(1, i);
         msg_.pose.position.z = cloud_with_attributes.cloud(2, i);
 
-        double dir_x = cloud_with_attributes.attributes.normals(4, i) - cloud_with_attributes.cloud(0, i);
-        double dir_y = cloud_with_attributes.attributes.normals(5, i) - cloud_with_attributes.cloud(1, i);
+        double dir_x =
+            cloud_with_attributes.attributes.normals(4, i) - cloud_with_attributes.cloud(0, i);
+        double dir_y =
+            cloud_with_attributes.attributes.normals(5, i) - cloud_with_attributes.cloud(1, i);
 
         msg_.scale = get_scale();
 
@@ -263,7 +268,10 @@ void BagWriter::writeCloudWithAttributes(const std::string& mcap_path, const Clo
     }
 
     writer.write(msg_array, "normals", getTime());
-    writer.write(msg::toPointCloud2(cloud_with_attributes.attributes.outliers, "world"), "outliers", getTime());
+    writer.write(
+        msg::toPointCloud2(cloud_with_attributes.attributes.outliers, "world"),
+        "outliers",
+        getTime());
 }
 
 void BagWriter::addPoses(const geom::Poses& poses, const std::string& topic_name) {

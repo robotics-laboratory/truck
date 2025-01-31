@@ -30,6 +30,9 @@ int main(int argc, char* argv[]) {
     std::string mcap_output_folder_path;
     std::string mcap_log_folder_path;
     std::string json_log_path;
+    std::string icp_log_path;
+    int icp_cloud_number;
+    int normals_rarefaction_percentage;
 
     {
         po::options_description desc("Executable for constructing 2D LiDAR map");
@@ -45,7 +48,16 @@ int main(int argc, char* argv[]) {
             "path to folder for mcap logs")(
             "json-log,jl",
             po::value<std::string>(&json_log_path)->default_value(""),
-            "path to json log file");
+            "path to json log file")(
+            "icp-log,il",
+            po::value<std::string>(&icp_log_path)->default_value(""),
+            "path to icp log file (normals and outliers)")(
+            "cloud_number,cn",
+            po::value<int>(&icp_cloud_number)->default_value(1),
+            "cloud number for visualizing normals and outliers")(
+            "percentage,p",
+            po::value<int>(&normals_rarefaction_percentage)->default_value(100),
+            "percentage of normals rendered [0;100]");
 
         po::variables_map vm;
         try {
@@ -151,7 +163,12 @@ int main(int argc, char* argv[]) {
             clouds = builder.applyGridFilter(clouds, 0.08);
 
             const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
-            bag_writer.writeCloudWithAttributes("/root/truck/packages/lidar_map/data/results/normals3", builder.clouds_with_attributes[5]);
+            if (!icp_log_path.empty()) {
+                bag_writer.writeCloudWithAttributes(
+                    icp_log_path,
+                    builder.clouds_with_attributes[icp_cloud_number],
+                    normals_rarefaction_percentage);
+            }
             BagWriter::writeCloud(mcap_output_folder_path, lidar_map, "world", "/map/lidar");
         }
     }

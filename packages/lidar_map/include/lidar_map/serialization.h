@@ -32,8 +32,10 @@ class BagWriter {
         const std::string& mcap_path, const Cloud& cloud, const std::string& frame_name,
         const std::string& topic_name);
 
-    void writeCloudWithAttributes(const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes);
-    
+    void writeCloudWithAttributes(
+        const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
+        const double percent);
+
     void addOptimizationStep(
         const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
         const std::string& merged_clouds_topic_name);
