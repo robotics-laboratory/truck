@@ -37,7 +37,7 @@ struct BuilderParams {
 
 class Builder {
   public:
-    std::vector<DataPoints> norms;
+    std::vector<CloudWithAttributes> clouds_with_attributes;
     Builder(const BuilderParams& params);
 
     std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(
@@ -59,7 +59,7 @@ class Builder {
     Clouds applyDynamicFilter(
         const geom::Poses& poses, const Clouds& clouds_base, double clouds_search_rad,
         size_t min_sim_points_count, double max_sim_points_dist) const;
-    DataPoints normals(const DataPoints& reference_dp);
+    CloudWithAttributes normals(const DataPoints& reference_dp, const Cloud& cloud);
 
   private:
     ICP icp_;

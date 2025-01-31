@@ -215,8 +215,12 @@ void BagWriter::addOptimizationStep(
     addMergedClouds(merged_clouds, merged_clouds_topic_name);
     id_++;
 }
-void BagWriter::addNormals(const std::vector<DataPoints>& normals, const std::string& topic_name) {
-    auto get_color = [](double a = 1.0, double r = 1.0, double g = 0.0, double b = 0.0) {
+void BagWriter::addNormals(const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes) {
+    rosbag2_cpp::Writer writer;
+    writer.open(mcap_path);
+    writer.write(msg::toPointCloud2(cloud_with_attributes.cloud, "world"), "cloud", getTime());
+
+    auto get_color = [](double a = 0.5, double r = 1.0, double g = 0.0, double b = 0.0) {
         std_msgs::msg::ColorRGBA color;
         color.a = a;
         color.r = r;
@@ -225,49 +229,40 @@ void BagWriter::addNormals(const std::vector<DataPoints>& normals, const std::st
         return color;
     };
 
+     auto get_scale = [](double x = 1.2, double y = 0.1, double z = 0.1) {
+        geometry_msgs::msg::Vector3 scale;
+        scale.x = x;
+        scale.y = y;
+        scale.z = z;
+        return scale;
+    };
+
     visualization_msgs::msg::MarkerArray msg_array;
 
-    for (size_t i = 0; i < 1; i++) {
-        const DataPoints& dp = normals[i];
-        for (size_t j = 0; j < dp.features.cols(); j++) {
-            double A = dp.features(0, j);
-            double B = dp.features(1, j);
-            double C = dp.features(2, j);
-            double D = dp.features(4, j);
-            double E = dp.features(5, j);
-            double F = dp.features(6, j);
-            
-            visualization_msgs::msg::Marker msg_;
-            msg_.header.frame_id = frame_name_;
-            msg_.id = i * dp.features.cols() + j;
-            msg_.type = visualization_msgs::msg::Marker::ARROW;
-            msg_.action = visualization_msgs::msg::Marker::ADD;
-            msg_.color = get_color();
+    for (size_t i = 0; i < cloud_with_attributes.cloud.cols(); i++) {
+        visualization_msgs::msg::Marker msg_;
+        msg_.header.frame_id = frame_name_;
+        msg_.id = i;
+        msg_.type = visualization_msgs::msg::Marker::ARROW;
+        msg_.action = visualization_msgs::msg::Marker::ADD;
+        msg_.color = get_color();
 
-            msg_.pose.position.x = A;
-            msg_.pose.position.y = B;
-            msg_.pose.position.z = C;
+        msg_.pose.position.x = cloud_with_attributes.cloud(0, i);
+        msg_.pose.position.y = cloud_with_attributes.cloud(1, i);
+        msg_.pose.position.z = cloud_with_attributes.cloud(2, i);
 
-            double dir_x = D - A;
-            double dir_y = E - B;
-            double dir_z = F - C;
+        double dir_x = cloud_with_attributes.attributes.normals(4, i) - cloud_with_attributes.cloud(0, i);
+        double dir_y = cloud_with_attributes.attributes.normals(5, i) - cloud_with_attributes.cloud(1, i);
 
-            msg_.scale.x = 2;
-            msg_.scale.y = 0.1;
-            msg_.scale.z = 0.1;
+        msg_.scale = get_scale();
 
-            double yaw = std::atan2(dir_y, dir_x);
+        double yaw = std::atan2(dir_y, dir_x);
+        msg_.pose.orientation = geom::msg::toQuaternion(truck::geom::Angle(yaw));
 
-            msg_.pose.orientation = geom::msg::toQuaternion(truck::geom::Angle(yaw));
-
-            msg_array.markers.push_back(msg_);
-            std::cout << A << ' ' << B << ' ' << C << " yaw=" << yaw << '\n';
-        }
+        msg_array.markers.push_back(msg_);
     }
-    std::cout << "Количество сообщений в msg_array.markers: " << msg_array.markers.size() << '\n';
 
-    writer_.write(msg_array, topic_name, getTime(id_ * freqency_));
-    id_++;
+    writer.write(msg_array, "normals", getTime());
 }
 
 void BagWriter::addPoses(const geom::Poses& poses, const std::string& topic_name) {
