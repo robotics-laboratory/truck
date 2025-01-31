@@ -37,6 +37,8 @@ matcher:
     epsilon: 2 # Учет ошибки
 
 outlierFilters:
+  - TrimmedDistOutlierFilter:
+      ratio: 0.85
   - MaxDistOutlierFilter:
       maxDist: 30 # Максимальное расстояние от точки до ближайшей точки в облаке.
 

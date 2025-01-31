@@ -59,7 +59,7 @@ class Builder {
     Clouds applyDynamicFilter(
         const geom::Poses& poses, const Clouds& clouds_base, double clouds_search_rad,
         size_t min_sim_points_count, double max_sim_points_dist) const;
-    CloudWithAttributes normals(const DataPoints& reference_dp, const Cloud& cloud);
+    CloudWithAttributes getCloudWithAttributes(const DataPoints& reference_dp, const DataPoints& reading_dp, const Cloud& cloud);
 
   private:
     ICP icp_;

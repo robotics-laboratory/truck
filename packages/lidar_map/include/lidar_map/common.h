@@ -20,7 +20,7 @@ using Clouds = std::vector<Cloud>;
 
 struct CloudAttributes {
     Eigen::Matrix3Xf normals;
-    std::vector<int> outliers;
+    Cloud outliers;
 };
 
 struct CloudWithAttributes {

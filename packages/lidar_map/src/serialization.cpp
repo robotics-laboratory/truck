@@ -215,7 +215,7 @@ void BagWriter::addOptimizationStep(
     addMergedClouds(merged_clouds, merged_clouds_topic_name);
     id_++;
 }
-void BagWriter::addNormals(const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes) {
+void BagWriter::writeCloudWithAttributes(const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes) {
     rosbag2_cpp::Writer writer;
     writer.open(mcap_path);
     writer.write(msg::toPointCloud2(cloud_with_attributes.cloud, "world"), "cloud", getTime());
@@ -263,6 +263,7 @@ void BagWriter::addNormals(const std::string& mcap_path, const CloudWithAttribut
     }
 
     writer.write(msg_array, "normals", getTime());
+    writer.write(msg::toPointCloud2(cloud_with_attributes.attributes.outliers, "world"), "outliers", getTime());
 }
 
 void BagWriter::addPoses(const geom::Poses& poses, const std::string& topic_name) {
