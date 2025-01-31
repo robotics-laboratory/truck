@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lidar_map/builder.h"
 #include "lidar_map/common.h"
 #include "geom/complex_polygon.h"
 
@@ -9,40 +10,59 @@
 
 namespace truck::lidar_map {
 
-std::vector<nav_msgs::msg::Odometry> loadOdomTopic(
+std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::PointCloud2>>
+syncOdomWithPointCloud(
+    const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
+    const std::vector<sensor_msgs::msg::PointCloud2>& point_cloud_msgs);
+
+namespace reader {
+
+Cloud readPCD(const std::string& pcd_path);
+
+std::vector<nav_msgs::msg::Odometry> readOdomTopic(
     const std::string& mcap_path, const std::string& odom_topic);
 
-std::vector<sensor_msgs::msg::PointCloud2> loadLaserScanTopic(
-    const std::string& mcap_path, const std::string& laser_scan_topic);
+std::vector<sensor_msgs::msg::PointCloud2> readPointCloudTopic(
+    const std::string& mcap_path, const std::string& point_cloud_topic);
 
-std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::PointCloud2>>
-syncOdomWithCloud(
-    const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
-    const std::vector<sensor_msgs::msg::PointCloud2>& laser_scan_msgs);
+}  // namespace reader
 
-class BagWriter {
-  public:
-    BagWriter(const std::string& mcap_path, const std::string& frame_name, double freqency);
+namespace writer {
 
-    void addVectorMap(const geom::ComplexPolygon& vector_map, const std::string& topic_name);
-    void addLidarMap(const Cloud& lidar_map, const std::string& topic_name);
-    void addOptimizationStep(
-        const geom::Poses& poses, const std::string& poses_topic_name, const Cloud& merged_clouds,
-        const std::string& merged_clouds_topic_name);
-
-  private:
-    void addPoses(const geom::Poses& poses, const std::string& topic_name);
-    void addMergedClouds(const Cloud& merged_clouds, const std::string& topic_name);
-
-    size_t id_ = 0;
-    const std::string frame_name_;
-    const double freqency_;
-
-    rosbag2_cpp::Writer writer_;
-};
-
-Cloud loadPCD(const std::string& pcd_path);
+void writePoseGraphInfoToJSON(
+    const std::string& json_path, const PoseGraphInfo& pose_graph_info, size_t iteration);
 
 void writeToPCD(const std::string& pcd_path, const Cloud& cloud);
+
+struct MCAPWriterParams {
+    std::string mcap_path;
+    std::string poses_topic_name;
+    std::string cloud_topic_name;
+    std::string frame_name = "";
+    double topic_frequency = 1.0;
+};
+
+class MCAPWriter {
+  public:
+    MCAPWriter(const MCAPWriterParams& params);
+
+    void update();
+
+    void writeCloud(const Cloud& cloud);
+
+    void writePoses(const geom::Poses& poses);
+
+    static void writeCloud(
+        const std::string& mcap_path, const Cloud& cloud, const std::string& topic_name,
+        std::string frame_name = "");
+
+  private:
+    size_t msg_id_ = 0;
+    rosbag2_cpp::Writer writer_;
+
+    MCAPWriterParams params_;
+};
+
+}  // namespace writer
 
 }  // namespace truck::lidar_map

@@ -4,8 +4,43 @@
 #include "lidar_map/common.h"
 
 #include <g2o/core/sparse_optimizer.h>
+#include <g2o/core/hyper_graph.h>
 
 namespace truck::lidar_map {
+
+class EdgeData : public g2o::HyperGraph::Data {
+  public:
+    EdgeData(int value) : _value(value) {}
+
+    bool read(std::istream& is) override { return true; }
+
+    bool write(std::ostream& os) const override { return true; }
+
+    int getValue() const { return _value; }
+
+  private:
+    int _value;
+};
+
+struct EdgeInfo {
+    int from_edge;
+    int to_edge;
+    double error_val;
+    std::string type;
+};
+
+struct PoseInfo {
+    int id;
+    geom::Pose pose;
+};
+
+using EdgesInfo = std::vector<EdgeInfo>;
+using PosesInfo = std::vector<PoseInfo>;
+
+struct PoseGraphInfo {
+    EdgesInfo edges;
+    PosesInfo poses;
+};
 
 struct BuilderParams {
     std::string icp_config;
@@ -14,14 +49,6 @@ struct BuilderParams {
     double icp_edge_weight = 3.0;
     bool verbose = true;
 };
-
-struct ICPEdgeInfo {
-    size_t from_edge;
-    size_t to_edge;
-    double error_val;
-};
-
-using ICPEdgesInfo = std::vector<ICPEdgeInfo>;
 
 class Builder {
   public:
@@ -32,19 +59,16 @@ class Builder {
 
     void initPoseGraph(const geom::Poses& poses, const Clouds& clouds);
 
-    geom::Poses optimizePoseGraph(size_t iterations);
+    geom::Poses optimizePoseGraph(size_t iterations = 1);
 
-    ICPEdgesInfo calculateICPEdgesInfo() const;
-
-    void writeICPEdgesInfoToJSON(
-        const std::string& json_path, const ICPEdgesInfo& icp_edges_info) const;
+    PoseGraphInfo calculatePoseGraphInfo() const;
 
     Clouds transformClouds(
         const geom::Poses& poses, const Clouds& clouds, bool inverse = false) const;
 
     Cloud mergeClouds(const Clouds& clouds) const;
 
-    Clouds applyGridFilter(const Clouds& clouds, double cell_size) const;
+    Clouds applyGridFilter(const Clouds& clouds, double cell_size = 0.1) const;
 
     Clouds applyDynamicFilter(
         const geom::Poses& poses, const Clouds& clouds_base, double clouds_search_rad,

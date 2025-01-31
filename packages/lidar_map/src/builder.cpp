@@ -12,7 +12,6 @@
 #include <g2o/solvers/dense/linear_solver_dense.h>
 #include <g2o/types/slam2d/edge_se2.h>
 #include <g2o/types/slam2d/vertex_se2.h>
-#include <nlohmann/json.hpp>
 #include <fstream>
 
 namespace truck::lidar_map {
@@ -195,7 +194,7 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
         vertex->setId(i);
         vertex->setEstimate(toSE2(poses[i]));
 
-        optimizer_.addVertex(vertex);
+        optimizer_.addVertex(vertex, 0);
         vertices.push_back(vertex);
     }
 
@@ -208,6 +207,8 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
         edge->setVertex(1, vertices[i]);
         edge->setMeasurement(toSE2(tf_matrix_odom));
         edge->setInformation(Eigen::Matrix3d::Identity() * params_.odom_edge_weight);
+        auto* userData = new EdgeData(0);
+        edge->setUserData(userData);
 
         optimizer_.addEdge(edge);
     }
@@ -234,6 +235,8 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             edge->setVertex(1, vertices[j]);
             edge->setMeasurement(toSE2(tf_matrix_final));
             edge->setInformation(Eigen::Matrix3d::Identity() * params_.icp_edge_weight);
+            auto* userData = new EdgeData(1);
+            edge->setUserData(userData);
 
             optimizer_.addEdge(edge);
         }
@@ -257,6 +260,10 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
 geom::Poses Builder::optimizePoseGraph(size_t iterations) {
     optimizer_.optimize(iterations);
 
+    if (params_.verbose) {
+        std::cout << "[LOG] optimizePoseGraph(): finished" << std::endl;
+    }
+
     geom::Poses optimized_poses;
 
     for (size_t i = 0; i < optimizer_.vertices().size(); i++) {
@@ -273,43 +280,41 @@ geom::Poses Builder::optimizePoseGraph(size_t iterations) {
 /**
  * Collecting information about ICP edges
  */
-ICPEdgesInfo Builder::calculateICPEdgesInfo() const {
-    ICPEdgesInfo icp_edges_info;
+PoseGraphInfo Builder::calculatePoseGraphInfo() const {
+    PoseGraphInfo pose_graph_info;
     for (auto it = optimizer_.activeEdges().begin(); it != optimizer_.activeEdges().end(); ++it) {
         const g2o::OptimizableGraph::Edge* edge = *it;
         const g2o::EdgeSE2* edge_se2 = dynamic_cast<const g2o::EdgeSE2*>(edge);
-        const number_t* info = edge_se2->informationData();
-        if (info[0] == params_.icp_edge_weight) {
-            const g2o::OptimizableGraph::Vertex* from_edge =
-                dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
-            const g2o::OptimizableGraph::Vertex* to_edge =
-                dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
-            icp_edges_info.push_back(ICPEdgeInfo{
-                .from_edge = from_edge->id(), .to_edge = to_edge->id(), .error_val = edge->chi2()});
-        }
-    }
-    return icp_edges_info;
-}
+        const g2o::OptimizableGraph::Vertex* from_edge =
+            dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(0));
+        const g2o::OptimizableGraph::Vertex* to_edge =
+            dynamic_cast<const g2o::OptimizableGraph::Vertex*>(edge_se2->vertex(1));
 
-/**
- * Writing information about icp edges to a json file
- */
-void Builder::writeICPEdgesInfoToJSON(
-    const std::string& json_path, const ICPEdgesInfo& icp_edges_info) const {
-    nlohmann::json json_data;
-    for (const auto& icp_edge_info : icp_edges_info) {
-        json_data.push_back(
-            {{"from_edge", icp_edge_info.from_edge},
-             {"to_edge", icp_edge_info.to_edge},
-             {"error_val", icp_edge_info.error_val}});
+        EdgeData* myDataPtr =
+            dynamic_cast<EdgeData*>(const_cast<g2o::HyperGraph::Data*>(edge->userData()));
+        const bool is_icp_edge = (myDataPtr != nullptr && myDataPtr->getValue() == 1);
+
+        EdgeInfo edge_info = {
+            .from_edge = from_edge->id(),
+            .to_edge = to_edge->id(),
+            .error_val = edge->chi2(),
+            .type = is_icp_edge ? "icp" : "odom"};
+
+        pose_graph_info.edges.push_back(edge_info);
     }
-    std::ofstream file(json_path);
-    if (file.is_open()) {
-        file << json_data.dump(4);
-        file.close();
-    } else {
-        std::cerr << "Error when opening a file for writing: " << json_path << std::endl;
+    for (auto it = optimizer_.activeVertices().begin(); it != optimizer_.activeVertices().end();
+         ++it) {
+        const g2o::OptimizableGraph::Vertex* vertex = *it;
+        const g2o::VertexSE2* vertex_se2 = dynamic_cast<const g2o::VertexSE2*>(vertex);
+        Eigen::Vector3d estimate;
+        vertex_se2->getEstimateData(estimate.data());
+        pose_graph_info.poses.push_back(PoseInfo{
+            .id = vertex_se2->id(),
+            .pose = {
+                .pos = geom::Vec2{estimate[0], estimate[1]},
+                .dir = truck::geom::Angle::fromRadians(estimate[2])}});
     }
+    return pose_graph_info;
 }
 
 /**
