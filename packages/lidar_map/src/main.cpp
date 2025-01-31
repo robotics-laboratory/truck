@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
             clouds = builder.applyGridFilter(clouds, 0.08);
 
             const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
-
+            bag_writer.addNormals(builder.norms, "normals");
             BagWriter::writeCloud(mcap_output_folder_path, lidar_map, "world", "/map/lidar");
         }
     }

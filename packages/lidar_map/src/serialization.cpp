@@ -4,6 +4,7 @@
 #include "geom/msg.h"
 #include "lidar_map/conversion.h"
 
+#include <cmath>
 #include <rosbag2_cpp/reader.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <rosbag2_cpp/writer.hpp>
@@ -212,6 +213,60 @@ void BagWriter::addOptimizationStep(
     const std::string& merged_clouds_topic_name) {
     addPoses(poses, poses_topic_name);
     addMergedClouds(merged_clouds, merged_clouds_topic_name);
+    id_++;
+}
+void BagWriter::addNormals(const std::vector<DataPoints>& normals, const std::string& topic_name) {
+    auto get_color = [](double a = 1.0, double r = 1.0, double g = 0.0, double b = 0.0) {
+        std_msgs::msg::ColorRGBA color;
+        color.a = a;
+        color.r = r;
+        color.g = g;
+        color.b = b;
+        return color;
+    };
+
+    visualization_msgs::msg::MarkerArray msg_array;
+
+    for (size_t i = 0; i < 1; i++) {
+        const DataPoints& dp = normals[i];
+        for (size_t j = 0; j < dp.features.cols(); j++) {
+            double A = dp.features(0, j);
+            double B = dp.features(1, j);
+            double C = dp.features(2, j);
+            double D = dp.features(4, j);
+            double E = dp.features(5, j);
+            double F = dp.features(6, j);
+            
+            visualization_msgs::msg::Marker msg_;
+            msg_.header.frame_id = frame_name_;
+            msg_.id = i * dp.features.cols() + j;
+            msg_.type = visualization_msgs::msg::Marker::ARROW;
+            msg_.action = visualization_msgs::msg::Marker::ADD;
+            msg_.color = get_color();
+
+            msg_.pose.position.x = A;
+            msg_.pose.position.y = B;
+            msg_.pose.position.z = C;
+
+            double dir_x = D - A;
+            double dir_y = E - B;
+            double dir_z = F - C;
+
+            msg_.scale.x = 2;
+            msg_.scale.y = 0.1;
+            msg_.scale.z = 0.1;
+
+            double yaw = std::atan2(dir_y, dir_x);
+
+            msg_.pose.orientation = geom::msg::toQuaternion(truck::geom::Angle(yaw));
+
+            msg_array.markers.push_back(msg_);
+            std::cout << A << ' ' << B << ' ' << C << " yaw=" << yaw << '\n';
+        }
+    }
+    std::cout << "Количество сообщений в msg_array.markers: " << msg_array.markers.size() << '\n';
+
+    writer_.write(msg_array, topic_name, getTime(id_ * freqency_));
     id_++;
 }
 

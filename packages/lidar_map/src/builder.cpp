@@ -227,6 +227,8 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             icp_.transformations.apply(reading_cloud, tf_matrix_odom);
             normalize(reading_cloud);
             const Eigen::Matrix4f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
+            auto n = normals(reference_cloud);
+            norms.push_back(n);
             const Eigen::Matrix4f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
             auto* edge = new g2o::EdgeSE2();
             edge->setVertex(0, vertices[i]);
@@ -359,6 +361,36 @@ Cloud Builder::mergeClouds(const Clouds& clouds) const {
     }
 
     return merged_cloud;
+}
+
+DataPoints Builder::normals(const DataPoints& reference_dp) {
+    DataPoints data_points_cloud(reference_dp);
+    icp_.referenceDataPointsFilters.apply(data_points_cloud); 
+    BOOST_AUTO(normals, data_points_cloud.getDescriptorViewByName("normals"));
+    std::cout << data_points_cloud.features.cols() << ' ' << normals.cols() << '\n';
+    DataPoints::Labels feature_labels;
+    feature_labels.push_back(DataPoints::Label("x", 1));
+    feature_labels.push_back(DataPoints::Label("y", 1));
+    feature_labels.push_back(DataPoints::Label("z", 1));
+    feature_labels.push_back(DataPoints::Label("w", 1));
+    feature_labels.push_back(DataPoints::Label("normal_x", 1));
+    feature_labels.push_back(DataPoints::Label("normal_y", 1));
+    feature_labels.push_back(DataPoints::Label("normal_z", 1));
+
+    DataPoints::Labels descriptor_labels;
+    DataPoints data_points(feature_labels, descriptor_labels, data_points_cloud.features.cols());
+        data_points.features = Eigen::MatrixXf::Zero(data_points_cloud.features.rows() + 3, data_points_cloud.features.cols());
+    
+    data_points.features.row(0) = data_points_cloud.features.row(0); 
+    data_points.features.row(1) = data_points_cloud.features.row(1); 
+    data_points.features.row(2) = data_points_cloud.features.row(2); 
+    data_points.features.row(3) = data_points_cloud.features.row(3); 
+
+    data_points.features.row(4) = normals.row(0); 
+    data_points.features.row(5) = normals.row(1); 
+    data_points.features.row(6) = normals.row(2); 
+
+    return data_points;
 }
 
 namespace {
