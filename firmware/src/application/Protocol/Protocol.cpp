@@ -1,5 +1,5 @@
 #include "Protocol.h"
-#include "MotorControl.h"
+// #include "MotorControl.h"
 #include "ServoController.h"
 #include "SensorPolling.h"
 
@@ -11,9 +11,9 @@ void motor_control_request_handle(const uint8_t *request_data, uint32_t request_
     if (request_data_size != sizeof(protocol_request_motor)) {
         int32_t status = 0;
         protocol_request_motor request = *(protocol_request_motor *) request_data;
-        MotorControl& MT = MotorControl::getInstance();
-        status |= MT.enable(request.is_enable);
-        status |= MT.set_speed(request.target_speed);
+        // MotorControl& MT = MotorControl::getInstance();
+        // status |= MT.enable(request.is_enable);
+        // status |= MT.set_speed(request.target_speed);
         protocol_response_motor response = {.status = status};
         memcpy(response_data, &response, sizeof(protocol_response_motor));
         response_data_size = sizeof(protocol_response_motor);
@@ -85,7 +85,7 @@ void Protocol::bind(uint32_t tag, request_callback_t callback) {
 void Protocol::transmit_inform_messages() {
     protocol_inform_imu_data imu_data;
     protocol_inform_motion_data move_data;
-    static MotorControl &MT = MotorControl::getInstance();
+    // static MotorControl &MT = MotorControl::getInstance();
     static SensorPolling &SP = SensorPolling::getInstance();
 
     int32_t status = 0;
@@ -95,7 +95,7 @@ void Protocol::transmit_inform_messages() {
     imu_data.data_updated = (status == 0);
     communication_unit.transmit(IMU_TAG + INFORM_BASE_ID_OFFSET, (uint8_t *) &imu_data, sizeof(imu_data));
 
-    move_data.motor_velocity = MT.get_speed();
+    // move_data.motor_velocity = MT.get_speed();
     move_data.front_left_wheel_velocity = 0.0f;
     move_data.front_right_wheel_velocity = 0.0f;
     move_data.data_updated = true;
