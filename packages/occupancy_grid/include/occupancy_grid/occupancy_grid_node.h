@@ -46,6 +46,7 @@ class OccupancyGridNode : public rclcpp::Node {
         double resolution = 0.1;
         double radius = 20;
         bool enable_lidar_grid = false;
+        bool enable_lidar_cloud = false;
         bool enable_camera_grid = false;
         bool enable_camera_cloud = false;
         Limits<double> camera_view_height = {-0.165, 0.15};
@@ -60,7 +61,7 @@ class OccupancyGridNode : public rclcpp::Node {
     } slot_;
 
     struct Signals {
-        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr lidar_trimmed_cloud = nullptr;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr lidar_cloud = nullptr;
         rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr camera_cloud = nullptr;
         rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr grid = nullptr;
     } signal_;

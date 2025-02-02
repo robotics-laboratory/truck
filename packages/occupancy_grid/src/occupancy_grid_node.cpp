@@ -36,12 +36,16 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
         this->declare_parameter("resolution", 0.1),
         this->declare_parameter("radius", 20.0),
         this->declare_parameter("enable_lidar_grid", false),
+        this->declare_parameter("enable_lidar_cloud", false),
         this->declare_parameter("enable_camera_grid", false),
         this->declare_parameter("enable_camera_cloud", false),
         Limits<double>{
             this->declare_parameter("camera_view_hmin", -0.05),
             this->declare_parameter("camera_view_hmax", 0.01)},
-        this->declare_parameter("camera_view_distance", 2.0)};
+        this->declare_parameter("camera_view_distance", 2.0),
+        Limits<double>{
+            this->declare_parameter("lidar_view_hmin", -0.15),
+            this->declare_parameter("lidar_view_hmax", 0.05)}};
 
     RCLCPP_INFO(this->get_logger(), "frame_id: %s", params_.frame_id.c_str());
     RCLCPP_INFO(this->get_logger(), "resolution: %.2fm", params_.resolution);
@@ -76,7 +80,7 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
             this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera/pointcloud", 10);
     }
 
-    signal_.lidar_trimmed_cloud =
+    signal_.lidar_cloud =
         this->create_publisher<sensor_msgs::msg::PointCloud2>("/livox/lidar/trimmed", 10);
 
     signal_.grid = create_publisher<nav_msgs::msg::OccupancyGrid>("/grid", 10);
@@ -103,12 +107,12 @@ std::optional<tf2::Transform> OccupancyGridNode::getLatestTranform(
     }
 }
 
-void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud) {
+void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_base) {
     if (!params_.enable_lidar_grid) {
         return;
     }
 
-    const auto& from_id = cloud->header.frame_id;
+    const auto& from_id = cloud_base->header.frame_id;
     const auto& to_id = params_.frame_id;
 
     const auto tf_opt = getLatestTranform(from_id, to_id);
@@ -128,7 +132,7 @@ void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSha
     auto odom_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
 
     odom_cloud->header.frame_id = to_id;
-    odom_cloud->header.stamp = cloud->header.stamp;
+    odom_cloud->header.stamp = cloud_base->header.stamp;
 
     odom_cloud->is_dense = false;
     odom_cloud->is_bigendian = false;
@@ -136,38 +140,38 @@ void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSha
     sensor_msgs::PointCloud2Modifier modifier(*odom_cloud);
     modifier.setPointCloud2FieldsByString(1, "xyz");
     
-    const size_t cloud_points_count = cloud->width * cloud->height;
+    const size_t cloud_points_count = cloud_base->width * cloud_base->height;
     modifier.resize(cloud_points_count);
 
     sensor_msgs::PointCloud2Iterator<float> odom_cloud_x(*odom_cloud, "x");
     sensor_msgs::PointCloud2Iterator<float> odom_cloud_y(*odom_cloud, "y");
     sensor_msgs::PointCloud2Iterator<float> odom_cloud_z(*odom_cloud, "z");
 
-    sensor_msgs::PointCloud2ConstIterator<float> cloud_x(*cloud, "x");
-    sensor_msgs::PointCloud2ConstIterator<float> cloud_y(*cloud, "y");
-    sensor_msgs::PointCloud2ConstIterator<float> cloud_z(*cloud, "z");
+    sensor_msgs::PointCloud2ConstIterator<float> cloud_base_x(*cloud_base, "x");
+    sensor_msgs::PointCloud2ConstIterator<float> cloud_base_y(*cloud_base, "y");
+    sensor_msgs::PointCloud2ConstIterator<float> cloud_base_z(*cloud_base, "z");
 
     size_t point_n = 0;
     for (size_t k = 0; k < cloud_points_count; ++k) {
-        const auto vec = tf2::Vector3{*cloud_x, *cloud_y, *cloud_z};
-        const auto odom_vec = tf(vec);
+        const auto point_base = tf2::Vector3{*cloud_base_x, *cloud_base_y, *cloud_base_z};
+        const auto point_odom = tf(point_base);
 
-        if (!params_.lidar_view_height.isMet(odom_vec.z())) {
+        if (!params_.lidar_view_height.isMet(point_odom.z())) {
             continue;
         }
 
-        *odom_cloud_x = odom_vec.x();
-        *odom_cloud_y = odom_vec.y();
-        *odom_cloud_z = odom_vec.z();
+        *odom_cloud_x = point_odom.x();
+        *odom_cloud_y = point_odom.y();
+        *odom_cloud_z = point_odom.z();
 
         ++point_n;
         ++odom_cloud_x;
         ++odom_cloud_y;
         ++odom_cloud_z;
 
-        ++cloud_x;
-        ++cloud_y;
-        ++cloud_z;
+        ++cloud_base_x;
+        ++cloud_base_y;
+        ++cloud_base_z;
     }
 
     modifier.resize(point_n);
@@ -177,7 +181,9 @@ void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSha
     state_.odom_lidar_points = std::move(odom_cloud);
     publishOccupancyGrid();
 
-    signal_.lidar_trimmed_cloud->publish(*state_.odom_lidar_points);
+    if (params_.enable_lidar_cloud) {
+        signal_.lidar_cloud->publish(*state_.odom_lidar_points);
+    }
 }
 
 void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPtr image) {
