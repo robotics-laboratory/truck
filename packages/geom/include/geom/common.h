@@ -14,7 +14,7 @@ T lerp(const T& from, const T& to, double t) {
 
 template<VectorSpace V>
 V lerp(const V& from, const V& to, double t) {
-    return from * (1 + t) + to * t;
+    return from * (1 - t) + to * t;
 }
 
 // TODO: "vectorized" lerp for tuples/ties

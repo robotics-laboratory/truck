@@ -4,13 +4,15 @@
 #include "geom/distance.h"
 #include "geom/interpolation.h"
 #include "geom/motion_state.h"
+#include "geom/interpolation.h"
 #include "common/exception.h"
+#include <vector>
 #include <optional>
 
 namespace truck::geom {
 
 struct PolylineIdx {
-    size_t seg_n = 0;
+    std::size_t seg_n = 0;
     double t = 0;  // [0, 1]
 };
 
@@ -30,10 +32,13 @@ class PolylineIndex {
         distances_.reserve(points_.size());
         distances_.push_back(0);
 
+        std::cerr << "distances:\n[ ";
         auto prev = points_.begin();
         for (auto curr = points_.begin() + 1; curr != points_.end(); prev = curr, ++curr) {
-            distances_.push_back(distance(*prev, *curr));
+            distances_.push_back(distance(*prev, *curr) + distances_.back());
+            std::cerr << fmt("%.2f", distances_.back()) << ' ';
         }
+        std::cerr << "]\n\n";
     }
 
     P At(const PolylineIdx idx) const {
@@ -43,40 +48,72 @@ class PolylineIndex {
     }
 
     AdvanceResult<P> AdvanceFromBegin(double dist) const {
-        return AdvanceFrom(PolylineIdx{}, dist);
+        return AdvanceFrom(PolylineIdx{.seg_n = 0, .t = 0}, dist);
     }
 
     AdvanceResult<P> AdvanceFrom(PolylineIdx from_id, double dist) const {
-        double start = distances_[from_id.seg_n];
-        double target = distances_[from_id.seg_n] + dist;
+        double start = LinearInterpolator<double>{}(
+            distances_[from_id.seg_n], distances_[from_id.seg_n + 1], from_id.t);
+        double target = start + dist;
+
+        if (target > ArcLength()) {
+            return AdvanceResult<P>{
+                .point = points_.back(),
+                .poly_idx = {.seg_n = points_.size(), .t = 0},
+                .reached_end = true};
+        }
+
+        std::cerr << fmt("seg_n: %d, start: %.2f, target: %.2f\n", from_id.seg_n, start, target);
 
         size_t l = from_id.seg_n;
         size_t r = distances_.size();
+        size_t index = 0;
 
+        // std::cerr << "\t---bs---\n";
         while (l < r) {
-            size_t mid = l + (r - l) / 2;
-            if (distances_[mid] <= target) {
-                l = mid + 1;
+            index = l + (r - l) / 2;
+            // std::cerr << fmt(
+            //     "\tl: %d, r: %d, index: %d, dist: %.2f, target: %.2f\n",
+            //     l,
+            //     r,
+            //     index,
+            //     distances_[index],
+            //     target);
+
+            if (distances_[index] < target) {
+                l = index + 1;
             } else {
-                r = mid;
+                r = index;
             }
         }
+        // std::cerr << "\t---\\bs---\n";
 
-        --l;
+        if (distances_[index] > target) {
+            // std::cerr << "Decrementing\n";
+            index--;
+        }
 
-        auto rem_dist = dist - distances_[l];
-        auto t = clamp(rem_dist / distance(points_[l], points_[l + 1]), 0., 1.);
+        std::cerr << fmt(
+            "index: %d, dist[index]: %.2f, target: %.2f\n", index, distances_[index], target);
+
+        const auto rem_dist = target - distances_[index];
+        const auto t = clamp(rem_dist / distance(points_[index], points_[index + 1]), 0., 1.);
+
+        std::cerr << fmt(
+            "rem: %.3f, t: %.3f, reached_end: %s\n", rem_dist, t, (rem_dist < 0) ? "true" : "false")
+                  << '\n';
 
         return AdvanceResult<P>{
-            .point = Interpolator<P>{}(points_[l], points_[r], t),
-            .poly_idx = l,
-            .reached_end = rem_dist <= 0.};
+            .point = LinearInterpolator<P>{}(points_[index], points_[index + 1], t),
+            .poly_idx = {.seg_n = index, .t = t},
+            .reached_end = false};
     }
 
     auto begin() const { return points_.begin(); }
     auto end() const { return points_.end(); }
 
     const auto& Distances() const { return distances_; }
+    double ArcLength() const { return distances_.back(); }
 
   private:
     std::vector<P> points_;
