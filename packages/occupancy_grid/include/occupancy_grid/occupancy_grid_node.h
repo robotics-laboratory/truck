@@ -9,7 +9,7 @@
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
-#include <sensor_msgs/msg/laser_scan.hpp>
+// #include <sensor_msgs/msg/laser_scan.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <tf2_ros/buffer.h>
@@ -32,7 +32,7 @@ class OccupancyGridNode : public rclcpp::Node {
   private:
     void handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPtr image);
 
-    void handleLaserScan(sensor_msgs::msg::LaserScan::ConstSharedPtr scan);
+    void handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud);
 
     void handleCameraInfo(sensor_msgs::msg::CameraInfo::SharedPtr info);
 
@@ -50,15 +50,17 @@ class OccupancyGridNode : public rclcpp::Node {
         bool enable_camera_cloud = false;
         Limits<double> camera_view_height = {-0.165, 0.15};
         double camera_view_distance = 2;
+        Limits<double> lidar_view_height = {-0.15, 0.05};
     } params_{};
 
     struct Slots {
-        rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar = nullptr;
+        rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr lidar = nullptr;
         rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr camera = nullptr;
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info = nullptr;
     } slot_;
 
     struct Signals {
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr lidar_trimmed_cloud = nullptr;
         rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr camera_cloud = nullptr;
         rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr grid = nullptr;
     } signal_;
