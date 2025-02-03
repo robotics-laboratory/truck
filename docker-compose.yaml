@@ -1,7 +1,7 @@
 services:
   truck:
     container_name: "${CONTAINER_NAME:-truck-${USER}}"
-    image: "registry.robotics-lab.ru/truck:1.0.0"
+    image: "registry.robotics-lab.ru/truck:1.1.0"
     privileged: true
     runtime: "${DOCKER_RUNTIME:-runc}"
     build:
