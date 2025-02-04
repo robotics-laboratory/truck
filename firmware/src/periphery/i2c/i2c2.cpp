@@ -16,7 +16,7 @@ I2C& I2C::getInstance() {
 uint32_t I2C::init(void) {
     uint32_t status = 0;
 
-    if (is_initialized == true) {
+    if (is_initialized == false) {
         LL_I2C_InitTypeDef I2C_InitStruct = {0};
         LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
 

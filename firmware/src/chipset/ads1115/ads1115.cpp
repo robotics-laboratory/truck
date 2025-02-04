@@ -7,11 +7,11 @@
 ADS1115::ADS1115(ADCServoType id) {
     switch (id) {
         case ADCServoType::ADC_SERVO_1: {
-            i2c_address = 0x48;
+            i2c_address = 0x49;
             break;
         }
         case ADCServoType::ADC_SERVO_2: {
-            i2c_address = 0x49;
+            i2c_address = 0x48;
             break;
         }
     }
