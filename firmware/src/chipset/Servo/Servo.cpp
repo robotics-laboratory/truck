@@ -36,6 +36,8 @@ uint32_t Servo::init() {
     } else {
         status = 1;
     }
+    is_initialized = true;
+    status = 0;
 
     return status;
 }
