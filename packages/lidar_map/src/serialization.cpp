@@ -297,6 +297,65 @@ void MCAPWriter::writeCloud(
     writer.write(msg::toPointCloud2(cloud, frame_name), topic_name, getTime());
 }
 
+void MCAPWriter::writeCloudWithAttributes(
+    const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
+    const double percent) {
+    rosbag2_cpp::Writer writer;
+    writer.open(mcap_path);
+    writer.write(msg::toPointCloud2(cloud_with_attributes.cloud, "world"), "cloud", getTime());
+
+    auto get_color = [](double a = 0.5, double r = 1.0, double g = 0.0, double b = 0.0) {
+        std_msgs::msg::ColorRGBA color;
+        color.a = a;
+        color.r = r;
+        color.g = g;
+        color.b = b;
+        return color;
+    };
+
+    auto get_scale = [](double x = 0.6, double y = 0.06, double z = 0.06) {
+        geometry_msgs::msg::Vector3 scale;
+        scale.x = x;
+        scale.y = y;
+        scale.z = z;
+        return scale;
+    };
+
+    visualization_msgs::msg::MarkerArray msg_array;
+    size_t points_count = cloud_with_attributes.cloud.cols();
+    size_t step = static_cast<size_t>(points_count / (points_count * (1 - (percent / 100))));
+    for (size_t i = 0; i < points_count; i += step) {
+        visualization_msgs::msg::Marker msg_;
+        msg_.header.frame_id = "world";
+        msg_.id = i;
+        msg_.type = visualization_msgs::msg::Marker::ARROW;
+        msg_.action = visualization_msgs::msg::Marker::ADD;
+        msg_.color = get_color();
+
+        msg_.pose.position.x = cloud_with_attributes.cloud(0, i);
+        msg_.pose.position.y = cloud_with_attributes.cloud(1, i);
+        msg_.pose.position.z = cloud_with_attributes.cloud(2, i);
+
+        double dir_x =
+            cloud_with_attributes.attributes.normals(4, i) - cloud_with_attributes.cloud(0, i);
+        double dir_y =
+            cloud_with_attributes.attributes.normals(5, i) - cloud_with_attributes.cloud(1, i);
+
+        msg_.scale = get_scale();
+
+        double yaw = std::atan2(dir_y, dir_x);
+        msg_.pose.orientation = geom::msg::toQuaternion(truck::geom::Angle(yaw));
+
+        msg_array.markers.push_back(msg_);
+    }
+
+    writer.write(msg_array, "normals", getTime());
+    writer.write(
+        msg::toPointCloud2(cloud_with_attributes.attributes.outliers, "world"),
+        "outliers",
+        getTime());
+}
+
 }  // namespace writer
 
 }  // namespace truck::lidar_map
