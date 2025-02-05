@@ -56,6 +56,10 @@ class MCAPWriter {
         const std::string& mcap_path, const Cloud& cloud, const std::string& topic_name,
         std::string frame_name = "");
 
+    void writeCloudWithAttributes(
+        const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
+        const double percent);
+
   private:
     size_t msg_id_ = 0;
     rosbag2_cpp::Writer writer_;
