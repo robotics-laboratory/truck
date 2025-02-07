@@ -25,24 +25,25 @@ Limits<double> velocityLimits(const model::Model& model, double velocity, double
 
 template<typename It>
 motion::Trajectory makeTrajectory(It begin, It end, const geom::Transform& tf) {
+    VERIFY(std::distance(begin, end) > 1);
+
     motion::Trajectory trajectory;
-    std::optional<geom::Vec2> prev = std::nullopt;
 
-    for (auto it = begin; it != end; ++it) {
-        geom::Vec2 curr = geom::toVec2(*it);
+    for (auto curr = begin + 1; curr != end; ++curr) {
+        const auto prev = curr - 1;
 
-        if (prev.has_value()) {
-            trajectory.states.emplace_back();
-            trajectory.states.back().pose = tf.apply(
-                geom::Pose{.pos = *prev, .dir = geom::AngleVec2::fromVector(curr - *prev)});
-        }
+        const geom::Pose world_pose{
+            .pos = *prev,
+            .dir = geom::AngleVec2::fromVector(geom::toVec2(*curr) - geom::toVec2(*prev))};
 
-        prev = curr;
+        trajectory.states.emplace_back();
+        trajectory.states.back().pose = tf.apply(world_pose);
     }
 
+    const geom::Pose world_pose{.pos = geom::toVec2(*(end - 1)), .dir = trajectory.states.pose.dir};
+
     trajectory.states.emplace_back();
-    trajectory.states.back().pose =
-        tf.apply(geom::Pose{.pos = *prev, .dir = trajectory.states.back().pose.dir});
+    trajectory.states.back().pose = tf.apply(world_pose);
 
     trajectory.fillDistance();
 
@@ -206,6 +207,9 @@ void RouteFollowerNode::onReset(
     const std::shared_ptr<std_srvs::srv::Empty::Request>,
     std::shared_ptr<std_srvs::srv::Empty::Response>) {
     RCLCPP_INFO(this->get_logger(), "Reset path!");
+    
+    state_.trajectory = motion::Trajectory{};
+    publishFullState();
 }
 
 void RouteFollowerNode::onOdometry(nav_msgs::msg::Odometry::SharedPtr odometry) {

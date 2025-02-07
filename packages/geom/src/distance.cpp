@@ -43,11 +43,11 @@ double distance(const Line& l, const Vec2& p) noexcept {
 double distance(const Vec2& p, const Line& l) noexcept { return distance(l, p); }
 
 double distanceSq(const MotionState& a, const MotionState& b) noexcept {
-    return distanceSq(a.position, b.position);
+    return distanceSq(a.pos, b.pos);
 }
 
 double distance(const MotionState& a, const MotionState& b) noexcept {
-    return distance(a.position, b.position);
+    return distance(a.pos, b.pos);
 }
 
 }  // namespace truck::geom

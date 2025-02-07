@@ -8,6 +8,8 @@ namespace truck::geom::spline {
 
 std::vector<MotionState> bezier3(
     const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, size_t n) {
+    VERIFY(n > 2);
+
     auto eval = [&](const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, double t)
         -> MotionState {
         const double t2 = t * t;
@@ -24,8 +26,8 @@ std::vector<MotionState> bezier3(
         const double curvature = cross(derivative, second_derivative) / pow(derivative.len(), 3);
 
         return MotionState{
-            .position = position,
-            .yaw = AngleVec2::fromVector(derivative),
+            .pos = position,
+            .dir = AngleVec2::fromVector(derivative),
             .curvature = curvature,
         };
     };

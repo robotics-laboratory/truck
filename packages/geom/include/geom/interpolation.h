@@ -10,8 +10,8 @@ struct LinearInterpolator {
 template<>
 MotionState lerp<MotionState>(const MotionState& from, const MotionState& to, double t) {
     return {
-        .position = lerp(from.position, to.position, t),
-        .yaw = lerp(from.yaw, to.yaw, t),
+        .pos = lerp(from.pos, to.pos, t),
+        .dir = lerp(from.dir, to.dir, t),
         .curvature = lerp(from.curvature, to.curvature, t),
     };
 }
