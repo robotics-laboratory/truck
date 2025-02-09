@@ -16,7 +16,7 @@ using OdometryMsgArray = std::vector<OdometryMsg>;
 using PointCloudMsg = sensor_msgs::msg::PointCloud2;
 using PointCloudMsgArray = std::vector<PointCloudMsg>;
 
-std::pair<OdometryMsgArray, PointCloudMsgArray>syncOdomWithPointCloud(
+std::pair<OdometryMsgArray, PointCloudMsgArray> syncOdomWithPointCloud(
     const OdometryMsgArray& odom_msgs, const PointCloudMsgArray& point_cloud_msgs);
 
 namespace reader {

@@ -163,7 +163,7 @@ std::pair<OdometryMsgArray, PointCloudMsgArray> readAndSyncOdomWithPointCloud(
     const std::string& point_cloud_topic, double min_odom_dist) {
     std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
     reader->open(mcap_path);
-    
+
     OdometryMsgArray odom_msg_array;
     PointCloudMsgArray point_cloud_msg_array;
 
@@ -171,7 +171,7 @@ std::pair<OdometryMsgArray, PointCloudMsgArray> readAndSyncOdomWithPointCloud(
     std::optional<PointCloudMsg> point_cloud_msg = std::nullopt;
 
     while (reader->has_next()) {
-        rosbag2_storage::SerializedBagMessageSharedPtr msg = reader->read_next();        
+        rosbag2_storage::SerializedBagMessageSharedPtr msg = reader->read_next();
 
         if (msg->topic_name == odom_topic) {
             odom_msg = deserializeMessage<OdometryMsg>(msg);

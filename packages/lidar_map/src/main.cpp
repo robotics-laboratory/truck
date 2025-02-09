@@ -91,8 +91,7 @@ int main(int argc, char* argv[]) {
             serialization::writer::MCAPWriterParams{
                 .mcap_path = mcap_log_folder_path,
                 .poses_topic_name = kOutputTopicPoses,
-                .cloud_topic_name = kOutputTopicClouds
-        });
+                .cloud_topic_name = kOutputTopicClouds});
     }
 
     Poses poses;
@@ -103,7 +102,7 @@ int main(int argc, char* argv[]) {
         const auto [odom_msgs, point_cloud_msgs] =
             serialization::reader::readAndSyncOdomWithPointCloud(
                 mcap_input_path, kInputTopicOdom, kInputTopicPointCloud, min_poses_dist);
-        
+
         poses = toPoses(odom_msgs);
         clouds = toClouds(point_cloud_msgs);
 
@@ -156,7 +155,7 @@ int main(int argc, char* argv[]) {
         clouds = builder.applyGridFilter(clouds);
 
         const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
-        
+
         serialization::writer::MCAPWriter::writeCloud(
             mcap_output_folder_path, lidar_map, kOutputTopicLidarMap);
     }
