@@ -1,6 +1,7 @@
 #include "lidar_map/serialization.h"
 
 #include "common/exception.h"
+#include "geom/distance.h"
 #include "geom/msg.h"
 #include "lidar_map/conversion.h"
 
@@ -13,7 +14,7 @@
 
 #include <optional>
 
-namespace truck::lidar_map {
+namespace truck::lidar_map::serialization {
 
 namespace {
 
@@ -91,6 +92,15 @@ Cloud readPCD(const std::string& pcd_path) {
 namespace {
 
 template<typename T>
+T deserializeMessage(rosbag2_storage::SerializedBagMessageSharedPtr msg) {
+    rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
+    typename T::SharedPtr ros_msg = std::make_shared<T>();
+    rclcpp::Serialization<T> serialization;
+    serialization.deserialize_message(&serialized_msg, ros_msg.get());
+    return *ros_msg;
+}
+
+template<typename T>
 std::optional<T> readNextMessage(
     std::unique_ptr<rosbag2_cpp::Reader>& reader, const std::string& topic_name) {
     while (reader->has_next()) {
@@ -100,13 +110,7 @@ std::optional<T> readNextMessage(
             continue;
         }
 
-        rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
-        typename T::SharedPtr ros_msg = std::make_shared<T>();
-
-        rclcpp::Serialization<T> serialization;
-        serialization.deserialize_message(&serialized_msg, ros_msg.get());
-
-        return *ros_msg;
+        return deserializeMessage<T>(msg);
     }
 
     return std::nullopt;
@@ -152,6 +156,50 @@ std::vector<sensor_msgs::msg::PointCloud2> readPointCloudTopic(
     }
 
     return data;
+}
+
+std::pair<OdometryMsgArray, PointCloudMsgArray> readAndSyncOdomWithPointCloud(
+    const std::string& mcap_path, const std::string& odom_topic,
+    const std::string& point_cloud_topic, double min_odom_dist) {
+    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
+    reader->open(mcap_path);
+    
+    OdometryMsgArray odom_msg_array;
+    PointCloudMsgArray point_cloud_msg_array;
+
+    std::optional<OdometryMsg> odom_msg = std::nullopt;
+    std::optional<PointCloudMsg> point_cloud_msg = std::nullopt;
+
+    while (reader->has_next()) {
+        rosbag2_storage::SerializedBagMessageSharedPtr msg = reader->read_next();        
+
+        if (msg->topic_name == odom_topic) {
+            odom_msg = deserializeMessage<OdometryMsg>(msg);
+
+            if (point_cloud_msg.has_value()) {
+                if (odom_msg_array.empty()) {
+                    odom_msg_array.push_back(*odom_msg);
+                    point_cloud_msg_array.push_back(*point_cloud_msg);
+                    point_cloud_msg = std::nullopt;
+                } else {
+                    const double cur_odom_dist = geom::distance(
+                        geom::toVec2(*odom_msg), geom::toVec2(odom_msg_array.back()));
+
+                    if (cur_odom_dist > min_odom_dist) {
+                        odom_msg_array.push_back(*odom_msg);
+                        point_cloud_msg_array.push_back(*point_cloud_msg);
+                        point_cloud_msg = std::nullopt;
+                    } else {
+                        point_cloud_msg = std::nullopt;
+                    }
+                }
+            }
+        } else if (msg->topic_name == point_cloud_topic) {
+            point_cloud_msg = deserializeMessage<PointCloudMsg>(msg);
+        }
+    }
+
+    return {odom_msg_array, point_cloud_msg_array};
 }
 
 }  // namespace reader
@@ -261,7 +309,7 @@ geometry_msgs::msg::Vector3 toVector3(double x, double y, double z) {
 
 void MCAPWriter::writeCloud(const Cloud& cloud) {
     writer_.write(
-        msg::toPointCloud2(cloud),
+        msg::toPointCloud2(cloud, params_.frame_name),
         params_.cloud_topic_name,
         getTime(msg_id_ * params_.topic_frequency));
 }
@@ -299,4 +347,4 @@ void MCAPWriter::writeCloud(
 
 }  // namespace writer
 
-}  // namespace truck::lidar_map
+}  // namespace truck::lidar_map::serialization

@@ -18,6 +18,8 @@ namespace po = boost::program_options;
 const std::string kInputTopicPointCloud = "/livox/lidar";
 const std::string kInputTopicOdom = "/ekf/odometry/filtered";
 const std::string kOutputTopicLidarMap = "/lidar_map";
+const std::string kOutputTopicPoses = "/poses";
+const std::string kOutputTopicClouds = "/clouds";
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
 
 int main(int argc, char* argv[]) {
@@ -80,32 +82,30 @@ int main(int argc, char* argv[]) {
     Builder builder = Builder(builder_params);
 
     const size_t optimization_steps = 0;
+    const double min_poses_dist = 4.0;
 
-    writer::MCAPWriterParams mcap_writer_params = {
-        .mcap_path = mcap_log_folder_path,
-        .poses_topic_name = "/poses",
-        .cloud_topic_name = "/cloud",
-    };
+    std::shared_ptr<serialization::writer::MCAPWriter> mcap_writer = nullptr;
 
-    writer::MCAPWriter mcap_writer(mcap_writer_params);
+    if (enable_mcap_log) {
+        mcap_writer = std::make_shared<serialization::writer::MCAPWriter>(
+            serialization::writer::MCAPWriterParams{
+                .mcap_path = mcap_log_folder_path,
+                .poses_topic_name = kOutputTopicPoses,
+                .cloud_topic_name = kOutputTopicClouds
+        });
+    }
 
     Poses poses;
     Clouds clouds;
 
     // 1. Read data from input bag
     {
-        auto odom_msgs = reader::readOdomTopic(mcap_input_path, kInputTopicOdom);
-
-        auto point_cloud_msgs = reader::readPointCloudTopic(mcap_input_path, kInputTopicPointCloud);
-
-        const auto [synced_odom_msgs, synced_point_cloud_msgs] =
-            syncOdomWithPointCloud(odom_msgs, point_cloud_msgs);
-
-        const auto all_poses = toPoses(synced_odom_msgs);
-
-        const auto all_clouds = toClouds(synced_point_cloud_msgs);
-
-        std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 8.0);
+        const auto [odom_msgs, point_cloud_msgs] =
+            serialization::reader::readAndSyncOdomWithPointCloud(
+                mcap_input_path, kInputTopicOdom, kInputTopicPointCloud, min_poses_dist);
+        
+        poses = toPoses(odom_msgs);
+        clouds = toClouds(point_cloud_msgs);
 
         const auto rotate_poses_by_angle_PI = [](auto& poses) {
             for (auto& pose : poses) {
@@ -125,14 +125,14 @@ int main(int argc, char* argv[]) {
             const Cloud lidar_map_on_iteration =
                 builder.mergeClouds(builder.transformClouds(poses, clouds));
 
-            mcap_writer.writeCloud(lidar_map_on_iteration);
-            mcap_writer.writePoses(poses);
-            mcap_writer.update();
+            mcap_writer->writeCloud(lidar_map_on_iteration);
+            mcap_writer->writePoses(poses);
+            mcap_writer->update();
         }
 
         if (enable_json_log) {
             const auto pose_graph_info = builder.calculatePoseGraphInfo();
-            writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, 0);
+            serialization::writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, 0);
         }
 
         for (size_t i = 1; i <= optimization_steps; i++) {
@@ -142,20 +142,22 @@ int main(int argc, char* argv[]) {
                 const Cloud lidar_map_on_iteration =
                     builder.mergeClouds(builder.transformClouds(poses, clouds));
 
-                mcap_writer.writeCloud(lidar_map_on_iteration);
-                mcap_writer.writePoses(poses);
-                mcap_writer.update();
+                mcap_writer->writeCloud(lidar_map_on_iteration);
+                mcap_writer->writePoses(poses);
+                mcap_writer->update();
             }
 
             if (enable_json_log) {
                 const auto pose_graph_info = builder.calculatePoseGraphInfo();
-                writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i);
+                serialization::writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i);
             }
         }
 
         clouds = builder.applyGridFilter(clouds);
 
         const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
-        writer::MCAPWriter::writeCloud(mcap_output_folder_path, lidar_map, kOutputTopicLidarMap);
+        
+        serialization::writer::MCAPWriter::writeCloud(
+            mcap_output_folder_path, lidar_map, kOutputTopicLidarMap);
     }
 }
