@@ -2,6 +2,7 @@
 
 #include "geom/angle_vector.h"
 #include "geom/vector.h"
+#include "geom/common.h"
 
 #include <ostream>
 #include <vector>
@@ -24,6 +25,9 @@ struct Pose {
 std::ostream& operator<<(std::ostream& out, const Pose& pose) noexcept;
 
 Pose interpolate(const Pose& a, const Pose& b, double t) noexcept;
+
+template<>
+Pose lerp<Pose>(const Pose& a, const Pose& b, double t);
 
 using Poses = std::vector<Pose>;
 

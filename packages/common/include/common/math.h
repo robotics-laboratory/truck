@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/exception.h"
+#include "common/concepts.h"
 
 #include <algorithm>
 #include <cmath>
@@ -71,5 +72,11 @@ inline constexpr size_t fls(T value) {
     }
     return i;
 }
+
+template<typename V>
+concept VectorSpace = requires(const V& a, const V& b, double t) {
+    { a + b } -> same_as<V>;
+    { a* t } -> same_as<V>;
+};
 
 }  // namespace truck
