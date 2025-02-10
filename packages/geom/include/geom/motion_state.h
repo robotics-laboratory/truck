@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geom/pose.h"
+#include "geom/interpolation.h"
 
 namespace truck::geom {
 
@@ -22,4 +23,13 @@ struct MotionState {
         curvature = 0;
     }
 };
+
+MotionState interpolate(const MotionState& from, const MotionState& to, double t) {
+    return {
+        .pos = interpolate(from.pos, to.pos, t),
+        .dir = interpolate(from.dir, to.dir, t),
+        .curvature = interpolate(from.curvature, to.curvature, t),
+    };
+}
+
 }  // namespace truck::geom
