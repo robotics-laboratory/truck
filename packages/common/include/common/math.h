@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common/exception.h"
-#include "common/concepts.h"
 
 #include <algorithm>
 #include <cmath>
