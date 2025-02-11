@@ -26,9 +26,6 @@ std::ostream& operator<<(std::ostream& out, const Pose& pose) noexcept;
 
 Pose interpolate(const Pose& a, const Pose& b, double t) noexcept;
 
-template<>
-Pose lerp<Pose>(const Pose& a, const Pose& b, double t);
-
 using Poses = std::vector<Pose>;
 
 }  // namespace truck::geom

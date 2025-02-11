@@ -1,3 +1,5 @@
+#pragma once
+
 #include "geom/pose.h"
 #include "geom/vector.h"
 

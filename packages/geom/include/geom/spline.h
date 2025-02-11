@@ -4,7 +4,7 @@
 #include "geom/motion_state.h"
 #include <optional>
 
-namespace truck::geom::spline {
+namespace truck::geom::spline_depr {
 
 std::vector<MotionState> bezier3(
     const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, size_t n) {

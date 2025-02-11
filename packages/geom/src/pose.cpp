@@ -20,9 +20,4 @@ Pose interpolate(const Pose& a, const Pose& b, double t) noexcept {
     return {pos, dir};
 }
 
-template<>
-Pose lerp<Pose>(const Pose& from, const Pose& to, double t) {
-    return interpolate(from, to, t);
-}
-
 }  // namespace truck::geom
