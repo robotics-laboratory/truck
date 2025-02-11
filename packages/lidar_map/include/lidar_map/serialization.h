@@ -8,22 +8,29 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <rosbag2_cpp/writer.hpp>
 
-namespace truck::lidar_map {
+namespace truck::lidar_map::serialization {
 
-std::pair<std::vector<nav_msgs::msg::Odometry>, std::vector<sensor_msgs::msg::PointCloud2>>
-syncOdomWithPointCloud(
-    const std::vector<nav_msgs::msg::Odometry>& odom_msgs,
-    const std::vector<sensor_msgs::msg::PointCloud2>& point_cloud_msgs);
+using OdometryMsg = nav_msgs::msg::Odometry;
+using OdometryMsgArray = std::vector<OdometryMsg>;
+
+using PointCloudMsg = sensor_msgs::msg::PointCloud2;
+using PointCloudMsgArray = std::vector<PointCloudMsg>;
+
+std::pair<OdometryMsgArray, PointCloudMsgArray> syncOdomWithPointCloud(
+    const OdometryMsgArray& odom_msgs, const PointCloudMsgArray& point_cloud_msgs);
 
 namespace reader {
 
 Cloud readPCD(const std::string& pcd_path);
 
-std::vector<nav_msgs::msg::Odometry> readOdomTopic(
-    const std::string& mcap_path, const std::string& odom_topic);
+OdometryMsgArray readOdomTopic(const std::string& mcap_path, const std::string& odom_topic);
 
-std::vector<sensor_msgs::msg::PointCloud2> readPointCloudTopic(
+PointCloudMsgArray readPointCloudTopic(
     const std::string& mcap_path, const std::string& point_cloud_topic);
+
+std::pair<OdometryMsgArray, PointCloudMsgArray> readAndSyncOdomWithPointCloud(
+    const std::string& mcap_path, const std::string& odom_topic,
+    const std::string& point_cloud_topic, double min_odom_dist);
 
 }  // namespace reader
 
@@ -69,4 +76,4 @@ class MCAPWriter {
 
 }  // namespace writer
 
-}  // namespace truck::lidar_map
+}  // namespace truck::lidar_map::serialization

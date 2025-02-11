@@ -70,7 +70,7 @@ class Builder {
     Clouds transformClouds(
         const geom::Poses& poses, const Clouds& clouds, bool inverse = false) const;
 
-    Cloud mergeClouds(const Clouds& clouds) const;
+    static Cloud mergeClouds(const Clouds& clouds);
 
     Clouds applyGridFilter(const Clouds& clouds, double cell_size = 0.1) const;
 

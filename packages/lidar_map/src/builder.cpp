@@ -358,7 +358,7 @@ Clouds Builder::transformClouds(
 /**
  * Merge clouds column-wise
  */
-Cloud Builder::mergeClouds(const Clouds& clouds) const {
+Cloud Builder::mergeClouds(const Clouds& clouds) {
     VERIFY(!clouds.empty());
     size_t points_count = 0;
 
