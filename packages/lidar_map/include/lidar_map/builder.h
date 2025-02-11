@@ -60,8 +60,7 @@ class Builder {
         const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const;
 
     void initPoseGraph(
-        const geom::Poses& poses, const Clouds& clouds,
-        const bool get_clouds_with_attributes = false);
+        const geom::Poses& poses, const Clouds& clouds);
 
     geom::Poses optimizePoseGraph(size_t iterations = 1);
 
@@ -78,8 +77,8 @@ class Builder {
         const geom::Poses& poses, const Clouds& clouds_base, double clouds_search_rad,
         size_t min_sim_points_count, double max_sim_points_dist) const;
 
-    CloudWithAttributes getCloudWithAttributes(
-        const DataPoints& reference_dp, const DataPoints& reading_dp, const Cloud& cloud);
+    CloudWithAttributes calculateAttributesForReferenceCloud(
+    const Cloud& reference_cloud, const Cloud& reading_cloud);
 
   private:
     ICP icp_;

@@ -347,7 +347,7 @@ void MCAPWriter::writeCloud(
 
 void MCAPWriter::writeCloudWithAttributes(
     const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
-    const double percent) {
+    const double percent, std::string frame_name) {
     rosbag2_cpp::Writer writer;
     writer.open(mcap_path);
     writer.write(msg::toPointCloud2(cloud_with_attributes.cloud, "world"), "cloud", getTime());
@@ -384,13 +384,13 @@ void MCAPWriter::writeCloudWithAttributes(
         msg_.pose.position.y = cloud_with_attributes.cloud(1, i);
         msg_.pose.position.z = cloud_with_attributes.cloud(2, i);
 
+        // Get direction vector components for the normal direction
         double dir_x =
-            cloud_with_attributes.attributes.normals(4, i) - cloud_with_attributes.cloud(0, i);
+            cloud_with_attributes.attributes.normals(0, i) - cloud_with_attributes.cloud(0, i);
         double dir_y =
-            cloud_with_attributes.attributes.normals(5, i) - cloud_with_attributes.cloud(1, i);
-
+            cloud_with_attributes.attributes.normals(1, i) - cloud_with_attributes.cloud(1, i);
         msg_.scale = get_scale();
-
+        // Get yaw angle from the direction vector using atan2
         double yaw = std::atan2(dir_y, dir_x);
         msg_.pose.orientation = geom::msg::toQuaternion(truck::geom::Angle(yaw));
 

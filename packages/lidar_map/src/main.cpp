@@ -20,6 +20,7 @@ const std::string kInputTopicOdom = "/ekf/odometry/filtered";
 const std::string kOutputTopicLidarMap = "/lidar_map";
 const std::string kOutputTopicPoses = "/poses";
 const std::string kOutputTopicClouds = "/clouds";
+const std::string logsFrameName = "world";
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
 
 int main(int argc, char* argv[]) {
@@ -31,9 +32,6 @@ int main(int argc, char* argv[]) {
     std::string mcap_output_folder_path;
     std::string mcap_log_folder_path;
     std::string json_log_path;
-    std::string icp_log_path;
-    int icp_cloud_number;
-    int normals_rarefaction_percentage;
 
     {
         po::options_description desc("Executable for constructing 2D LiDAR map");
@@ -49,16 +47,7 @@ int main(int argc, char* argv[]) {
             "path to NON-EXISTING folder for saving map logs")(
             "json-log",
             po::value<std::string>(&json_log_path)->default_value(""),
-            "path to json file for saving map logs")(
-            "icp-log,il",
-            po::value<std::string>(&icp_log_path)->default_value(""),
-            "path to NON-EXISTING folder for saving ICP log file (normals and outliers) ")(
-            "cloud_number,cn",
-            po::value<int>(&icp_cloud_number)->default_value(1),
-            "cloud number for visualizing normals and outliers for icp-log")(
-            "percentage,p",
-            po::value<int>(&normals_rarefaction_percentage)->default_value(100),
-            "percentage of normals rendered [0;100] for icp-log");
+            "path to json file for saving map logs");
 
         po::variables_map vm;
         try {
@@ -103,7 +92,8 @@ int main(int argc, char* argv[]) {
             serialization::writer::MCAPWriterParams{
                 .mcap_path = mcap_log_folder_path,
                 .poses_topic_name = kOutputTopicPoses,
-                .cloud_topic_name = kOutputTopicClouds});
+                .cloud_topic_name = kOutputTopicClouds,
+                .frame_name = logsFrameName});
     }
 
     Poses poses;
@@ -130,7 +120,7 @@ int main(int argc, char* argv[]) {
 
     // 2. Construct and optimize pose graph
     {
-        builder.initPoseGraph(poses, clouds, !icp_log_path.empty());
+        builder.initPoseGraph(poses, clouds);
 
         if (enable_mcap_log) {
             const Cloud lidar_map_on_iteration =
@@ -170,12 +160,11 @@ int main(int argc, char* argv[]) {
 
         serialization::writer::MCAPWriter::writeCloud(
             mcap_output_folder_path, lidar_map, kOutputTopicLidarMap);
-
-        if (!icp_log_path.empty()) {
-            mcap_writer.writeCloudWithAttributes(
-                icp_log_path,
-                builder.clouds_with_attributes[icp_cloud_number],
-                normals_rarefaction_percentage);
-        }
+        auto cloud_with_attributes = builder.calculateAttributesForReferenceCloud(clouds[0], clouds[1]);
+        std::cout << cloud_with_attributes.cloud.cols() << " " <<  cloud_with_attributes.attributes.outliers.rows() << " " << cloud_with_attributes.attributes.normals.cols() << '\n';
+        mcap_writer->writeCloudWithAttributes(
+                "/root/truck/packages/lidar_map/data/results/oo2",
+                cloud_with_attributes,
+                70);
     }
 }

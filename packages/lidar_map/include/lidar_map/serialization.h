@@ -65,7 +65,8 @@ class MCAPWriter {
 
     void writeCloudWithAttributes(
         const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
-        const double percent);
+        const double percent,
+        std::string frame_name = "");
 
   private:
     size_t msg_id_ = 0;
