@@ -347,61 +347,49 @@ void MCAPWriter::writeCloud(
 
 void MCAPWriter::writeCloudWithAttributes(
     const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
-    const double percent, std::string frame_name) {
+    bool enable_weights, bool enable_normals, double normals_ratio, std::string frame_name) {
     rosbag2_cpp::Writer writer;
     writer.open(mcap_path);
-    writer.write(msg::toPointCloud2(cloud_with_attributes.cloud, "world"), "cloud", getTime());
+    writer.write(msg::toPointCloud2(cloud_with_attributes.cloud, frame_name), "cloud", getTime());
+    if (enable_normals) {
+        visualization_msgs::msg::MarkerArray msg_array;
+        size_t points_count = cloud_with_attributes.cloud.cols();
+        size_t step =
+            static_cast<size_t>(points_count / (points_count * (1 - (normals_ratio / 100))));
+        for (size_t i = 0; i < points_count; i += step) {
+            visualization_msgs::msg::Marker msg_;
+            msg_.header.frame_id = frame_name;
+            msg_.id = i;
+            msg_.type = visualization_msgs::msg::Marker::ARROW;
+            msg_.action = visualization_msgs::msg::Marker::ADD;
+            msg_.color = toColorRGBA(0.5, 1, 0, 0);
 
-    auto get_color = [](double a = 0.5, double r = 1.0, double g = 0.0, double b = 0.0) {
-        std_msgs::msg::ColorRGBA color;
-        color.a = a;
-        color.r = r;
-        color.g = g;
-        color.b = b;
-        return color;
-    };
+            msg_.pose.position.x = cloud_with_attributes.cloud(0, i);
+            msg_.pose.position.y = cloud_with_attributes.cloud(1, i);
+            msg_.pose.position.z = cloud_with_attributes.cloud(2, i);
 
-    auto get_scale = [](double x = 0.6, double y = 0.06, double z = 0.06) {
-        geometry_msgs::msg::Vector3 scale;
-        scale.x = x;
-        scale.y = y;
-        scale.z = z;
-        return scale;
-    };
+            // Get direction vector components for the normal direction
+            double dir_x =
+                cloud_with_attributes.attributes.normals(0, i) - cloud_with_attributes.cloud(0, i);
+            double dir_y =
+                cloud_with_attributes.attributes.normals(1, i) - cloud_with_attributes.cloud(1, i);
+            msg_.scale = toVector3(0.6, 0.06, 0.06);
+            // Get yaw angle from the direction vector using atan2
+            double yaw = std::atan2(dir_y, dir_x);
+            msg_.pose.orientation = geom::msg::toQuaternion(truck::geom::Angle(yaw));
 
-    visualization_msgs::msg::MarkerArray msg_array;
-    size_t points_count = cloud_with_attributes.cloud.cols();
-    size_t step = static_cast<size_t>(points_count / (points_count * (1 - (percent / 100))));
-    for (size_t i = 0; i < points_count; i += step) {
-        visualization_msgs::msg::Marker msg_;
-        msg_.header.frame_id = "world";
-        msg_.id = i;
-        msg_.type = visualization_msgs::msg::Marker::ARROW;
-        msg_.action = visualization_msgs::msg::Marker::ADD;
-        msg_.color = get_color();
+            msg_array.markers.push_back(msg_);
+        }
 
-        msg_.pose.position.x = cloud_with_attributes.cloud(0, i);
-        msg_.pose.position.y = cloud_with_attributes.cloud(1, i);
-        msg_.pose.position.z = cloud_with_attributes.cloud(2, i);
-
-        // Get direction vector components for the normal direction
-        double dir_x =
-            cloud_with_attributes.attributes.normals(0, i) - cloud_with_attributes.cloud(0, i);
-        double dir_y =
-            cloud_with_attributes.attributes.normals(1, i) - cloud_with_attributes.cloud(1, i);
-        msg_.scale = get_scale();
-        // Get yaw angle from the direction vector using atan2
-        double yaw = std::atan2(dir_y, dir_x);
-        msg_.pose.orientation = geom::msg::toQuaternion(truck::geom::Angle(yaw));
-
-        msg_array.markers.push_back(msg_);
+        writer.write(msg_array, "normals", getTime());
     }
 
-    writer.write(msg_array, "normals", getTime());
-    writer.write(
-        msg::toPointCloud2(cloud_with_attributes.attributes.outliers, "world"),
-        "outliers",
-        getTime());
+    if (enable_weights) {
+        writer.write(
+            msg::toPointCloud2(cloud_with_attributes.attributes.outliers, frame_name),
+            "outliers",
+            getTime());
+    }
 }
 
 }  // namespace writer

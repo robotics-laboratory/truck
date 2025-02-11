@@ -59,8 +59,7 @@ class Builder {
     std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(
         const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const;
 
-    void initPoseGraph(
-        const geom::Poses& poses, const Clouds& clouds);
+    void initPoseGraph(const geom::Poses& poses, const Clouds& clouds);
 
     geom::Poses optimizePoseGraph(size_t iterations = 1);
 
@@ -78,7 +77,7 @@ class Builder {
         size_t min_sim_points_count, double max_sim_points_dist) const;
 
     CloudWithAttributes calculateAttributesForReferenceCloud(
-    const Cloud& reference_cloud, const Cloud& reading_cloud);
+        const Cloud& reference_cloud, const Cloud& reading_cloud);
 
   private:
     ICP icp_;

@@ -48,3 +48,17 @@ ros2 run lidar_map lidar_map_executable
   --json-log data/logs/json/cloud_atrium_XX_YY_ZZ_log.json
 ```
 ### Debug
+
+To visualize the normals, add this to main.cpp.
+
+```c++
+//Calculate attributes for the reference cloud using i and next cloud
+auto cloud_with_attributes = builder.calculateAttributesForReferenceCloud(clouds[i], clouds[i + 1]);
+mcap_writer->writeCloudWithAttributes(
+        "data/logs/icp_logs", // path where the mcap file will be saved
+        cloud_with_attributes,
+        70, // percentage of normals to be visualized
+        true, // true to write outliers
+        true, // true to write normals
+        "world"); // frame name
+```

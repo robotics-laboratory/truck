@@ -179,8 +179,7 @@ std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
  * - 'poses': set of clouds' poses in a world frame
  * - 'clouds': set of clouds in correspondig local frames
  */
-void Builder::initPoseGraph(
-    const geom::Poses& poses, const Clouds& clouds) {
+void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
     auto solver = new g2o::OptimizationAlgorithmLevenberg(
         g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
 
@@ -375,7 +374,7 @@ Cloud Builder::mergeClouds(const Clouds& clouds) {
 /**
  * get normals and outliers for cloud
  */
-CloudWithAttributes  Builder::calculateAttributesForReferenceCloud(
+CloudWithAttributes Builder::calculateAttributesForReferenceCloud(
     const Cloud& reference_cloud, const Cloud& reading_cloud) {
     DataPoints reference_dp = toDataPoints(reference_cloud);
     DataPoints reading_dp = toDataPoints(reading_cloud);
@@ -384,10 +383,10 @@ CloudWithAttributes  Builder::calculateAttributesForReferenceCloud(
     cloud_with_attributes.cloud = reference_cloud;
 
     icp_.referenceDataPointsFilters.apply(reference_dp);
-    
+
     // normals = matrix 3 * n
-    // normals_x, normals_y, normals_z - components of the normal vector that indicate the direction perpendicular
-    // to the surface passing through the point.
+    // normals_x, normals_y, normals_z - components of the normal vector that indicate the direction
+    // perpendicular to the surface passing through the point.
     cloud_with_attributes.attributes.normals = reference_dp.getDescriptorViewByName("normals");
 
     icp_.matcher->init(reference_dp);
@@ -395,7 +394,7 @@ CloudWithAttributes  Builder::calculateAttributesForReferenceCloud(
     Matcher::OutlierWeights outlierWeights =
         icp_.outlierFilters.compute(reading_dp, reference_dp, matches);
 
-    cloud_with_attributes.attributes.outliers = Cloud(4, outlierWeights.cols());
+    cloud_with_attributes.attributes.outliers = Eigen::Matrix4Xf(4, outlierWeights.cols());
     for (size_t i = 0; i < outlierWeights.cols(); i++) {
         cloud_with_attributes.attributes.outliers(0, i) = reading_dp.features(0, i);
         cloud_with_attributes.attributes.outliers(1, i) = reading_dp.features(1, i);

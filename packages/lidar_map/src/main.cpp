@@ -20,7 +20,6 @@ const std::string kInputTopicOdom = "/ekf/odometry/filtered";
 const std::string kOutputTopicLidarMap = "/lidar_map";
 const std::string kOutputTopicPoses = "/poses";
 const std::string kOutputTopicClouds = "/clouds";
-const std::string logsFrameName = "world";
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
 
 int main(int argc, char* argv[]) {
@@ -92,8 +91,7 @@ int main(int argc, char* argv[]) {
             serialization::writer::MCAPWriterParams{
                 .mcap_path = mcap_log_folder_path,
                 .poses_topic_name = kOutputTopicPoses,
-                .cloud_topic_name = kOutputTopicClouds,
-                .frame_name = logsFrameName});
+                .cloud_topic_name = kOutputTopicClouds});
     }
 
     Poses poses;
@@ -160,11 +158,4 @@ int main(int argc, char* argv[]) {
 
         serialization::writer::MCAPWriter::writeCloud(
             mcap_output_folder_path, lidar_map, kOutputTopicLidarMap);
-        auto cloud_with_attributes = builder.calculateAttributesForReferenceCloud(clouds[0], clouds[1]);
-        std::cout << cloud_with_attributes.cloud.cols() << " " <<  cloud_with_attributes.attributes.outliers.rows() << " " << cloud_with_attributes.attributes.normals.cols() << '\n';
-        mcap_writer->writeCloudWithAttributes(
-                "/root/truck/packages/lidar_map/data/results/oo2",
-                cloud_with_attributes,
-                70);
     }
-}
