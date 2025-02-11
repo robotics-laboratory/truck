@@ -159,3 +159,4 @@ int main(int argc, char* argv[]) {
         serialization::writer::MCAPWriter::writeCloud(
             mcap_output_folder_path, lidar_map, kOutputTopicLidarMap);
     }
+}

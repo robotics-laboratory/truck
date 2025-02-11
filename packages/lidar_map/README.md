@@ -23,7 +23,6 @@ Parameters:
 
 4. `--json-log`: path to json file for saving map logs (optional)
 
-
 Run the executable `lidar_map_executable` with the assigned `--mcap-input` and `--mcap-output` arguments:
 ```console
 ros2 run lidar_map lidar_map_executable
