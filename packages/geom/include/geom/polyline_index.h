@@ -42,39 +42,38 @@ class PolylineIndex {
         // std::cerr << "]\n\n";
     }
 
-    P At(const PolylineIdx idx) const {
+    P StateAt(const PolylineIdx idx) const {
         const auto& a = points_[idx.seg_n];
         const auto& b = points_[idx.seg_n + 1];
         return Interpolator{}(a, b, idx.t);
     }
 
-    std::pair<P, double> DistAt(const PolylineIdx idx) const {
+    double DistAt(const PolylineIdx idx) const {
         const auto& a = distances_[idx.seg_n];
         const auto& b = distances_[idx.seg_n + 1];
         return Interpolator{}(a, b, idx.t);
     }
 
-    // default parameter to use in the loop initialization
-    AdvanceResult<P> AdvanceFromBegin(double dist = 0) const {
-        return AdvanceFrom(PolylineIdx{.seg_n = 0, .t = 0}, dist);
+    std::pair<P, double> At(const PolylineIdx idx) const {
+        return std::make_pair(StateAt(idx), DistAt(idx));
     }
 
-    AdvanceResult<P> AdvanceFrom(const PolylineIdx from_id, double dist) const {
-        double start = DistAt(from_id);
+    // default parameter to use in the loop initialization
+    AdvanceResult<P> AdvanceFromBegin(double dist = 0) const {
+        double start = 0;
         double target = start + dist;
 
         if (target >= Length()) {
             return AdvanceResult<P>{
                 .point = points_.back(),
                 .dist = Length(),
-                .poly_idx = {.seg_n = points_.size(), .t = 0},
+                .poly_idx = {.seg_n = points_.size() - 1, .t = 1},
                 .reached_end = true};
         }
 
         // index of the first point at which distance traveled exceeds `target`
         size_t index = std::distance(
-            distances_.begin(),
-            std::upper_bound(distances_.begin() + from_id.seg_n, distances_.end(), target));
+            distances_.begin(), std::upper_bound(distances_.begin(), distances_.end(), target));
 
         VERIFY(index < distances_.size());
 
@@ -95,7 +94,12 @@ class PolylineIndex {
         //           << '\n';
 
         return AdvanceResult<P>{
-            .point = At(polyidx), .dist = target, .poly_idx = polyidx, .reached_end = false};
+            .point = StateAt(polyidx), .dist = target, .poly_idx = polyidx, .reached_end = false};
+    }
+
+    AdvanceResult<P> AdvanceFrom(const PolylineIdx from_id, double dist) const {
+        double start = DistAt(from_id);
+        return AdvanceFromBegin(start + dist);
     }
 
     double Length() const { return distances_.back(); }
