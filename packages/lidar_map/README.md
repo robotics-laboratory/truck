@@ -52,12 +52,12 @@ To visualize the normals or outliers weights, add this to main.cpp.
 
 ```c++
 //Calculate attributes for reference and reading clouds
-  CloudWithAttributes reference_cloud_with_attr = { 
+  CloudWithAttributes reference_cloud_with_attr = {
         .cloud = clouds[1],
         .normals = builder.calculateNormalsForReferenceCloud(clouds[1]),
         };
 
-  CloudWithAttributes reading_cloud_with_attr = { 
+  CloudWithAttributes reading_cloud_with_attr = {
         .cloud = clouds[0],
         .weights = builder.calculateWeightsForReadingCloud(clouds[0], clouds[1]),
         };
