@@ -372,37 +372,34 @@ Cloud Builder::mergeClouds(const Clouds& clouds) {
 }
 
 /**
- * get normals and outliers for cloud
+ * get outliers weights for cloud
  */
-CloudWithAttributes Builder::calculateAttributesForReferenceCloud(
-    const Cloud& reference_cloud, const Cloud& reading_cloud) {
+Eigen::VectorXf Builder::calculateWeightsForReadingCloud(
+    const Cloud& reading_cloud, const Cloud& reference_cloud) {
     DataPoints reference_dp = toDataPoints(reference_cloud);
     DataPoints reading_dp = toDataPoints(reading_cloud);
 
-    CloudWithAttributes cloud_with_attributes;
-    cloud_with_attributes.cloud = reference_cloud;
-
     icp_.referenceDataPointsFilters.apply(reference_dp);
-
-    // normals = matrix 3 * n
-    // normals_x, normals_y, normals_z - components of the normal vector that indicate the direction
-    // perpendicular to the surface passing through the point.
-    cloud_with_attributes.attributes.normals = reference_dp.getDescriptorViewByName("normals");
-
     icp_.matcher->init(reference_dp);
     Matcher::Matches matches = icp_.matcher->findClosests(reading_dp);
     Matcher::OutlierWeights outlierWeights =
         icp_.outlierFilters.compute(reading_dp, reference_dp, matches);
 
-    cloud_with_attributes.attributes.outliers = Eigen::Matrix4Xf(4, outlierWeights.cols());
+    Eigen::VectorXf weights(outlierWeights.cols());
     for (size_t i = 0; i < outlierWeights.cols(); i++) {
-        cloud_with_attributes.attributes.outliers(0, i) = reading_dp.features(0, i);
-        cloud_with_attributes.attributes.outliers(1, i) = reading_dp.features(1, i);
-        cloud_with_attributes.attributes.outliers(2, i) = reading_dp.features(2, i);
-        cloud_with_attributes.attributes.outliers(3, i) = outlierWeights(0, i);
+        weights(i) = outlierWeights(0, i);
     }
 
-    return cloud_with_attributes;
+    return weights;
+}
+
+/**
+ * get normals for cloud
+ */
+Eigen::Matrix3Xf Builder::calculateNormalsForReferenceCloud(const Cloud& reference_cloud) {
+    DataPoints reference_dp = toDataPoints(reference_cloud);
+    icp_.referenceDataPointsFilters.apply(reference_dp);
+    return reference_dp.getDescriptorViewByName("normals");
 }
 
 namespace {

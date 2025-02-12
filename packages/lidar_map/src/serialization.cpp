@@ -347,11 +347,14 @@ void MCAPWriter::writeCloud(
 
 void MCAPWriter::writeCloudWithAttributes(
     const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
-    bool enable_weights, bool enable_normals, double normals_ratio, std::string frame_name) {
+    double normals_ratio, std::string frame_name) {
     rosbag2_cpp::Writer writer;
     writer.open(mcap_path);
     writer.write(msg::toPointCloud2(cloud_with_attributes.cloud, frame_name), "cloud", getTime());
-    if (enable_normals) {
+    std::cout << cloud_with_attributes.normals.has_value() << ' '
+              << cloud_with_attributes.weights.has_value() << '\n';
+    if (cloud_with_attributes.normals.has_value()) {
+        const Eigen::Matrix3Xf normals = cloud_with_attributes.normals.value();
         visualization_msgs::msg::MarkerArray msg_array;
         size_t points_count = cloud_with_attributes.cloud.cols();
         size_t step =
@@ -369,10 +372,8 @@ void MCAPWriter::writeCloudWithAttributes(
             msg_.pose.position.z = cloud_with_attributes.cloud(2, i);
 
             // Get direction vector components for the normal direction
-            double dir_x =
-                cloud_with_attributes.attributes.normals(0, i) - cloud_with_attributes.cloud(0, i);
-            double dir_y =
-                cloud_with_attributes.attributes.normals(1, i) - cloud_with_attributes.cloud(1, i);
+            double dir_x = normals(0, i) - cloud_with_attributes.cloud(0, i);
+            double dir_y = normals(1, i) - cloud_with_attributes.cloud(1, i);
             msg_.scale = toVector3(0.6, 0.06, 0.06);
             // Get yaw angle from the direction vector using atan2
             double yaw = std::atan2(dir_y, dir_x);
@@ -384,11 +385,15 @@ void MCAPWriter::writeCloudWithAttributes(
         writer.write(msg_array, "normals", getTime());
     }
 
-    if (enable_weights) {
-        writer.write(
-            msg::toPointCloud2(cloud_with_attributes.attributes.outliers, frame_name),
-            "outliers",
-            getTime());
+    if (cloud_with_attributes.weights.has_value()) {
+        Cloud cloud = cloud_with_attributes.cloud;
+        const Eigen::VectorXf& weights = cloud_with_attributes.weights.value();
+
+        for (size_t i = 0; i < cloud.cols(); i++) {
+            cloud(3, i) = weights(i);
+        }
+
+        writer.write(msg::toPointCloud2(cloud, frame_name), "weights", getTime());
     }
 }
 

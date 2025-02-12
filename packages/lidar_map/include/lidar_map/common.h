@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pointmatcher/PointMatcher.h>
+#include <optional>
 
 namespace truck::lidar_map {
 
@@ -18,14 +19,13 @@ using Cloud = Eigen::Matrix4Xf;
  */
 using Clouds = std::vector<Cloud>;
 
-struct CloudAttributes {
-    Eigen::Matrix3Xf normals;
-    Eigen::Matrix4Xf outliers;
-};
-
 struct CloudWithAttributes {
     Cloud cloud;
-    CloudAttributes attributes;
+    std::optional<Eigen::VectorXf> weights = std::nullopt;
+
+    // normals_x, normals_y, normals_z - components of the normal vector that indicate the direction
+    // perpendicular to the surface passing through the point.
+    std::optional<Eigen::Matrix3Xf> normals = std::nullopt;
 };
 
 }  // namespace truck::lidar_map
