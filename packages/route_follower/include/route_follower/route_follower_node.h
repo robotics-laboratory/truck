@@ -31,7 +31,7 @@ class RouteFollowerNode : public rclcpp::Node {
 
   private:
     void onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg);
-    void onOdometry(nav_msgs::msg::Odometry::SharedPtr msg);
+    void onOdometry(nav_msgs::msg::Odometry::SharedPtr odometry);
     void onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg);
     void onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
 

@@ -31,13 +31,10 @@ class PolylineIndex {
         distances_.reserve(points_.size());
         distances_.push_back(0);
 
-        // std::cerr << "distances:\n[ ";
         auto prev = points_.begin();
         for (auto curr = points_.begin() + 1; curr != points_.end(); prev = curr, ++curr) {
             distances_.push_back(geom::distance(*prev, *curr) + distances_.back());
-            // std::cerr << fmt("%.2f", distances_.back()) << ' ';
         }
-        // std::cerr << "]\n\n";
     }
 
     P StateAt(const PolylineIdx idx) const {
@@ -74,19 +71,11 @@ class PolylineIndex {
 
         --index;
 
-        // std::cerr << fmt(
-        //     "index: %d, dist[index]: %.2f, target: %.2f\n", index, distances_[index], target);
-
         const double rem_dist = dist - distances_[index];
         const double seg_len = geom::distance(points_[index], points_[index + 1]);
         const double t = seg_len ? clamp(rem_dist / seg_len, 0., 1.) : 0;
 
         PolylineIdx polyidx = {.seg_n = index, .t = t};
-
-        // std::cerr << fmt(
-        //     "rem: %.3f, t: %.3f, reached_end: %s\n", rem_dist, t, (rem_dist < 0) ? "true" :
-        //     "false")
-        //           << '\n';
 
         return AdvanceResult<P>{
             .point = StateAt(polyidx), .dist = dist, .poly_idx = polyidx, .reached_end = false};
@@ -106,4 +95,7 @@ class PolylineIndex {
     std::vector<P> points_;
     std::vector<double> distances_;
 };
+
+using PolylineMotionIndex = PolylineIndex<MotionState, MotionStateLinearInterpolator>;
+
 }  // namespace truck::geom

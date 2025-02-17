@@ -1,5 +1,5 @@
-#include <rclcpp/rclcpp.hpp>
 #include "route_follower/route_follower_node.h"
+#include <rclcpp/rclcpp.hpp>
 
 int main(int argc, char** argv) {
     rclcpp::init(argc, argv);

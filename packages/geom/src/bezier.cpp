@@ -5,28 +5,24 @@
 
 namespace truck::geom {
 
-Poses bezier1(const Vec2& p0, const Vec2& p1, size_t n) {
+MotionStates bezier1(const Vec2& p0, const Vec2& p1, size_t n) {
     VERIFY(n > 2);
 
     const auto dir = AngleVec2::fromVector(p1 - p0);
 
-    Poses poses;
-    poses.reserve(n);
+    MotionStates states;
+    states.reserve(n);
 
-    poses.emplace_back(p0, dir);
-
-    for (size_t i = 1; i < n - 1; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         const double t = static_cast<double>(i) / (n - 1);
         const double t_1 = 1 - t;
-        poses.emplace_back(p0 * t_1 + p1 * t, dir);
+        states.push_back(MotionState{.pos = interpolate(p0, p1, t), .dir = dir, .curvature = 0});
     }
 
-    poses.emplace_back(p1, dir);
-
-    return poses;
+    return states;
 }
 
-Poses bezier1(const Vec2& p0, const Vec2& p1, double step) {
+MotionStates bezier1(const Vec2& p0, const Vec2& p1, double step) {
     VERIFY(step > 0);
 
     const double dist = (p1 - p0).len();
@@ -34,30 +30,36 @@ Poses bezier1(const Vec2& p0, const Vec2& p1, double step) {
     return bezier1(p0, p1, n);
 }
 
-Poses bezier2(const Vec2& p0, const Vec2& p1, const Vec2& p2, size_t n) {
+MotionStates bezier2(const Vec2& p0, const Vec2& p1, const Vec2& p2, size_t n) {
     VERIFY(n > 2);
 
-    Poses poses;
-    poses.reserve(n);
+    MotionStates states;
+    states.reserve(n);
 
-    poses.emplace_back(p0, AngleVec2::fromVector(p1 - p0));
-
-    for (size_t i = 1; i < n - 1; ++i) {
-        const double t = static_cast<double>(i) / (n - 1);
+    auto eval = [&](const Vec2& p0, const Vec2& p1, const Vec2& p2, double t) -> MotionState {
         const double t_1 = 1 - t;
 
-        const auto pos = p0 * t_1 * t_1 + p1 * 2 * t * t_1 + p2 * t * t;
+        const auto position = p0 * t_1 * t_1 + p1 * 2 * t * t_1 + p2 * t * t;
         const auto derivative = 2 * t_1 * (p1 - p0) + 2 * t * (p2 - p1);
+        const auto second_derivative = 2 * (p2 - 2 * p1 + p0);
+        const double curvature = cross(derivative, second_derivative) / pow(derivative.len(), 3);
 
-        poses.emplace_back(pos, AngleVec2::fromVector(derivative));
+        return MotionState{
+            .pos = position,
+            .dir = AngleVec2::fromVector(derivative),
+            .curvature = curvature,
+        };
+    };
+
+    for (size_t i = 0; i < n; ++i) {
+        const double t = static_cast<double>(i) / (n - 1);
+        states.push_back(eval(p0, p1, p2, t));
     }
 
-    poses.emplace_back(p2, AngleVec2::fromVector(p2 - p1));
-
-    return poses;
+    return states;
 }
 
-Poses bezier2(const Vec2& p0, const Vec2& p1, const Vec2& p2, double step) {
+MotionStates bezier2(const Vec2& p0, const Vec2& p1, const Vec2& p2, double step) {
     VERIFY(step > 0);
 
     const double dist = (p1 - p0).len() + (p2 - p1).len();
@@ -65,33 +67,41 @@ Poses bezier2(const Vec2& p0, const Vec2& p1, const Vec2& p2, double step) {
     return bezier2(p0, p1, p2, n);
 }
 
-Poses bezier3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, size_t n) {
+MotionStates bezier3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, size_t n) {
     VERIFY(n > 2);
 
-    Poses poses;
-    poses.reserve(n);
+    std::vector<MotionState> states;
+    states.reserve(n);
 
-    poses.emplace_back(p0, AngleVec2::fromVector(p1 - p0));
-
-    for (size_t i = 1; i < n - 1; ++i) {
-        const double t = static_cast<double>(i) / (n - 1);
+    auto eval = [&](const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, double t)
+        -> MotionState {
         const double t2 = t * t;
 
         const double t_1 = 1 - t;
         const double t_2 = t_1 * t_1;
 
-        const auto pos = p0 * t_2 * t_1 + p1 * 3 * t * t_2 + p2 * 3 * t2 * t_1 + p3 * t2 * t;
+        const auto position = p0 * t_2 * t_1 + p1 * 3 * t * t_2 + p2 * 3 * t2 * t_1 + p3 * t2 * t;
         const auto derivative = 3 * t_2 * (p1 - p0) + 6 * t_1 * t * (p2 - p1) + 3 * t2 * (p3 - p2);
+        const auto second_derivative =
+            6 * (1 - t) * (p2 - 2 * p1 + p0) + 6 * t * (p3 - 2 * p2 + p1);
+        const double curvature = cross(derivative, second_derivative) / pow(derivative.len(), 3);
 
-        poses.emplace_back(pos, AngleVec2::fromVector(derivative));
+        return MotionState{
+            .pos = position,
+            .dir = AngleVec2::fromVector(derivative),
+            .curvature = curvature,
+        };
     };
 
-    poses.emplace_back(p3, AngleVec2::fromVector(p3 - p2));
+    for (size_t i = 0; i < n; ++i) {
+        const double t = static_cast<double>(i) / (n - 1);
+        states.push_back(eval(p0, p1, p2, p3, t));
+    }
 
-    return poses;
+    return states;
 }
 
-Poses bezier3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, double step) {
+MotionStates bezier3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, double step) {
     VERIFY(step > 0);
 
     const double dist = (p1 - p0).len() + (p2 - p1).len() + (p3 - p2).len();

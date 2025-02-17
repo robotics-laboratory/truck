@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 
 #include "geom/polyline_index.h"
-#include "geom/spline.h"
+#include "geom/bezier.h"
 #include "geom/test/equal_assert.h"
 
 using namespace truck::geom;
 
 TEST(PolylineIndex, it_works) {
     const PolylineIndex<MotionState, MotionStateLinearInterpolator> polyline =
-        spline_depr::bezier3({0, 0}, {1, 1}, {2, 1}, {3, 0}, 50);
+        bezier3({0, 0}, {1, 1}, {2, 1}, {3, 0}, size_t(60));
 
     double dist = 0;
     const double dist_inc = .1;
@@ -27,7 +27,7 @@ TEST(PolylineIndex, it_works) {
 
 TEST(PolylineIndex, even_steps) {
     const PolylineIndex<MotionState, MotionStateLinearInterpolator> polyline =
-        spline_depr::bezier3({0, -5}, {10, -5}, {0, 5}, {-10, 5}, 1023);
+        bezier3({0, -5}, {10, -5}, {0, 5}, {-10, 5}, size_t(1023));
     const double dist_inc = .2;
 
     Vec2 prev = polyline.AdvanceFromBegin().point.pos;
@@ -41,7 +41,7 @@ TEST(PolylineIndex, even_steps) {
 
 TEST(PolylineIndex, edge_case) {
     const PolylineIndex<MotionState, MotionStateLinearInterpolator> polyline =
-        spline_depr::bezier3({0, 0}, {1, 1}, {2, 1}, {3, 0}, 255);
+        bezier3({0, 0}, {1, 1}, {2, 1}, {3, 0}, .1);
 
     const auto end = polyline.AdvanceFromBegin(polyline.Length() + 1e3);
     ASSERT_TRUE(end.reached_end);

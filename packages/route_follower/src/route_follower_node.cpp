@@ -32,13 +32,14 @@ motion::Trajectory makeTrajectory(It begin, It end, const geom::Transform& tf) {
     for (auto curr = begin + 1; curr != end; ++curr) {
         const auto prev = curr - 1;
         const geom::Pose world_pose{
-            .pos = *prev,
+            .pos = geom::toVec2(*prev),
             .dir = geom::AngleVec2::fromVector(geom::toVec2(*curr) - geom::toVec2(*prev))};
 
         trajectory.states.push_back(motion::State{.pose = tf.apply(world_pose)});
     }
 
-    const geom::Pose world_pose{.pos = geom::toVec2(*(end - 1)), .dir = trajectory.states.pose.dir};
+    const geom::Pose world_pose{
+        .pos = geom::toVec2(*(end - 1)), .dir = trajectory.states.back().pose.dir};
 
     trajectory.states.push_back(motion::State{.pose = tf.apply(world_pose)});
     trajectory.fillDistance();
@@ -200,8 +201,8 @@ void RouteFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPt
 }
 
 void RouteFollowerNode::onReset(
-    const std::shared_ptr<std_srvs::srv::Empty::Request>,
-    std::shared_ptr<std_srvs::srv::Empty::Response>) {
+    const std::shared_ptr<std_srvs::srv::Empty::Request> /*unused*/,
+    std::shared_ptr<std_srvs::srv::Empty::Response> /*unused*/) {
     RCLCPP_INFO(this->get_logger(), "Reset path!");
 
     state_.trajectory = motion::Trajectory{};
@@ -243,9 +244,9 @@ void RouteFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
 }
 
 void RouteFollowerNode::onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static) {
-    static const std::string authority;
+    static const std::string kAuthority;
     for (const auto& transform : msg->transforms) {
-        tf_buffer_->setTransform(transform, authority, is_static);
+        tf_buffer_->setTransform(transform, kAuthority, is_static);
     }
 }
 
