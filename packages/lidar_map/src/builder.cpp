@@ -218,9 +218,10 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
     // Add ICP edges
     for (size_t i = 0; i < poses.size(); i++) {
         for (size_t j = i + 1; j < poses.size(); j++) {
-            if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
-                continue;
-            }
+            if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist || 
+            std::abs(static_cast<int>(i) - static_cast<int>(j)) < 12) {
+            continue;
+        }
 
             const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
 
@@ -555,6 +556,33 @@ Clouds Builder::applyDynamicFilter(
     return transformClouds(poses, filtered_clouds, true);
 }
 
+Clouds Builder::applyBoundingBoxFilter(const Clouds& clouds, double value) const {
+    const std::string value_str = std::to_string(value);
+    const std::string neg_value_str = std::to_string(-value);
+
+    PointMatcherSupport::Parametrizable::Parameters bbox_filter_params = {
+        {"xMin", neg_value_str},
+        {"xMax", value_str},
+        {"yMin", neg_value_str},
+        {"yMax", value_str},
+        {"zMin", neg_value_str},
+        {"zMax", value_str},
+    };
+
+    std::shared_ptr<Matcher::DataPointsFilter> bbox_filter =
+        Matcher::get().DataPointsFilterRegistrar.create(
+            "BoundingBoxDataPointsFilter", bbox_filter_params);
+
+    Clouds clouds_filtered;
+
+    for (const auto& cloud : clouds) {
+        clouds_filtered.push_back(bbox_filter->filter(toDataPoints(cloud)).features);
+    }
+
+    return clouds_filtered;
+}
+
+
 /**
  * Down-sample clouds by taking a spatial average of clouds's points
  *
@@ -582,6 +610,30 @@ Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
     }
 
     return clouds_filtered;
+}
+
+Cloud Builder::applyGridFilter(const Cloud& cloud, double cell_size) const {
+    std::cout << "1\n";
+    const std::string cell_size_str = std::to_string(cell_size);
+    std::cout << "2\n";
+    PointMatcherSupport::Parametrizable::Parameters grid_filter_params = {
+        {"vSizeX", cell_size_str},
+        {"vSizeY", cell_size_str},
+        {"vSizeZ", cell_size_str},
+    };
+    std::cout << "3\n";
+    std::shared_ptr<Matcher::DataPointsFilter> grid_filter =
+        Matcher::get().DataPointsFilterRegistrar.create(
+            "VoxelGridDataPointsFilter", grid_filter_params);
+    std::cout << "4\n";
+    std::cout << cloud.cols() << ' ' << cloud.rows() << '\n';
+    auto dp = toDataPoints(cloud);
+    std::cout << "5\n";
+    std::cout << dp.features.cols() << ' ' << dp.features.rows() << '\n';
+    auto s = grid_filter->filter(dp).features;
+    std::cout << "6\n";
+    Cloud result = grid_filter->filter(toDataPoints(cloud)).features;
+    return result;
 }
 
 }  // namespace truck::lidar_map
