@@ -44,7 +44,7 @@ struct PoseGraphInfo {
 
 struct BuilderParams {
     std::string icp_config;
-    double icp_edge_max_dist = 0.6;
+    double icp_edge_max_dist = 3;
     double odom_edge_weight = 1.0;
     double icp_edge_weight = 3.0;
     bool verbose = true;

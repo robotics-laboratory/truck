@@ -118,15 +118,14 @@ int main(int argc, char* argv[]) {
 
     // 2. Construct and optimize pose graph
     {
-        poses = std::vector<decltype(poses)::value_type>(poses.begin(), poses.begin() + 418);
-        clouds = std::vector<Cloud>(clouds.begin(), clouds.begin() + 418);
+        poses = std::vector<decltype(poses)::value_type>(poses.begin(), poses.begin() + 419);
+        clouds = std::vector<Cloud>(clouds.begin(), clouds.begin() + 419);
         clouds = builder.applyBoundingBoxFilter(clouds, 10.0);
         builder.initPoseGraph(poses, clouds);
         if (enable_mcap_log) {
-            // Clouds clouds_filter = builder.applyGridFilter(clouds, 0.3);
             const Cloud lidar_map_on_iteration =
                 builder.mergeClouds(builder.transformClouds(poses, clouds));
-            Cloud lidar_map_on_iteration_f = builder.applyGridFilter(lidar_map_on_iteration, 0.3);
+            Cloud lidar_map_on_iteration_f = builder.applyGridFilter(lidar_map_on_iteration, 0.15);
             mcap_writer->writeCloud(lidar_map_on_iteration_f);
             mcap_writer->writePoses(poses);
             mcap_writer->update();
@@ -142,9 +141,9 @@ int main(int argc, char* argv[]) {
 
             if (enable_mcap_log) {
                 const Cloud lidar_map_on_iteration =
-                    builder.mergeClouds(builder.transformClouds(poses, clouds));
-
-                mcap_writer->writeCloud(lidar_map_on_iteration);
+                builder.mergeClouds(builder.transformClouds(poses, clouds));
+                Cloud lidar_map_on_iteration_f = builder.applyGridFilter(lidar_map_on_iteration, 0.15);
+                mcap_writer->writeCloud(lidar_map_on_iteration_f);
                 mcap_writer->writePoses(poses);
                 mcap_writer->update();
             }
@@ -155,12 +154,8 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // clouds = builder.applyGridFilter(clouds, 0.3);
-
         const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
-        // std::cout << "!!!" << lidar_map.cols() << '\n';
-        Cloud lidar_map_filtered = builder.applyGridFilter(lidar_map, 0.05);
-        // std::cout << "!!!" << lidar_map.cols() << '\n';
+        Cloud lidar_map_filtered = builder.applyGridFilter(lidar_map, 0.15);
         serialization::writer::MCAPWriter::writeCloud(
             mcap_output_folder_path, lidar_map_filtered, kOutputTopicLidarMap);
     }

@@ -565,8 +565,9 @@ Clouds Builder::applyBoundingBoxFilter(const Clouds& clouds, double value) const
         {"xMax", value_str},
         {"yMin", neg_value_str},
         {"yMax", value_str},
-        {"zMin", neg_value_str},
-        {"zMax", value_str},
+        {"zMin", "-inf"},
+        {"zMax", "inf"},
+        {"removeInside", "0"},
     };
 
     std::shared_ptr<Matcher::DataPointsFilter> bbox_filter =
@@ -613,25 +614,16 @@ Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
 }
 
 Cloud Builder::applyGridFilter(const Cloud& cloud, double cell_size) const {
-    std::cout << "1\n";
     const std::string cell_size_str = std::to_string(cell_size);
-    std::cout << "2\n";
     PointMatcherSupport::Parametrizable::Parameters grid_filter_params = {
         {"vSizeX", cell_size_str},
         {"vSizeY", cell_size_str},
         {"vSizeZ", cell_size_str},
     };
-    std::cout << "3\n";
     std::shared_ptr<Matcher::DataPointsFilter> grid_filter =
         Matcher::get().DataPointsFilterRegistrar.create(
             "VoxelGridDataPointsFilter", grid_filter_params);
-    std::cout << "4\n";
-    std::cout << cloud.cols() << ' ' << cloud.rows() << '\n';
-    auto dp = toDataPoints(cloud);
-    std::cout << "5\n";
-    std::cout << dp.features.cols() << ' ' << dp.features.rows() << '\n';
-    auto s = grid_filter->filter(dp).features;
-    std::cout << "6\n";
+
     Cloud result = grid_filter->filter(toDataPoints(cloud)).features;
     return result;
 }
