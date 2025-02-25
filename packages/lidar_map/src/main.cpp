@@ -153,9 +153,11 @@ int main(int argc, char* argv[]) {
                 serialization::writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i);
             }
         }
+        clouds = builder.applyDynamicFilter(poses, clouds, 40.0, 30, 0.5);
 
         const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
         Cloud lidar_map_filtered = builder.applyGridFilter(lidar_map, 0.15);
+
         serialization::writer::MCAPWriter::writeCloud(
             mcap_output_folder_path, lidar_map_filtered, kOutputTopicLidarMap);
     }
