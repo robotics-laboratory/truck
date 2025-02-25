@@ -350,10 +350,11 @@ void MCAPWriter::writeCloudWithAttributes(
     double normals_ratio, std::string frame_name) {
     rosbag2_cpp::Writer writer;
     writer.open(mcap_path);
-    writer.write(msg::toPointCloud2(cloud_with_attributes.cloud, frame_name), "cloud", getTime());
-    std::cout << cloud_with_attributes.normals.has_value() << ' '
-              << cloud_with_attributes.weights.has_value() << '\n';
+
     if (cloud_with_attributes.normals.has_value()) {
+        writer.write(
+            msg::toPointCloud2(cloud_with_attributes.cloud, frame_name), "cloud", getTime());
+
         const Eigen::Matrix3Xf normals = cloud_with_attributes.normals.value();
         visualization_msgs::msg::MarkerArray msg_array;
         size_t points_count = cloud_with_attributes.cloud.cols();
@@ -388,12 +389,7 @@ void MCAPWriter::writeCloudWithAttributes(
     if (cloud_with_attributes.weights.has_value()) {
         Cloud cloud = cloud_with_attributes.cloud;
         const Eigen::VectorXf& weights = cloud_with_attributes.weights.value();
-
-        for (size_t i = 0; i < cloud.cols(); i++) {
-            cloud(3, i) = weights(i);
-        }
-
-        writer.write(msg::toPointCloud2(cloud, frame_name), "weights", getTime());
+        writer.write(msg::toPointCloud2(cloud, weights), "cloud_with_weights", getTime());
     }
 }
 
