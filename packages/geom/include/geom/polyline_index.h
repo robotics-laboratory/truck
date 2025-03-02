@@ -22,6 +22,19 @@ struct AdvanceResult {
     bool reached_end = false;
 };
 
+/// @brief
+/// @tparam P point type (e.g. Vector2, MotionState)
+/// @tparam Interpolator a struct with metods for interpolation of`double`and`P`types
+///
+/// ```
+/// const geom::PolylineIndex<geom::MotionState, geom::MotionStateLinearInterpolator> polyline =
+///     geom::bezier3({0, -5}, {10, -5}, {0, 5}, {-10, 5}, size_t(1023));
+///
+/// for (auto it = polyline.AdvanceFromBegin(dist_inc); !it.reached_end;
+///      it = polyline.AdvanceFrom(it.poly_idx, dist_inc)) {
+///     ...
+/// }
+/// ```
 template<typename P, typename Interpolator>
 class PolylineIndex {
   public:
