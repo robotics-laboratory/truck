@@ -17,9 +17,13 @@ services:
         cache-to:
           # - type=registry,ref=registry.robotics-lab.ru/truck:cache-arm64
           # - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64
+    environment:
+      MEDIAMTX_WEBRTC_HOSTNAME: "${MEDIAMTX_WEBRTC_HOSTNAME:-localhost}"
+      MEDIAMTX_WEBRTC_PORT: "${MEDIAMTX_WEBRTC_PORT:-8189}"
     ports:
       - "${FOXGLOVE_PORT:-8765}:8765"
-      - "${VIDEO_STREAMING_PORT:-8889}:8889"
+      - "${MEDIAMTX_HTTP_PORT:-8889}:8889"
+      - "${MEDIAMTX_WEBRTC_PORT:-8189}:${MEDIAMTX_WEBRTC_PORT:-8189}/udp"
     volumes:
       - "${PWD}:/truck"
       - "/dev:/dev"
