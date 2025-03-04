@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>motion_planner</name>
+  <version>0.0.0</version>
+  <description>motion_planner</description>
+  <maintainer email="fun1ham@gmail.com">xs1nus</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>truck_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>common</depend>
+  <depend>geom</depend>
+  <depend>speed</depend>
+  <depend>collision</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>map</depend>
+  <depend>OpenCV</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
