@@ -11,4 +11,14 @@ Poses toPoses(const MotionStates& states) {
     return poses;
 }
 
+Polyline toPolyline(const MotionStates& states) {
+    Polyline points(states.size());
+
+    std::transform(states.begin(), states.end(), points.begin(), [](const MotionState& state) {
+        return state.pose().pos;
+    });
+
+    return points;
+}
+
 }  // namespace truck::geom

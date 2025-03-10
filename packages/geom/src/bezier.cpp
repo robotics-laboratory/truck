@@ -15,7 +15,6 @@ MotionStates bezier1(const Vec2& p0, const Vec2& p1, size_t n) {
 
     for (size_t i = 0; i < n; ++i) {
         const double t = static_cast<double>(i) / (n - 1);
-        const double t_1 = 1 - t;
         states.push_back(MotionState{.pos = interpolate(p0, p1, t), .dir = dir, .curvature = 0});
     }
 

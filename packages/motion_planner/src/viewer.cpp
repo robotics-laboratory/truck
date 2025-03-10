@@ -5,9 +5,9 @@
 
 namespace truck::motion_planner::viewer {
 
-CVDrawer::CVDrawer(const ViewerConfig& cfg, double res, cv::Rect bbox) :
+CVDrawer::CVDrawer(const ViewerConfig& cfg, double res, const geom::ComplexPolygon& polygon) :
     res_{res},
-    bbox_{bbox},
+    bbox_{cv::boundingRect(toCVPoints(geom::Vec2(0, 0), polygon.outer))},
     origin_{geom::Vec2(bbox_.x, bbox_.y)},
     frame_{cv::Mat(bbox_.size(), CV_8UC3, toCVScalar(cfg.background_color))} {}
 
@@ -23,11 +23,26 @@ cv::Point CVDrawer::toCVPoint(const geom::Vec2& point) const {
     return cv::Point(point.x * res_, point.y * res_) - cv::Point(origin_.x, origin_.y);
 }
 
+cv::Point CVDrawer::toCVPoint(const geom::Vec2& origin, const geom::Vec2& point) const {
+    return cv::Point(point.x * res_, point.y * res_) - cv::Point(origin.x, origin.y);
+}
+
 std::vector<cv::Point> CVDrawer::toCVPoints(const std::vector<geom::Vec2>& points) const {
     std::vector<cv::Point> cv_points;
 
     for (const geom::Vec2& point : points) {
         cv_points.emplace_back(toCVPoint(point));
+    }
+
+    return cv_points;
+}
+
+std::vector<cv::Point> CVDrawer::toCVPoints(
+    const geom::Vec2& origin, const std::vector<geom::Vec2>& points) const {
+    std::vector<cv::Point> cv_points;
+
+    for (const geom::Vec2& point : points) {
+        cv_points.emplace_back(toCVPoint(origin, point));
     }
 
     return cv_points;
@@ -39,18 +54,18 @@ void CVDrawer::drawPoint(const geom::Vec2& point, const DrawerParam& param) {
 
 void CVDrawer::drawPoints(const std::vector<geom::Vec2>& points, const DrawerParam& param) {
     for (const auto& point : points) {
-        drawPoint(point, param.rgb, param.thickness);
+        drawPoint(point, param);
     }
 }
 
 void CVDrawer::drawSegment(const geom::Segment& seg, const DrawerParam& param) {
     cv::line(
-        frame_, toCVPoint(seg.begin), toCVPoint(seg.end), thickness, toCVScalar(rgb), cv::FILLED)
+        frame_, toCVPoint(seg.begin), toCVPoint(seg.end), toCVScalar(param.rgb), param.thickness);
 }
 
 void CVDrawer::drawPolyline(const geom::Polyline& polyline, const DrawerParam& param) {
-    for (size_t i = 1; i < path.size(); i++) {
-        drawer_.drawSegment(geom::Segment{path[i - 1], path[i]}, param.rgb, param.thickness);
+    for (size_t i = 1; i < polyline.size(); i++) {
+        drawSegment(geom::Segment{polyline[i - 1], polyline[i]}, param);
     }
 }
 
@@ -63,11 +78,21 @@ void CVDrawer::fillPoly(
     }
 }
 
+void CVDrawer::dump(const std::string& filename) {
+    /**
+     * Rotate an image around 'x' axis to avoid .png map mirroring
+     * relative to the x-axis of the .geojson map
+     */
+    cv::flip(frame_, frame_, 0);
+    cv::imwrite(filename, frame_);
+}
+
 namespace {
 
 void drawMilestones(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Milestones& milestones) {
     for (const auto& milestone : milestones) {
-        drawer.drawSegment(milestone.toSegment(), cfg.hull.milestones);
+        const geom::Segment segment = milestone.toSegment();
+        drawer.drawSegment(segment, cfg.hull.milestones);
     }
 }
 
@@ -94,8 +119,8 @@ void drawEdges(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& gra
     }
 }
 
-void drawNodes(const ViewerConfig& cfg, CVDrawer& drawer, const graph::Graph& graph) {
-    for (const graph::Node& node : graph.nodes) {
+void drawNodes(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& graph) {
+    for (const hull::Node& node : graph.nodes) {
         drawer.drawPoint(node.pose.pos, cfg.graph.nodes);
     }
 }
@@ -103,27 +128,22 @@ void drawNodes(const ViewerConfig& cfg, CVDrawer& drawer, const graph::Graph& gr
 }  // namespace
 
 Viewer::Viewer(const ViewerConfig& params, const geom::ComplexPolygon& polygon) :
-    cfg_(params),
-    drawer_{params.res, cv::boundingRect(toCVPoints(geom::Vec2(0, 0), params.res, polygon.outer))} {
-}
+    cfg_(params), drawer_{params, params.res, polygon} {}
 
 void Viewer::addPolygon(const geom::ComplexPolygon& polygon) {
     drawer_.fillPoly(polygon, cfg_.polygon.inner, cfg_.polygon.outer);
 }
 
 void Viewer::addHull(const hull::GraphBuild& graph_build) {
-    drawer_.drawPolyline(
-        graph_build.reference.Points(),
-        cfg_.color_rgb.motion.reference,
-        cfg_.thickness.motion.reference);
+    drawer_.drawPolyline(geom::toPolyline(graph_build.reference.Points()), cfg_.motion.reference);
 
-    drawMilestones(cfg_, graph_build.milestones);
-    drawBounds(cfg_, graph_build.milestones);
+    drawMilestones(cfg_, drawer_, graph_build.milestones);
+    drawBounds(cfg_, drawer_, graph_build.milestones);
 }
 
-void Viewer::addGraph(const navigation::graph::Graph& graph) {
-    drawEdges(cfg_, graph);
-    drawNodes(cfg_, graph);
+void Viewer::addGraph(const hull::Graph& graph) {
+    drawEdges(cfg_, drawer_, graph);
+    drawNodes(cfg_, drawer_, graph);
 }
 
 void Viewer::addMotion(const hull::TrajectoryBuild& trajectory_build) {
@@ -131,13 +151,6 @@ void Viewer::addMotion(const hull::TrajectoryBuild& trajectory_build) {
     drawer_.drawPolyline(trajectory_build.trajectory, cfg_.motion.trajectory);
 }
 
-void Viewer::draw() {
-    /**
-     * Rotate an image around 'x' axis to avoid .png map mirroring
-     * relative to the x-axis of the .geojson map
-     */
-    cv::flip(frame_, frame_, 0);
-    cv::imwrite(cfg_.path, frame_);
-}
+void Viewer::draw() { drawer_.dump(cfg_.path); }
 
 }  // namespace truck::motion_planner::viewer

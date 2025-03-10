@@ -16,10 +16,36 @@ find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 
-add_executable(
-  ${PROJECT_NAME}_node src/main.cpp src/motion_planner_node.cpp
-                       src/motion_planner.cpp
+add_library(${PROJECT_NAME} SHARED src/motion_planner.cpp)
+add_library(${PROJECT_NAME}_viewer SHARED src/viewer.cpp src/motion_planner.cpp)
+
+ament_target_dependencies(${PROJECT_NAME} common geom speed collision)
+
+ament_target_dependencies(${PROJECT_NAME}_viewer common geom OpenCV)
+
+ament_export_targets(${PROJECT_NAME}_targets HAS_LIBRARY_TARGET)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}_targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
+
+target_include_directories(
+  ${PROJECT_NAME}
+  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+
+target_include_directories(
+  ${PROJECT_NAME}_viewer
+  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+
+add_executable(${PROJECT_NAME}_node src/main.cpp src/motion_planner_node.cpp)
 
 ament_target_dependencies(
   ${PROJECT_NAME}_node
@@ -52,7 +78,10 @@ if(BUILD_TESTING)
   ament_add_gtest(
     ${PROJECT_NAME}_tests test/main.cpp WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
-  ament_target_dependencies(${PROJECT_NAME}_tests ament_index_cpp)
+  target_link_libraries(
+    ${PROJECT_NAME}_tests ${PROJECT_NAME} ${PROJECT_NAME}_viewer
+  )
+  ament_target_dependencies(${PROJECT_NAME}_tests ament_index_cpp map)
 endif()
 
 # install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})

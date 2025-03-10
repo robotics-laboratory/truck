@@ -2,6 +2,7 @@
 
 #include "geom/pose.h"
 #include "geom/common.h"
+#include "geom/polyline.h"
 #include <vector>
 
 namespace truck::geom {
@@ -17,6 +18,7 @@ struct MotionState {
 using MotionStates = std::vector<MotionState>;
 
 Poses toPoses(const MotionStates& states);
+Polyline toPolyline(const MotionStates& states);
 
 struct MotionStateLinearInterpolator {
     MotionState operator()(const MotionState& from, const MotionState& to, double t) const {

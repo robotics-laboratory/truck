@@ -10,7 +10,7 @@ hull::Milestone::Milestone(
 
 geom::Pose hull::Milestone::guide(double offset) const {
     VERIFY(Limits(-left_ledge, right_ledge).isMet(offset));
-    return geom::Pose{.pos = (pose.dir.right().vec() * offset), .dir = pose.dir};
+    return geom::Pose{.pos = (pose.dir.right().vec() * offset) + pose.pos, .dir = pose.dir};
 }
 
 geom::Poses hull::Milestone::getSpacedOutGuides(double spacing) const {
@@ -38,13 +38,14 @@ geom::Segment hull::Milestone::toSegment() const {
 
 GraphBuilder::GraphBuilder(const hull::GraphParams& params) : params_{params} {}
 
-hull::Graph GraphBuilder::buildGraph(const Reference& reference) const {
+hull::GraphBuild GraphBuilder::buildGraph(const Reference& reference) const {
     hull::GraphBuild build = hull::GraphBuild{.reference = reference};
     makeMilestones(build);
     makeNodes(build);
     makeEdges(build);
 
-    return hull::Graph{.nodes = std::move(build.nodes), .edges = std::move(build.edges)};
+    // return hull::Graph{.nodes = std::move(build.nodes), .edges = std::move(build.edges)};
+    return build;
 }
 
 void GraphBuilder::makeMilestones(hull::GraphBuild& build) const {

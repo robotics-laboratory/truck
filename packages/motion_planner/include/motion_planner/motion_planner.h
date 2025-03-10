@@ -42,6 +42,7 @@ struct Node {
     NodeId id;
     geom::Pose pose;
     std::vector<EdgeId> edges;
+    // int id_milestone_offset;
 };
 
 struct Edge {
@@ -76,7 +77,7 @@ class GraphBuilder {
   public:
     GraphBuilder(const hull::GraphParams& params);
 
-    hull::Graph buildGraph(const Reference& reference) const;
+    hull::GraphBuild buildGraph(const Reference& reference) const;
 
   private:
     void makeMilestones(hull::GraphBuild& build) const;
