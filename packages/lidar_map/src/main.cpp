@@ -18,8 +18,8 @@ namespace po = boost::program_options;
 const std::string kInputTopicPointCloud = "/livox/lidar";
 const std::string kInputTopicOdom = "/ekf/odometry/filtered";
 const std::string kOutputTopicLidarMap = "/lidar_map";
-const int points_intensity_threshold = 15;
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
+const int kPointsIntensityThreshold = 15;
 
 int main(int argc, char* argv[]) {
     bool enable_mcap_log = false;
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 
         const auto all_poses = toPoses(synced_odom_msgs);
 
-        const auto all_clouds = toClouds(synced_point_cloud_msgs, points_intensity_threshold);
+        const auto all_clouds = toClouds(synced_point_cloud_msgs, kPointsIntensityThreshold);
 
         std::tie(poses, clouds) = builder.sliceDataByPosesProximity(all_poses, all_clouds, 8.0);
 
