@@ -21,6 +21,7 @@ const std::string kOutputTopicLidarMap = "/lidar_map";
 const std::string kOutputTopicPoses = "/poses";
 const std::string kOutputTopicClouds = "/clouds";
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
+const int kPointsIntensityThreshold = 15;
 
 int main(int argc, char* argv[]) {
     bool enable_mcap_log = false;
@@ -81,7 +82,7 @@ int main(int argc, char* argv[]) {
 
     Builder builder = Builder(builder_params);
 
-    const size_t optimization_steps = 0;
+    const size_t optimization_steps = 10;
     const double min_poses_dist = 4.0;
 
     std::shared_ptr<serialization::writer::MCAPWriter> mcap_writer = nullptr;

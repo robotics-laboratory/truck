@@ -11,9 +11,10 @@ namespace truck::lidar_map {
 
 geom::Poses toPoses(const std::vector<nav_msgs::msg::Odometry>& odom_msgs);
 
-Cloud toCloud(const sensor_msgs::msg::PointCloud2& scan);
+Cloud toCloud(const sensor_msgs::msg::PointCloud2& scan, const int intensity_threshold = 0);
 
-Clouds toClouds(const std::vector<sensor_msgs::msg::PointCloud2>& scans);
+Clouds toClouds(
+    const std::vector<sensor_msgs::msg::PointCloud2>& scans, const int intensity_threshold = 0);
 
 namespace msg {
 
