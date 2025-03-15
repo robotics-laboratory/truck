@@ -21,23 +21,60 @@ geom::Poses toPoses(const std::vector<nav_msgs::msg::Odometry>& odom_msgs) {
     return poses;
 }
 
+
+float getIntensity(const sensor_msgs::msg::PointCloud2& point_cloud, size_t point_index) {
+    int intensity_offset = -1;
+    size_t i = 0;
+
+    while (i < point_cloud.fields.size() && intensity_offset == -1) {
+        if (point_cloud.fields[i].name == "intensity") {
+            intensity_offset = point_cloud.fields[i].offset;
+        }
+        ++i;
+    }
+
+    if (intensity_offset == -1) {
+        throw std::runtime_error("Field 'intensity' not found in PointCloud2!");
+    }
+
+    if (point_index >= point_cloud.width * point_cloud.height) {
+        throw std::out_of_range("Point index is out of range!");
+    }
+
+    size_t byte_index = point_index * point_cloud.point_step + intensity_offset;
+    return *reinterpret_cast<const float*>(&point_cloud.data[byte_index]);
+}
+
+
 Cloud toCloud(const sensor_msgs::msg::PointCloud2& point_cloud) {
     pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
     pcl::PCLPointCloud2 pcl_pc2;
+    pcl::PointCloud<pcl::PointXYZI> pcl_cloud2;
+
+    pcl::fromROSMsg(point_cloud, pcl_cloud2);
     pcl_conversions::toPCL(point_cloud, pcl_pc2);
     pcl::fromPCLPointCloud2(pcl_pc2, pcl_cloud);
 
+    
+    std::vector<Eigen::Vector4f> filtered_points;
     const size_t point_count = pcl_cloud.size();
-    Cloud cloud(4, point_count);
-
     for (size_t j = 0; j < point_count; ++j) {
         const auto& point = pcl_cloud.points[j];
+        float intensity = pcl_cloud2.points[j].intensity;
+        if (intensity > 10) {
+            filtered_points.emplace_back(point.x, point.y, point.z, 1.0f);
+        }
+    }
 
-        cloud(0, j) = point.x;
-        cloud(1, j) = point.y;
-        cloud(2, j) = point.z;
+    const size_t point_count2 = filtered_points.size();
+    Cloud cloud(4, point_count2);
+    for (size_t j = 0; j < point_count2; ++j) {
+        cloud(0, j) = filtered_points[j][0];
+        cloud(1, j) = filtered_points[j][1];
+        cloud(2, j) = filtered_points[j][2];
         cloud(3, j) = 1.0;
     }
+
 
     return cloud;
 }

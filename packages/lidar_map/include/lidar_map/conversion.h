@@ -6,10 +6,13 @@
 
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/msg/point_field.hpp>
 
 namespace truck::lidar_map {
 
 geom::Poses toPoses(const std::vector<nav_msgs::msg::Odometry>& odom_msgs);
+
+float getIntensity(const sensor_msgs::msg::PointCloud2& point_cloud, size_t point_index);
 
 Cloud toCloud(const sensor_msgs::msg::PointCloud2& scan);
 

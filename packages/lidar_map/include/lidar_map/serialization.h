@@ -62,7 +62,9 @@ class MCAPWriter {
     static void writeCloud(
         const std::string& mcap_path, const Cloud& cloud, const std::string& topic_name,
         std::string frame_name = "");
-
+        
+    static void writeClouds(
+            const std::string& mcap_path, const Cloud& cloud3, const Cloud& cloud1, const Cloud& cloud2);
     static void writeCloudWithAttributes(
         const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
         double normals_ratio = 0.5, std::string frame_name = "");
