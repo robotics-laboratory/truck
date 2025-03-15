@@ -1,3 +1,4 @@
+#include "geom/common.h"
 #include "geom/pose.h"
 
 #include "common/exception.h"

@@ -2,6 +2,7 @@
 
 #include "geom/angle_vector.h"
 #include "geom/vector.h"
+#include "geom/common.h"
 
 #include <ostream>
 #include <vector>
