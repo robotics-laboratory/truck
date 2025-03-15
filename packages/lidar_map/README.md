@@ -59,7 +59,8 @@ CloudWithAttributes reference_cloud_with_attr = {
 serialization::writer::MCAPWriter::writeCloudWithAttributes(
     "data/logs/reference_cloud_with_attr",        // path to save mcap file
     reference_cloud_with_attr,                    // cloud
-    "world",                                      // frame
+    "/cloud",                                     // topic name
+    "world",                                      // frame name
     70                                            // ratio of normals to be visualized
 );
 ```
@@ -75,6 +76,7 @@ CloudWithAttributes reading_cloud_with_attr = {
 serialization::writer::MCAPWriter::writeCloudWithAttributes(
     "data/logs/reading_cloud_with_attr",          // path to save mcap file
     reading_cloud_with_attr,                      // cloud
+    "/cloud",                                     // topic name
     "world"                                       // frame
 );
 ```
