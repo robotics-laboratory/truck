@@ -2,6 +2,9 @@
 
 #include "geom/pose.h"
 #include "lidar_map/common.h"
+#include "geom/bounding_box.h"
+#include "geom/segment.h"
+#include "geom/vector.h"
 
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/core/hyper_graph.h>
@@ -36,6 +39,9 @@ struct PoseInfo {
 
 using EdgesInfo = std::vector<EdgeInfo>;
 using PosesInfo = std::vector<PoseInfo>;
+using BoundingBox = truck::geom::BoundingBox;
+using Segment = truck::geom::Segment;
+using Vec2 = truck::geom::Vec2;
 
 struct PoseGraphInfo {
     EdgesInfo edges;
@@ -45,8 +51,11 @@ struct PoseGraphInfo {
 struct BuilderParams {
     std::string icp_config;
     double icp_edge_max_dist = 0.6;
+    double icp_edge_min_dist = 1.0;
     double odom_edge_weight = 1.0;
     double icp_edge_weight = 3.0;
+    int ktree_neighbors_clount = 10;
+    double min_poses_dist = 1.0;
     bool verbose = true;
 };
 
@@ -56,6 +65,12 @@ class Builder {
 
     std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(
         const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const;
+
+    double segmentDistance(const Segment& seg1, const Segment& seg2);
+
+    BoundingBox computeBoundingBox(const truck::geom::Segment& segment);
+
+    bool segmentsIntersect(const Segment& s1, const Segment& s2);
 
     void initPoseGraph(const geom::Poses& poses, const Clouds& clouds);
 

@@ -7,6 +7,7 @@
 #include "geom/distance.h"
 
 #include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
@@ -17,6 +18,7 @@
 namespace truck::lidar_map {
 
 namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 using IndexPoint = std::pair<geom::Vec2, size_t>;
 using IndexPoints = std::vector<IndexPoint>;
@@ -24,6 +26,9 @@ using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
 using BlockSolverType = g2o::BlockSolver<g2o::BlockSolverTraits<3, 3>>;
 using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>;
+
+using Vec2 = truck::geom::Vec2;
+using SegmentValue = std::pair<truck::geom::BoundingBox, truck::geom::Segment>;
 
 namespace {
 
@@ -173,6 +178,62 @@ std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
 }
 
 /**
+ * Computes the shortest distance between two line segments.
+ *
+ * @param seg1 First line segment.
+ * @param seg2 Second line segment.
+ * @return Minimum Euclidean distance between the two segments.
+ */
+double Builder::segmentDistance(const Segment& seg1, const Segment& seg2) {
+    return std::min(
+        {geom::distance(seg1.begin, projection(seg1.begin, seg2)),
+         geom::distance(seg1.end, projection(seg1.end, seg2)),
+         geom::distance(seg2.begin, projection(seg2.begin, seg1)),
+         geom::distance(seg2.end, projection(seg2.end, seg1))});
+}
+
+/**
+ * Computes the bounding box for a given segment.
+ *
+ * @param segment The input line segment.
+ * @return BoundingBox object that encloses the segment.
+ */
+BoundingBox Builder::computeBoundingBox(const truck::geom::Segment& segment) {
+    return BoundingBox(
+        Vec2(std::min(segment.begin.x, segment.end.x), std::min(segment.begin.y, segment.end.y)),
+        Vec2(std::max(segment.begin.x, segment.end.x), std::max(segment.begin.y, segment.end.y)));
+}
+
+/**
+ * Determines whether two line segments intersect.
+ *
+ * @param s1 First line segment.
+ * @param s2 Second line segment.
+ * @return True if the segments intersect, false else.
+ */
+bool Builder::segmentsIntersect(const Segment& s1, const Segment& s2) {
+    auto orientation = [](const Vec2& a, const Vec2& b, const Vec2& c) {
+        return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    };
+
+    double o1 = orientation(s1.begin, s1.end, s2.begin);
+    double o2 = orientation(s1.begin, s1.end, s2.end);
+    double o3 = orientation(s2.begin, s2.end, s1.begin);
+    double o4 = orientation(s2.begin, s2.end, s1.end);
+
+    if ((o1 * o2 < 0) && (o3 * o4 < 0)) {
+        return true;
+    }
+
+    if ((s1.begin.x == s2.begin.x && s1.begin.y == s2.begin.y)
+        || (s1.end.x == s2.end.x && s1.end.y == s2.end.y)) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * Initialize pose graph
  *
  * Input:
@@ -214,31 +275,55 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
     }
 
     auto data_points_clouds = toDataPoints(clouds);
-
+    bgi::rtree<SegmentValue, bgi::quadratic<16>> rtree;
     // Add ICP edges
     for (size_t i = 0; i < poses.size(); i++) {
         for (size_t j = i + 1; j < poses.size(); j++) {
-            if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
+            if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist
+                || std::abs(static_cast<int>(i) - static_cast<int>(j))
+                       <= params_.icp_edge_max_dist / params_.min_poses_dist) {
                 continue;
             }
 
-            const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
+            Vec2 start(poses[i].pos.x, poses[i].pos.y);
+            Vec2 end(poses[j].pos.x, poses[j].pos.y);
+            Segment segment(start, end);
+            BoundingBox bbox = computeBoundingBox(segment);
 
-            const auto& reference_cloud = data_points_clouds[i];
-            auto reading_cloud = data_points_clouds[j];
-            icp_.transformations.apply(reading_cloud, tf_matrix_odom);
-            normalize(reading_cloud);
-            const Eigen::Matrix4f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
-            const Eigen::Matrix4f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
-            auto* edge = new g2o::EdgeSE2();
-            edge->setVertex(0, vertices[i]);
-            edge->setVertex(1, vertices[j]);
-            edge->setMeasurement(toSE2(tf_matrix_final));
-            edge->setInformation(Eigen::Matrix3d::Identity() * params_.icp_edge_weight);
-            auto* userData = new EdgeData(1);
-            edge->setUserData(userData);
+            std::vector<SegmentValue> nearest_segments;
+            rtree.query(
+                bgi::nearest(bbox, params_.ktree_neighbors_clount),
+                std::back_inserter(nearest_segments));
 
-            optimizer_.addEdge(edge);
+            bool can_add = true;
+            for (const auto& [existing_bbox, existing_segment] : nearest_segments) {
+                if (segmentDistance(segment, existing_segment) < params_.icp_edge_min_dist
+                    || segmentsIntersect(segment, existing_segment)) {
+                    can_add = false;
+                    break;
+                }
+            }
+
+            if (can_add) {
+                const Eigen::Matrix4f tf_matrix_odom = transformationMatrix(poses[i], poses[j]);
+
+                const auto& reference_cloud = data_points_clouds[i];
+                auto reading_cloud = data_points_clouds[j];
+                icp_.transformations.apply(reading_cloud, tf_matrix_odom);
+                normalize(reading_cloud);
+                const Eigen::Matrix4f tf_matrix_icp = icp_(reading_cloud, reference_cloud);
+                const Eigen::Matrix4f tf_matrix_final = tf_matrix_icp * tf_matrix_odom;
+                auto* edge = new g2o::EdgeSE2();
+                edge->setVertex(0, vertices[i]);
+                edge->setVertex(1, vertices[j]);
+                edge->setMeasurement(toSE2(tf_matrix_final));
+                edge->setInformation(Eigen::Matrix3d::Identity() * params_.icp_edge_weight);
+                auto* userData = new EdgeData(1);
+                edge->setUserData(userData);
+
+                optimizer_.addEdge(edge);
+                rtree.insert(std::make_pair(bbox, segment));
+            }
         }
     }
 
