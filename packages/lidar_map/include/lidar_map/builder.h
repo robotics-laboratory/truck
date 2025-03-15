@@ -74,6 +74,11 @@ class Builder {
         const geom::Poses& poses, const Clouds& clouds_base, double clouds_search_rad,
         size_t min_sim_points_count, double max_sim_points_dist) const;
 
+    Eigen::VectorXf calculateWeightsForReadingCloud(
+        const Cloud& reading_cloud, const Cloud& reference_cloud);
+
+    Eigen::Matrix3Xf calculateNormalsForReferenceCloud(const Cloud& reference_cloud);
+
   private:
     ICP icp_;
     g2o::SparseOptimizer optimizer_;

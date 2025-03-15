@@ -93,6 +93,58 @@ sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string fram
     return result;
 }
 
+sensor_msgs::msg::PointCloud2 toPointCloud2(
+    const Cloud& cloud, const Eigen::VectorXf& weights, std::string frame_id) {
+    sensor_msgs::msg::PointCloud2 result;
+
+    result.header.frame_id = frame_id;
+    result.height = 1;
+    result.width = cloud.cols();
+    result.fields.resize(5);
+
+    result.fields[0].name = "x";
+    result.fields[0].offset = 0;
+    result.fields[0].datatype = sensor_msgs::msg::PointField::FLOAT32;
+    result.fields[0].count = 1;
+
+    result.fields[1].name = "y";
+    result.fields[1].offset = 4;
+    result.fields[1].datatype = sensor_msgs::msg::PointField::FLOAT32;
+    result.fields[1].count = 1;
+
+    result.fields[2].name = "z";
+    result.fields[2].offset = 8;
+    result.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32;
+    result.fields[2].count = 1;
+
+    result.fields[3].name = "w";
+    result.fields[3].offset = 12;
+    result.fields[3].datatype = sensor_msgs::msg::PointField::FLOAT32;
+    result.fields[3].count = 1;
+
+    result.fields[4].name = "weights";
+    result.fields[4].offset = 16;
+    result.fields[4].datatype = sensor_msgs::msg::PointField::FLOAT32;
+    result.fields[4].count = 1;
+
+    result.point_step = 20;
+    result.row_step = result.point_step * result.width;
+    result.is_bigendian = isBigendian();
+    result.is_dense = true;
+
+    result.data.resize(result.row_step * result.height);
+
+    for (size_t i = 0; i < cloud.cols(); i++) {
+        std::memcpy(&result.data[i * result.point_step], &cloud(0, i), sizeof(float));
+        std::memcpy(&result.data[i * result.point_step + 4], &cloud(1, i), sizeof(float));
+        std::memcpy(&result.data[i * result.point_step + 8], &cloud(2, i), sizeof(float));
+        std::memcpy(&result.data[i * result.point_step + 12], &cloud(3, i), sizeof(float));
+        std::memcpy(&result.data[i * result.point_step + 16], &weights(i), sizeof(float));
+    }
+
+    return result;
+}
+
 }  // namespace msg
 
 }  // namespace truck::lidar_map

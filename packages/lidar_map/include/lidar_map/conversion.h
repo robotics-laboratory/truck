@@ -19,6 +19,9 @@ namespace msg {
 
 sensor_msgs::msg::PointCloud2 toPointCloud2(const Cloud& cloud, std::string frame_id = "world");
 
+sensor_msgs::msg::PointCloud2 toPointCloud2(
+    const Cloud& cloud, const Eigen::VectorXf& weights, std::string frame_id = "world");
+
 }  // namespace msg
 
 }  // namespace truck::lidar_map
