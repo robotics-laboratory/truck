@@ -347,13 +347,13 @@ void MCAPWriter::writeCloud(
 
 void MCAPWriter::writeCloudWithAttributes(
     const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
-    double normals_ratio, std::string frame_name) {
+    std::string frame_name, double normals_ratio) {
     rosbag2_cpp::Writer writer;
     writer.open(mcap_path);
 
     if (cloud_with_attributes.normals.has_value()) {
         writer.write(
-            msg::toPointCloud2(cloud_with_attributes.cloud, frame_name), "cloud", getTime());
+            msg::toPointCloud2(cloud_with_attributes.cloud, frame_name), "/cloud", getTime());
 
         const Eigen::Matrix3Xf normals = cloud_with_attributes.normals.value();
         visualization_msgs::msg::MarkerArray msg_array;
@@ -383,13 +383,13 @@ void MCAPWriter::writeCloudWithAttributes(
             msg_array.markers.push_back(msg_);
         }
 
-        writer.write(msg_array, "normals", getTime());
+        writer.write(msg_array, "/normals", getTime());
     }
 
     if (cloud_with_attributes.weights.has_value()) {
         Cloud cloud = cloud_with_attributes.cloud;
         const Eigen::VectorXf& weights = cloud_with_attributes.weights.value();
-        writer.write(msg::toPointCloud2(cloud, weights), "cloud_with_weights", getTime());
+        writer.write(msg::toPointCloud2(cloud, weights), "/cloud_with_weights", getTime());
     }
 }
 

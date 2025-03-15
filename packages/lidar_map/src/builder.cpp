@@ -372,7 +372,7 @@ Cloud Builder::mergeClouds(const Clouds& clouds) {
 }
 
 /**
- * get outliers weights for cloud
+ * Calculate outliers weights for cloud
  */
 Eigen::VectorXf Builder::calculateWeightsForReadingCloud(
     const Cloud& reading_cloud, const Cloud& reference_cloud) {
@@ -394,7 +394,7 @@ Eigen::VectorXf Builder::calculateWeightsForReadingCloud(
 }
 
 /**
- * get normals for cloud
+ * Calculate normals for cloud
  */
 Eigen::Matrix3Xf Builder::calculateNormalsForReferenceCloud(const Cloud& reference_cloud) {
     DataPoints reference_dp = toDataPoints(reference_cloud);

@@ -52,8 +52,6 @@ struct BuilderParams {
 
 class Builder {
   public:
-    std::vector<CloudWithAttributes> clouds_with_attributes;
-
     Builder(const BuilderParams& params);
 
     std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(

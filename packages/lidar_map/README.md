@@ -1,4 +1,4 @@
-# 2D LiDAR Map Builder
+# 3D LiDAR Map Builder
 
 This package allows to build 3D LiDAR map of environment by providing bag file of `.mcap` format with recorded odometry and LiDAR topics.
 
@@ -48,29 +48,33 @@ ros2 run lidar_map lidar_map_executable
 ```
 ### Debug
 
-To visualize the normals or outliers weights, add this to main.cpp.
+Calculate and visualize normals for `reference_cloud`:
 
 ```c++
-//Calculate attributes for reference and reading clouds
-  CloudWithAttributes reference_cloud_with_attr = {
-        .cloud = clouds[1],
-        .normals = builder.calculateNormalsForReferenceCloud(clouds[1]),
-        };
+CloudWithAttributes reference_cloud_with_attr = {
+  .cloud = reference_cloud,
+  .normals = builder.calculateNormalsForReferenceCloud(reference_cloud),
+};
 
-  CloudWithAttributes reading_cloud_with_attr = {
-        .cloud = clouds[0],
-        .weights = builder.calculateWeightsForReadingCloud(clouds[0], clouds[1]),
-        };
+serialization::writer::MCAPWriter::writeCloudWithAttributes(
+    "data/logs/reference_cloud_with_attr",        // path to save mcap file
+    reference_cloud_with_attr,                    // cloud
+    "world",                                      // frame
+    70                                            // ratio of normals to be visualized
+);
+```
 
-  serialization::writer::MCAPWriter::writeCloudWithAttributes(
-      "data/logs/reference_cloud_with_attr", // path where the mcap file will be saved
-      reference_cloud_with_attr,
-      70, // percentage of normals to be visualized
-      "world"); // frame name
+Calculate and visualize outliers weights for `reading_cloud`:
 
-  serialization::writer::MCAPWriter::writeCloudWithAttributes(
-      "data/logs/reading_cloud_with_attr", // path where the mcap file will be saved
-      reading_cloud_with_attr,
-      70, // percentage of normals to be visualized
-      "world"); // frame name
+```c++
+CloudWithAttributes reading_cloud_with_attr = {
+  .cloud = reading_cloud,
+  .weights = builder.calculateWeightsForReadingCloud(clouds[0], clouds[1])
+};
+
+serialization::writer::MCAPWriter::writeCloudWithAttributes(
+    "data/logs/reading_cloud_with_attr",          // path to save mcap file
+    reading_cloud_with_attr,                      // cloud
+    "world"                                       // frame
+);
 ```

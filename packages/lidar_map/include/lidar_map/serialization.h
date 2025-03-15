@@ -65,7 +65,7 @@ class MCAPWriter {
 
     static void writeCloudWithAttributes(
         const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
-        double normals_ratio = 0.5, std::string frame_name = "");
+        std::string frame_name = "", double normals_ratio = 0.5);
 
   private:
     size_t msg_id_ = 0;
