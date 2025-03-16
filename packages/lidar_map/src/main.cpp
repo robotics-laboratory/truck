@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        clouds = builder.applyGridFilter(clouds, 0.5);
+        clouds = builder.applyGridFilter(clouds);
 
         const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
 

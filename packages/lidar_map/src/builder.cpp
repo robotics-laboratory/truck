@@ -296,12 +296,14 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
                 std::back_inserter(nearest_segments));
 
             bool can_add = true;
-            for (const auto& [existing_bbox, existing_segment] : nearest_segments) {
+            auto it = nearest_segments.begin();
+            while (it != nearest_segments.end() && can_add) {
+                const auto& [existing_bbox, existing_segment] = *it;
                 if (segmentDistance(segment, existing_segment) < params_.icp_edge_min_dist
                     || segmentsIntersect(segment, existing_segment)) {
                     can_add = false;
-                    break;
                 }
+                ++it;
             }
 
             if (can_add) {
