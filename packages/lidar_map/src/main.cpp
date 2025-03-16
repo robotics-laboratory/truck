@@ -22,7 +22,7 @@ const std::string kOutputTopicPoses = "/poses";
 const std::string kOutputTopicClouds = "/clouds";
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
 const std::string kIcpConfigPath = kPkgPathLidarMap + "/config/icp.yaml";
-const int kPointsIntensityThreshold = 15;
+const int kPointsIntensityThreshold = 50;
 const double kMinPosesDist = 1.0;
 const double kIcpEdgeMaxDist = 3.0;
 const double kIcpEdgeMinDist = 1.0;
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
                 mcap_input_path, kInputTopicOdom, kInputTopicPointCloud, kMinPosesDist);
 
         poses = toPoses(odom_msgs);
-        clouds = toClouds(point_cloud_msgs);
+        clouds = toClouds(point_cloud_msgs, kPointsIntensityThreshold);
 
         const auto rotate_poses_by_angle_PI = [](auto& poses) {
             for (auto& pose : poses) {
@@ -127,13 +127,16 @@ int main(int argc, char* argv[]) {
 
     // 2. Construct and optimize pose graph
     {
+        clouds = builder.applyBoundingBoxFilter(clouds, 10.0);
         builder.initPoseGraph(poses, clouds);
 
         if (enable_mcap_log) {
             const Cloud lidar_map_on_iteration =
                 builder.mergeClouds(builder.transformClouds(poses, clouds));
+            const Cloud lidar_map_on_iteration_fitered =
+                builder.applyGridFilter(lidar_map_on_iteration, 0.15);
 
-            mcap_writer->writeCloud(lidar_map_on_iteration);
+            mcap_writer->writeCloud(lidar_map_on_iteration_fitered);
             mcap_writer->writePoses(poses);
             mcap_writer->update();
         }
@@ -149,8 +152,10 @@ int main(int argc, char* argv[]) {
             if (enable_mcap_log) {
                 const Cloud lidar_map_on_iteration =
                     builder.mergeClouds(builder.transformClouds(poses, clouds));
+                const Cloud lidar_map_on_iteration_fitered =
+                    builder.applyGridFilter(lidar_map_on_iteration, 0.15);
 
-                mcap_writer->writeCloud(lidar_map_on_iteration);
+                mcap_writer->writeCloud(lidar_map_on_iteration_fitered);
                 mcap_writer->writePoses(poses);
                 mcap_writer->update();
             }
@@ -161,11 +166,10 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        clouds = builder.applyGridFilter(clouds);
-
         const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
+        Cloud lidar_map_filtered = builder.applyGridFilter(lidar_map, 0.15);
 
         serialization::writer::MCAPWriter::writeCloud(
-            mcap_output_folder_path, lidar_map, kOutputTopicLidarMap);
+            mcap_output_folder_path, lidar_map_filtered, kOutputTopicLidarMap);
     }
 }
