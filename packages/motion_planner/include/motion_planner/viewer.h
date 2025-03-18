@@ -89,7 +89,7 @@ class Viewer {
 
     void addPolygon(const geom::ComplexPolygon& polygon);
     void addHull(const hull::GraphBuild& graph_build);
-    void addGraph(const hull::Graph& graph);
+    void addGraph(const hull::GraphBuild& graph_build);
     void addMotion(const hull::TrajectoryBuild& trajectory_build);
 
     void draw();

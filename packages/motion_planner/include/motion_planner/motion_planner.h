@@ -14,14 +14,23 @@ using MilestoneId = size_t;
 using NodeId = size_t;
 using EdgeId = size_t;
 
+using MilestoneIds = std::vector<MilestoneId>;
+using NodeIds = std::vector<NodeId>;
+using EdgeIds = std::vector<EdgeId>;
+
 namespace hull {
+
+using Guide = geom::Pose;
+using IndexGuide = std::pair<int, Guide>;
+using IndexGuides = std::vector<IndexGuide>;
 
 class Milestone {
   public:
-    Milestone(size_t id, const geom::Pose& pose, double left_ledge, double right_ledge) noexcept;
-    geom::Pose guide(double offset) const;
-    geom::Poses getSpacedOutGuides(double spacing) const;
-    std::pair<geom::Pose, geom::Pose> getEndpoints() const;
+    Milestone(
+        MilestoneId id, const geom::Pose& pose, double left_ledge, double right_ledge) noexcept;
+    Guide guide(double offset) const;
+    IndexGuides getSpacedOutGuides(double spacing) const;
+    std::pair<Guide, Guide> getEndpoints() const;
     geom::Segment toSegment() const;
 
     MilestoneId id;
@@ -42,10 +51,12 @@ struct Node {
     NodeId id;
     geom::Pose pose;
     std::vector<EdgeId> edges;
-    // int id_milestone_offset;
+    MilestoneId milestone_id;
+    int milestone_offset;
 };
 
 struct Edge {
+    EdgeId id;
     NodeId from, to;
     double weight;
 };
@@ -63,7 +74,7 @@ struct GraphBuild {
     Milestones milestones = {};
     Nodes nodes = {};
     Edges edges = {};
-    std::vector<std::size_t> node_milestone_map = {};
+    std::vector<NodeIds> milestone_nodes = {};
 };
 
 struct TrajectoryBuild {

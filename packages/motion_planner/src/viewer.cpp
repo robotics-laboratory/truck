@@ -110,7 +110,7 @@ void drawBounds(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Milestone
     }
 }
 
-void drawEdges(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& graph) {
+void drawEdges(const ViewerConfig& cfg, CVDrawer& drawer, const hull::GraphBuild& graph) {
     for (const hull::Edge& edge : graph.edges) {
         const geom::Vec2& from = graph.nodes[edge.from].pose.pos;
         const geom::Vec2& to = graph.nodes[edge.to].pose.pos;
@@ -119,7 +119,7 @@ void drawEdges(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& gra
     }
 }
 
-void drawNodes(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& graph) {
+void drawNodes(const ViewerConfig& cfg, CVDrawer& drawer, const hull::GraphBuild& graph) {
     for (const hull::Node& node : graph.nodes) {
         drawer.drawPoint(node.pose.pos, cfg.graph.nodes);
     }
@@ -141,9 +141,9 @@ void Viewer::addHull(const hull::GraphBuild& graph_build) {
     drawBounds(cfg_, drawer_, graph_build.milestones);
 }
 
-void Viewer::addGraph(const hull::Graph& graph) {
-    drawEdges(cfg_, drawer_, graph);
-    drawNodes(cfg_, drawer_, graph);
+void Viewer::addGraph(const hull::GraphBuild& graph_build) {
+    drawEdges(cfg_, drawer_, graph_build);
+    drawNodes(cfg_, drawer_, graph_build);
 }
 
 void Viewer::addMotion(const hull::TrajectoryBuild& trajectory_build) {
