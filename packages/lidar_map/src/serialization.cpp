@@ -354,6 +354,17 @@ void MCAPWriter::writeClouds(
     writer.write(msg::toPointCloud2(cloud2, "world"), "cloud2", getTime());
 }
 
+void MCAPWriter::writeClouds2(const std::string& mcap_path, const std::vector<Cloud>& clouds) {
+    rosbag2_cpp::Writer writer;
+    writer.open(mcap_path);
+    
+    for (size_t i = 0; i < clouds.size(); ++i) {
+        std::string topic_name = "cloud_" + std::to_string(i);
+        writer.write(msg::toPointCloud2(clouds[i], "world"), topic_name, getTime());
+    }
+}
+
+
 void MCAPWriter::writeCloudWithAttributes(
     const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
     double normals_ratio, std::string frame_name) {

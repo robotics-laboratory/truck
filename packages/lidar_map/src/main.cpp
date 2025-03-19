@@ -130,9 +130,9 @@ int main(int argc, char* argv[]) {
 
         // TODO (apmilko): fix clouds orientation
         rotate_poses_by_angle_PI(poses);
-        // clouds = builder.transformClouds(poses, clouds);
-        // DP cloud1 = toDataPoints(clouds[2046]);
-        // DP cloud2 = toDataPoints(clouds[1802]);
+        clouds = builder.transformClouds(poses, clouds);
+        // DP cloud1 = toDataPoints(clouds[266]);
+        // DP cloud2 = toDataPoints(clouds[267]);
         // std::ifstream icp_config_stream("/root/truck/packages/lidar_map/config/icp.yaml");
         // PM::ICP icp;
         // icp.loadFromYaml(icp_config_stream);
@@ -140,7 +140,9 @@ int main(int argc, char* argv[]) {
 
         // DP cloud3(cloud1);
         // icp.transformations.apply(cloud3, T);
+        // DP cloud3 = toDataPoints(clouds[268]);
         // serialization::writer::MCAPWriter::writeClouds(mcap_output_folder_path, cloud3.features, cloud1.features, cloud2.features);
+        serialization::writer::MCAPWriter::writeClouds2(mcap_output_folder_path, std::vector<Cloud>(clouds.begin() + 293, clouds.begin() + 308));
     }
     
     // 2. Construct and optimize pose graph
@@ -154,46 +156,46 @@ int main(int argc, char* argv[]) {
 
         // clouds = clouds1;
         // clouds.insert(clouds.end(), clouds2.begin(), clouds2.end());
-        clouds = builder.applyBoundingBoxFilter(clouds, 10.0);
+        // clouds = builder.applyBoundingBoxFilter(clouds, 10.0);
         
-        builder.initPoseGraph(poses, clouds);
-        if (enable_mcap_log) {
-            const Cloud lidar_map_on_iteration =
-                builder.mergeClouds(builder.transformClouds(poses, clouds));
-            Cloud lidar_map_on_iteration_f = builder.applyGridFilter(lidar_map_on_iteration, 0.15);
-            mcap_writer->writeCloud(lidar_map_on_iteration_f);
-            mcap_writer->writePoses(poses);
-            mcap_writer->update();
-        }   
+        // builder.initPoseGraph(poses, clouds);
+        // if (enable_mcap_log) {
+        //     const Cloud lidar_map_on_iteration =
+        //         builder.mergeClouds(builder.transformClouds(poses, clouds));
+        //     Cloud lidar_map_on_iteration_f = builder.applyGridFilter(lidar_map_on_iteration, 0.15);
+        //     mcap_writer->writeCloud(lidar_map_on_iteration_f);
+        //     mcap_writer->writePoses(poses);
+        //     mcap_writer->update();
+        // }   
 
-        if (enable_json_log) {
-            const auto pose_graph_info = builder.calculatePoseGraphInfo();
-            serialization::writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, 0);
-        }
+        // if (enable_json_log) {
+        //     const auto pose_graph_info = builder.calculatePoseGraphInfo();
+        //     serialization::writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, 0);
+        // }
 
-        for (size_t i = 1; i <= optimization_steps; i++) {
-            poses = builder.optimizePoseGraph();
+        // for (size_t i = 1; i <= optimization_steps; i++) {
+        //     poses = builder.optimizePoseGraph();
 
-            if (enable_mcap_log) {
-                const Cloud lidar_map_on_iteration =
-                builder.mergeClouds(builder.transformClouds(poses, clouds));
-                Cloud lidar_map_on_iteration_f = builder.applyGridFilter(lidar_map_on_iteration, 0.15);
-                mcap_writer->writeCloud(lidar_map_on_iteration_f);
-                mcap_writer->writePoses(poses);
-                mcap_writer->update();
-            }
+        //     if (enable_mcap_log) {
+        //         const Cloud lidar_map_on_iteration =
+        //         builder.mergeClouds(builder.transformClouds(poses, clouds));
+        //         Cloud lidar_map_on_iteration_f = builder.applyGridFilter(lidar_map_on_iteration, 0.15);
+        //         mcap_writer->writeCloud(lidar_map_on_iteration_f);
+        //         mcap_writer->writePoses(poses);
+        //         mcap_writer->update();
+        //     }
 
-            if (enable_json_log) {
-                const auto pose_graph_info = builder.calculatePoseGraphInfo();
-                serialization::writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i);
-            }
-        }
-        // clouds = builder.applyDynamicFilter(poses, clouds, 40.0, 30, 0.5);
+        //     if (enable_json_log) {
+        //         const auto pose_graph_info = builder.calculatePoseGraphInfo();
+        //         serialization::writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, i);
+        //     }
+        // }
+        // // clouds = builder.applyDynamicFilter(poses, clouds, 40.0, 30, 0.5);
 
-        const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
-        Cloud lidar_map_filtered = builder.applyGridFilter(lidar_map, 0.15);
+        // const auto lidar_map = builder.mergeClouds(builder.transformClouds(poses, clouds));
+        // Cloud lidar_map_filtered = builder.applyGridFilter(lidar_map, 0.15);
 
-        serialization::writer::MCAPWriter::writeCloud(
-            mcap_output_folder_path, lidar_map_filtered, kOutputTopicLidarMap);
+        // serialization::writer::MCAPWriter::writeCloud(
+        //     mcap_output_folder_path, lidar_map_filtered, kOutputTopicLidarMap);
     }
 }
