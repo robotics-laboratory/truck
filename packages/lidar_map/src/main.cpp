@@ -28,7 +28,6 @@ const double kIcpEdgeMaxDist = 3.0;
 const double kIcpEdgeMinDist = 1.0;
 const double kOdomEdgeWeight = 1.0;
 const double kIcpEdgeWeight = 3.0;
-const size_t kKtreeNeighborsCount = 10;
 const size_t kOptimizationSteps = 10;
 
 int main(int argc, char* argv[]) {
@@ -87,7 +86,6 @@ int main(int argc, char* argv[]) {
         .icp_edge_min_dist = kIcpEdgeMinDist,
         .odom_edge_weight = kOdomEdgeWeight,
         .icp_edge_weight = kIcpEdgeWeight,
-        .ktree_neighbors_clount = kKtreeNeighborsCount,
         .min_poses_dist = kMinPosesDist,
         .verbose = true};
 

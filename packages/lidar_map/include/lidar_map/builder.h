@@ -51,7 +51,6 @@ struct BuilderParams {
     double icp_edge_min_dist = 1.0;
     double odom_edge_weight = 1.0;
     double icp_edge_weight = 3.0;
-    int ktree_neighbors_clount = 10;
     double min_poses_dist = 1.0;
     bool verbose = true;
 };
