@@ -39,9 +39,6 @@ struct PoseInfo {
 
 using EdgesInfo = std::vector<EdgeInfo>;
 using PosesInfo = std::vector<PoseInfo>;
-using BoundingBox = truck::geom::BoundingBox;
-using Segment = truck::geom::Segment;
-using Vec2 = truck::geom::Vec2;
 
 struct PoseGraphInfo {
     EdgesInfo edges;
@@ -66,11 +63,11 @@ class Builder {
     std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(
         const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const;
 
-    double segmentDistance(const Segment& seg1, const Segment& seg2);
+    double segmentDistance(const geom::Segment& seg1, const geom::Segment& seg2);
 
-    BoundingBox computeBoundingBox(const truck::geom::Segment& segment);
+    geom::BoundingBox computeBoundingBox(const geom::Segment& segment);
 
-    bool segmentsIntersect(const Segment& s1, const Segment& s2);
+    bool segmentsIntersect(const geom::Segment& s1, const geom::Segment& s2);
 
     void initPoseGraph(const geom::Poses& poses, const Clouds& clouds);
 
