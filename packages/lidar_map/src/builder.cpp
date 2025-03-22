@@ -556,29 +556,79 @@ Clouds Builder::applyDynamicFilter(
 }
 
 /**
- * Down-sample clouds by taking a spatial average of clouds's points
+ * Down-sample a single cloud by applying a voxel grid filter.
  *
- * As we work in 2D case, we divide the plane into a regular grid of rectangles,
- * sampling rate is adjusted by setting the grid cell size along each dimension
+ * In the 3D case, the space is divided into a regular grid of cubic voxels,
+ * and points within each voxel are combined into a single representative point.
+ * The resolution of the down-sampling is controlled by the cell_size parameter,
+ * which sets the size of the voxels along each dimension (X, Y, Z).
  *
- * The set of points which lie within the bounds of a grid cell are combined into one output point
+ * @param cloud The input point cloud to be filtered.
+ * @param cell_size The size of each voxel in the grid.
+ * @return A down-sampled point cloud.
  */
-Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
+Cloud Builder::applyGridFilter(const Cloud& cloud, double cell_size) const {
     const std::string cell_size_str = std::to_string(cell_size);
     PointMatcherSupport::Parametrizable::Parameters grid_filter_params = {
         {"vSizeX", cell_size_str},
         {"vSizeY", cell_size_str},
         {"vSizeZ", cell_size_str},
     };
-
     std::shared_ptr<Matcher::DataPointsFilter> grid_filter =
         Matcher::get().DataPointsFilterRegistrar.create(
             "VoxelGridDataPointsFilter", grid_filter_params);
 
+    return grid_filter->filter(toDataPoints(cloud)).features;
+}
+
+/**
+ * Down-sample a set of point clouds using a voxel grid filter.
+ *
+ * @param clouds The input set of point clouds to be filtered.
+ * @param cell_size The size of each voxel in the grid.
+ * @return A set of down-sampled point clouds.
+ */
+Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
+    Clouds clouds_filtered;
+    for (const auto& cloud : clouds) {
+        clouds_filtered.push_back(applyGridFilter(cloud, cell_size));
+    }
+    return clouds_filtered;
+}
+
+/**
+ * Apply a bounding box filter to a set of point clouds.
+ *
+ * This function filters out points that fall outside a specified bounding box in the XY plane.
+ * The bounding box is defined symmetrically around the origin, with limits [-value, value]
+ * along the X and Y axes.
+ *
+ * @param clouds The input set of point clouds to be filtered.
+ * @param value The half-width of the bounding box along the X and Y axes.
+ * @return A set of point clouds with points outside the bounding box removed.
+ */
+Clouds Builder::applyBoundingBoxFilter(const Clouds& clouds, double value) const {
+    const std::string value_str = std::to_string(value);
+    const std::string neg_value_str = std::to_string(-value);
+
+    PointMatcherSupport::Parametrizable::Parameters bbox_filter_params = {
+        {"xMin", neg_value_str},
+        {"xMax", value_str},
+        {"yMin", neg_value_str},
+        {"yMax", value_str},
+        {"zMin", "-inf"},
+        {"zMax", "inf"},
+        {"removeInside", "0"},
+    };
+
+    std::shared_ptr<Matcher::DataPointsFilter> bbox_filter =
+        Matcher::get().DataPointsFilterRegistrar.create(
+            "BoundingBoxDataPointsFilter", bbox_filter_params);
+
     Clouds clouds_filtered;
 
     for (const auto& cloud : clouds) {
-        clouds_filtered.push_back(grid_filter->filter(toDataPoints(cloud)).features);
+        clouds_filtered.push_back(bbox_filter->filter(toDataPoints(cloud)).features);
     }
 
     return clouds_filtered;
