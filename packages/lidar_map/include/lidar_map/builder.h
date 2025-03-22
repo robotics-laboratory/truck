@@ -5,11 +5,16 @@
 #include "geom/bounding_box.h"
 #include "geom/segment.h"
 #include "geom/vector.h"
+#include "geom/boost/box.h"
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/core/hyper_graph.h>
 
 namespace truck::lidar_map {
+
+namespace bgi = boost::geometry::index;
 
 class EdgeData : public g2o::HyperGraph::Data {
   public:
@@ -39,6 +44,8 @@ struct PoseInfo {
 
 using EdgesInfo = std::vector<EdgeInfo>;
 using PosesInfo = std::vector<PoseInfo>;
+using SegmentValue = std::pair<geom::BoundingBox, geom::Segment>;
+using ICPRTree = bgi::rtree<SegmentValue, bgi::quadratic<16>>;
 
 struct PoseGraphInfo {
     EdgesInfo edges;
@@ -66,8 +73,6 @@ class Builder {
 
     geom::BoundingBox computeBoundingBox(const geom::Segment& segment);
 
-    bool segmentsIntersect(const geom::Segment& s1, const geom::Segment& s2);
-
     void initPoseGraph(const geom::Poses& poses, const Clouds& clouds);
 
     geom::Poses optimizePoseGraph(size_t iterations = 1);
@@ -94,6 +99,7 @@ class Builder {
     ICP icp_;
     g2o::SparseOptimizer optimizer_;
     BuilderParams params_;
+    ICPRTree icp_edges_rtree_;
 };
 
 }  // namespace truck::lidar_map

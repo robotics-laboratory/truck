@@ -5,7 +5,6 @@
 #include "geom/boost/box.h"
 #include "geom/bounding_box.h"
 #include "geom/distance.h"
-#include "geom/intersection.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
@@ -178,21 +177,6 @@ std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
 }
 
 /**
- * Computes the shortest distance between two line segments.
- *
- * @param seg1 First line segment.
- * @param seg2 Second line segment.
- * @return Minimum Euclidean distance between the two segments.
- */
-double Builder::segmentDistance(const geom::Segment& seg1, const geom::Segment& seg2) {
-    return std::min(
-        {geom::distance(seg1.begin, projection(seg1.begin, seg2)),
-         geom::distance(seg1.end, projection(seg1.end, seg2)),
-         geom::distance(seg2.begin, projection(seg2.begin, seg1)),
-         geom::distance(seg2.end, projection(seg2.end, seg1))});
-}
-
-/**
  * Computes the bounding box for a given segment.
  *
  * @param segment The input line segment.
@@ -248,18 +232,18 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
     }
 
     auto data_points_clouds = toDataPoints(clouds);
-    bgi::rtree<SegmentValue, bgi::quadratic<16>> rtree;
     // Add ICP edges
     for (size_t i = 0; i < poses.size(); i++) {
         for (size_t j = i + 1; j < poses.size(); j++) {
-            // A vertex is considered unusable if the distance between poses exceeds
-            // the maximum allowed value or if the pose indices are too close to each other.
-            bool is_unusable_vertice =
-                geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist
-                || std::abs(static_cast<int>(i) - static_cast<int>(j))
-                       <= params_.icp_edge_max_dist / params_.min_poses_dist;
+            // Distance between two poses exceeds the maximum allowed ICP edge distance
+            bool is_distance_unused =
+                geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist;
+            // Indices of the poses are close enough based on the minimum pose distance
+            double min_indices_dist = params_.icp_edge_max_dist / params_.min_poses_dist;
+            bool are_indices_close =
+                std::abs(static_cast<int>(i) - static_cast<int>(j)) <= min_indices_dist;
 
-            if (is_unusable_vertice) {
+            if (is_distance_unused || are_indices_close) {
                 continue;
             }
 
@@ -269,19 +253,16 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             geom::BoundingBox bbox = computeBoundingBox(segment);
 
             std::vector<SegmentValue> nearest_segments;
-            rtree.query(bgi::nearest(bbox, 1), std::back_inserter(nearest_segments));
+            icp_edges_rtree_.query(bgi::nearest(bbox, 1), std::back_inserter(nearest_segments));
 
             bool can_add = true;
-            auto it = nearest_segments.begin();
-            while (it != nearest_segments.end() && can_add) {
-                const auto& [existing_bbox, existing_segment] = *it;
+            if (!nearest_segments.empty()) {
+                const auto& [existing_bbox, existing_segment] = nearest_segments.front();
                 // If the distance between segments is less than the minimum allowed value or they
                 // intersect, the new ICP edge is not added.
-                if (segmentDistance(segment, existing_segment) < params_.icp_edge_min_dist
-                    || geom::intersect(segment, existing_segment)) {
+                if (geom::distance(segment, existing_segment) < params_.icp_edge_min_dist) {
                     can_add = false;
                 }
-                ++it;
             }
 
             if (!can_add) {
@@ -305,7 +286,7 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             edge->setUserData(userData);
 
             optimizer_.addEdge(edge);
-            rtree.insert(std::make_pair(bbox, segment));
+            icp_edges_rtree_.insert(std::make_pair(bbox, segment));
         }
     }
 
