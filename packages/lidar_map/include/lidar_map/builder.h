@@ -2,11 +2,19 @@
 
 #include "geom/pose.h"
 #include "lidar_map/common.h"
+#include "geom/bounding_box.h"
+#include "geom/segment.h"
+#include "geom/vector.h"
+#include "geom/boost/box.h"
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/core/hyper_graph.h>
 
 namespace truck::lidar_map {
+
+namespace bgi = boost::geometry::index;
 
 class EdgeData : public g2o::HyperGraph::Data {
   public:
@@ -36,6 +44,8 @@ struct PoseInfo {
 
 using EdgesInfo = std::vector<EdgeInfo>;
 using PosesInfo = std::vector<PoseInfo>;
+using SegmentValue = std::pair<geom::BoundingBox, geom::Segment>;
+using ICPRTree = bgi::rtree<SegmentValue, bgi::quadratic<16>>;
 
 struct PoseGraphInfo {
     EdgesInfo edges;
@@ -45,8 +55,10 @@ struct PoseGraphInfo {
 struct BuilderParams {
     std::string icp_config;
     double icp_edge_max_dist = 0.6;
+    double icp_edge_min_dist = 1.0;
     double odom_edge_weight = 1.0;
     double icp_edge_weight = 3.0;
+    double min_poses_dist = 1.0;
     bool verbose = true;
 };
 
@@ -56,6 +68,8 @@ class Builder {
 
     std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(
         const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const;
+
+    geom::BoundingBox computeBoundingBox(const geom::Segment& segment);
 
     void initPoseGraph(const geom::Poses& poses, const Clouds& clouds);
 
@@ -83,6 +97,7 @@ class Builder {
     ICP icp_;
     g2o::SparseOptimizer optimizer_;
     BuilderParams params_;
+    ICPRTree icp_edges_rtree_;
 };
 
 }  // namespace truck::lidar_map

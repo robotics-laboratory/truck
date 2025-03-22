@@ -7,6 +7,7 @@
 #include "geom/distance.h"
 
 #include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
@@ -17,6 +18,7 @@
 namespace truck::lidar_map {
 
 namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 using IndexPoint = std::pair<geom::Vec2, size_t>;
 using IndexPoints = std::vector<IndexPoint>;
@@ -24,6 +26,8 @@ using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
 using BlockSolverType = g2o::BlockSolver<g2o::BlockSolverTraits<3, 3>>;
 using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>;
+
+using SegmentValue = std::pair<geom::BoundingBox, geom::Segment>;
 
 namespace {
 
@@ -173,6 +177,20 @@ std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
 }
 
 /**
+ * Computes the bounding box for a given segment.
+ *
+ * @param segment The input line segment.
+ * @return BoundingBox object that encloses the segment.
+ */
+geom::BoundingBox Builder::computeBoundingBox(const geom::Segment& segment) {
+    return geom::BoundingBox(
+        geom::Vec2(
+            std::min(segment.begin.x, segment.end.x), std::min(segment.begin.y, segment.end.y)),
+        geom::Vec2(
+            std::max(segment.begin.x, segment.end.x), std::max(segment.begin.y, segment.end.y)));
+}
+
+/**
  * Initialize pose graph
  *
  * Input:
@@ -214,11 +232,40 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
     }
 
     auto data_points_clouds = toDataPoints(clouds);
-
     // Add ICP edges
     for (size_t i = 0; i < poses.size(); i++) {
         for (size_t j = i + 1; j < poses.size(); j++) {
-            if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
+            // Distance between two poses exceeds the maximum allowed ICP edge distance
+            bool is_distance_unused =
+                geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist;
+            // Indices of the poses are close enough based on the minimum pose distance
+            double min_indices_dist = params_.icp_edge_max_dist / params_.min_poses_dist;
+            bool are_indices_close =
+                std::abs(static_cast<int>(i) - static_cast<int>(j)) <= min_indices_dist;
+
+            if (is_distance_unused || are_indices_close) {
+                continue;
+            }
+
+            geom::Vec2 start(poses[i].pos.x, poses[i].pos.y);
+            geom::Vec2 end(poses[j].pos.x, poses[j].pos.y);
+            geom::Segment segment(start, end);
+            geom::BoundingBox bbox = computeBoundingBox(segment);
+
+            std::vector<SegmentValue> nearest_segments;
+            icp_edges_rtree_.query(bgi::nearest(bbox, 1), std::back_inserter(nearest_segments));
+
+            bool can_add = true;
+            if (!nearest_segments.empty()) {
+                const auto& [existing_bbox, existing_segment] = nearest_segments.front();
+                // If the distance between segments is less than the minimum allowed value or they
+                // intersect, the new ICP edge is not added.
+                if (geom::distance(segment, existing_segment) < params_.icp_edge_min_dist) {
+                    can_add = false;
+                }
+            }
+
+            if (!can_add) {
                 continue;
             }
 
@@ -239,6 +286,7 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             edge->setUserData(userData);
 
             optimizer_.addEdge(edge);
+            icp_edges_rtree_.insert(std::make_pair(bbox, segment));
         }
     }
 
@@ -312,7 +360,7 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
             .id = vertex_se2->id(),
             .pose = {
                 .pos = geom::Vec2{estimate[0], estimate[1]},
-                .dir = truck::geom::Angle::fromRadians(estimate[2])}});
+                .dir = geom::Angle::fromRadians(estimate[2])}});
     }
     return pose_graph_info;
 }

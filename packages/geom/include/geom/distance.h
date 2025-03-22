@@ -27,4 +27,6 @@ double distanceSq(const MotionState& a, const MotionState& b) noexcept;
 
 double distance(const MotionState& a, const MotionState& b) noexcept;
 
+double distance(const Segment& a, const Segment& b) noexcept;
+
 }  // namespace truck::geom
