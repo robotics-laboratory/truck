@@ -69,8 +69,6 @@ class Builder {
     std::pair<geom::Poses, Clouds> sliceDataByPosesProximity(
         const geom::Poses& poses, const Clouds& clouds, double poses_min_dist) const;
 
-    double segmentDistance(const geom::Segment& seg1, const geom::Segment& seg2);
-
     geom::BoundingBox computeBoundingBox(const geom::Segment& segment);
 
     void initPoseGraph(const geom::Poses& poses, const Clouds& clouds);
