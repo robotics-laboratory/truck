@@ -108,4 +108,48 @@ MotionStates bezier3(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2&
     return bezier3(p0, p1, p2, p3, n);
 }
 
+MotionStates compose_bezier1(const std::vector<Vec2>& pts, size_t n) {
+    VERIFY(pts.size() >= 2);
+
+    MotionStates spline;
+    spline.reserve(pts.size() * n);
+
+    for (size_t i = 1; i < pts.size(); ++i) {
+        auto chunk = bezier1(pts[i - 1], pts[i], n);
+        spline.insert(spline.end(), chunk.begin(), chunk.end());
+    }
+
+    return spline;
+}
+
+MotionStates compose_bezier2(const std::vector<Vec2>& pts, size_t n) {
+    VERIFY(pts.size() >= 3);
+    VERIFY((pts.size() - 3) % 2 == 0);
+
+    MotionStates spline;
+    spline.reserve(pts.size() * n);
+
+    for (size_t i = 2; i < pts.size(); i += 2) {
+        auto chunk = bezier2(pts[i - 2], pts[i - 1], pts[i], n);
+        spline.insert(spline.end(), chunk.begin(), chunk.end());
+    }
+
+    return spline;
+}
+
+MotionStates compose_bezier3(const std::vector<Vec2>& pts, size_t n) {
+    VERIFY(pts.size() >= 4);
+    VERIFY((pts.size() - 4) % 3 == 0);
+
+    MotionStates spline;
+    spline.reserve(pts.size() * n);
+
+    for (size_t i = 3; i < pts.size(); i += 3) {
+        auto chunk = bezier3(pts[i - 3], pts[i - 2], pts[i - 1], pts[i], n);
+        spline.insert(spline.end(), chunk.begin(), chunk.end());
+    }
+
+    return spline;
+}
+
 }  // namespace truck::geom

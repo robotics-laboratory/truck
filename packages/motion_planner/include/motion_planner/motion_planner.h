@@ -3,6 +3,7 @@
 #include "geom/motion_state.h"
 #include "geom/polyline_index.h"
 #include "geom/polyline.h"
+#include "geom/complex_polygon.h"
 
 #include <vector>
 
@@ -45,12 +46,16 @@ struct GraphParams {
     double hull_radius;
     double milestone_spacing;
     double node_spacing;
+    double raycast_increment;
+    double max_edge_splope;
+    double safezone_radius;
 };
 
 struct Node {
     NodeId id;
     geom::Pose pose;
-    std::vector<EdgeId> edges;
+    std::vector<EdgeId> out;
+    std::vector<EdgeId> in;
     MilestoneId milestone_id;
     int milestone_offset;
 };
@@ -70,6 +75,7 @@ struct Graph {
 };
 
 struct GraphBuild {
+    geom::ComplexPolygon map;
     Reference reference;
     Milestones milestones = {};
     Nodes nodes = {};
@@ -88,7 +94,7 @@ class GraphBuilder {
   public:
     GraphBuilder(const hull::GraphParams& params);
 
-    hull::GraphBuild buildGraph(const Reference& reference) const;
+    hull::GraphBuild buildGraph(const Reference& reference, const geom::ComplexPolygon& map) const;
 
   private:
     void makeMilestones(hull::GraphBuild& build) const;

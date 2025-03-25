@@ -1,10 +1,70 @@
 #include "motion_planner/motion_planner.h"
 #include "common/exception.h"
 #include "common/math.h"
+#include "geom/complex_polygon.h"
+#include "geom/boost.h"
+#include "boost/geometry/geometry.hpp"
 
 #include <iostream>
 
 namespace truck::motion_planner {
+
+namespace bg = boost::geometry;
+
+using IndexPoint = std::pair<geom::Vec2, std::size_t>;
+using IndexPoints = std::vector<IndexPoint>;
+using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
+
+namespace {
+
+bool areWithinDistance(
+    const auto& geometry, const geom::ComplexPolygons& polygons, double distance) {
+    for (const geom::ComplexPolygon& polygon : polygons) {
+        for (const geom::Segment& segment : polygon.segments()) {
+            if (bg::distance(segment, geometry) < distance) {
+                return true;
+            }
+        }
+
+        for (const geom::Polygon& polygon_inner : polygon.inners) {
+            if (bg::distance(polygon_inner, geometry) < distance) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+RTree toRTree(const Reference& reference) {
+    RTree rtree;
+    for (std::size_t i = 0; i < reference.Points().size(); ++i) {
+        rtree.insert(IndexPoint(reference.Points()[i].pos, i));
+    }
+
+    return rtree;
+}
+
+IndexPoints pointsInSearchRadius(
+    const geom::Vec2& point, const RTree& rtree, double search_radius) {
+    IndexPoints rtree_indexed_points;
+
+    const geom::BoundingBox rtree_box(
+        geom::Vec2(point.x - search_radius, point.y - search_radius),
+        geom::Vec2(point.x + search_radius, point.y + search_radius));
+
+    rtree.query(
+        bg::index::intersects(rtree_box)
+            && bg::index::satisfies([&](const IndexPoint& rtree_indexed_point) {
+                   const geom::Vec2 neighbor_point = rtree_indexed_point.first;
+                   return (point - neighbor_point).lenSq() < squared(search_radius);
+               }),
+        std::back_inserter(rtree_indexed_points));
+
+    return rtree_indexed_points;
+}
+
+}  // namespace
 
 hull::Milestone::Milestone(
     MilestoneId id, const geom::Pose& pose, double left_ledge, double right_ledge) noexcept :
@@ -40,22 +100,83 @@ geom::Segment hull::Milestone::toSegment() const {
 
 GraphBuilder::GraphBuilder(const hull::GraphParams& params) : params_{params} {}
 
-hull::GraphBuild GraphBuilder::buildGraph(const Reference& reference) const {
-    hull::GraphBuild build = hull::GraphBuild{.reference = reference};
+hull::GraphBuild GraphBuilder::buildGraph(
+    const Reference& reference, const geom::ComplexPolygon& map) const {
+    hull::GraphBuild build = hull::GraphBuild{.map = map, .reference = reference};
     makeMilestones(build);
+
+    // std::cerr << "milestones added\n";
     makeNodes(build);
+    // std::cerr << "nodes added\n";
+
     makeEdges(build);
+    // std::cerr << "edges added\n";
 
     // return hull::Graph{.nodes = std::move(build.nodes), .edges = std::move(build.edges)};
     return build;
 }
 
+hull::Milestone makeMilestone(
+    std::size_t milestone_id, const geom::Pose& milestone_pose, const hull::GraphParams& params,
+    const hull::GraphBuild& build, const geom::ComplexPolygon& map) {
+    RTree reference_points = toRTree(build.reference);
+
+    auto static_collision_check = [&](const geom::Vec2& p,
+                                      const geom::ComplexPolygon& complex_polygon) -> bool {
+        if (areWithinDistance(p, {complex_polygon}, params.safezone_radius)
+            || !bg::within(p, complex_polygon.outer)) {
+            std::cerr << "static";
+            return true;
+        }
+
+        return false;
+    };
+
+    auto milestone_intersection_check =
+        [&](const geom::Vec2& p, const geom::Vec2& ray_start, double ray_length) {
+            auto pts = pointsInSearchRadius(p, reference_points, ray_length);
+            for (const auto& [q, i] : pts) {
+                if (geom::distance(ray_start, q)
+                    >= .5 * params.milestone_spacing /* TODO come up with good constant */) {
+                    std::cerr << "self-intersection";
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+    auto ray_cast = [&](const geom::Pose& start) -> double {
+        std::size_t n_iterations = 0;
+
+        for (geom::Vec2 curr = start.pos;
+             !static_collision_check(curr, map)
+             && !milestone_intersection_check(
+                 curr, start.pos, n_iterations * params.raycast_increment)
+             && n_iterations * params.raycast_increment < params.hull_radius
+             /* TODO: online collision checks*/;
+             ++n_iterations) {
+            curr += start.dir * params.raycast_increment;
+        }
+
+        return (n_iterations - 1) * params.raycast_increment;
+    };
+
+    std::cerr << "milestone #" << milestone_id << " ";
+    double left_ledge = ray_cast({milestone_pose.pos, milestone_pose.dir.left()});
+    std::cerr << ", ";
+    double right_ledge = ray_cast({milestone_pose.pos, milestone_pose.dir.right()});
+    std::cerr << "\n";
+
+    return hull::Milestone(milestone_id, milestone_pose, left_ledge, right_ledge);
+}
+
 void GraphBuilder::makeMilestones(hull::GraphBuild& build) const {
-    size_t milestone_id = 0;
+    std::size_t milestone_id = 0;
     for (auto it = build.reference.AdvanceFromBegin(); !it.reached_end;
          it = build.reference.AdvanceFrom(it.poly_idx, params_.milestone_spacing)) {
-        build.milestones.emplace_back(
-            milestone_id++, it.point.pose(), params_.hull_radius, params_.hull_radius);
+        build.milestones.push_back(
+            std::move(makeMilestone(milestone_id++, it.point.pose(), params_, build, build.map)));
     }
 }
 
@@ -64,10 +185,14 @@ void GraphBuilder::makeNodes(hull::GraphBuild& build) const {
         build.milestone_nodes.emplace_back();
         const auto guides = milestone.getSpacedOutGuides(params_.node_spacing);
         for (const auto& [offset, guide] : guides) {
+            if (areWithinDistance(guide.pos, {build.map}, params_.safezone_radius)) {
+                continue;
+            }
             hull::Node node = {
                 .id = build.nodes.size(),
                 .pose = guide,
-                .edges = {},
+                .out = {},
+                .in = {},
                 .milestone_id = milestone.id,
                 .milestone_offset = offset};
 
@@ -75,16 +200,29 @@ void GraphBuilder::makeNodes(hull::GraphBuild& build) const {
             build.nodes.push_back(std::move(node));
         }
     }
+
+    // std::cerr << "milestone_nodes:\n";
+
+    // for (size_t i = 0; i < build.milestone_nodes.size(); ++i) {
+    //     std::cerr << i << ": ";
+    //     for (NodeId id : build.milestone_nodes[i]) {
+    //         std::cerr << id << " ";
+    //     }
+    //     std::cerr << "\n";
+    // }
 }
 
 void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
-    size_t watch_dog = 0;
+    std::size_t watch_dog = 0;
     for (hull::Node& from : build.nodes) {
-        if (build.milestone_nodes.size() >= from.id) {
+        if (build.milestone_nodes.size() <= from.milestone_id + 1) {
+            // std::cerr << "continue on from.milestone_id + 1 = " << from.milestone_id + 1
+            //           << "; build.milestone_nodes.size() = " << build.milestone_nodes.size()
+            //           << "\n";
             continue;
         }
 
-        for (const NodeId to_id : build.milestone_nodes[from.id + 1]) {
+        for (const NodeId to_id : build.milestone_nodes.at(from.milestone_id + 1)) {
             hull::Node& to = build.nodes[to_id];
             hull::Edge edge = {
                 .id = build.edges.size(),
@@ -92,14 +230,29 @@ void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
                 .to = to.id,
                 .weight = geom::distance(from.pose, to.pose)};
 
-            from.edges.push_back(edge.id);
-            // to.edges.push_back(edge.id); // if graph is not oriented
+            if (std::abs(from.milestone_offset - to.milestone_offset) * params_.node_spacing
+                    < params_.milestone_spacing * params_.max_edge_splope
+                && !areWithinDistance(
+                    geom::Segment{from.pose.pos, to.pose.pos}, {build.map}, params_.safezone_radius)
+                && (!from.in.empty() || from.milestone_id == 0)) {
+                from.out.push_back(edge.id);
+                to.in.push_back(edge.id);  // if graph is not oriented
 
-            std::cerr << "edge.id: " << edge.id << "; from = " << from.id << "; to = " << to.id
-                      << ".\n";
-            build.edges.push_back(std::move(edge));
+                // std::cerr << "edge.id: " << edge.id << "; from = " << from.id << " on "
+                //           << from.milestone_id << "; to = " << to.id << " on " << to.milestone_id
+                //           << ".\n";
+
+                build.edges.push_back(std::move(edge));
+
+                if (watch_dog++ > 1e6) {
+                    std::cerr << "watchdog!\n";
+                    return;
+                }
+            }
         }
     }
+
+    std::cerr << "#edges = " << build.edges.size() << "\n";
 }
 
 }  // namespace truck::motion_planner

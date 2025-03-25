@@ -30,13 +30,13 @@ struct ViewerConfig {
 
     struct Hull {
         DrawerParam milestones = {.rgb = {255, 0, 0}, .thickness = 1.0};
-        DrawerParam bounds = {.rgb = {0, 0, 255}, .thickness = 3.0};
+        DrawerParam bounds = {.rgb = {100, 20, 20}, .thickness = 2.0};
         DrawerParam reference = {.rgb = {255, 165, 0}, .thickness = 1.5};
     };
 
     struct Graph {
-        DrawerParam edges = {.rgb = {50, 50, 50}, .thickness = 3.0};
-        DrawerParam nodes = {.rgb = {0, 0, 255}, .thickness = 7.0};
+        DrawerParam edges = {.rgb = {100, 100, 100}, .thickness = 1.0};
+        DrawerParam nodes = {.rgb = {0, 0, 255}, .thickness = 3.0};
     };
 
     struct Motion {
