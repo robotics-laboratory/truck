@@ -16,8 +16,11 @@ find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED src/motion_planner.cpp)
-add_library(${PROJECT_NAME}_viewer SHARED src/viewer.cpp src/motion_planner.cpp)
+add_library(${PROJECT_NAME} SHARED src/graph_builder.cpp src/search.cpp)
+add_library(
+  ${PROJECT_NAME}_viewer SHARED src/viewer.cpp src/graph_builder.cpp
+                                src/search.cpp
+)
 
 ament_target_dependencies(${PROJECT_NAME} common geom speed collision)
 

@@ -38,7 +38,7 @@ struct AdvanceResult {
 template<typename P, typename Interpolator>
 class PolylineIndex {
   public:
-    PolylineIndex(std::vector<P>&& range) : points_(std::move(range)) {
+    PolylineIndex(std::vector<P>&& points) : points_(std::move(points)) {
         VERIFY(points_.size() >= 2);
 
         distances_.reserve(points_.size());

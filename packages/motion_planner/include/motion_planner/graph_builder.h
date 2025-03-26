@@ -19,7 +19,7 @@ using MilestoneIds = std::vector<MilestoneId>;
 using NodeIds = std::vector<NodeId>;
 using EdgeIds = std::vector<EdgeId>;
 
-namespace hull {
+namespace hull {  // TODO: give it a proper name
 
 using Guide = geom::Pose;
 using IndexGuide = std::pair<int, Guide>;
@@ -74,6 +74,12 @@ struct Graph {
     Edges edges;
 };
 
+struct GraphContext {
+    Milestones milestones = {};
+    std::vector<NodeIds> milestone_nodes = {};
+};
+
+// TODO: clean & separate interfaces
 struct GraphBuild {
     geom::ComplexPolygon map;
     Reference reference;
@@ -81,11 +87,6 @@ struct GraphBuild {
     Nodes nodes = {};
     Edges edges = {};
     std::vector<NodeIds> milestone_nodes = {};
-};
-
-struct TrajectoryBuild {
-    geom::Polyline trajectory;
-    geom::Polyline path;
 };
 
 }  // namespace hull
