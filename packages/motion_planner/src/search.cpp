@@ -1,20 +1,42 @@
 #include "motion_planner/search.h"
 #include "geom/distance.h"
+#include "geom/bezier.h"
 
 #include <set>
 
 namespace truck::motion_planner::search {
 
-geom::PolylineMotionIndex fitSpline(
-    const hull::Graph& graph, const hull::GraphParams& params, const Path& path) {
-    // TODO: connect all poses of nodes in the path with bezier3 curves
-    // maximum curvature of a curve should not exceed `params.max_curvature`
+// TODO: add curvature constraints
+geom::MotionStates fitSpline(const hull::Graph& graph, const Path& path) {
+    geom::MotionStates motionStates;
+
+    // Ensure we have at least two points to create a curve
+    if (path.trace.size() < 2) {
+        return motionStates;  // Return empty if not enough points
+    }
+
+    std::vector<geom::Vec2> control_pts;
+
+    constexpr double scaling = 0.5;  // Adjust for curvature, this factor can be tuned
+
+    for (std::size_t i = 0; i < path.trace.size() - 1; ++i) {
+        const hull::Node& from = graph.nodes[path.trace[i]];
+        const hull::Node& to = graph.nodes[path.trace[i + 1]];
+
+        control_pts.push_back(from.pose.pos);
+        control_pts.push_back(from.pose.pos + from.pose.dir * scaling);
+        control_pts.push_back(to.pose.pos - to.pose.dir * scaling);
+    }
+
+    control_pts.push_back(graph.nodes[path.trace.back()].pose.pos);
+
+    return geom::compose_bezier3(control_pts, std::size_t(50));
 }
 
 Path findShortestPath(
     const hull::Graph& graph, const std::vector<bool>& node_occupancy, NodeId from_id,
     NodeId to_id) {
-    const size_t nodes_count = graph.nodes.size();
+    const std::size_t nodes_count = graph.nodes.size();
 
     VERIFY(from_id < nodes_count);
     VERIFY(to_id < nodes_count);
