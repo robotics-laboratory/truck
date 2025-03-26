@@ -34,16 +34,24 @@ TEST(MotionPlanner, hull) {
     const geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
     const Reference reference = geom::compose_bezier3(
-        {{10, 10},
-         {11, 11},
-         {12, 11},
-         {13, 10},
-         {14, 9},
-         {15, 9},
-         {16, 15},
-         {17, 21},
-         {16, 30},
-         {21, 30}},
+        {
+            {10, 10},
+            {11, 11},
+            {12, 11},
+            {13, 10},
+            {14, 9},
+            {15, 9},
+            {16, 15},
+            {17, 21},
+            {16, 30},
+            {21, 30},
+            {26, 30},
+            {30, 30},
+            {23, 25},
+            {20, 20},
+            {22, 21},
+            {22, 20},
+        },
         size_t(60));
 
     const viewer::ViewerConfig viewer_cfg{"test/data/hull.png"};
