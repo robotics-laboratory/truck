@@ -1,4 +1,4 @@
-#include "motion_planner/motion_planner.h"
+#include "motion_planner/graph_builder.h"
 
 #include <rclcpp/rclcpp.hpp>
 

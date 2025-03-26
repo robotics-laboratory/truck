@@ -24,7 +24,7 @@ add_library(
 
 ament_target_dependencies(${PROJECT_NAME} common geom speed collision)
 
-ament_target_dependencies(${PROJECT_NAME}_viewer common geom OpenCV)
+ament_target_dependencies(${PROJECT_NAME}_viewer common geom collision OpenCV)
 
 ament_export_targets(${PROJECT_NAME}_targets HAS_LIBRARY_TARGET)
 

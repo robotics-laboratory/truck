@@ -2,7 +2,7 @@
 
 #include "geom/polyline.h"
 #include "geom/complex_polygon.h"
-#include "motion_planner/motion_planner.h"
+#include "motion_planner/graph_builder.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>

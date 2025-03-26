@@ -1,5 +1,5 @@
 #include "motion_planner/viewer.h"
-#include "motion_planner/motion_planner.h"
+#include "motion_planner/graph_builder.h"
 
 #include "common/exception.h"
 

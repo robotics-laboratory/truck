@@ -3,7 +3,7 @@
 #include "map/map.h"
 #include "geom/bezier.h"
 
-#include "motion_planner/motion_planner.h"
+#include "motion_planner/graph_builder.h"
 #include "motion_planner/viewer.h"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -53,7 +53,7 @@ TEST(MotionPlanner, hull) {
         .milestone_spacing = 2.0,
         .node_spacing = .40,
         .raycast_increment = .1,
-        .max_edge_splope = 2.0,
+        .max_edge_slope = 2.0,
         .safezone_radius = .5,
     };
 
@@ -102,7 +102,7 @@ TEST(MotionPlanner, graph) {
         .milestone_spacing = 2.0,
         .node_spacing = .40,
         .raycast_increment = .01,
-        .max_edge_splope = 2.0,
+        .max_edge_slope = 2.0,
         .safezone_radius = .5,
     };
 

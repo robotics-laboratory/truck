@@ -24,6 +24,7 @@ namespace hull {  // TODO: give it a proper name
 using Guide = geom::Pose;
 using IndexGuide = std::pair<int, Guide>;
 using IndexGuides = std::vector<IndexGuide>;
+using Milestones = std::vector<class Milestone>;
 
 class Milestone {
   public:
@@ -40,14 +41,13 @@ class Milestone {
     double right_ledge;
 };
 
-using Milestones = std::vector<Milestone>;
-
+// TODO: separate this mess
 struct GraphParams {
     double hull_radius;
     double milestone_spacing;
     double node_spacing;
     double raycast_increment;
-    double max_edge_splope;
+    double max_edge_slope;
     double safezone_radius;
 };
 
@@ -87,6 +87,12 @@ struct GraphBuild {
     Nodes nodes = {};
     Edges edges = {};
     std::vector<NodeIds> milestone_nodes = {};
+};
+
+// TODO: annihilate
+struct TrajectoryBuild {
+    geom::Polyline path;
+    geom::Polyline trajectory;
 };
 
 }  // namespace hull

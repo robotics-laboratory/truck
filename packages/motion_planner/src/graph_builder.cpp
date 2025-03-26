@@ -231,7 +231,7 @@ void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
                 .weight = geom::distance(from.pose, to.pose)};
 
             if (std::abs(from.milestone_offset - to.milestone_offset) * params_.node_spacing
-                    < params_.milestone_spacing * params_.max_edge_splope
+                    < params_.milestone_spacing * params_.max_edge_slope
                 && !areWithinDistance(
                     geom::Segment{from.pose.pos, to.pose.pos}, {build.map}, params_.safezone_radius)
                 && (!from.in.empty() || from.milestone_id == 0)) {
