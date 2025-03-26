@@ -1,0 +1,8 @@
+.idea
+input*/
+output*/
+run*/
+venv
+.env
+__pycache__/
+.ruff_cache/

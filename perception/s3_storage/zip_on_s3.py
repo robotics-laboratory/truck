@@ -1,11 +1,11 @@
 import os
 
-from boto3.s3.transfer import TransferConfig
+import boto3
 from botocore.exceptions import ClientError
-
-from private_config import private_settings
 from s3_storage.get_s3_conn import get_conn
 
+# Создаем сессию и клиент S3
+session = boto3.session.Session()
 
 s3 = get_conn()
 
@@ -13,33 +13,6 @@ s3 = get_conn()
 bucket_name = "the-lab-bucket"
 local_dir = "../output_zip/"
 s3_prefix = "cvat/input/"
-
-
-def download_files_from_s3(
-    bucket_name="the-lab-bucket", s3_prefix="cvat/input/", file_names=None
-):
-    download_dir = "./downloaded_zip/"
-    os.makedirs(download_dir, exist_ok=True)
-
-    objects = s3.list_objects_v2(Bucket=bucket_name, Prefix=s3_prefix)
-    if "Contents" not in objects:
-        print(f"No files found in s3://{bucket_name}/{s3_prefix}")
-        return
-
-    for obj in objects["Contents"]:
-        file_key = obj["Key"]
-        file_name = os.path.basename(file_key)
-
-        if file_name.endswith(".zip") and (
-            file_names is None or file_name in file_names
-        ):
-            local_path = os.path.join(download_dir, file_name)
-
-            try:
-                s3.download_file(bucket_name, file_key, local_path)
-                print(f"Downloaded {file_name} to {local_path}")
-            except ClientError as e:
-                print(f"Failed to download {file_name}: {e}")
 
 
 # Проверка существования файла в S3
@@ -84,5 +57,21 @@ def download_files_from_s3(
         print(f"No files found in s3://{bucket_name}/{s3_prefix}")
         return
 
-# Загружаем файлы
+    for obj in objects["Contents"]:
+        file_key = obj["Key"]
+        file_name = os.path.basename(file_key)
+
+        if file_name.endswith(".zip") and (
+            file_names is None or file_name in file_names
+        ):
+            local_path = os.path.join(download_dir, file_name)
+
+            try:
+                s3.download_file(bucket_name, file_key, local_path)
+                print(f"Downloaded {file_name} to {local_path}")
+            except ClientError as e:
+                print(f"Failed to download {file_name}: {e}")
+
+
+# Загружаем файлы и создаем манифест
 upload_files_to_s3(local_dir, bucket_name, s3_prefix)

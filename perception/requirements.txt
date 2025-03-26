@@ -5,8 +5,8 @@ opencv-python~=4.11.0.86
 mcap~=1.2.2
 mcap-ros2-support==0.5.5
 
-boto3==1.37.9
-botocore==1.37.9
+boto3~=1.36.26
+botocore~=1.36.26
 PyYAML~=6.0.2
 pytz~=2025.1
 

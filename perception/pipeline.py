@@ -3,7 +3,7 @@ import shutil
 
 from config import Config
 from frames_from_mp4 import frames_from_mp4_main
-from pcd_utils.mcap_to_pcd import mcap_to_pcd_main
+from mcap_to_pcd import mcap_to_pcd_main
 
 run_name = Config.run_name
 
