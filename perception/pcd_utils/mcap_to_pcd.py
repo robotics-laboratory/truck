@@ -3,7 +3,7 @@ import os
 from mcap.reader import make_reader
 from mcap_ros2.decoder import DecoderFactory
 
-from config import Config
+from perception.config import Config
 from timestamp import get_timestamp, get_start_time, get_frames_num
 import numpy as np
 
@@ -63,8 +63,7 @@ def find_and_save_points_by_time(input_file, output_file, target_time, epsilon=1
         for schema, channel, message, ros_msg in reader.iter_decoded_messages(
             topics=["/livox/lidar"]
         ):
-            timestamp = message.log_time / 1e9  # Преобразуем в секунды
-            # Увеличенный диапазон проверки
+            timestamp = message.log_time / 1e9
             if abs(timestamp - target_time) <= epsilon:
                 print(f"Target timestamp {target_time:.6f} found! Saving points.")
                 points = np.frombuffer(ros_msg.data, dtype=dtype)
@@ -77,7 +76,6 @@ def find_and_save_points_by_time(input_file, output_file, target_time, epsilon=1
 
 
 def mcap_to_pcd_main():
-    # Задаем параметры
     input_mcap_file = f"input_mcap/{Config.run_name}.mcap"
     input_metadate_file = f"input_mcap/{Config.run_name}_metadata.yaml"
     start_time = get_start_time(input_metadate_file)
@@ -99,9 +97,7 @@ def mcap_to_pcd_main():
             + str(i).zfill(3)
             + ".pcd"
         )
-        # Парсим начальное время и переводим в UTC
         target_timestamp = get_timestamp(start_time, elapsed_time)
-        # Вызов функции
         find_and_save_points_by_time(input_mcap_file, output_pcd_file, target_timestamp)
         elapsed_time += Config.frequency
 

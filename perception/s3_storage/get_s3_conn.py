@@ -1,6 +1,6 @@
 import boto3
 
-from private_config import private_settings
+from perception.private_config import private_settings
 
 
 def get_conn() -> boto3.client:

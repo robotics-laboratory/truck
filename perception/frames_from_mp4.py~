@@ -1,6 +1,6 @@
 import cv2
 import os
-from perception.config import Config
+from config import Config
 
 
 def extract_frames_by_frequency(video_paths, frequency, root_output_dir):

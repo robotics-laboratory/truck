@@ -6,12 +6,10 @@ import pytz
 def get_timestamp(start_time_str, elapsed_time):
     # Парсим начальное время и переводим в UTC
     start_time_msk = datetime.strptime(start_time_str, "%Y-%m-%d %I:%M:%S.%f %p")
-    start_time_utc = start_time_msk  # MSK -> UTC
+    start_time_utc = start_time_msk
 
-    # Вычисляем целевую временную метку в UTC
     target_time_utc = start_time_utc + timedelta(seconds=elapsed_time)
 
-    # Конвертируем в UNIX timestamp
     target_timestamp = target_time_utc.timestamp()
 
     print(f"Target timestamp (UTC): {target_timestamp:.6f}")
@@ -27,11 +25,9 @@ def get_start_time(file_path, tz_name="Europe/Moscow") -> str:
             "starting_time"
         ]["nanoseconds_since_epoch"]
 
-        # Конвертация в секунды и микросекунды
         timestamp_seconds = nanoseconds_since_epoch // 1_000_000_000
         timestamp_microseconds = (nanoseconds_since_epoch % 1_000_000_000) // 1_000
 
-        # Преобразуем в datetime с учетом временной зоны
         utc_time = datetime.fromtimestamp(
             timestamp_seconds, tz=timezone.utc
         ) + timedelta(microseconds=timestamp_microseconds)

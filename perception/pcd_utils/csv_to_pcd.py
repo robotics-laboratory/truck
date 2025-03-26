@@ -2,14 +2,11 @@ import pandas as pd
 
 
 def csv_to_pcd(csv_file_path, pcd_file_path):
-    # Чтение данных из csv файла, игнорируя все, кроме столбцов X, Y, Z
     df = pd.read_csv(csv_file_path, usecols=["X", "Y", "Z"])
     df = df.dropna()
 
-    # Определение количества точек
     num_points = len(df)
 
-    # Создание PCD файла
     with open(pcd_file_path, "w") as f:
         # Запись заголовка PCD файла
         f.write("# .PCD v0.7 - Point Cloud Data file format\n")
@@ -24,28 +21,14 @@ def csv_to_pcd(csv_file_path, pcd_file_path):
         f.write(f"POINTS {num_points}\n")
         f.write("DATA ascii\n")
 
-        # Запись точек в формате X Y Z
         for _, row in df.iterrows():
             f.write(f"{row['X']} {row['Y']} {-row['Z']}\n")
 
 
-# Пути к файлам
-csv_paths = [
-    "1.csv",
-    "2.csv",
-    "3.csv",
-    "4.csv",
-    "5.csv",
-    "6.csv",
-    "7.csv",
-    "people_sprava_10m.csv",
-    "9.csv",
-    "10.csv",
-]
+csv_paths = []
 
 input_dir = "input_csv/"
 output_dir = "output_pcd/"
 for csv_path in csv_paths:
     pcd_path = f"{csv_path[:-4]}.pcd"
-    # Создание PCD файла с RGB и дополнительными полями
     csv_to_pcd(input_dir + csv_path, output_dir + pcd_path)

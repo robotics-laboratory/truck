@@ -2,7 +2,7 @@ import os
 
 import boto3
 from botocore.exceptions import ClientError
-from perception.s3_storage.get_s3_conn import get_conn
+from s3_storage.get_s3_conn import get_conn
 
 # Создаем сессию и клиент S3
 session = boto3.session.Session()
