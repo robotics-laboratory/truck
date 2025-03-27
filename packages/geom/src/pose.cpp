@@ -20,4 +20,12 @@ Pose interpolate(const Pose& a, const Pose& b, double t) noexcept {
     return {pos, dir};
 }
 
+Pose PoseLinearInterpolator::operator()(const Pose& from, const Pose& to, double t) const {
+    return interpolate(from, to, t);
+}
+
+double PoseLinearInterpolator::operator()(double from, const double to, double t) const {
+    return interpolate(from, to, t);
+}
+
 }  // namespace truck::geom

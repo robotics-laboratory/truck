@@ -13,9 +13,10 @@ struct Path {
     NodeIds trace;
 };
 
-geom::MotionStates fitSpline(const hull::Graph& graph, const Path& path);
+geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path);
 
-Path findShortestPath(const hull::Graph& graph, NodeId from, NodeId to);
+Path findShortestPath(
+    const hull::Graph& graph, const std::vector<bool>& node_occupancy, NodeId from, NodeId to);
 
 std::vector<bool> getNodeOccupancy(
     const hull::Graph& graph, const collision::StaticCollisionChecker& checker);

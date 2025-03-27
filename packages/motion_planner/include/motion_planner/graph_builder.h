@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geom/motion_state.h"
+#include "geom/pose.h"
 #include "geom/polyline_index.h"
 #include "geom/polyline.h"
 #include "geom/complex_polygon.h"
@@ -9,7 +9,7 @@
 
 namespace truck::motion_planner {
 
-using Reference = geom::PolylineMotionIndex;
+using Reference = geom::PolylinePoseIndex;
 
 using MilestoneId = size_t;
 using NodeId = size_t;
@@ -101,7 +101,8 @@ class GraphBuilder {
   public:
     GraphBuilder(const hull::GraphParams& params);
 
-    hull::GraphBuild buildGraph(const Reference& reference, const geom::ComplexPolygon& map) const;
+    std::pair<hull::Graph, hull::GraphContext> buildGraph(
+        const Reference& reference, const geom::ComplexPolygon& map) const;
 
   private:
     void makeMilestones(hull::GraphBuild& build) const;

@@ -100,20 +100,23 @@ geom::Segment hull::Milestone::toSegment() const {
 
 GraphBuilder::GraphBuilder(const hull::GraphParams& params) : params_{params} {}
 
-hull::GraphBuild GraphBuilder::buildGraph(
+std::pair<hull::Graph, hull::GraphContext> GraphBuilder::buildGraph(
     const Reference& reference, const geom::ComplexPolygon& map) const {
     hull::GraphBuild build = hull::GraphBuild{.map = map, .reference = reference};
     makeMilestones(build);
-
-    // std::cerr << "milestones added\n";
     makeNodes(build);
-    // std::cerr << "nodes added\n";
-
     makeEdges(build);
-    // std::cerr << "edges added\n";
 
-    // return hull::Graph{.nodes = std::move(build.nodes), .edges = std::move(build.edges)};
-    return build;
+    return {
+        hull::Graph{
+            .nodes = std::move(build.nodes),
+            .edges = std::move(build.edges),
+        },
+        hull::GraphContext{
+            .milestones = std::move(build.milestones),
+            .milestone_nodes = std::move(build.milestone_nodes),
+        },
+    };
 }
 
 hull::Milestone makeMilestone(
@@ -125,7 +128,6 @@ hull::Milestone makeMilestone(
                                       const geom::ComplexPolygon& complex_polygon) -> bool {
         if (areWithinDistance(p, {complex_polygon}, params.safezone_radius)
             || !bg::within(p, complex_polygon.outer)) {
-            std::cerr << "static";
             return true;
         }
 
@@ -138,7 +140,6 @@ hull::Milestone makeMilestone(
             for (const auto& [q, i] : pts) {
                 if (geom::distance(ray_start, q)
                     >= .5 * params.milestone_spacing /* TODO come up with good constant */) {
-                    std::cerr << "self-intersection";
                     return true;
                 }
             }
@@ -162,11 +163,8 @@ hull::Milestone makeMilestone(
         return (n_iterations - 1) * params.raycast_increment;
     };
 
-    std::cerr << "milestone #" << milestone_id << " ";
     double left_ledge = ray_cast({milestone_pose.pos, milestone_pose.dir.left()});
-    std::cerr << ", ";
     double right_ledge = ray_cast({milestone_pose.pos, milestone_pose.dir.right()});
-    std::cerr << "\n";
 
     return hull::Milestone(milestone_id, milestone_pose, left_ledge, right_ledge);
 }
@@ -176,7 +174,7 @@ void GraphBuilder::makeMilestones(hull::GraphBuild& build) const {
     for (auto it = build.reference.AdvanceFromBegin(); !it.reached_end;
          it = build.reference.AdvanceFrom(it.poly_idx, params_.milestone_spacing)) {
         build.milestones.push_back(
-            std::move(makeMilestone(milestone_id++, it.point.pose(), params_, build, build.map)));
+            std::move(makeMilestone(milestone_id++, it.point, params_, build, build.map)));
     }
 }
 
@@ -188,37 +186,26 @@ void GraphBuilder::makeNodes(hull::GraphBuild& build) const {
             if (areWithinDistance(guide.pos, {build.map}, params_.safezone_radius)) {
                 continue;
             }
+
             hull::Node node = {
                 .id = build.nodes.size(),
                 .pose = guide,
                 .out = {},
                 .in = {},
                 .milestone_id = milestone.id,
-                .milestone_offset = offset};
+                .milestone_offset = offset,
+            };
 
             build.milestone_nodes[milestone.id].push_back(node.id);
             build.nodes.push_back(std::move(node));
         }
     }
-
-    // std::cerr << "milestone_nodes:\n";
-
-    // for (size_t i = 0; i < build.milestone_nodes.size(); ++i) {
-    //     std::cerr << i << ": ";
-    //     for (NodeId id : build.milestone_nodes[i]) {
-    //         std::cerr << id << " ";
-    //     }
-    //     std::cerr << "\n";
-    // }
 }
 
 void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
     std::size_t watch_dog = 0;
     for (hull::Node& from : build.nodes) {
         if (build.milestone_nodes.size() <= from.milestone_id + 1) {
-            // std::cerr << "continue on from.milestone_id + 1 = " << from.milestone_id + 1
-            //           << "; build.milestone_nodes.size() = " << build.milestone_nodes.size()
-            //           << "\n";
             continue;
         }
 
@@ -228,7 +215,7 @@ void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
                 .id = build.edges.size(),
                 .from = from.id,
                 .to = to.id,
-                .weight = geom::distance(from.pose, to.pose)};
+                .weight = geom::distance(from.pose, to.pose)};  // TODO: add heuristic
 
             if (std::abs(from.milestone_offset - to.milestone_offset) * params_.node_spacing
                     < params_.milestone_spacing * params_.max_edge_slope

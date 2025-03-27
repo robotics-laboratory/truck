@@ -17,8 +17,8 @@ struct MotionState {
 
 using MotionStates = std::vector<MotionState>;
 
-Poses toPoses(const MotionStates& states);
-Polyline toPolyline(const MotionStates& states);
+Poses toPoses(const MotionStates& states) noexcept;
+Polyline toPolyline(const MotionStates& states) noexcept;
 
 struct MotionStateLinearInterpolator {
     MotionState operator()(const MotionState& from, const MotionState& to, double t) const {

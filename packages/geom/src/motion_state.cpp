@@ -1,7 +1,7 @@
 #include "geom/motion_state.h"
 
 namespace truck::geom {
-Poses toPoses(const MotionStates& states) {
+Poses toPoses(const MotionStates& states) noexcept {
     Poses poses(states.size());
 
     std::transform(states.begin(), states.end(), poses.begin(), [](const MotionState& state) {
@@ -11,7 +11,7 @@ Poses toPoses(const MotionStates& states) {
     return poses;
 }
 
-Polyline toPolyline(const MotionStates& states) {
+Polyline toPolyline(const MotionStates& states) noexcept {
     Polyline points(states.size());
 
     std::transform(states.begin(), states.end(), points.begin(), [](const MotionState& state) {

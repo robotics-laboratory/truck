@@ -110,5 +110,6 @@ class PolylineIndex {
 };
 
 using PolylineMotionIndex = PolylineIndex<MotionState, MotionStateLinearInterpolator>;
+using PolylinePoseIndex = PolylineIndex<Pose, PoseLinearInterpolator>;
 
 }  // namespace truck::geom

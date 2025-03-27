@@ -7,7 +7,7 @@
 namespace truck::motion_planner::search {
 
 // TODO: add curvature constraints
-geom::MotionStates fitSpline(const hull::Graph& graph, const Path& path) {
+geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path) {
     geom::MotionStates motionStates;
 
     // Ensure we have at least two points to create a curve
@@ -20,15 +20,15 @@ geom::MotionStates fitSpline(const hull::Graph& graph, const Path& path) {
     constexpr double scaling = 0.5;  // Adjust for curvature, this factor can be tuned
 
     for (std::size_t i = 0; i < path.trace.size() - 1; ++i) {
-        const hull::Node& from = graph.nodes[path.trace[i]];
-        const hull::Node& to = graph.nodes[path.trace[i + 1]];
+        const hull::Node& from = nodes[path.trace[i]];
+        const hull::Node& to = nodes[path.trace[i + 1]];
 
         control_pts.push_back(from.pose.pos);
         control_pts.push_back(from.pose.pos + from.pose.dir * scaling);
         control_pts.push_back(to.pose.pos - to.pose.dir * scaling);
     }
 
-    control_pts.push_back(graph.nodes[path.trace.back()].pose.pos);
+    control_pts.push_back(nodes[path.trace.back()].pose.pos);
 
     return geom::compose_bezier3(control_pts, std::size_t(50));
 }

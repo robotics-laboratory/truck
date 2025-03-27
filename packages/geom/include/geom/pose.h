@@ -26,6 +26,11 @@ std::ostream& operator<<(std::ostream& out, const Pose& pose) noexcept;
 
 Pose interpolate(const Pose& a, const Pose& b, double t) noexcept;
 
+struct PoseLinearInterpolator {
+    Pose operator()(const Pose& from, const Pose& to, double t) const;
+    double operator()(double from, const double to, double t) const;
+};
+
 using Poses = std::vector<Pose>;
 
 }  // namespace truck::geom

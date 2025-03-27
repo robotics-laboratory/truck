@@ -2,6 +2,7 @@
 #include "motion_planner/graph_builder.h"
 
 #include "common/exception.h"
+#include "geom/polyline.h"
 
 namespace truck::motion_planner::viewer {
 
@@ -110,7 +111,7 @@ void drawBounds(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Milestone
     }
 }
 
-void drawEdges(const ViewerConfig& cfg, CVDrawer& drawer, const hull::GraphBuild& graph) {
+void drawEdges(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& graph) {
     for (const hull::Edge& edge : graph.edges) {
         const geom::Vec2& from = graph.nodes[edge.from].pose.pos;
         const geom::Vec2& to = graph.nodes[edge.to].pose.pos;
@@ -119,7 +120,7 @@ void drawEdges(const ViewerConfig& cfg, CVDrawer& drawer, const hull::GraphBuild
     }
 }
 
-void drawNodes(const ViewerConfig& cfg, CVDrawer& drawer, const hull::GraphBuild& graph) {
+void drawNodes(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& graph) {
     for (const hull::Node& node : graph.nodes) {
         drawer.drawPoint(node.pose.pos, cfg.graph.nodes);
     }
@@ -134,16 +135,24 @@ void Viewer::addPolygon(const geom::ComplexPolygon& polygon) {
     drawer_.fillPoly(polygon, cfg_.polygon.inner, cfg_.polygon.outer);
 }
 
-void Viewer::addHull(const hull::GraphBuild& graph_build) {
-    drawer_.drawPolyline(geom::toPolyline(graph_build.reference.Points()), cfg_.motion.reference);
+void Viewer::addHull(const Reference& reference, const hull::GraphContext& graph_context) {
+    geom::Polyline polyline(reference.Points().size());
 
-    drawMilestones(cfg_, drawer_, graph_build.milestones);
-    drawBounds(cfg_, drawer_, graph_build.milestones);
+    std::transform(
+        reference.Points().begin(),
+        reference.Points().end(),
+        polyline.begin(),
+        [](const geom::Pose& pose) -> geom::Vec2 { return pose.pos; });
+
+    drawer_.drawPolyline(polyline, cfg_.motion.reference);
+
+    drawMilestones(cfg_, drawer_, graph_context.milestones);
+    drawBounds(cfg_, drawer_, graph_context.milestones);
 }
 
-void Viewer::addGraph(const hull::GraphBuild& graph_build) {
-    drawEdges(cfg_, drawer_, graph_build);
-    drawNodes(cfg_, drawer_, graph_build);
+void Viewer::addGraph(const hull::Graph& graph) {
+    drawEdges(cfg_, drawer_, graph);
+    drawNodes(cfg_, drawer_, graph);
 }
 
 void Viewer::addMotion(const hull::TrajectoryBuild& trajectory_build) {

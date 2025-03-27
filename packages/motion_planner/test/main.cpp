@@ -33,7 +33,7 @@ TEST(MotionPlanner, hull) {
 
     const geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
-    const Reference reference = geom::compose_bezier3(
+    const auto bezier_curve = geom::compose_bezier3(
         {
             {10, 10},
             {11, 11},
@@ -53,6 +53,8 @@ TEST(MotionPlanner, hull) {
             {22, 20},
         },
         size_t(60));
+
+    const Reference reference = geom::toPoses(bezier_curve);
 
     const viewer::ViewerConfig viewer_cfg{"test/data/hull.png"};
 
@@ -66,14 +68,14 @@ TEST(MotionPlanner, hull) {
     };
 
     const GraphBuilder builder{graph_params};
-    const hull::GraphBuild graph_build = builder.buildGraph(reference, polygons[0]);
+    const auto [graph, context] = builder.buildGraph(reference, polygons[0]);
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
 
     viewer::Viewer viewer = viewer::Viewer(viewer_cfg, polygon);
     viewer.addPolygon(polygon);
-    viewer.addHull(graph_build);
+    viewer.addHull(reference, context);
     viewer.draw();
 }
 
@@ -82,7 +84,7 @@ TEST(MotionPlanner, graph) {
 
     const geom::ComplexPolygons polygons = map::Map::fromGeoJson(file_path).polygons();
 
-    const Reference reference = geom::compose_bezier3(
+    const auto bezier_curve = geom::compose_bezier3(
         {
             {10, 10},
             {11, 11},
@@ -103,6 +105,7 @@ TEST(MotionPlanner, graph) {
         },
         size_t(60));
 
+    const Reference reference = geom::toPoses(bezier_curve);
     const viewer::ViewerConfig viewer_cfg{"test/data/graph.png"};
 
     const hull::GraphParams graph_params{
@@ -115,7 +118,7 @@ TEST(MotionPlanner, graph) {
     };
 
     const GraphBuilder builder{graph_params};
-    const hull::GraphBuild graph_build = builder.buildGraph(reference, polygons[0]);
+    const auto [graph, context] = builder.buildGraph(reference, polygons[0]);
 
     VERIFY(polygons.size() == 1);
     const auto& polygon = polygons[0];
@@ -123,8 +126,8 @@ TEST(MotionPlanner, graph) {
     viewer::Viewer viewer = viewer::Viewer(viewer_cfg, polygon);
 
     viewer.addPolygon(polygon);
-    viewer.addHull(graph_build);
-    viewer.addGraph(graph_build);
+    viewer.addHull(reference, context);
+    viewer.addGraph(graph);
     viewer.draw();
 }
 
