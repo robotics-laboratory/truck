@@ -6,9 +6,9 @@ launch:
     name: "simulation"
     default: "false"
 - node:
-    pkg: "route_follower"
-    exec: "route_follower_node"
-    name: "route_follower_node"
+    pkg: "motion_planner"
+    exec: "motion_planner_node"
+    name: "motion_planner_node"
     output: "log"
     param:
     - { name: "use_sim_time", value: "$(var simulation)" }

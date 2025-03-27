@@ -64,6 +64,34 @@ Reference convertToReference(It begin, It end, const geom::Transform& tf) {
     return Reference{std::move(poses)};
 }
 
+RTree toRTree(const std::vector<geom::Vec2>& points) {
+    RTree rtree;
+
+    for (size_t i = 0; i < points.size(); i++) {
+        rtree.insert(IndexPoint(points[i], i));
+    }
+
+    return rtree;
+}
+
+RTree toRTree(const hull::Nodes& nodes) {
+    RTree rtree;
+
+    for (const auto& node : nodes) {
+        rtree.insert(IndexPoint(node.pose.pos, node.id));
+    }
+
+    return rtree;
+}
+
+size_t findNearestIndex(const RTree& rtree, const geom::Vec2& point) {
+    IndexPoints rtree_indexed_points;
+
+    rtree.query(bg::index::nearest(point, 1), std::back_inserter(rtree_indexed_points));
+
+    return rtree_indexed_points[0].second;
+}
+
 }  // namespace
 
 MotionPlannerNode::MotionPlannerNode() : Node("motion_planner") {
@@ -147,16 +175,35 @@ void MotionPlannerNode::publishFullState() {
 }
 
 void MotionPlannerNode::publishTrajectory() {
+    if (!state_.graph) {
+        RCLCPP_WARN(this->get_logger(), "Ignore grid, there's no graph!");
+        return;
+    }
+
+    const auto source = std::string{"world"};
+    const auto target = state_.odometry->header.frame_id;
+
+    auto tf_opt = getLatestTranform(source, target);
+    if (!tf_opt) {
+        RCLCPP_WARN(
+            this->get_logger(),
+            "Ignore grid, there is no transform from '%s' -> '%s'!",
+            source.c_str(),
+            target.c_str());
+        return;
+    }
+
     checker_->reset(*state_.distance_transform);
 
-    NodeId node_from = ...;
-    NodeId node_to = ...;
+    NodeId node_from = findNearestIndex(cache_.node_pts, state_.localization->pose.pos);
 
-    const auto node_occupancy = search::getNodeOccupancy(state_.graph, *checker_);
-    const auto path = search::findShortestPath(state_.graph, node_occupancy, node_from, node_to);
+    const auto node_occupancy =
+        search::getNodeOccupancy(*state_.graph, *checker_, model_->shape().radius());
+    const auto path =
+        search::findShortestPath(*state_.graph, node_occupancy, node_from, cache_.finish_nodes);
 
-    const geom::MotionStates spline = fitSpline(state_.graph.nodes, path);
-    state_.trajectory = convertToTrajectory(spline, *state_.tf);
+    const geom::MotionStates spline = search::fitSpline(state_.graph->nodes, path);
+    state_.trajectory = convertToTrajectory(spline, *tf_opt);
 
     bool collision = false;
     for (auto& state : state_.trajectory.states) {
@@ -217,8 +264,8 @@ void MotionPlannerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPt
     const auto source = std::string{"world"};
     const auto target = state_.odometry->header.frame_id;
 
-    state_.tf = getLatestTranform(source, target);
-    if (!state_.tf) {
+    auto tf_opt = getLatestTranform(source, target);
+    if (!tf_opt) {
         RCLCPP_WARN(
             this->get_logger(),
             "Ignore grid, there is no transform from '%s' -> '%s'!",
@@ -227,10 +274,15 @@ void MotionPlannerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPt
         return;
     }
 
-    const auto reference = convertToReference(msg->data.begin(), msg->data.end(), *state_.tf);
+    const auto reference = convertToReference(msg->data.begin(), msg->data.end(), *tf_opt);
     const auto [graph, context] = builder_->buildGraph(reference, map_->polygons().at(0));
 
     state_.graph = std::move(graph);
+    cache_.node_pts = toRTree(graph.nodes);
+    cache_.finish_nodes = std::set<NodeId>{
+        context.milestone_nodes.back().cbegin(),
+        context.milestone_nodes.back().cend(),
+    };
 }
 
 void MotionPlannerNode::onReset(

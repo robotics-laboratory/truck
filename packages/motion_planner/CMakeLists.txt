@@ -48,7 +48,10 @@ target_include_directories(
          "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 
-add_executable(${PROJECT_NAME}_node src/main.cpp src/motion_planner_node.cpp)
+add_executable(
+  ${PROJECT_NAME}_node src/main.cpp src/graph_builder.cpp src/search.cpp
+                       src/motion_planner_node.cpp
+)
 
 ament_target_dependencies(
   ${PROJECT_NAME}_node
@@ -87,6 +90,6 @@ if(BUILD_TESTING)
   ament_target_dependencies(${PROJECT_NAME}_tests ament_index_cpp map)
 endif()
 
-# install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()

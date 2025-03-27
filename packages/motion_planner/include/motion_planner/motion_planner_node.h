@@ -14,6 +14,7 @@
 #include "geom/transform.h"
 #include "map/map.h"
 #include "motion_planner/graph_builder.h"
+#include "geom/boost.h"
 
 #include <rclcpp/time.hpp>
 #include <tf2_ros/qos.hpp>
@@ -21,11 +22,18 @@
 #include <chrono>
 #include <optional>
 #include <memory>
+#include <set>
 
 namespace truck::motion_planner {
 
 using namespace std::chrono_literals;
 using namespace std::placeholders;
+
+namespace bg = boost::geometry;
+
+using IndexPoint = std::pair<geom::Vec2, size_t>;
+using IndexPoints = std::vector<IndexPoint>;
+using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
 class MotionPlannerNode : public rclcpp::Node {
   public:
@@ -78,14 +86,18 @@ class MotionPlannerNode : public rclcpp::Node {
     struct State {
         nav_msgs::msg::Odometry::SharedPtr odometry = nullptr;
         std::optional<geom::Localization> localization = std::nullopt;
+        std::optional<hull::Graph> graph = std::nullopt;
         nav_msgs::msg::OccupancyGrid::SharedPtr grid = nullptr;
         std::shared_ptr<collision::Map> distance_transform = nullptr;
-        hull::Graph graph;
-        std::optional<geom::Transform> tf;
         motion::Trajectory trajectory;
 
         double scheduled_velocity = 0;
     } state_;
+
+    struct Cache {
+        RTree node_pts;
+        std::set<NodeId> finish_nodes;
+    } cache_;
 
     std::unique_ptr<GraphBuilder> builder_ = nullptr;
     std::unique_ptr<model::Model> model_ = nullptr;

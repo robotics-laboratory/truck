@@ -2,8 +2,6 @@
 #include "geom/distance.h"
 #include "geom/bezier.h"
 
-#include <set>
-
 namespace truck::motion_planner::search {
 
 // TODO: add curvature constraints
@@ -33,13 +31,16 @@ geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path) {
     return geom::compose_bezier3(control_pts, std::size_t(50));
 }
 
+/// Find the shortest path in the `graph` from `from_id` to any node from `to_ids`
+/// using Dijkstra search algorithm
 Path findShortestPath(
     const hull::Graph& graph, const std::vector<bool>& node_occupancy, NodeId from_id,
-    NodeId to_id) {
+    const std::set<NodeId>& to_ids) {
     const std::size_t nodes_count = graph.nodes.size();
 
     VERIFY(from_id < nodes_count);
-    VERIFY(to_id < nodes_count);
+    VERIFY(std::all_of(
+        to_ids.begin(), to_ids.end(), [&](NodeId to_id) { return to_id < nodes_count; }));
 
     const double max_dist = std::numeric_limits<double>::max();
 
@@ -64,9 +65,14 @@ Path findShortestPath(
         };
     };
 
+    NodeId finish = std::numeric_limits<NodeId>::max();
+
     auto extractPath = [&]() {
+        VERIFY_FMT(
+            finish != std::numeric_limits<NodeId>::max(), "Finish vertex is not initialized!");
+
         Path path;
-        NodeId cur_id = to_id;
+        NodeId cur_id = finish;
 
         if (prev[cur_id] == nodes_count) {
             return path;
@@ -102,7 +108,8 @@ Path findShortestPath(
         }
 
         // exit condition
-        if (cur_node.id == to_id || dist[cur_node.id] == max_dist) {
+        if (to_ids.contains(cur_node.id) || dist[cur_node.id] == max_dist) {
+            finish = cur_node.id;
             break;
         }
 
