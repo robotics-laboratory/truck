@@ -6,6 +6,7 @@
 #include "geom/polyline.h"
 
 #include <algorithm>
+#include <unordered_set>
 
 namespace truck::motion_planner::viewer {
 
@@ -123,9 +124,21 @@ void drawEdges(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& gra
     }
 }
 
-void drawNodes(const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& graph) {
+void drawNodes(
+    const ViewerConfig& cfg, CVDrawer& drawer, const hull::Graph& graph,
+    const std::vector<bool>& occupancy_grid) {
+    std::unordered_set<NodeId> occupied_nodes;
+
+    for (std::size_t i = 0; i < occupancy_grid.size(); ++i) {
+        if (occupancy_grid[i] == true) {
+            occupied_nodes.insert(i);
+        }
+    }
+
     for (const hull::Node& node : graph.nodes) {
-        drawer.drawPoint(node.pose.pos, cfg.graph.nodes);
+        drawer.drawPoint(
+            node.pose.pos,
+            occupied_nodes.contains(node.id) ? cfg.graph.occupied_nodes : cfg.graph.nodes);
     }
 }
 
@@ -153,9 +166,9 @@ void Viewer::addHull(const Reference& reference, const hull::GraphContext& graph
     drawBounds(cfg_, drawer_, graph_context.milestones);
 }
 
-void Viewer::addGraph(const hull::Graph& graph) {
+void Viewer::addGraph(const hull::Graph& graph, const std::vector<bool>& occupancy_grid) {
     drawEdges(cfg_, drawer_, graph);
-    drawNodes(cfg_, drawer_, graph);
+    drawNodes(cfg_, drawer_, graph, occupancy_grid);
 }
 
 void Viewer::addMotion(

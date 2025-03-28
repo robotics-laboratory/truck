@@ -36,8 +36,9 @@ struct ViewerConfig {
     };
 
     struct Graph {
-        DrawerParam edges = {.rgb = {100, 100, 100}, .thickness = 1.0};
+        DrawerParam edges = {.rgb = {200, 200, 200}, .thickness = 1.0};
         DrawerParam nodes = {.rgb = {0, 0, 255}, .thickness = 3.0};
+        DrawerParam occupied_nodes = {.rgb = {255, 0, 0}, .thickness = 10.0};
     };
 
     struct Motion {
@@ -51,7 +52,7 @@ struct ViewerConfig {
     Graph graph = {};
     Motion motion{};
 
-    double res = 50;
+    double res = 100;
     std::string path = "";
 };
 
@@ -90,7 +91,7 @@ class Viewer {
 
     void addPolygon(const geom::ComplexPolygon& polygon);
     void addHull(const Reference& reference, const hull::GraphContext& graph_contex);
-    void addGraph(const hull::Graph& graph);
+    void addGraph(const hull::Graph& graph, const std::vector<bool>& occupancy_grid);
     void addMotion(
         const search::Path& path, const geom::MotionStates& trajectory, const hull::Graph& graph);
 

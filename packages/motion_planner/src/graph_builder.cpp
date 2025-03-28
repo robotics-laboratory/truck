@@ -203,6 +203,14 @@ void GraphBuilder::makeNodes(hull::GraphBuild& build) const {
 
 void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
     std::size_t watch_dog = 0;
+
+    auto calculate_edge_weight = [&](const hull::Node& from, const hull::Node& to) -> double {
+        return std::abs(from.milestone_offset) + std::abs(to.milestone_offset)
+               + 2 * std::exp(std::abs(from.milestone_offset - to.milestone_offset));
+        // TODO: come up with a good heuristic & get rid
+        // of hardcoded constants
+    };
+
     for (hull::Node& from : build.nodes) {
         if (build.milestone_nodes.size() <= from.milestone_id + 1) {
             continue;
@@ -214,7 +222,7 @@ void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
                 .id = build.edges.size(),
                 .from = from.id,
                 .to = to.id,
-                .weight = geom::distance(from.pose, to.pose)};  // TODO: add heuristic
+                .weight = calculate_edge_weight(from, to)};
 
             if (std::abs(from.milestone_offset - to.milestone_offset) * params_.node_spacing
                     < params_.milestone_spacing * params_.max_edge_slope
