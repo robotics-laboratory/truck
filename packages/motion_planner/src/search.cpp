@@ -28,12 +28,12 @@ geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path) {
 
     control_pts.push_back(nodes[path.trace.back()].pose.pos);
 
-    return geom::compose_bezier3(control_pts, std::size_t(50));
+    return geom::compose_bezier3(control_pts, std::size_t(20));
 }
 
 /// Find the shortest path in the `graph` from `from_id` to any node from `to_ids`
 /// using Dijkstra search algorithm
-Path findShortestPath(
+std::optional<Path> findShortestPath(
     const hull::Graph& graph, const std::vector<bool>& node_occupancy, NodeId from_id,
     const std::set<NodeId>& to_ids) {
     const std::size_t nodes_count = graph.nodes.size();
@@ -67,10 +67,10 @@ Path findShortestPath(
 
     NodeId finish = std::numeric_limits<NodeId>::max();
 
-    auto extractPath = [&]() {
-        VERIFY_FMT(
-            finish != std::numeric_limits<NodeId>::max(), "Finish vertex is not initialized!");
-
+    auto extractPath = [&]() -> std::optional<Path> {
+        if (finish == std::numeric_limits<NodeId>::max()) {
+            return std::nullopt;
+        }
         Path path;
         NodeId cur_id = finish;
 
@@ -113,7 +113,7 @@ Path findShortestPath(
             break;
         }
 
-        // dijkstra loop
+        // dijkstra inner loop
         for (const EdgeId& edge_id : graph.nodes[cur_node.id].out) {
             const hull::Edge& edge = graph.edges[edge_id];
             const NodeId neighbor_id = edge.to;
@@ -141,14 +141,15 @@ Path findShortestPath(
 }
 
 std::vector<bool> getNodeOccupancy(
-    const hull::Graph& graph, const collision::StaticCollisionChecker& checker, double threshold) {
+    const hull::Nodes& nodes, const collision::StaticCollisionChecker& checker,
+    const geom::Transform& tf, double threshold) {
     VERIFY(checker.initialized());
 
-    std::vector<bool> node_occupancy(graph.nodes.size(), false);
+    std::vector<bool> node_occupancy(nodes.size(), false);
 
-    for (const auto& node : graph.nodes) {
+    for (const auto& node : nodes) {
         // Check if the distance from the checker to the node's pose is less than the threshold
-        if (checker.distance(node.pose) < threshold) {
+        if (checker.distance(tf(node.pose)) < threshold) {
             // Mark the node as occupied
             node_occupancy[node.id] = true;
         }

@@ -39,7 +39,7 @@ bool areWithinDistance(
 RTree toRTree(const Reference& reference) {
     RTree rtree;
     for (std::size_t i = 0; i < reference.Points().size(); ++i) {
-        rtree.insert(IndexPoint(reference.Points()[i].pos, i));
+        rtree.insert(IndexPoint(reference.Points().at(i).pos, i));
     }
 
     return rtree;
@@ -196,7 +196,7 @@ void GraphBuilder::makeNodes(hull::GraphBuild& build) const {
                 .milestone_offset = offset,
             };
 
-            build.milestone_nodes[milestone.id].push_back(node.id);
+            build.milestone_nodes.at(milestone.id).push_back(node.id);
             build.nodes.push_back(std::move(node));
         }
     }
@@ -210,7 +210,7 @@ void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
         }
 
         for (const NodeId to_id : build.milestone_nodes.at(from.milestone_id + 1)) {
-            hull::Node& to = build.nodes[to_id];
+            hull::Node& to = build.nodes.at(to_id);
             hull::Edge edge = {
                 .id = build.edges.size(),
                 .from = from.id,

@@ -116,7 +116,7 @@ MotionStates compose_bezier1(const std::vector<Vec2>& pts, size_t n) {
 
     for (size_t i = 1; i < pts.size(); ++i) {
         auto chunk = bezier1(pts[i - 1], pts[i], n);
-        spline.insert(spline.end(), chunk.begin(), chunk.end());
+        spline.insert(spline.end(), chunk.begin() + (i == 1 ? 0 : 1), chunk.end());
     }
 
     return spline;
@@ -131,7 +131,7 @@ MotionStates compose_bezier2(const std::vector<Vec2>& pts, size_t n) {
 
     for (size_t i = 2; i < pts.size(); i += 2) {
         auto chunk = bezier2(pts[i - 2], pts[i - 1], pts[i], n);
-        spline.insert(spline.end(), chunk.begin(), chunk.end());
+        spline.insert(spline.end(), chunk.begin() + (i == 2 ? 0 : 1), chunk.end());
     }
 
     return spline;
@@ -146,7 +146,7 @@ MotionStates compose_bezier3(const std::vector<Vec2>& pts, size_t n) {
 
     for (size_t i = 3; i < pts.size(); i += 3) {
         auto chunk = bezier3(pts[i - 3], pts[i - 2], pts[i - 1], pts[i], n);
-        spline.insert(spline.end(), chunk.begin(), chunk.end());
+        spline.insert(spline.end(), chunk.begin() + (i == 3 ? 0 : 1), chunk.end());
     }
 
     return spline;

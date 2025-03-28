@@ -28,8 +28,11 @@ Limits<double> velocityLimits(const model::Model& model, double velocity, double
 
 motion::Trajectory convertToTrajectory(
     const geom::MotionStates& mstates, const geom::Transform& tf) {
-    motion::Trajectory trajectory(mstates.size());
+    motion::Trajectory trajectory;
+    trajectory.states.resize(mstates.size());
 
+    std::cerr << "<convertToTrajectory>\n";
+    std::cerr << "mstates.size() is: " << mstates.size() << "\n";
     std::transform(
         mstates.cbegin(),
         mstates.cend(),
@@ -38,7 +41,12 @@ motion::Trajectory convertToTrajectory(
             return motion::State{.pose = tf.apply(mstate.pose())};
         });
 
+    std::cerr << "<convertToTrajectory>\n";
+    std::cerr << "trajectory length is: " << trajectory.states.size() << "\n";
+
     trajectory.fillDistance();
+
+    std::cerr << "Distance filled\n";
     return trajectory;
 }
 
@@ -161,6 +169,17 @@ MotionPlannerNode::MotionPlannerNode() : Node("motion_planner") {
 
     checker_ = std::make_unique<collision::StaticCollisionChecker>(model_->shape());
 
+    const auto graph_params = hull::GraphParams{
+        .hull_radius = model_->shape().width * 2.5,
+        .milestone_spacing = model_->shape().length * 1.5,
+        .node_spacing = model_->shape().radius(),
+        .raycast_increment = .1,
+        .max_edge_slope = 2.0,
+        .safezone_radius = model_->shape().radius(),
+    };
+
+    builder_ = std::make_unique<GraphBuilder>(graph_params);
+
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_buffer_->setUsingDedicatedThread(true);
 
@@ -193,17 +212,31 @@ void MotionPlannerNode::publishTrajectory() {
         return;
     }
 
+    RCLCPP_INFO(this->get_logger(), "Transform accepted 2!");
+
     checker_->reset(*state_.distance_transform);
 
-    NodeId node_from = findNearestIndex(cache_.node_pts, state_.localization->pose.pos);
+    RCLCPP_INFO(this->get_logger(), "Distance transform checked reset!");
+
+    NodeId node_from =
+        findNearestIndex(cache_.node_pts, tf_opt->inv()(state_.localization->pose.pos));
 
     const auto node_occupancy =
-        search::getNodeOccupancy(*state_.graph, *checker_, model_->shape().radius());
+        search::getNodeOccupancy(state_.graph->nodes, *checker_, *tf_opt, model_->shape().radius());
     const auto path =
         search::findShortestPath(*state_.graph, node_occupancy, node_from, cache_.finish_nodes);
 
-    const geom::MotionStates spline = search::fitSpline(state_.graph->nodes, path);
+    if (!path.has_value()) {
+        RCLCPP_INFO(this->get_logger(), "Path couldn't be found :(");
+        return;
+    }
+    RCLCPP_INFO(this->get_logger(), "Calculated shortest path");
+
+    const geom::MotionStates spline = search::fitSpline(state_.graph->nodes, *path);
+    RCLCPP_INFO(this->get_logger(), "Path -> Spline");
+
     state_.trajectory = convertToTrajectory(spline, *tf_opt);
+    RCLCPP_INFO(this->get_logger(), "Spline -> Trajectory");
 
     bool collision = false;
     for (auto& state : state_.trajectory.states) {
@@ -218,12 +251,22 @@ void MotionPlannerNode::publishTrajectory() {
         .setScheduledVelocity(state_.scheduled_velocity)
         .fill(state_.trajectory);
 
+    RCLCPP_INFO(this->get_logger(), "GreedyPlanner's completed successfully");
+
+    std::cerr << "[DEBUG]: <trajectory> \n";
+    for (std::size_t i = 0; i < state_.trajectory.states.size(); i += 10) {
+        std::cerr << "[DEBUG]: " << state_.trajectory.states[i] << "\n";
+    }
+    std::cerr << "[DEBUG]: </trajectory> \n";
+
     // dirty way to drop invalid trajectories and get error message
+    state_.trajectory.throwIfInvalid(motion::TrajectoryValidations::enableAll(), *model_);
     try {
-        state_.trajectory.throwIfInvalid(motion::TrajectoryValidations::enableAll(), *model_);
+        // state_.trajectory.throwIfInvalid(motion::TrajectoryValidations::enableAll(), *model_);
     } catch (const std::exception& e) {
         RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 5000, "%s", e.what());
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Drop invalid trajectory!");
+        RCLCPP_INFO(this->get_logger(), "Trajectory is invalid??!!!");
 
         state_.trajectory = motion::Trajectory{};
     }
@@ -236,10 +279,13 @@ void MotionPlannerNode::publishTrajectory() {
         state_.scheduled_velocity = limits.clamp(scheduled_state.velocity);
     } else {
         state_.scheduled_velocity = 0.0;
+        RCLCPP_INFO(this->get_logger(), "Trajectory is empty?");
     }
 
     signal_.trajectory->publish(
         motion::msg::toTrajectory(state_.odometry->header, state_.trajectory));
+
+    RCLCPP_INFO(this->get_logger(), "Trajectory published successfully!");
 }
 
 void MotionPlannerNode::publishGridCostMap() {
@@ -257,6 +303,8 @@ void MotionPlannerNode::publishGridCostMap() {
 }
 
 void MotionPlannerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg) {
+    RCLCPP_INFO(this->get_logger(), "Route accepted!");
+
     if (!state_.odometry || !state_.distance_transform) {
         return;
     }
@@ -274,8 +322,23 @@ void MotionPlannerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPt
         return;
     }
 
-    const auto reference = convertToReference(msg->data.begin(), msg->data.end(), *tf_opt);
+    RCLCPP_INFO(this->get_logger(), "Transform accepted!");
+
+    const Reference reference =
+        convertToReference(msg->data.begin(), msg->data.end(), geom::Transform{});
+    std::cerr << "Reference points: " << reference.Points().at(0) << "\n"
+              << reference.Points().at(1) << reference.Points().at(2) << "\n"
+              << reference.Points().at(3) << "\n";
+
+    std::cerr << "Reference points (inv): " << tf_opt->inv()(reference.Points().at(0)) << "\n"
+              << tf_opt->inv()(reference.Points().at(1)) << tf_opt->inv()(reference.Points().at(2))
+              << "\n"
+              << tf_opt->inv()(reference.Points().at(3)) << "\n";
+
+    RCLCPP_INFO(this->get_logger(), "Converted route to the reference!");
     const auto [graph, context] = builder_->buildGraph(reference, map_->polygons().at(0));
+
+    RCLCPP_INFO(this->get_logger(), "Graph build complete!");
 
     state_.graph = std::move(graph);
     cache_.node_pts = toRTree(graph.nodes);
