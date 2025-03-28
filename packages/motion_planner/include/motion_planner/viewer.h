@@ -3,6 +3,7 @@
 #include "geom/polyline.h"
 #include "geom/complex_polygon.h"
 #include "motion_planner/graph_builder.h"
+#include "motion_planner/search.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -41,7 +42,7 @@ struct ViewerConfig {
 
     struct Motion {
         DrawerParam path = {.rgb = {0, 200, 0}, .thickness = 5.0};
-        DrawerParam trajectory = {.rgb = {100, 100, 0}, .thickness = 7.0};
+        DrawerParam trajectory = {.rgb = {100, 100, 0}, .thickness = 3.0};
         DrawerParam reference = {.rgb = {200, 100, 100}, .thickness = 5.0};
     };
 
@@ -90,7 +91,8 @@ class Viewer {
     void addPolygon(const geom::ComplexPolygon& polygon);
     void addHull(const Reference& reference, const hull::GraphContext& graph_contex);
     void addGraph(const hull::Graph& graph);
-    void addMotion(const hull::TrajectoryBuild& trajectory_build);
+    void addMotion(
+        const search::Path& path, const geom::MotionStates& trajectory, const hull::Graph& graph);
 
     void draw();
 

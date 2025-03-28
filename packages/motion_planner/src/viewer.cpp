@@ -1,8 +1,11 @@
 #include "motion_planner/viewer.h"
 #include "motion_planner/graph_builder.h"
+#include "motion_planner/search.h"
 
 #include "common/exception.h"
 #include "geom/polyline.h"
+
+#include <algorithm>
 
 namespace truck::motion_planner::viewer {
 
@@ -155,9 +158,25 @@ void Viewer::addGraph(const hull::Graph& graph) {
     drawNodes(cfg_, drawer_, graph);
 }
 
-void Viewer::addMotion(const hull::TrajectoryBuild& trajectory_build) {
-    drawer_.drawPolyline(trajectory_build.path, cfg_.motion.path);
-    drawer_.drawPolyline(trajectory_build.trajectory, cfg_.motion.trajectory);
+void Viewer::addMotion(
+    const search::Path& path, const geom::MotionStates& trajectory, const hull::Graph& graph) {
+    geom::Polyline path_polyline(path.trace.size());
+    geom::Polyline trajectory_polyline(trajectory.size());
+
+    std::transform(
+        path.trace.cbegin(),
+        path.trace.cend(),
+        path_polyline.begin(),
+        [&graph](const NodeId& node_id) { return graph.nodes.at(node_id).pose.pos; });
+
+    std::transform(
+        trajectory.cbegin(),
+        trajectory.cend(),
+        trajectory_polyline.begin(),
+        [&graph](const geom::MotionState& mstate) { return mstate.pos; });
+
+    drawer_.drawPolyline(path_polyline, cfg_.motion.path);
+    drawer_.drawPolyline(trajectory_polyline, cfg_.motion.trajectory);
 }
 
 void Viewer::draw() { drawer_.dump(cfg_.path); }

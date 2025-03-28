@@ -88,13 +88,6 @@ struct GraphBuild {
     Edges edges = {};
     std::vector<NodeIds> milestone_nodes = {};
 };
-
-// TODO: annihilate
-struct TrajectoryBuild {
-    geom::Polyline path;
-    geom::Polyline trajectory;
-};
-
 }  // namespace hull
 
 class GraphBuilder {

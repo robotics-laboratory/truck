@@ -154,8 +154,7 @@ hull::Milestone makeMilestone(
              !static_collision_check(curr, map)
              && !milestone_intersection_check(
                  curr, start.pos, n_iterations * params.raycast_increment)
-             && n_iterations * params.raycast_increment < params.hull_radius
-             /* TODO: online collision checks*/;
+             && n_iterations * params.raycast_increment < params.hull_radius;
              ++n_iterations) {
             curr += start.dir * params.raycast_increment;
         }
@@ -224,10 +223,6 @@ void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
                 && (!from.in.empty() || from.milestone_id == 0)) {
                 from.out.push_back(edge.id);
                 to.in.push_back(edge.id);  // if graph is not oriented
-
-                // std::cerr << "edge.id: " << edge.id << "; from = " << from.id << " on "
-                //           << from.milestone_id << "; to = " << to.id << " on " << to.milestone_id
-                //           << ".\n";
 
                 build.edges.push_back(std::move(edge));
 
