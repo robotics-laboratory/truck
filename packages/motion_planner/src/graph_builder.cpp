@@ -205,10 +205,16 @@ void GraphBuilder::makeEdges(hull::GraphBuild& build) const {
     std::size_t watch_dog = 0;
 
     auto calculate_edge_weight = [&](const hull::Node& from, const hull::Node& to) -> double {
-        return std::abs(from.milestone_offset) + std::abs(to.milestone_offset)
-               + 2 * std::exp(std::abs(from.milestone_offset - to.milestone_offset));
-        // TODO: come up with a good heuristic & get rid
-        // of hardcoded constants
+        double dist_penalty = geom::distance(from.pose.pos, to.pose.pos);
+
+        double centring_penalty =
+            params_.node_spacing
+            * (std::abs(from.milestone_offset) + std::abs(to.milestone_offset));
+
+        double lane_switch_penalty =
+            params_.node_spacing * std::exp(std::abs(from.milestone_offset - to.milestone_offset));
+
+        return 0.5 * dist_penalty + 1.0 * centring_penalty + 2.0 * lane_switch_penalty;
     };
 
     for (hull::Node& from : build.nodes) {

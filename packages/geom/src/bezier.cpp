@@ -1,4 +1,5 @@
 #include "geom/bezier.h"
+#include "geom/distance.h"
 
 #include "common/exception.h"
 #include "common/math.h"
@@ -152,4 +153,74 @@ MotionStates compose_bezier3(const std::vector<Vec2>& pts, size_t n) {
     return spline;
 }
 
+MotionStates catmul_rom(const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, size_t n) {
+    MotionStates points;
+
+    double alpha = 0.5;  // Adjustable alpha value
+
+    auto get_t = [&](double t, double alpha, const Vec2& p0, const Vec2& p1) -> double {
+        return t + std::pow(distanceSq(p0, p1), alpha * 0.5);
+    };
+
+    auto eval = [&](const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3, double t
+
+                    ) -> MotionState {
+        double t0 = 0.0;
+        double t1 = get_t(t0, alpha, p0, p1);
+        double t2 = get_t(t1, alpha, p1, p2);
+        double t3 = get_t(t2, alpha, p2, p3);
+
+        t = interpolate(t1, t2, t);
+
+        Vec2 A1 = p0 * ((t1 - t) / (t1 - t0)) + p1 * ((t - t0) / (t1 - t0));
+        Vec2 A2 = p1 * ((t2 - t) / (t2 - t1)) + p2 * ((t - t1) / (t2 - t1));
+        Vec2 A3 = p2 * ((t3 - t) / (t3 - t2)) + p3 * ((t - t2) / (t3 - t2));
+        Vec2 B1 = A1 * ((t2 - t) / (t2 - t0)) + A2 * ((t - t0) / (t2 - t0));
+        Vec2 B2 = A2 * ((t3 - t) / (t3 - t1)) + A3 * ((t - t1) / (t3 - t1));
+
+        Vec2 position = B1 * ((t2 - t) / (t2 - t1)) + B2 * ((t - t1) / (t2 - t1));
+
+        Vec2 derivative = (B2 - B1) * (1 / (t2 - t1));
+
+        Vec2 second_derivative =
+            (((A3 - A2) * ((t - t1) / (t3 - t1)) + derivative * ((t3 - t) / (t3 - t1)))
+             - derivative * ((t2 - t) / (t2 - t1)))
+            * (1 / (t2 - t1));
+
+        double curvature = cross(derivative, second_derivative) / pow(derivative.len(), 3);
+
+        return MotionState{
+            .pos = position,
+            .dir = AngleVec2::fromVector(derivative),
+            .curvature = curvature,
+        };
+    };
+
+    for (size_t i = 0; i < n; ++i) {
+        double t = static_cast<double>(i) / (n - 1);
+        points.push_back(eval(p0, p1, p2, p3, t));
+    }
+
+    return points;
+}
+
+MotionStates compose_catmul_rom(const std::vector<Vec2>& pts, size_t n) {
+    VERIFY(pts.size() >= 2);
+
+    const std::size_t k = pts.size() - 1;
+    MotionStates spline;
+    spline.reserve(n * k);
+
+    for (size_t i = 1; i < pts.size(); ++i) {
+        Vec2 p0 = i > 1 ? pts[i - 2] : pts[0] - (pts[1] - pts[0]);
+        Vec2 p1 = pts[i - 1];
+        Vec2 p2 = pts[i - 0];
+        Vec2 p3 = i < pts.size() - 1 ? pts[i + 1] : pts[k] - (pts[k] - pts[k - 1]);
+
+        auto chunk = catmul_rom(p0, p1, p2, p3, n);
+        spline.insert(spline.end(), chunk.begin() + (i == 1 ? 0 : 1), chunk.end());
+    }
+
+    return spline;
+}
 }  // namespace truck::geom

@@ -5,7 +5,7 @@
 namespace truck::motion_planner::search {
 
 // TODO: add curvature constraints
-geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path) {
+/*geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path) {
     geom::MotionStates motionStates;
 
     // Ensure we have at least two points to create a curve
@@ -29,6 +29,26 @@ geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path) {
     control_pts.push_back(nodes[path.trace.back()].pose.pos);
 
     return geom::compose_bezier3(control_pts, std::size_t(20));
+}*/
+
+geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path) {
+    geom::MotionStates motionStates;
+
+    // Ensure we have at least two points to create a curve
+    if (path.trace.size() < 2) {
+        return motionStates;  // Return empty if not enough points
+    }
+
+    std::vector<geom::Vec2> control_pts;
+
+    for (std::size_t i = 0; i < path.trace.size() - 1; ++i) {
+        const hull::Node& from = nodes[path.trace[i]];
+        control_pts.push_back(from.pose.pos);
+    }
+
+    control_pts.push_back(nodes[path.trace.back()].pose.pos);
+
+    return geom::compose_catmul_rom(control_pts, std::size_t(20));
 }
 
 /// Find the shortest path in the `graph` from `from_id` to any node from `to_ids`

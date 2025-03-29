@@ -167,7 +167,12 @@ TEST(MotionPlanner, trajectory) {
     set_obstacles(occupancy_grid, {79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90});
     set_obstacles(
         occupancy_grid, {314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326});
-    set_obstacles(occupancy_grid, {186, 190});
+
+    set_obstacles(
+        occupancy_grid, {394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406});
+
+    set_obstacles(
+        occupancy_grid, {445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457});
 
     NodeId from_id = context.milestone_nodes.front().at(16);
     std::set<NodeId> to_ids = {

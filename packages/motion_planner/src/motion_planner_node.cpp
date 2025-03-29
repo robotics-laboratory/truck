@@ -170,7 +170,7 @@ MotionPlannerNode::MotionPlannerNode() : Node("motion_planner") {
     checker_ = std::make_unique<collision::StaticCollisionChecker>(model_->shape());
 
     const auto graph_params = hull::GraphParams{
-        .hull_radius = model_->shape().width * 2.5,
+        .hull_radius = model_->shape().width * 7,
         .milestone_spacing = model_->shape().length * 1.5,
         .node_spacing = model_->shape().radius(),
         .raycast_increment = .1,
@@ -183,7 +183,6 @@ MotionPlannerNode::MotionPlannerNode() : Node("motion_planner") {
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_buffer_->setUsingDedicatedThread(true);
 
-    // TODO: de-hardcode filepath
     std::string map_file_path = this->declare_parameter("map_file_path", "map/data/map_6.geojson");
     map_ = std::make_unique<map::Map>(map::Map::fromGeoJson(map_file_path));
 }
