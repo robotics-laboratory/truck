@@ -1,12 +1,11 @@
 import os
 
+import numpy as np
 from mcap.reader import make_reader
 from mcap_ros2.decoder import DecoderFactory
+from timestamp import get_frames_num, get_start_time, get_timestamp
 
 from perception.config import Config
-from timestamp import get_timestamp, get_start_time, get_frames_num
-import numpy as np
-
 
 # Описание структуры данных
 dtype = np.dtype(

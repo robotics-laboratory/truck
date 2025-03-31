@@ -1,11 +1,13 @@
-import cv2
 import os
+
+import cv2
+
 from perception.config import Config
 
 
 def extract_frames_by_frequency(video_paths, frequency, root_output_dir):
     """
-    Извлекает кадры из нескольких видео с заданной частотой и сохраняет их как изображения.
+    Извлекает кадры из нескольких видео и сохраняет их как изображения.
 
     :param video_paths: Список путей к видеофайлам.
     :param frequency: Частота извлечения кадров в секундах.
@@ -51,7 +53,8 @@ def extract_frames_by_frequency(video_paths, frequency, root_output_dir):
             ret, frame = cap.read()
             if not ret:
                 print(
-                    f"Не удалось извлечь кадр на времени {elapsed_time} сек. из {video_path}"
+                    f"Не удалось извлечь кадр на времени {elapsed_time} "
+                    f"сек. из {video_path}"
                 )
                 continue
 
@@ -62,7 +65,8 @@ def extract_frames_by_frequency(video_paths, frequency, root_output_dir):
 
             cv2.imwrite(output_path, frame)
             print(
-                f"Кадр на {elapsed_time} сек. из {video_path} успешно сохранен: {output_path}"
+                f"Кадр на {elapsed_time} сек. из {video_path} "
+                f"успешно сохранен: {output_path}"
             )
 
         cap.release()

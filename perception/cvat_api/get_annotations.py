@@ -1,5 +1,6 @@
-import requests
 import os
+
+import requests
 
 from perception.private_config import private_settings
 

@@ -2,6 +2,7 @@ import os
 
 import boto3
 from botocore.exceptions import ClientError
+
 from perception.s3_storage.get_s3_conn import get_conn
 
 # Создаем сессию и клиент S3
@@ -39,7 +40,8 @@ def upload_files_to_s3(local_dir, bucket_name, s3_prefix):
 
                 if file_exists_in_s3(bucket_name, s3_path):
                     print(
-                        f"File {file} already exists in s3://{bucket_name}/{s3_path}. Skipping upload."
+                        f"File {file} already exists in s3://{bucket_name}/{s3_path}."
+                        f" Skipping upload."
                     )
                 else:
                     s3.upload_file(local_path, bucket_name, s3_path)

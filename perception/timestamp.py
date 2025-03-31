@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
-import yaml
+
 import pytz
+import yaml
 
 
 def get_timestamp(start_time_str, elapsed_time):
