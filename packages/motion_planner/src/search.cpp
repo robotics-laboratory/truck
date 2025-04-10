@@ -32,11 +32,11 @@ namespace truck::motion_planner::search {
 }*/
 
 geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path) {
-    geom::MotionStates motionStates;
+    geom::MotionStates motion_states;
 
     // Ensure we have at least two points to create a curve
     if (path.trace.size() < 2) {
-        return motionStates;  // Return empty if not enough points
+        return motion_states;  // Return empty if not enough points
     }
 
     std::vector<geom::Vec2> control_pts;
@@ -49,6 +49,16 @@ geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path) {
     control_pts.push_back(nodes[path.trace.back()].pose.pos);
 
     return geom::compose_catmul_rom(control_pts, std::size_t(20));
+}
+
+geom::Polyline toPolyline(const hull::Nodes& nodes, const Path& path) {
+    geom::Polyline polyline;
+
+    for (const NodeId node_id : path.trace) {
+        polyline.push_back(nodes[node_id].pose.pos);
+    }
+
+    return polyline;
 }
 
 /// Find the shortest path in the `graph` from `from_id` to any node from `to_ids`

@@ -17,6 +17,7 @@ struct Path {
 };
 
 geom::MotionStates fitSpline(const hull::Nodes& nodes, const Path& path);
+geom::Polyline toPolyline(const hull::Nodes& nodes, const Path& path);
 std::optional<Path> findShortestPath(
     const hull::Graph& graph, const std::vector<bool>& node_occupancy, NodeId from_id,
     const std::set<NodeId>& to_ids);

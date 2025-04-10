@@ -2,6 +2,7 @@
 
 #include "geom/msg.h"
 #include "geom/motion_state.h"
+#include "geom/bezier.h"
 #include "model/model.h"
 #include "motion/trajectory.h"
 #include "speed/greedy_planner.h"
@@ -211,11 +212,7 @@ void MotionPlannerNode::publishTrajectory() {
         return;
     }
 
-    RCLCPP_INFO(this->get_logger(), "Transform accepted 2!");
-
     checker_->reset(*state_.distance_transform);
-
-    RCLCPP_INFO(this->get_logger(), "Distance transform checked reset!");
 
     NodeId node_from =
         findNearestIndex(cache_.node_pts, tf_opt->inv()(state_.localization->pose.pos));
@@ -229,13 +226,21 @@ void MotionPlannerNode::publishTrajectory() {
         RCLCPP_INFO(this->get_logger(), "Path couldn't be found :(");
         return;
     }
-    RCLCPP_INFO(this->get_logger(), "Calculated shortest path");
 
-    const geom::MotionStates spline = search::fitSpline(state_.graph->nodes, *path);
-    RCLCPP_INFO(this->get_logger(), "Path -> Spline");
+    // RCLCPP_INFO(this->get_logger(), "Calculated shortest path");
+    VERIFY_FMT(!path->trace.empty(), "Path shouldn't be empty");
+
+    const geom::Polyline polyline_path = search::toPolyline(state_.graph->nodes, *path);
+    geom::Polyline polyline_path_2 = {tf_opt->inv()(state_.localization->pose.pos)};
+    polyline_path_2.insert(polyline_path_2.end(), polyline_path.cbegin(), polyline_path.cend());
+
+    const geom::MotionStates spline = geom::compose_catmul_rom(polyline_path_2, std::size_t(20));
+
+    // const geom::MotionStates spline = search::fitSpline(state_.graph->nodes, *path);
+    // RCLCPP_INFO(this->get_logger(), "Path -> Spline");
 
     state_.trajectory = convertToTrajectory(spline, *tf_opt);
-    RCLCPP_INFO(this->get_logger(), "Spline -> Trajectory");
+    // RCLCPP_INFO(this->get_logger(), "Spline -> Trajectory");
 
     bool collision = false;
     for (auto& state : state_.trajectory.states) {
@@ -250,22 +255,20 @@ void MotionPlannerNode::publishTrajectory() {
         .setScheduledVelocity(state_.scheduled_velocity)
         .fill(state_.trajectory);
 
-    RCLCPP_INFO(this->get_logger(), "GreedyPlanner's completed successfully");
+    // RCLCPP_INFO(this->get_logger(), "GreedyPlanner's completed successfully");
 
-    std::cerr << "[DEBUG]: <trajectory> \n";
-    for (std::size_t i = 0; i < state_.trajectory.states.size(); i += 10) {
-        std::cerr << "[DEBUG]: " << state_.trajectory.states[i] << "\n";
-    }
-    std::cerr << "[DEBUG]: </trajectory> \n";
+    // std::cerr << "[DEBUG]: <trajectory> \n";
+    // for (std::size_t i = 0; i < state_.trajectory.states.size(); i += 10) {
+    //     std::cerr << "[DEBUG]: " << state_.trajectory.states[i] << "\n";
+    // }
+    // std::cerr << "[DEBUG]: </trajectory> \n";
 
-    // dirty way to drop invalid trajectories and get error message
-    state_.trajectory.throwIfInvalid(motion::TrajectoryValidations::enableAll(), *model_);
     try {
-        // state_.trajectory.throwIfInvalid(motion::TrajectoryValidations::enableAll(), *model_);
+        state_.trajectory.throwIfInvalid(motion::TrajectoryValidations::enableAll(), *model_);
     } catch (const std::exception& e) {
         RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 5000, "%s", e.what());
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Drop invalid trajectory!");
-        RCLCPP_INFO(this->get_logger(), "Trajectory is invalid??!!!");
+        RCLCPP_INFO(this->get_logger(), "Trajectory is invalid");
 
         state_.trajectory = motion::Trajectory{};
     }
@@ -278,7 +281,7 @@ void MotionPlannerNode::publishTrajectory() {
         state_.scheduled_velocity = limits.clamp(scheduled_state.velocity);
     } else {
         state_.scheduled_velocity = 0.0;
-        RCLCPP_INFO(this->get_logger(), "Trajectory is empty?");
+        RCLCPP_INFO(this->get_logger(), "Trajectory is empty");
     }
 
     signal_.trajectory->publish(
@@ -321,7 +324,7 @@ void MotionPlannerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPt
         return;
     }
 
-    RCLCPP_INFO(this->get_logger(), "Transform accepted!");
+    // RCLCPP_INFO(this->get_logger(), "Transform accepted!");
 
     const Reference reference =
         convertToReference(msg->data.begin(), msg->data.end(), geom::Transform{});
@@ -334,7 +337,7 @@ void MotionPlannerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPt
               << "\n"
               << tf_opt->inv()(reference.Points().at(3)) << "\n";
 
-    RCLCPP_INFO(this->get_logger(), "Converted route to the reference!");
+    // RCLCPP_INFO(this->get_logger(), "Converted route to the reference!");
     const auto [graph, context] = builder_->buildGraph(reference, map_->polygons().at(0));
 
     RCLCPP_INFO(this->get_logger(), "Graph build complete!");
