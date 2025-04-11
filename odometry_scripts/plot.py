@@ -1,47 +1,183 @@
 import json
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
 import matplotlib.transforms as transf
 import numpy as np
+from matplotlib.animation import FuncAnimation
 from mcap.reader import make_reader
 from mcap_ros2.decoder import DecoderFactory
 
-mcap_pose = []
+ROOT = Path(__file__).parent
+FPS = 30
+GRID_SIZE = 0.6
+TF = transf.Affine2D()
+TF.rotate_deg(45)
+TF.translate(-7 * GRID_SIZE, -7 * GRID_SIZE)
 
-with open("/Users/zhora/Downloads/Aruco_Odometry/run-01.mcap", "rb") as mcap_file:
-    reader = make_reader(mcap_file, decoder_factories=[DecoderFactory()])
-    for schema, channel, message, ros_msg in reader.iter_decoded_messages(
-        topics=["/ekf/odometry/filtered"]
-    ):
-        mcap_pose.append((ros_msg.pose.pose.position.x, ros_msg.pose.pose.position.y))
 
-mcap_pose = np.array(mcap_pose)
-tr = transf.Affine2D()
-tr.rotate_deg(45)
-tr.translate(-4.2, -4.2)
+def read_json_poses(path):
+    data = json.load(open(path))
+    result = []
+    for item in data:
+        x, y = None, None
+        if item["x_pos"] != "None":
+            x, y = float(item["x_pos"]), float(item["y_pos"])
+        ts = 1 / FPS * int(item["frame_num"])
+        result.append((ts, x, y))
+    return result
 
-mcap_pose = tr.transform(mcap_pose)
 
-with open("odom.json", "r") as odom_file:
-    odom = json.load(odom_file)
-    poses = []
-    for pt in odom:
-        if pt["x_pos"] != "None":
-            poses.append([float(pt["x_pos"]), float(pt["y_pos"])])
-    poses = np.asarray(poses)
+def read_mcap_poses(path):
+    result = []
+    ts0 = None
+    with open(path, "rb") as mcap_file:
+        reader = make_reader(mcap_file, decoder_factories=[DecoderFactory()])
+        for _, _, message, ros_msg in reader.iter_decoded_messages(
+            topics=["/ekf/odometry/filtered"]
+        ):
+            x = ros_msg.pose.pose.position.x
+            y = ros_msg.pose.pose.position.y
+            x, y = TF.transform((x, y))
+            ts = message.publish_time / 10**9
+            if ts0 is None:
+                ts0 = ts
+            result.append((ts - ts0, x, y))
+    return result
 
+
+def get_time_offset(gt_poses, mcap_poses):
+    ts0, x0, y0 = next(item for item in gt_poses if item[1] is not None)
+    min_dist, min_ts = float("+inf"), None
+    deadline = 30
+
+    for ts, x, y in mcap_poses:
+        if x is None or y is None:
+            continue
+        dist = np.sqrt((x0 - x) ** 2 + (y0 - y) ** 2)
+        if dist < min_dist:
+            min_dist = dist
+            min_ts = ts
+        if ts > deadline:
+            break
+
+    print(f"MIN DIST: {min_dist:.3f}m")
+    print(f"GT TIME: {ts0:.3f}s")
+    print(f"MCAP TIME: {min_ts:.3f}s")
+    print(f"TIME OFFSET: {ts0 - min_ts:.3f}s")
+    return ts0 - min_ts
+
+
+def sync_mcap_poses(gt_poses, mcap_poses):
+    time_offset = get_time_offset(gt_poses, mcap_poses)
+    mcap_index = 0
+    result = []
+    for gt_ts, _, _ in gt_poses:
+        while mcap_index < len(mcap_poses):
+            mcap_ts, mcap_x, mcap_y = mcap_poses[mcap_index]
+            mcap_ts += time_offset
+            if mcap_ts > gt_ts:
+                result.append((mcap_ts, mcap_x, mcap_y))
+                break
+            mcap_index += 1
+    return result
+
+
+gt_poses = read_json_poses(ROOT / "odom.json")
+mcap_poses = read_mcap_poses(ROOT / "run-01.mcap")
+mcap_poses = sync_mcap_poses(gt_poses, mcap_poses)
+dropped = len(gt_poses) - len(mcap_poses)
+gt_poses = gt_poses[-len(mcap_poses) :]
+print(f"DROPPED {dropped / FPS:.3f}s OF FRAMES")
+
+
+def plot_all():
     fig, ax = plt.subplots()
-
-    ax.plot(poses[:, 0], poses[:, 1], "-", linewidth=1)
-
-    loc = plticker.MultipleLocator(
-        base=0.6
-    )  # this locator puts ticks at regular intervals
+    loc = plticker.MultipleLocator(base=GRID_SIZE)
     ax.xaxis.set_major_locator(loc)
     ax.yaxis.set_major_locator(loc)
 
-    ax.plot(mcap_pose[:, 0], mcap_pose[:, 1], "-", linewidth=1)
+    gt_poses_np = np.asarray(gt_poses)
+    mcap_poses_np = np.asarray(mcap_poses)
+    ax.plot(gt_poses_np[:, 1], gt_poses_np[:, 2], "-", linewidth=1)
+    ax.plot(mcap_poses_np[:, 1], mcap_poses_np[:, 2], "-", linewidth=1)
 
+    plt.axis("equal")
     plt.grid()
     plt.show()
+
+
+def plot_sequential():
+    step = 30 * FPS
+    offset = 400
+
+    while offset < len(gt_poses):
+        fig, ax = plt.subplots()
+        loc = plticker.MultipleLocator(base=GRID_SIZE)
+        ax.xaxis.set_major_locator(loc)
+        ax.yaxis.set_major_locator(loc)
+
+        RANGE = slice(offset, offset + step)
+        gt_poses_np = np.asarray(gt_poses)
+        mcap_poses_np = np.asarray(mcap_poses)
+        ax.plot(gt_poses_np[RANGE, 1], gt_poses_np[RANGE, 2], "-", linewidth=1)
+        ax.plot(mcap_poses_np[RANGE, 1], mcap_poses_np[RANGE, 2], "-", linewidth=1)
+
+        plt.axis("equal")
+        plt.grid()
+        plt.show()
+
+        offset += step
+
+
+def plot_animation():
+    fig, [ax, ax2] = plt.subplots(1, 2)
+    ax.set_title("trajectory")
+    ax2.set_title("position drift")
+    loc = plticker.MultipleLocator(base=GRID_SIZE)
+    ax.xaxis.set_major_locator(loc)
+    ax.yaxis.set_major_locator(loc)
+
+    [gt_line] = ax.plot([], [], lw=1, label="gt")
+    [mcap_line] = ax.plot([], [], lw=1, label="odom")
+    [diff_line] = ax2.plot([], [], lw=1)
+    gt_poses_np = np.asarray(gt_poses, dtype=np.float32)
+    mcap_poses_np = np.asarray(mcap_poses, dtype=np.float32)
+    pose_diff = gt_poses_np - mcap_poses_np
+
+    def animate(n):
+        # cut = slice(n - FPS * 10, n)
+        cut = slice(0, n)
+        gt_line.set_xdata(gt_poses_np[cut, 1])
+        gt_line.set_ydata(gt_poses_np[cut, 2])
+        mcap_line.set_xdata(mcap_poses_np[cut, 1])
+        mcap_line.set_ydata(mcap_poses_np[cut, 2])
+        diff_line.set_xdata(pose_diff[cut, 1])
+        diff_line.set_ydata(pose_diff[cut, 2])
+        return [gt_line, mcap_line, diff_line]
+
+    frames = range(400, len(gt_poses), 10)
+    anim = FuncAnimation(fig, animate, frames=frames, interval=50)  # noqa
+
+    ax.set_xlim(np.min(mcap_poses_np[:, 1]) - 1, np.max(mcap_poses_np[:, 1]) + 1)
+    ax.set_ylim(np.min(mcap_poses_np[:, 2]) - 1, np.max(mcap_poses_np[:, 2]) + 1)
+    ax.set_aspect("equal", adjustable="box")
+    ax.grid()
+    ax.legend()
+
+    diff_max = np.nanmax(np.abs(pose_diff[:, 1:].flatten()))
+    ax2.set_xlim(-diff_max, diff_max)
+    ax2.set_ylim(-diff_max, diff_max)
+    ax2.set_aspect("equal", adjustable="box")
+    ax2.grid()
+
+    fig.set_size_inches(20, 10)
+    fig.tight_layout()
+    # anim.save(ROOT / "anim.mp4")
+    plt.show()
+
+
+# plot_all()
+# plot_sequential()
+plot_animation()
