@@ -121,15 +121,36 @@ for frame in input_markers:
         if (int(front_marker["marker_id"]) == 0) and (
             int(back_marker["marker_id"]) == 1
         ):
+            undist_front = cv2.undistortPoints(
+                np.asarray(
+                    [[float(front_marker["x_px"]), float(front_marker["y_px"])]],
+                    dtype=np.float32,
+                ),
+                camera_matrix,
+                distortion_coeffs,
+                None,
+                mtx,
+            )
+            undist_back = cv2.undistortPoints(
+                np.asarray(
+                    [[float(back_marker["x_px"]), float(back_marker["y_px"])]],
+                    dtype=np.float32,
+                ),
+                camera_matrix,
+                distortion_coeffs,
+                None,
+                mtx,
+            )
+
             front_pose = frame_to_world(
-                (float(front_marker["x_px"]), float(front_marker["y_px"])),
+                undist_front[0][0],
                 tvec,
                 rvec,
                 mtx,
                 0.15,
             )
             back_pose = frame_to_world(
-                (float(back_marker["x_px"]), float(back_marker["y_px"])),
+                undist_back[0][0],
                 tvec,
                 rvec,
                 mtx,
