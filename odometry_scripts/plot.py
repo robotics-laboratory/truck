@@ -1,5 +1,5 @@
+import argparse
 import json
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
@@ -9,12 +9,23 @@ from matplotlib.animation import FuncAnimation
 from mcap.reader import make_reader
 from mcap_ros2.decoder import DecoderFactory
 
-ROOT = Path(__file__).parent
-FPS = 30
-GRID_SIZE = 0.6
+parser = argparse.ArgumentParser(description="Plot car odometry")
+parser.add_argument(
+    "-p", "--path", default="./", help="Path to folder with experiment data."
+)
+
+args = parser.parse_args()
+
+with open(args.path + "/params.json", "r") as params_file:
+    params = json.load(params_file)
+    fps = params["fps"]
+    grid_size = params["grid_size"]
+    distortion_coeffs = np.asarray(params["grid_camera_dist"], dtype=np.float32)
+    camera_matrix = np.asarray(params["grid_camera_matrix"], dtype=np.float32)
+
 TF = transf.Affine2D()
 TF.rotate_deg(45)
-TF.translate(-7 * GRID_SIZE, -7 * GRID_SIZE)
+TF.translate(-7 * grid_size, -7 * grid_size)
 
 
 def read_json_poses(path):
@@ -22,9 +33,9 @@ def read_json_poses(path):
     result = []
     for item in data:
         x, y = None, None
-        if item["x_pos"] != "None":
-            x, y = float(item["x_pos"]), float(item["y_pos"])
-        ts = 1 / FPS * int(item["frame_num"])
+        if item["x_pos"] is not None:
+            x, y = item["x_pos"], item["y_pos"]
+        ts = 1 / fps * int(item["frame_num"])
         result.append((ts, x, y))
     return result
 
@@ -84,17 +95,17 @@ def sync_mcap_poses(gt_poses, mcap_poses):
     return result
 
 
-gt_poses = read_json_poses(ROOT / "odom.json")
-mcap_poses = read_mcap_poses(ROOT / "run-01.mcap")
+gt_poses = read_json_poses(args.path + "/odom.json")
+mcap_poses = read_mcap_poses(args.path + "/odom_live.mcap")
 mcap_poses = sync_mcap_poses(gt_poses, mcap_poses)
 dropped = len(gt_poses) - len(mcap_poses)
 gt_poses = gt_poses[-len(mcap_poses) :]
-print(f"DROPPED {dropped / FPS:.3f}s OF FRAMES")
+print(f"DROPPED {dropped / fps:.3f}s OF FRAMES")
 
 
 def plot_all():
     fig, ax = plt.subplots()
-    loc = plticker.MultipleLocator(base=GRID_SIZE)
+    loc = plticker.MultipleLocator(base=grid_size)
     ax.xaxis.set_major_locator(loc)
     ax.yaxis.set_major_locator(loc)
 
@@ -109,12 +120,12 @@ def plot_all():
 
 
 def plot_sequential():
-    step = 30 * FPS
+    step = 30 * fps
     offset = 400
 
     while offset < len(gt_poses):
         fig, ax = plt.subplots()
-        loc = plticker.MultipleLocator(base=GRID_SIZE)
+        loc = plticker.MultipleLocator(base=grid_size)
         ax.xaxis.set_major_locator(loc)
         ax.yaxis.set_major_locator(loc)
 
@@ -135,7 +146,7 @@ def plot_animation():
     fig, [ax, ax2] = plt.subplots(1, 2)
     ax.set_title("trajectory")
     ax2.set_title("position drift")
-    loc = plticker.MultipleLocator(base=GRID_SIZE)
+    loc = plticker.MultipleLocator(base=grid_size)
     ax.xaxis.set_major_locator(loc)
     ax.yaxis.set_major_locator(loc)
 
@@ -147,7 +158,7 @@ def plot_animation():
     pose_diff = gt_poses_np - mcap_poses_np
 
     def animate(n):
-        # cut = slice(n - FPS * 10, n)
+        # cut = slice(n - fps * 10, n)
         cut = slice(0, n)
         gt_line.set_xdata(gt_poses_np[cut, 1])
         gt_line.set_ydata(gt_poses_np[cut, 2])

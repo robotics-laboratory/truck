@@ -1,68 +1,75 @@
+import argparse
 import json
 
 import cv2
 import numpy as np
 
+parser = argparse.ArgumentParser(description="Calculate camera params and tvec, rvec")
+parser.add_argument(
+    "-p",
+    "--path",
+    default="./",
+    required=True,
+    help="Path to folder with experiment data.",
+)
+parser.add_argument(
+    "-l",
+    "--grid_size",
+    default=None,
+    required=True,
+    help="Edge length of the grid (in metres).",
+)
+
+args = parser.parse_args()
+
 input = []
+grid_size = float(args.grid_size)
 
-grid_len = 0.6
-camera_matrix = np.array(
-    [
-        [1772.55581, 0.00000000, 2005.69013],
-        [0.00000000, 1759.59489, 1506.87308],
-        [0.00000000, 0.00000000, 1.00000000],
-    ],
-    dtype=np.float32,
-)
+with open(args.path + "/params.json", "r") as params_file:
+    try:
+        params = json.load(params_file)
+    except json.JSONDecodeError:
+        params = {}
 
-distortion_coeffs = np.array(
-    [-2.35848581e-01, 6.19417270e-02, 1.60368010e-04, 3.48600473e-04, -7.36220717e-03],
-    dtype=np.float32,
-)
-
-with open("grid.json", "r") as input_file:
-    input_str = input_file.read()
-
-input = json.loads(input_str)
+with open(args.path + "/grid.json", "r") as input_file:
+    input = json.load(input_file)
 
 grid_coords = [
-    [float(point["x_grid"]) * grid_len, float(point["y_grid"]) * grid_len, 0.0]
-    for point in input
+    [point["x_grid"] * grid_size, point["y_grid"] * grid_size, 0.0] for point in input
 ]
-img_coords = [[float(point["x_img"]), float(point["y_img"])] for point in input]
+img_coords = [[point["x_img"], point["y_img"]] for point in input]
 
-ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(
-    [np.array(grid_coords, dtype=np.float32).reshape(-1, 1, 3)],
-    [np.array(img_coords, dtype=np.float32).reshape(-1, 1, 2)],
-    (4000, 3000),
-    camera_matrix,
-    distortion_coeffs,
-    flags=cv2.CALIB_USE_INTRINSIC_GUESS,
-)
+if ("charuco_camera_matrix" in params.keys()) and (
+    "charuco_camera_dist" in params.keys()
+):
+    ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(
+        [np.array(grid_coords, dtype=np.float32).reshape(-1, 1, 3)],
+        [np.array(img_coords, dtype=np.float32).reshape(-1, 1, 2)],
+        (4000, 3000),
+        np.asarray(params["charuco_camera_matrix"], dtype=np.float32),
+        np.asarray(params["charuco_camera_dist"], dtype=np.float32),
+        flags=cv2.CALIB_USE_INTRINSIC_GUESS,
+    )
+else:
+    ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(
+        [np.array(grid_coords, dtype=np.float32).reshape(-1, 1, 3)],
+        [np.array(img_coords, dtype=np.float32).reshape(-1, 1, 2)],
+        (4000, 3000),
+    )
 
-with open("params.json", "w+") as params_file:
-    params_str = params_file.read()
-    if params_str:
-        params = json.loads(params_str)
-    else:
-        params = {}
-    params["tvecs"] = str(tvecs)
-    params["rvecs"] = str(rvecs)
-
-    params_file.seek(0)
-    print(json.dumps(params), file=params_file)
-
-
-print(ret, camera_matrix, dist_coeffs, rvecs, tvecs, sep="\n")
 rvecs = [a[0] for a in rvecs[0]]
 tvecs = [a[0] for a in tvecs[0]]
 
-print(rvecs, tvecs)
 R, _ = cv2.Rodrigues(np.asarray(rvecs))
-# Транспонируем R (обратная матрица поворота)
 R_inv = R.T
-# Инвертируем трансляцию
 camera_position = -np.dot(R_inv, np.asarray(tvecs))
 rvec_inv, _ = cv2.Rodrigues(R_inv)
-print(camera_position)
-print(rvec_inv)
+
+with open(args.path + "/params.json", "w+") as params_file:
+    params["grid_rms"] = ret
+    params["tvecs"] = camera_position.tolist()
+    params["rvecs"] = rvec_inv.tolist()
+    params["grid_size"] = grid_size
+    params["grid_camera_matrix"] = camera_matrix.tolist()
+    params["grid_camera_dist"] = dist_coeffs.flatten().tolist()
+    json.dump(params, params_file)

@@ -1,19 +1,41 @@
+import argparse
 import json
+import os
 
 import cv2
 import numpy as np
 
-# Parametres
-drag_threshold = 10
-move_step_px = 100
-scale_factor = 1.1
-grid_size = 20
+# Constants
+DRAG_THRESHOLD = 10
+MOVE_STEP_PX = 100
+SCALE_FACTOR = 1.1
+GRID_SIZE = 20
 
-video_path = "/Users/zhora/Downloads/Aruco_Odometry/run-01.mp4"
-cap = cv2.VideoCapture(video_path)
-ret, orig_image = cap.read()
-if orig_image is None:
-    raise IOError("Image not found")
+parser = argparse.ArgumentParser(description="Select grid nodes on video frame.")
+parser.add_argument(
+    "-p",
+    "--path",
+    default="./",
+    required=True,
+    help="Path to folder with experiment data.",
+)
+parser.add_argument(
+    "-v",
+    "--view",
+    default=None,
+    help="Filename of JSON (in path folder) with grid nodes to view/edit grid label",
+)
+
+args = parser.parse_args()
+
+frame_path = args.path + "/frame.png"
+if not os.path.exists(frame_path):
+    raise Exception(f"No image file {frame_path}")
+
+if args.view and (not os.path.exists(args.path + "/" + args.view)):
+    raise Exception(f"No JSON file {args.path + "/" + args.view}")
+
+orig_image = cv2.imread(frame_path)
 
 zoom = 1.0
 offset = np.array([0.0, 0.0])
@@ -27,21 +49,12 @@ selected_point_idx = None
 
 
 def image_to_display(pt):
-    """
-    Преобразует точку из координат оригинального изображения
-    в координаты окна отображения.
-    """
-    # Масштабирование
     p_scaled = (pt[0] * zoom, pt[1] * zoom)
-    # Смещение
+
     return (p_scaled[0] - offset[0], p_scaled[1] - offset[1])
 
 
 def display_to_image(pt):
-    """
-    Преобразует точку из координат окна отображения
-    в координаты оригинального изображения.
-    """
     return ((pt[0] + offset[0]) / zoom, (pt[1] + offset[1]) / zoom)
 
 
@@ -58,10 +71,19 @@ def redraw():
         int(offset[1]) : int(offset[1] + display_height),
         int(offset[0]) : int(offset[0] + display_width),
     ].copy()
-    for pt in corner_points:
+    for i, pt in enumerate(corner_points):
         p_disp = image_to_display(pt)
         if 0 <= p_disp[0] < display_width and 0 <= p_disp[1] < display_height:
             if pt[2] == 1:  # dragged point
+                cv2.putText(
+                    display_img,
+                    f"[{corners[i][0]},{corners[i][1]}]",
+                    (int(p_disp[0]) - 50, int(p_disp[1]) - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 255, 0),
+                    2,
+                )
                 color = (0, 255, 0)
             else:
                 color = (0, 0, 255)
@@ -78,7 +100,7 @@ def mouse_callback(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         for i, pt in enumerate(corner_points):
             p_disp = image_to_display(pt)
-            if np.hypot(p_disp[0] - x, p_disp[1] - y) < drag_threshold:
+            if np.hypot(p_disp[0] - x, p_disp[1] - y) < DRAG_THRESHOLD:
                 dragging = True
                 selected_point_idx = i
                 return
@@ -91,14 +113,13 @@ def mouse_callback(event, x, y, flags, param):
         dragging = False
         selected_point_idx = None
         selected_type = None
+
     elif event == cv2.EVENT_RBUTTONDOWN:
-        pass
-        # delete point
-        # for i, pt in enumerate(other_points):
-        #     p_disp = image_to_display(pt)
-        #     if np.hypot(p_disp[0] - x, p_disp[1] - y) < drag_threshold:
-        #         other_points = np.delete(other_points, i)
-        #         return
+        for i, pt in enumerate(corner_points):
+            p_disp = image_to_display(pt)
+            if np.hypot(p_disp[0] - x, p_disp[1] - y) < DRAG_THRESHOLD:
+                corner_points[i][2] = 0
+                return
     redraw()
 
 
@@ -107,20 +128,20 @@ def keyboard_routine():
     key = cv2.waitKey(20)
 
     if key == ord("+") or key == ord("="):
-        zoom *= scale_factor
+        zoom *= SCALE_FACTOR
     elif key == ord("-") or key == ord("_"):
-        if zoom < scale_factor:
+        if zoom < SCALE_FACTOR:
             zoom = 1
         else:
-            zoom /= scale_factor
+            zoom /= SCALE_FACTOR
     elif key == 2:  # left
-        offset[0] -= move_step_px
+        offset[0] -= MOVE_STEP_PX
     elif key == 3:  # right
-        offset[0] += move_step_px
+        offset[0] += MOVE_STEP_PX
     elif key == 0:  # up
-        offset[1] -= move_step_px
+        offset[1] -= MOVE_STEP_PX
     elif key == 1:  # down
-        offset[1] += move_step_px
+        offset[1] += MOVE_STEP_PX
 
     return key
 
@@ -130,46 +151,48 @@ cv2.resizeWindow("Image", display_width, display_height)
 cv2.setMouseCallback("Image", mouse_callback)
 redraw()
 
-while True:
-    key = keyboard_routine()
+if args.view is None:
+    corners = [[0, 0], [1, 0], [1, 1], [0, 1]]
 
-    if key != -1:
-        redraw()
-    if key == ord("n") and len(corner_points) == 4:
-        break
-    elif key == 27:
-        cv2.destroyAllWindows()
-        exit()
+    while True:
+        key = keyboard_routine()
 
-cv2.destroyAllWindows()
+        if key != -1:
+            redraw()
+        if key == 13 and len(corner_points) == 4:  # 13 == Enter (CR, carriage return)
+            break
+        elif key == 27:
+            cv2.destroyAllWindows()
+            exit()
 
-corners = [[0, 0], [1, 0], [1, 1], [0, 1]]
+    image_corners = np.array([pt[:2] for pt in corner_points], dtype=np.float32)
+    H = cv2.getPerspectiveTransform(np.array(corners, dtype=np.float32), image_corners)
 
-image_corners = np.array([pt[:2] for pt in corner_points], dtype=np.float32)
-H = cv2.getPerspectiveTransform(np.array(corners, dtype=np.float32), image_corners)
+    for i in range(-GRID_SIZE // 2 + 1, GRID_SIZE // 2 + 1):
+        for j in range(-GRID_SIZE // 2 + 1, GRID_SIZE // 2 + 1):
+            if (i, j) in [(0, 0), (1, 0), (1, 1), (0, 1)]:
+                continue
+            corners.append([i, j])
+    grid_img_points = cv2.perspectiveTransform(
+        np.array(corners[4:], dtype=np.float32).reshape(-1, 1, 2), H
+    )
+    predict_points = grid_img_points.reshape(-1, 2).tolist()
+    corner_points.extend([[pt[0], pt[1], 0] for pt in predict_points])
+else:
+    with open(args.path + "/" + args.view, "r") as input_file:
+        input = json.load(input_file)
 
-for i in range(-grid_size // 2 + 1, grid_size // 2 + 1):
-    for j in range(-grid_size // 2 + 1, grid_size // 2 + 1):
-        if (i, j) in [(0, 0), (1, 0), (1, 1), (0, 1)]:
-            continue
-        corners.append([i, j])
-grid_img_points = cv2.perspectiveTransform(
-    np.array(corners[4:], dtype=np.float32).reshape(-1, 1, 2), H
-)
-predict_points = grid_img_points.reshape(-1, 2).tolist()
-corner_points.extend([[pt[0], pt[1], 0] for pt in predict_points])
+    corners = [[point["x_grid"], point["y_grid"]] for point in input]
+    corner_points = [[point["x_img"], point["y_img"], 1] for point in input]
 
-
-cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
-cv2.resizeWindow("Image", display_width, display_height)
-cv2.setMouseCallback("Image", mouse_callback)
 redraw()
 
 while True:
     key = keyboard_routine()
+
     if key != -1:
         redraw()
-    if key == 27:
+    if key == 13:  # 13 == Enter (CR, carriage return)
         break
 
 output_array = []
@@ -177,6 +200,7 @@ output_array = []
 for i in range(len(corners)):
     if corner_points[i][2] == 0:
         continue
+
     if (
         (corner_points[i][0] > display_width)
         or (corner_points[i][0] < 0)
@@ -184,31 +208,22 @@ for i in range(len(corners)):
         or (corner_points[i][1] < 0)
     ):
         continue
-    if (corner_points[i][0] < 40) and (corner_points[i][1] < 40):
-        continue
+
     output_array.append(
         {
-            "x_grid": str(corners[i][0]),
-            "y_grid": str(corners[i][1]),
-            "x_img": str(corner_points[i][0]),
-            "y_img": str(corner_points[i][1]),
+            "x_grid": int(corners[i][0]),
+            "y_grid": int(corners[i][1]),
+            "x_img": float(corner_points[i][0]),
+            "y_img": float(corner_points[i][1]),
         }
     )
 
-with open("grid.json", "w+") as output_file:
-    json.dump(output_array, fp=output_file)
+if args.view is None:
+    json_filename = "/grid.json"
+else:
+    json_filename = "/" + args.view
+
+with open(args.path + json_filename, "w+") as output_file:
+    json.dump(output_array, output_file)
 
 cv2.destroyAllWindows()
-
-
-# with open("grid.json", "r") as grid_file:
-#     grid = json.load(grid_file)
-
-#     corner_points = []
-#     for pt in grid:
-#         corner_points.append([float(pt['x_img']), float(pt['y_img'])])
-
-#     redraw()
-#     while(True):
-#         key = cv2.waitKey(20)
-#         pass
