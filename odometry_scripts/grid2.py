@@ -55,6 +55,8 @@ else:
         [np.array(grid_coords, dtype=np.float32).reshape(-1, 1, 3)],
         [np.array(img_coords, dtype=np.float32).reshape(-1, 1, 2)],
         (4000, 3000),
+        None,
+        None,
     )
 
 rvecs = [a[0] for a in rvecs[0]]
