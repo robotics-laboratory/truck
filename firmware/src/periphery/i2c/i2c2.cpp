@@ -5,12 +5,32 @@
 #include "stm32g4xx_ll_rcc.h"
 #include "stm32g4xx_ll_bus.h"
 #include "stm32g4xx_ll_gpio.h"
-
+#include "stm32g4xx_ll_i2c.h"
 #include "board.h"
 
 I2C& I2C::getInstance() {
     static I2C _instance;
     return _instance;
+}
+
+void I2C::restart(void) {
+    LL_I2C_Disable(i2c_handle);
+    LL_I2C_Enable(i2c_handle);
+}
+
+uint32_t I2C::wait_register(
+    uint32_t(wait_register)(I2C_TypeDef*), bool wait_state, uint32_t time_out_ts) {
+    uint32_t status = 0;
+
+    while (wait_register(i2c_handle) == wait_state) {
+        if (time_out_ts < board_get_tick()) {
+            restart();
+            status = 1;
+            break;
+        }
+    };
+    status = 0;
+    return status;
 }
 
 uint32_t I2C::init(void) {
@@ -64,12 +84,8 @@ uint32_t I2C::init(void) {
 }
 
 uint32_t I2C::read_bytes(
-    uint8_t chip_address,
-    uint8_t register_address,
-    uint8_t *ptr_bytes,
-    size_t size,
-    uint32_t time_out
-) {
+    uint8_t chip_address, uint8_t register_address, uint8_t* ptr_bytes, size_t size,
+    uint32_t time_out) {
     uint32_t status = 0;
     do {
         if (is_initialized != true) {
@@ -82,16 +98,9 @@ uint32_t I2C::read_bytes(
             break;
         }
 
-        uint32_t temp_tick_counter = board_get_tick();
-        while (LL_I2C_IsActiveFlag_BUSY(i2c_handle) == true) {
-            if (((board_get_tick() - temp_tick_counter)
-                > time_out)) {
-                // i2c_restart(i2c);
-                status = 3;
-                break;
-            }
-        };
-        if (status != 0) {
+        uint32_t time_out_ts = board_get_tick() + time_out;
+        if (wait_register(LL_I2C_IsActiveFlag_BUSY, true, time_out_ts) != 0) {
+            status = 3;
             break;
         }
 
@@ -101,31 +110,27 @@ uint32_t I2C::read_bytes(
             LL_I2C_ADDRSLAVE_7BIT,
             1,
             LL_I2C_MODE_SOFTEND,
-            LL_I2C_GENERATE_START_WRITE
-        );
+            LL_I2C_GENERATE_START_WRITE);
 
-        while (LL_I2C_IsActiveFlag_TXE(i2c_handle) == false) {
-            if (((board_get_tick() - temp_tick_counter)
-                > time_out)) {
-                // i2c_restart(i2c);
-                status = 4;
-                break;
-            }
+        if (wait_register(LL_I2C_IsActiveFlag_TXE, false, time_out_ts) != 0) {
+            status = 4;
+            break;
         }
-        if (status != 0) {
+
+        if (LL_I2C_IsActiveFlag_NACK(i2c_handle) == SET) {
+            status = 4;
             break;
         }
 
         LL_I2C_TransmitData8(i2c_handle, register_address);
-        while (LL_I2C_IsActiveFlag_TC(i2c_handle) == false) {
-            if (((board_get_tick() - temp_tick_counter)
-                > time_out)) {
-                // i2c_restart(i2c);
-                status = 5;
-                break;
-            }
+
+        if (wait_register(LL_I2C_IsActiveFlag_TC, false, time_out_ts) != 0) {
+            status = 5;
+            break;
         }
-        if (status != 0) {
+
+        if (LL_I2C_IsActiveFlag_NACK(i2c_handle) == SET) {
+            status = 4;
             break;
         }
 
@@ -135,17 +140,12 @@ uint32_t I2C::read_bytes(
             LL_I2C_ADDRSLAVE_7BIT,
             size,
             LL_I2C_MODE_AUTOEND,
-            LL_I2C_GENERATE_START_READ
-        );
+            LL_I2C_GENERATE_START_READ);
 
         for (size_t i = 0; i < size; i++) {
-            while (LL_I2C_IsActiveFlag_RXNE(i2c_handle) == false) {
-                if (((board_get_tick() - temp_tick_counter)
-                    > time_out)) {
-                    // i2c_restart(i2c);
-                    status = 6;
-                    break;
-                }
+            if (wait_register(LL_I2C_IsActiveFlag_RXNE, false, time_out_ts) != 0) {
+                status = 6;
+                break;
             }
             ptr_bytes[i] = LL_I2C_ReceiveData8(i2c_handle);
         }
@@ -153,15 +153,8 @@ uint32_t I2C::read_bytes(
             break;
         }
 
-        while (LL_I2C_IsActiveFlag_STOP(i2c_handle) == false) {
-            if (((board_get_tick() - temp_tick_counter)
-                > time_out)) {
-                // i2c_restart(i2c);
-                status = 7;
-                break;
-            }
-        };
-        if (status != 0) {
+        if (wait_register(LL_I2C_IsActiveFlag_STOP, false, time_out_ts) != 0) {
+            status = 7;
             break;
         }
 
@@ -175,12 +168,8 @@ uint32_t I2C::read_bytes(
 }
 
 uint32_t I2C::write_bytes(
-    uint8_t chip_address,
-    uint8_t register_address,
-    uint8_t *ptr_bytes,
-    size_t size,
-    uint32_t time_out
-) {
+    uint8_t chip_address, uint8_t register_address, uint8_t* ptr_bytes, size_t size,
+    uint32_t time_out) {
     uint32_t status = 0;
 
     uint32_t i = 0;
@@ -196,16 +185,10 @@ uint32_t I2C::write_bytes(
             break;
         }
 
-        uint32_t temp_tick_counter = board_get_tick();
-        while (LL_I2C_IsActiveFlag_BUSY(i2c_handle) == true) {
-            if (((board_get_tick() - temp_tick_counter)
-                > time_out)) {
-                // i2c_restart(i2c);
-                status = 3;
-                break;
-            }
-        };
-        if (status != 0) {
+        uint32_t time_out_ts = board_get_tick();
+
+        if (wait_register(LL_I2C_IsActiveFlag_BUSY, true, time_out_ts) != 0) {
+            status = 3;
             break;
         }
 
@@ -215,26 +198,17 @@ uint32_t I2C::write_bytes(
             LL_I2C_ADDRSLAVE_7BIT,
             size + 1,
             LL_I2C_MODE_AUTOEND,
-            LL_I2C_GENERATE_START_WRITE
-        );
-
-        while (LL_I2C_IsActiveFlag_TXE(i2c_handle) == false) {
-            if (((board_get_tick() - temp_tick_counter)
-                > time_out)) {
-                // i2c_restart(i2c);
-                status = 2;
-                break;
-            }
-        }
-        if (status != 0) {
+            LL_I2C_GENERATE_START_WRITE);
+        // TODO check NACK
+        if (wait_register(LL_I2C_IsActiveFlag_TXE, false, time_out_ts) != 0) {
+            status = 4;
             break;
         }
 
         LL_I2C_TransmitData8(i2c_handle, register_address);
         while (LL_I2C_IsActiveFlag_STOP(i2c_handle) == false) {
-            if (((board_get_tick() - temp_tick_counter)
-                > time_out)) {
-                // i2c_restart(i2c);
+            if (time_out_ts > board_get_tick()) {
+                restart();
                 status = 3;
                 break;
             }
