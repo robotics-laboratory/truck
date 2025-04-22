@@ -9,19 +9,22 @@
 
 #include "board.h"
 #include "usart2.h"
+#include "mag3110.h"
+#include "hal_gpio.h"
 
 #include "wheel_encoder.h"
 #include "ServoController.h"
 
-#define ENCODERS_SPEED_MSG_TAG           1
-#define SERVO_MEASURED_ANGLES_MSG_TAG    2
+#define ENCODERS_SPEED_MSG_TAG 1
+#define SERVO_MEASURED_ANGLES_MSG_TAG 2
+#define MAGN_Z_MSG_TAG 4
 
-#define SERVO_TARGET_ANGLES_MSG_TAG      3
+#define SERVO_TARGET_ANGLES_MSG_TAG 3
 
 static uint8_t cobs_buffer[64] = {0};
-static uint8_t *msg_buff = &(cobs_buffer[1]);
+static uint8_t* msg_buff = &(cobs_buffer[1]);
 
-static uint8_t rx_cmd_buffer[64] = { 0 };
+static uint8_t rx_cmd_buffer[64] = {0};
 volatile bool rx_data_available = false;
 
 static void send_cobs_buffer(uint32_t size) {
@@ -36,18 +39,32 @@ SensorPolling& SensorPolling::getInstance() {
 }
 
 void SensorPolling::task() {
-    static WheelEncoder &enc_left_front = WheelEncoder::get_instance(WheelType::LEFT_FRONT);
-    static WheelEncoder &enc_right_front = WheelEncoder::get_instance(WheelType::RIGHT_FRONT);
+    static WheelEncoder& enc_left_front = WheelEncoder::get_instance(WheelType::LEFT_FRONT);
+    static WheelEncoder& enc_right_front = WheelEncoder::get_instance(WheelType::RIGHT_FRONT);
+    static MAG3110& magnitometr = MAG3110::getInstance();
+
+    magnitometr.init();
+    hal_gpio_init(GPIO_PORT_A, GPIO_PIN_7);
     enc_left_front.init();
     enc_right_front.init();
 
-    static ServoController &SC = ServoController::getInstance();
+    static ServoController& SC = ServoController::getInstance();
     volatile uint32_t last_msg_send = board_get_tick();
+    uint16_t magn_x = 0;
+    uint16_t magn_y = 0;
+    uint16_t magn_z = 0;
+
+    uint32_t disable_pin = 0;
 
     usart_2_set_memory_for_rx_data(rx_cmd_buffer, 64);
 
     while (true) {
-        if (board_get_tick() != last_msg_send) {
+        if ((disable_pin != 0) && (board_get_tick() > disable_pin)) {
+            hal_gpio_reset_pin(GPIO_PORT_A, GPIO_PIN_7);
+            disable_pin = 0;
+        }
+
+        if ((board_get_tick() - last_msg_send) > 9) {
             uint16_t left_angle = 0;
             uint16_t right_angle = 0;
             SC.get_angle(left_angle, right_angle);
@@ -63,28 +80,37 @@ void SensorPolling::task() {
             memcpy(&(msg_buff[5]), &right_speed, sizeof(right_speed));
             send_cobs_buffer(9);
 
+            magnitometr.get_magn_z(magn_x, magn_y, magn_z);
+            msg_buff[0] = MAGN_Z_MSG_TAG;
+            memcpy(&(msg_buff[1]), &magn_x, sizeof(magn_x));
+            memcpy(&(msg_buff[3]), &magn_y, sizeof(magn_y));
+            memcpy(&(msg_buff[5]), &magn_z, sizeof(magn_z));
+            send_cobs_buffer(7);
+
             last_msg_send = board_get_tick();
         }
 
         if (rx_data_available == true) {
-            uint8_t *rx_data = NULL;
+            uint8_t* rx_data = NULL;
             uint32_t rx_bytes = 0;
             usart_2_get_memory_for_rx_data(&rx_data, &rx_bytes);
             if ((rx_bytes == 0) || (rx_bytes == 64)) {
                 // printf("Empty message\n");
             } else {
-                uint8_t *rx_data_end = rx_data + rx_bytes;
-                uint8_t *curent_msg = rx_data;
+                uint8_t* rx_data_end = rx_data + rx_bytes;
+                uint8_t* curent_msg = rx_data;
                 do {
                     uint32_t msg_size = 0;
 
-                    for (msg_size = 0; ((curent_msg + msg_size) < rx_data_end)
-                        && (curent_msg[msg_size] != 0); ++msg_size);
+                    for (msg_size = 0;
+                         ((curent_msg + msg_size) < rx_data_end) && (curent_msg[msg_size] != 0);
+                         ++msg_size)
+                        ;
 
                     if ((curent_msg + msg_size) < rx_data_end) {
-                        cobs::decode(curent_msg,  msg_size);
+                        cobs::decode(curent_msg, msg_size);
                     }
-                    uint8_t *cmd_data = curent_msg + 1;
+                    uint8_t* cmd_data = curent_msg + 1;
                     uint8_t cmd_size = msg_size - 1;
                     if ((cmd_data[0] == 3) && (cmd_size == 3)) {
                         uint8_t left_servo_angle = 0;
@@ -93,6 +119,9 @@ void SensorPolling::task() {
                         right_servo_angle = cmd_data[2];
                         SC.set_angle(left_servo_angle, right_servo_angle);
                         // printf("ang %d %d\n", left_servo_angle, right_servo_angle);
+                    } else if ((cmd_data[0] == 5) && (cmd_size == 1)) {
+                        hal_gpio_set_pin(GPIO_PORT_A, GPIO_PIN_7);
+                        disable_pin = board_get_tick() + 500;
                     } else {
                         // printf("Incorrect request\n");
                     }
@@ -101,17 +130,18 @@ void SensorPolling::task() {
             }
             rx_data_available = false;
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
 int32_t SensorPolling::init() {
     int32_t status = 0;
     if (!is_initialized) {
-        BaseType_t task_status = xTaskCreate(startTaskImpl, "sensor_task", 1024, this, 1, &task_handle);
+        BaseType_t task_status =
+            xTaskCreate(startTaskImpl, "sensor_task", 1024, this, 1, &task_handle);
         if (task_status == pdTRUE) {
             vTaskSuspend(task_handle);
-//            imu.init();
+            //            imu.init();
             is_initialized = true;
         } else {
             printf("Error сreating sensor polling task\n");
@@ -123,41 +153,9 @@ int32_t SensorPolling::init() {
     return status;
 }
 
-void SensorPolling::start() {
-    vTaskResume(task_handle);
-}
+void SensorPolling::start() { vTaskResume(task_handle); }
 
-int32_t SensorPolling::get_gyro_data(float &x_axis, float &y_axis, float &z_axis) {
-    int32_t status = 0;
-    if (is_initialized) {
-        x_axis = gyro_x;
-        y_axis = gyro_y;
-        z_axis = gyro_z;
-        if (!gyro_updated) {
-            status = 2;
-        }
-    } else {
-        status = 1;
-    }
-    return status;
-}
-
-int32_t SensorPolling::get_accel_data(float &x_axis, float &y_axis, float &z_axis) {
-    int32_t status = 0;
-    if (is_initialized) {
-        x_axis = accel_x;
-        y_axis = accel_y;
-        z_axis = accel_z;
-        if (!accel_updated) {
-            status = 2;
-        }
-    } else {
-        status = 1;
-    }
-    return status;
-}
-
-int32_t SensorPolling::get_magn_data(float &x_axis, float &y_axis, float &z_axis) {
+int32_t SensorPolling::get_magn_data(float& x_axis, float& y_axis, float& z_axis) {
     int32_t status = 0;
     if (is_initialized) {
         x_axis = magn_x;
