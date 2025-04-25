@@ -53,32 +53,33 @@ def upload_files_to_s3(local_dir: str, bucket_name: str, s3_prefix: str):
     :param s3_prefix: Префикс (путь внутри бакета)
     """
     for root, _, files in os.walk(local_dir):
-        for file in files:
-            if file.endswith(".zip"):
-                local_path = os.path.join(root, file)
-                s3_path = s3_prefix + file
+        for filename in files:
+            if filename.endswith(".zip"):
+                local_path = os.path.join(root, filename)
+                s3_path = s3_prefix + filename
 
                 if file_exists_in_s3(bucket_name, s3_path):
                     print(
-                        f"Файл {file} уже загружен на s3://{bucket_name}/{s3_path}. "
+                        f"Файл {filename} уже загружен на s3://{bucket_name}/{s3_path}. "
                         f"Пропускаем загрузку."
                     )
                 else:
                     s3.upload_file(local_path, bucket_name, s3_path)
-                    print(f"Uploaded {file} to s3://{bucket_name}/{s3_path}")
+                    print(f"Uploaded {filename} to s3://{bucket_name}/{s3_path}")
 
 
 def upload_file_on_s3(file_path: str, bucket_name: str, s3_prefix: str = "cvat/input/"):
-    file_name = os.path.basename(file_path)
-    s3_path = s3_prefix + file_name
+    filename = os.path.basename(file_path)
+    s3_path = s3_prefix + filename
 
     if file_exists_in_s3(bucket_name, s3_path):
         print(
-            f"File {file_name} already exists in s3://{bucket_name}/{s3_path}. Skipping upload."
+            f"Файл {filename} уже загружен на s3://{bucket_name}/{s3_path}. "
+            f"Пропускаем загрузку."
         )
     else:
         s3.upload_file(file_path, bucket_name, s3_path)
-        print(f"Uploaded {file_name} to s3://{bucket_name}/{s3_path}")
+        print(f"{filename} загружен на s3://{bucket_name}/{s3_path}")
 
 
 def download_files_from_s3(

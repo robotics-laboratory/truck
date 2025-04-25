@@ -61,7 +61,8 @@ def get_start_time_from_metadate(
 
 def get_frames_num(metadate_file_path: str, elapsed_time: float, frequency: int) -> int:
     """
-    Получает количество доступных кадров из YAML-файла с учетом заданных в config.py параметров
+    Получает количество доступных кадров из YAML-файла
+    с учетом заданных в config.py параметров
     :param metadate_file_path: путь к YAML-файлу метаданных
     :param elapsed_time: сдвиг времени в секундах
     :param frequency: частота извлечения кадров
