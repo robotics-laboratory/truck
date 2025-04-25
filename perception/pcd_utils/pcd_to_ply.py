@@ -2,9 +2,17 @@ import open3d as o3d
 
 
 def pcd_to_ply(pcd_file_path, ply_file_path):
+    """
+    Конвертирует PCD файл в PLY формат
+    :param pcd_file_path: Путь к PCD файлу
+    :param ply_file_path: Путь, куда сохранить PLY файл
+    """
+    # Чтение файла PCD
     pcd = o3d.io.read_point_cloud(pcd_file_path)
 
+    # Проверка, был ли успешно загружен PCD файл
     if not pcd.is_empty():
+        # Сохранение в формат PLY
         o3d.io.write_point_cloud(ply_file_path, pcd)
         print(f"Файл успешно конвертирован в {ply_file_path}")
     else:
@@ -27,6 +35,9 @@ pcd_paths = [
 input_dir = "output_pcd/"
 output_dir = "output_ply/"
 
-for pcd_path in pcd_paths:
-    ply_path = f"{pcd_path[:-4]}.ply"
-    pcd_to_ply(input_dir + pcd_path, output_dir + ply_path)
+
+if __name__ == "__main__":
+    for pcd_path in pcd_paths:
+        ply_path = f"{pcd_path[:-4]}.ply"
+        # Конвертирование PCD в PLY
+        pcd_to_ply(input_dir + pcd_path, output_dir + ply_path)

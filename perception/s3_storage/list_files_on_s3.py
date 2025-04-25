@@ -1,7 +1,13 @@
-from perception.s3_storage.get_s3_conn import get_conn
+from s3_storage.get_s3_conn import get_conn
+from typing import List
 
 
-def list_files_in_buckets(buckets, prefix=None):
+def get_list_files_in_buckets(buckets: List[str], prefix: str | None = None):
+    """
+    Выводит содержимое указанных бакетов на S3
+    :param buckets: Список имен бакетов
+    :param prefix: Префикс (путь внутри бакета)
+    """
     s3 = get_conn()
 
     for bucket in buckets:
@@ -24,5 +30,5 @@ def list_files_in_buckets(buckets, prefix=None):
         print("\n" + "=" * 50 + "\n")
 
 
-# Пример использования:
-list_files_in_buckets(["the-lab-bucket"], prefix="cvat/")
+if __name__ == "__main__":
+    get_list_files_in_buckets(["the-lab-bucket"], prefix="cvat/")
