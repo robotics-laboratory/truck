@@ -60,7 +60,8 @@ def upload_files_to_s3(local_dir: str, bucket_name: str, s3_prefix: str):
 
                 if file_exists_in_s3(bucket_name, s3_path):
                     print(
-                        f"Файл {filename} уже загружен на s3://{bucket_name}/{s3_path}. "
+                        f"Файл {filename} уже загружен на "
+                        f"s3://{bucket_name}/{s3_path}."
                         f"Пропускаем загрузку."
                     )
                 else:
