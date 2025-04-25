@@ -1,7 +1,6 @@
 import os
 
 import requests
-
 from private_config import private_settings
 
 CVAT_API_URL = f"{private_settings.CVAT_HOST}/api"

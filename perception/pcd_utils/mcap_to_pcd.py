@@ -1,11 +1,10 @@
 import os
 
 import numpy as np
+from config import Config
 from mcap.reader import make_reader
 from mcap_ros2.decoder import DecoderFactory
 from timestamp import get_frames_num, get_start_time_from_metadate, get_timestamp
-
-from config import Config
 
 # Описание структуры данных
 dtype = np.dtype(

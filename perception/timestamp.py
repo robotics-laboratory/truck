@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta, timezone
-import yaml
+
 import pytz
+import yaml
 
 
 def get_timestamp(start_time_string: str, elapsed_time: float) -> float:
     """
-    Получает метку времени в формате UNIX timestamp и возвращает время в секундах с учетом "сдвига" elapsed_time
+    Получает метку времени в формате UNIX timestamp и возвращает время в секундах
+    с учетом "сдвига" elapsed_time
     :param start_time_string: строка с временем в формате "YYYY-MM-DD HH:mm:ss.ffffff AM
     В таком формате отображается дата начала записи в Foxglove
     :param elapsed_time: сдвиг времени в секундах

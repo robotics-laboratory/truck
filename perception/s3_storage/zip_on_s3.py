@@ -60,7 +60,8 @@ def upload_files_to_s3(local_dir: str, bucket_name: str, s3_prefix: str):
 
                 if file_exists_in_s3(bucket_name, s3_path):
                     print(
-                        f"File {file} already exists in s3://{bucket_name}/{s3_path}. Skipping upload."
+                        f"Файл {file} уже загружен на s3://{bucket_name}/{s3_path}. "
+                        f"Пропускаем загрузку."
                     )
                 else:
                     s3.upload_file(local_path, bucket_name, s3_path)
@@ -88,7 +89,8 @@ def download_files_from_s3(
 
     :param bucket_name: Имя S3 бакета
     :param s3_prefix: Префикс (путь внутри бакета)
-    :param file_names: Список имен файлов, которые нужно скачать. При None - скачиваются все файлы
+    :param file_names: Список имен файлов, которые нужно скачать.
+    При None - скачиваются все файлы
     """
     download_dir = "./downloaded_zip/"
     os.makedirs(download_dir, exist_ok=True)

@@ -1,14 +1,16 @@
-import cv2
 import os
-from config import Config
 from typing import List
+
+import cv2
+from config import Config
 
 
 def extract_frames_by_frequency(
     video_paths: List[str], frequency: int, root_output_dir: str
 ):
     """
-    Извлекает кадры из нескольких видео с заданной частотой и сохраняет их как изображения.
+    Извлекает кадры из видео с четырех ракурсов с заданной частотой
+    и сохраняет их как изображения
 
     :param video_paths: Список путей к видеофайлам.
     :param frequency: Частота извлечения кадров в секундах.
@@ -65,7 +67,8 @@ def extract_frames_by_frequency(
             ret, frame = cap.read()
             if not ret:
                 print(
-                    f"Не удалось извлечь кадр на времени {elapsed_time} сек. из {video_path}"
+                    f"Не удалось извлечь кадр на времени {elapsed_time} сек. "
+                    f"из {video_path}"
                 )
                 continue
 
@@ -78,7 +81,8 @@ def extract_frames_by_frequency(
             # Сохраняем кадр в формате JPG
             cv2.imwrite(output_path, frame)
             print(
-                f"Кадр на {elapsed_time} сек. из {video_path} успешно сохранен: {output_path}"
+                f"Кадр на {elapsed_time} сек. из {video_path} успешно сохранен: "
+                f"{output_path}"
             )
 
         # Освобождаем ресурсы

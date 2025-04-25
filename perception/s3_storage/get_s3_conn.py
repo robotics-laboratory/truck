@@ -1,5 +1,4 @@
 import boto3
-
 from private_config import private_settings
 
 
