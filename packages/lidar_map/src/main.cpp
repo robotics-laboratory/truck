@@ -21,8 +21,15 @@ const std::string kOutputTopicLidarMap = "/lidar_map";
 const std::string kOutputTopicPoses = "/poses";
 const std::string kOutputTopicClouds = "/clouds";
 const std::string kPkgPathLidarMap = ament_index_cpp::get_package_share_directory("lidar_map");
+const std::string kIcpConfigPath = kPkgPathLidarMap + "/config/icp.yaml";
 const int kPointsIntensityThreshold = 15;
 const double kBoundingBoxThreshold = 10.0;
+const double kMinPosesDist = 1.0;
+const double kIcpEdgeMaxDist = 3.0;
+const double kIcpEdgeMinDist = 1.0;
+const double kOdomEdgeWeight = 1.0;
+const double kIcpEdgeWeight = 3.0;
+const size_t kOptimizationSteps = 10;
 
 int main(int argc, char* argv[]) {
     bool enable_mcap_log = false;
@@ -75,16 +82,15 @@ int main(int argc, char* argv[]) {
     }
 
     const BuilderParams builder_params{
-        .icp_config = kPkgPathLidarMap + "/config/icp.yaml",
-        .icp_edge_max_dist = 3,
-        .odom_edge_weight = 1.0,
-        .icp_edge_weight = 3.0,
+        .icp_config = kIcpConfigPath,
+        .icp_edge_max_dist = kIcpEdgeMaxDist,
+        .icp_edge_min_dist = kIcpEdgeMinDist,
+        .odom_edge_weight = kOdomEdgeWeight,
+        .icp_edge_weight = kIcpEdgeWeight,
+        .min_poses_dist = kMinPosesDist,
         .verbose = true};
 
     Builder builder = Builder(builder_params);
-
-    const size_t optimization_steps = 10;
-    const double min_poses_dist = 4.0;
 
     std::shared_ptr<serialization::writer::MCAPWriter> mcap_writer = nullptr;
 
@@ -103,7 +109,7 @@ int main(int argc, char* argv[]) {
     {
         const auto [odom_msgs, point_cloud_msgs] =
             serialization::reader::readAndSyncOdomWithPointCloud(
-                mcap_input_path, kInputTopicOdom, kInputTopicPointCloud, min_poses_dist);
+                mcap_input_path, kInputTopicOdom, kInputTopicPointCloud, kMinPosesDist);
 
         poses = toPoses(odom_msgs);
         clouds = toClouds(point_cloud_msgs);
@@ -139,7 +145,7 @@ int main(int argc, char* argv[]) {
             serialization::writer::writePoseGraphInfoToJSON(json_log_path, pose_graph_info, 0);
         }
 
-        for (size_t i = 1; i <= optimization_steps; i++) {
+        for (size_t i = 1; i <= kOptimizationSteps; i++) {
             poses = builder.optimizePoseGraph();
 
             if (enable_mcap_log) {
