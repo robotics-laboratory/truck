@@ -72,16 +72,16 @@ End-to-end automation for preparing a dataset:
 #### `privat_config.py`
 Retrieves sensitive credentials from environment variables or `.env` file:
 
-- `AWS_ACCESS_KEY_ID` — AWS S3 Access Key  
-- `AWS_SECRET_ACCESS_KEY` — AWS S3 Secret Key  
-- `CVAT_LOGIN` — CVAT username  
-- `CVAT_PASSWORD` — CVAT password  
+- `AWS_ACCESS_KEY_ID` — AWS S3 Access Key
+- `AWS_SECRET_ACCESS_KEY` — AWS S3 Secret Key
+- `CVAT_LOGIN` — CVAT username
+- `CVAT_PASSWORD` — CVAT password
 - `CVAT_HOST` — URL of the CVAT server
 
 #### `config.yaml`
 
-- `frequency`: Sampling rate for both video frames and point cloud extraction  
-- `mcap_elapsed`: Time offset (in seconds) to align MCAP data  
+- `frequency`: Sampling rate for both video frames and point cloud extraction
+- `mcap_elapsed`: Time offset (in seconds) to align MCAP data
 - `video_elapsed`: Time offset (in seconds) to align video frames
 
 ---
