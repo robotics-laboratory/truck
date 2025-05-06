@@ -90,11 +90,7 @@ def get_start_time_from_mcap(
     raise ValueError("No messages found on topic /livox/lidar.")
 
 
-def get_frames_num(
-        metadate_file_path: str,
-        elapsed_time: float,
-        frequency: int
-) -> int:
+def get_frames_num(metadate_file_path: str, elapsed_time: float, frequency: int) -> int:
     """
     Gets the number of available frames from a YAML metadata file,
     considering the given config parameters.
