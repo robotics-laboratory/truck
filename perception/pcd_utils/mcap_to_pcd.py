@@ -1,12 +1,11 @@
 import os
 
 import numpy as np
-from config import Config
 from mcap.reader import make_reader
 from mcap_ros2.decoder import DecoderFactory
-from timestamp import get_frames_num, get_start_time_from_metadate, get_timestamp
+from timestamp import get_start_time_from_mcap, get_timestamp
 
-# Описание структуры данных
+# Description of the point cloud data structure
 dtype = np.dtype(
     [
         ("x", "float32"),
@@ -23,7 +22,10 @@ dtype = np.dtype(
 
 def save_pcd_manual(points, filename):
     """
-    Сохраняет точки в формате PCD
+    Save point cloud data to a PCD (Point Cloud Data) file.
+
+    :param points: Structured NumPy array with fields ['x', 'y', 'z'].
+    :param filename: Path to the output PCD file.
     """
     xyz = np.stack((points["x"], points["y"], points["z"]), axis=-1)
     header = f"""# .PCD v0.7 - Point Cloud Data file format
@@ -45,23 +47,25 @@ DATA ascii
     print(f"Saved {xyz.shape[0]} points to {filename}")
 
 
-def mcap_to_pcd_main():
+def mcap_to_pcd_main(run_name: str, elapsed_time: float = 0, frequency: int = 2) -> int:
     """
-    Получает кадры pcd из mcap с учетом заданных в config.py параметров
+    Extract and save PCD frames from an MCAP file
+    based on the given frequency and start offset.
+
+    :param run_name: Name of the run used to locate the MCAP file and save output.
+    :param elapsed_time: Initial time offset in seconds
+    from the start of the MCAP recording.
+    :param frequency: Time interval (in seconds) between saved frames.
+    :return: Number of PCD files saved.
     """
-    # Задаем параметры
-    input_mcap_file = f"input_mcap/{Config.run_name}.mcap"
-    input_metadate_file = f"input_mcap/{Config.run_name}_metadata.yaml"
-    start_time = get_start_time_from_metadate(input_metadate_file)
-    elapsed_time = Config.elapsed_time
+    # Set input and output paths
+    input_mcap_file = f"data/{run_name}/{run_name}.mcap"
+    start_time = get_start_time_from_mcap(input_mcap_file)
 
-    if not os.path.exists(f"{Config.run_name}/pointcloud"):
-        os.makedirs(f"{Config.run_name}/pointcloud")
+    if not os.path.exists(f"{run_name}/pointcloud"):
+        os.makedirs(f"{run_name}/pointcloud")
 
-    root_output_dir = Config.run_name
-    frames_num = get_frames_num(
-        input_metadate_file, Config.elapsed_time, Config.frequency
-    )
+    root_output_dir = run_name
 
     i = 0
     with open(input_mcap_file, "rb") as inp_file:
@@ -69,9 +73,7 @@ def mcap_to_pcd_main():
         for schema, channel, message, ros_msg in reader.iter_decoded_messages(
             topics=["/livox/lidar"]
         ):
-            if i >= frames_num - 1:
-                break
-            timestamp = message.log_time / 1e9  # Преобразуем в секунды
+            timestamp = message.log_time / 1e9  # Convert nanoseconds to seconds
             if timestamp > get_timestamp(start_time, elapsed_time):
                 output_file = (
                     root_output_dir
@@ -86,8 +88,11 @@ def mcap_to_pcd_main():
                 save_pcd_manual(points, output_file)
 
                 i += 1
-                elapsed_time += Config.frequency
+                elapsed_time += frequency
+    last_pcd_index = i
+    return last_pcd_index
 
 
 if __name__ == "__main__":
-    mcap_to_pcd_main()
+    test_run_name = "example"
+    mcap_to_pcd_main(test_run_name)

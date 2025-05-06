@@ -1,110 +1,113 @@
 import os
 
-import boto3
-from botocore.exceptions import ClientError
-from s3_storage.get_s3_conn import get_conn
+import s3fs
+from private_config import private_settings
 
-# Создаем сессию и клиент S3
-session = boto3.session.Session()
+# Connect to S3 using s3fs
+fs = s3fs.S3FileSystem(
+    key=private_settings.AWS_ACCESS_KEY_ID,
+    secret=private_settings.AWS_SECRET_ACCESS_KEY,
+    client_kwargs={"endpoint_url": "https://storage.yandexcloud.net"},
+)
 
-s3 = get_conn()
-
-# Параметры
 bucket = "the-lab-bucket"
 zip_dir = "../output_zip/"
 prefix = "cvat/input/"
+s3_base_path = f"{bucket}/{prefix}".rstrip("/")
 
 
-# Проверка существования файла в S3
 def file_exists_in_s3(bucket: str, key: str) -> bool:
-    try:
-        s3.head_object(Bucket=bucket, Key=key)
-        return True
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "404":
-            return False
-        else:
-            raise
+    """
+    Check if a file exists in the specified S3 bucket.
+
+    :param bucket: S3 bucket name.
+    :param key: Path to the file within the bucket.
+    :return: True if the file exists, False otherwise.
+    """
+    s3_path = f"{bucket}/{key}"
+    return fs.exists(s3_path)
 
 
 def delete_zip_from_s3(bucket: str, filename: str, prefix: str = "cvat/input/"):
     """
-    Удаляет zip-файл из S3 по имени.
+    Delete a .zip file from S3.
 
-    :param bucket: Имя S3 бакета
-    :param prefix: Префикс (путь внутри бакета)
-    :param filename: Имя файла, включая .zip
+    :param bucket: S3 bucket name.
+    :param filename: Name of the zip file to delete.
+    :param prefix: Path prefix within the bucket.
     """
-    key = os.path.join(prefix, filename)
-
+    s3_path = f"{bucket}/{prefix}{filename}"
     try:
-        s3.delete_object(Bucket=bucket, Key=key)
-        print(f"Файл '{key}' успешно удален из S3.")
-    except ClientError as e:
-        print(f"Ошибка при удалении файла '{key}': {e}")
+        fs.rm(s3_path)
+        print(f"File '{s3_path}' was successfully deleted from S3.")
+    except Exception as e:
+        print(f"Error deleting file '{s3_path}': {e}")
 
 
-def upload_files_to_s3(local_dir: str, bucket_name: str, s3_prefix: str):
+def upload_zip_on_s3(local_dir: str, bucket_name: str, s3_prefix: str):
     """
-    Загружает zip-файлы из локальной директории в S3, если они еще не существуют
+    Upload all .zip files from a local directory to a specific S3 prefix.
 
-    :param local_dir: Путь к локальной директории с zip-файлами
-    :param bucket_name: Имя S3 бакета
-    :param s3_prefix: Префикс (путь внутри бакета)
+    :param local_dir: Local directory to search for .zip files.
+    :param bucket_name: S3 bucket name.
+    :param s3_prefix: Path prefix within the bucket to upload to.
     """
     for root, _, files in os.walk(local_dir):
         for filename in files:
             if filename.endswith(".zip"):
                 local_path = os.path.join(root, filename)
-                s3_path = s3_prefix + filename
+                s3_path = f"{bucket_name}/{s3_prefix}{filename}"
 
-                if file_exists_in_s3(bucket_name, s3_path):
+                if fs.exists(s3_path):
                     print(
-                        f"Файл {filename} уже загружен на "
-                        f"s3://{bucket_name}/{s3_path}."
-                        f"Пропускаем загрузку."
+                        f"File {filename} is already uploaded to s3://{s3_path}. "
+                        f"Skipping."
                     )
                 else:
-                    s3.upload_file(local_path, bucket_name, s3_path)
-                    print(f"Uploaded {filename} to s3://{bucket_name}/{s3_path}")
+                    fs.put(local_path, s3_path)
+                    print(f"Uploaded {filename} to s3://{s3_path}")
 
 
 def upload_file_on_s3(file_path: str, bucket_name: str, s3_prefix: str = "cvat/input/"):
-    filename = os.path.basename(file_path)
-    s3_path = s3_prefix + filename
+    """
+    Upload a single file to S3.
 
-    if file_exists_in_s3(bucket_name, s3_path):
-        print(
-            f"Файл {filename} уже загружен на s3://{bucket_name}/{s3_path}. "
-            f"Пропускаем загрузку."
-        )
+    :param file_path: Path to the local file.
+    :param bucket_name: S3 bucket name.
+    :param s3_prefix: Path prefix within the bucket.
+    """
+    filename = os.path.basename(file_path)
+    s3_path = f"{bucket_name}/{s3_prefix}{filename}"
+
+    if fs.exists(s3_path):
+        print(f"File {filename} is already uploaded to s3://{s3_path}. Skipping.")
     else:
-        s3.upload_file(file_path, bucket_name, s3_path)
-        print(f"{filename} загружен на s3://{bucket_name}/{s3_path}")
+        fs.put(file_path, s3_path)
+        print(f"{filename} uploaded to s3://{s3_path}")
 
 
 def download_files_from_s3(
     bucket_name: str = "the-lab-bucket", s3_prefix: str = "cvat/input/", file_names=None
 ):
     """
-    Скачивает zip-файлы из S3.
+    Download specified .zip files from S3 to the local 'downloaded_zip' directory.
 
-    :param bucket_name: Имя S3 бакета
-    :param s3_prefix: Префикс (путь внутри бакета)
-    :param file_names: Список имен файлов, которые нужно скачать.
-    При None - скачиваются все файлы
+    :param bucket_name: S3 bucket name.
+    :param s3_prefix: Path prefix within the bucket.
+    :param file_names: List of filenames to download. If None, download all .zip files.
     """
     download_dir = "./downloaded_zip/"
     os.makedirs(download_dir, exist_ok=True)
 
-    objects = s3.list_objects_v2(Bucket=bucket_name, Prefix=s3_prefix)
-    if "Contents" not in objects:
-        print(f"No files found in s3://{bucket_name}/{s3_prefix}")
+    s3_path_prefix = f"{bucket_name}/{s3_prefix}"
+    try:
+        files = fs.ls(s3_path_prefix)
+    except FileNotFoundError:
+        print(f"No files found in s3://{s3_path_prefix}")
         return
 
-    for obj in objects["Contents"]:
-        file_key = obj["Key"]
-        file_name = os.path.basename(file_key)
+    for file in files:
+        file_name = os.path.basename(file)
 
         if file_name.endswith(".zip") and (
             file_names is None or file_name in file_names
@@ -112,11 +115,11 @@ def download_files_from_s3(
             local_path = os.path.join(download_dir, file_name)
 
             try:
-                s3.download_file(bucket_name, file_key, local_path)
+                fs.get(file, local_path)
                 print(f"Downloaded {file_name} to {local_path}")
-            except ClientError as e:
+            except Exception as e:
                 print(f"Failed to download {file_name}: {e}")
 
 
 if __name__ == "__main__":
-    upload_files_to_s3(zip_dir, bucket, prefix)
+    upload_zip_on_s3(zip_dir, bucket, prefix)

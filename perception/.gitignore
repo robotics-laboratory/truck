@@ -2,6 +2,7 @@
 input*/
 output*/
 run*/
+data
 venv
 .env
 __pycache__/
