@@ -1,9 +1,0 @@
-.idea
-input*/
-output*/
-run*/
-data
-venv
-.env
-__pycache__/
-.ruff_cache/
