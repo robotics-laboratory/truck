@@ -1,9 +1,11 @@
-*.DS_Store
+**/.idea
 .vscode
 .dvc
 __pycache__/
 *.py[cod]
 *$py.class
+*.DS_Store
+.ruff_cache/
 
 # ROS2 builds
 build
@@ -15,3 +17,9 @@ packages/navigation/test/data
 packages/simulator_2d/test/data
 packages/svg_debug_drawer/test/data/im*_out.svg
 packages/lidar_map/data
+
+# perception
+perception/output*/
+perception/run*/
+perception/data
+perception/.env
