@@ -7,7 +7,7 @@
 #include "ads1115.h"
 
 enum class ServoType{
-  SERVO_LEFT = 1,
+  SERVO_LEFT,
   SERVO_RIGHT
 };
 
@@ -22,6 +22,9 @@ class Servo {
   float max_angle = 270.0f;
   float home_angle = 135.0f;
   float min_angle = 0.0f;
+
+  float adc_to_ang_poly1;
+  float adc_to_ang_poly0;
 
   static PWMServo &get_pwm_instance(ServoType servo_type_) {
       switch (servo_type_) {
@@ -51,7 +54,8 @@ class Servo {
   uint32_t init();
   uint32_t calibrate(void);
   uint32_t set_angle(float angle);
-  uint16_t get_angle();
+  float get_angle(void);
+  void get_home_angles(float &ret_home_angle);
   uint32_t stop();
 };
 

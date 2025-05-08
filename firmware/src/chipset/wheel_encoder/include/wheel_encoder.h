@@ -46,7 +46,7 @@ class WheelEncoder {
       }
   }
 
-  WheelEncoder(WheelType id) : encoder_timer_handle(get_timer_instance(id)) {};
+  WheelEncoder(WheelType id) : encoder_timer_handle(get_timer_instance(id)), type(id) {};
 
   void low_pas_filter_apply(float raw_speed);
 

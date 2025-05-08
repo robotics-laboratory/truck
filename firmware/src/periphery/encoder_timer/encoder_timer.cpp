@@ -102,7 +102,7 @@ uint32_t EncoderTimer::init() {
 
     LL_TIM_IC_SetActiveInput(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_ACTIVEINPUT_DIRECTTI);
     LL_TIM_IC_SetPrescaler(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_ICPSC_DIV1);
-    LL_TIM_IC_SetFilter(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_IC_FILTER_FDIV1);
+    LL_TIM_IC_SetFilter(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_IC_FILTER_FDIV1_N2);
     LL_TIM_IC_SetPolarity(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_IC_POLARITY_RISING);
 
     LL_DMA_SetMemoryAddress(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel, (uint32_t)(raw_buffer.data()));
