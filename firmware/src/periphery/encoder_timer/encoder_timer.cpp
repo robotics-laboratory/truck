@@ -65,7 +65,7 @@ uint32_t EncoderTimer::init() {
     GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
     GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN; // what??
-    GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+    GPIO_InitStruct.Pull = LL_GPIO_PULL_DOWN;
     switch (type) {
         case EncoderType::ID_0:
             GPIO_InitStruct.Pin = LL_GPIO_PIN_0;
@@ -86,8 +86,8 @@ uint32_t EncoderTimer::init() {
             dma_channel = LL_DMA_CHANNEL_3;
             break;
         case EncoderType::ID_3:
-            GPIO_InitStruct.Pin = LL_GPIO_PIN_10;
-            GPIO_InitStruct.Alternate = LL_GPIO_AF_10;
+            GPIO_InitStruct.Pin = LL_GPIO_PIN_3;
+            GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
             LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
             dma_channel = LL_DMA_CHANNEL_4;
             break;
@@ -102,7 +102,7 @@ uint32_t EncoderTimer::init() {
 
     LL_TIM_IC_SetActiveInput(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_ACTIVEINPUT_DIRECTTI);
     LL_TIM_IC_SetPrescaler(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_ICPSC_DIV1);
-    LL_TIM_IC_SetFilter(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_IC_FILTER_FDIV1);
+    LL_TIM_IC_SetFilter(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_IC_FILTER_FDIV1_N2);
     LL_TIM_IC_SetPolarity(const_cast<TIM_TypeDef*>(common_timer_handle), timer_channel, LL_TIM_IC_POLARITY_RISING);
 
     LL_DMA_SetMemoryAddress(const_cast<DMA_TypeDef *>(common_dma_handler), dma_channel, (uint32_t)(raw_buffer.data()));
