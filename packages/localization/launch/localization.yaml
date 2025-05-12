@@ -15,9 +15,7 @@ launch:
         - name: "bbox_filter"
           param:
             - { name: "enable", value: true }
-            - { name: "radius", value: 8.0 }
-            - { name: "z_min", value: 0.0 }
-            - { name: "z_max", value: 2.0 }
+            - { name: "radius", value: 10.0 }
 
         - name: "local_scan"
           param:

@@ -215,8 +215,8 @@ void LocalizationNode::makeLocalizationTick() {
             {"yMin", std::to_string(ego.y - params_.bbox_filter.radius)},
             {"yMax", std::to_string(ego.y + params_.bbox_filter.radius)},
 
-            {"zMin", std::to_string(params_.bbox_filter.z_min)},
-            {"zMax", std::to_string(params_.bbox_filter.z_max)},
+            {"zMin", std::to_string(-std::numeric_limits<double>::max())},
+            {"zMax", std::to_string(std::numeric_limits<double>::max())},
 
             {"removeInside", std::to_string(false)}};
 
