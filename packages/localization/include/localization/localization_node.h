@@ -65,7 +65,7 @@ class LocalizationNode : public rclcpp::Node {
     void loadScanGlobal();
 
     void onReset(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
-    void onLocalScan(const sensor_msgs::msg::LaserScan::SharedPtr msg);
+    void onLocalScan(const sensor_msgs::msg::PointCloud2::SharedPtr msg);
 
     void makeLocalizationTick();
 
@@ -85,7 +85,7 @@ class LocalizationNode : public rclcpp::Node {
     } signals_;
 
     struct Slots {
-        rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr local_scan = nullptr;
+        rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr local_scan = nullptr;
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose = nullptr;
     } slots_;
 
@@ -99,7 +99,7 @@ class LocalizationNode : public rclcpp::Node {
             DataPoints data_points;
             sensor_msgs::msg::PointCloud2 point_cloud;
         } global;
-        sensor_msgs::msg::LaserScan local;
+        sensor_msgs::msg::PointCloud2 local;
     } scans_;
 
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;

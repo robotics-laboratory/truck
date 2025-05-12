@@ -74,7 +74,7 @@ void LocalizationNode::initializeTopicHandlers() {
             "/scan/local/bbox_filtered", rclcpp::QoS(1).reliability(qos))};
 
     slots_ = Slots{
-        .local_scan = this->create_subscription<sensor_msgs::msg::LaserScan>(
+        .local_scan = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "/lidar/scan",
             rclcpp::QoS(1).reliability(qos),
             std::bind(&LocalizationNode::onLocalScan, this, _1)),
@@ -124,7 +124,7 @@ void LocalizationNode::loadScanGlobal() {
         this->get_logger(), "Bag '%s' was succesfully parsed", params_.global_scan.config.c_str());
 
     DataPoints data_points = toDataPoints(point_cloud);
-    data_points.features.row(2).setZero();
+    data_points.features.row(3).setZero();
 
     scans_.global = Scans::Global{
         .data_points = toDataPoints(point_cloud),
@@ -145,18 +145,18 @@ void LocalizationNode::onReset(const geometry_msgs::msg::PoseStamped::SharedPtr 
     RCLCPP_INFO(this->get_logger(), "Update pose estimation");
 }
 
-void LocalizationNode::onLocalScan(const sensor_msgs::msg::LaserScan::SharedPtr msg) {
+void LocalizationNode::onLocalScan(const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
     scans_.local = *msg;
 }
 
 namespace {
 
-Eigen::Matrix3f transformationMatrix(const geom::Pose& pose) {
+Eigen::Matrix4f transformationMatrix(const geom::Pose& pose) {
     const double dtheta = pose.dir.angle().radians();
     const double cos_dtheta = std::cos(dtheta);
     const double sin_dtheta = std::sin(dtheta);
 
-    Eigen::Matrix3f tf_matrix = Eigen::Matrix3f::Identity();
+    Eigen::Matrix4f tf_matrix = Eigen::Matrix4f::Identity();
 
     // Rotation
     tf_matrix(0, 0) = cos_dtheta;
@@ -165,15 +165,15 @@ Eigen::Matrix3f transformationMatrix(const geom::Pose& pose) {
     tf_matrix(1, 1) = cos_dtheta;
 
     // Translation
-    tf_matrix(0, 2) = pose.pos.x;
-    tf_matrix(1, 2) = pose.pos.y;
+    tf_matrix(0, 3) = pose.pos.x;
+    tf_matrix(1, 3) = pose.pos.y;
 
     return tf_matrix;
 }
 
-geom::Pose toPose(const Eigen::Matrix3f& tf_matrix) {
-    const double tx = tf_matrix(0, 2);
-    const double ty = tf_matrix(1, 2);
+geom::Pose toPose(const Eigen::Matrix4f& tf_matrix) {
+    const double tx = tf_matrix(0, 3);
+    const double ty = tf_matrix(1, 3);
     const double dtheta = std::atan2(tf_matrix(1, 0), tf_matrix(0, 0));
     return {geom::Vec2(tx, ty), geom::AngleVec2::fromRadians(dtheta)};
 }
@@ -184,7 +184,7 @@ DataPoints transformDataPoints(const DataPoints& data_points, const tf2::Transfo
     geometry_msgs::msg::Pose tf_pose;
     tf2::toMsg(tf, tf_pose);
 
-    const Eigen::Matrix3f tf_matrix = transformationMatrix(geom::toPose(tf_pose));
+    const Eigen::Matrix4f tf_matrix = transformationMatrix(geom::toPose(tf_pose));
     data_points_tf.features = tf_matrix * data_points_tf.features;
 
     return data_points_tf;
@@ -261,12 +261,12 @@ void LocalizationNode::makeLocalizationTick() {
         header.stamp = this->now();
 
         if (params_.global_scan.rendering.bbox_filtered.enable) {
-            global_scan_tf.features.row(2).setZero();
+            global_scan_tf.features.row(3).setZero();
             signals_.global_scan_bbox_filtered->publish(toPointCloud2(header, global_scan_tf));
         }
 
         if (params_.local_scan.rendering.bbox_filtered.enable) {
-            local_scan_tf.features.row(2).setZero();
+            local_scan_tf.features.row(3).setZero();
             signals_.local_scan_bbox_filtered->publish(toPointCloud2(header, local_scan_tf));
         }
     }

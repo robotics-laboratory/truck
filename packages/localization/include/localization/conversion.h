@@ -9,8 +9,6 @@ using DataPoints = Matcher::DataPoints;
 
 namespace truck::localization {
 
-DataPoints toDataPoints(const sensor_msgs::msg::LaserScan& msg);
-
 DataPoints toDataPoints(const sensor_msgs::msg::PointCloud2& msg);
 
 sensor_msgs::msg::PointCloud2 toPointCloud2(
