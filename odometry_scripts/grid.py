@@ -33,7 +33,7 @@ if not os.path.exists(frame_path):
     raise Exception(f"No image file {frame_path}")
 
 if args.view and (not os.path.exists(args.path + "/" + args.view)):
-    raise Exception(f"No JSON file {args.path + "/" + args.view}")
+    raise Exception(f"No JSON file {args.path + '/' + args.view}")
 
 orig_image = cv2.imread(frame_path)
 
@@ -57,6 +57,33 @@ def image_to_display(pt):
 def display_to_image(pt):
     return ((pt[0] + offset[0]) / zoom, (pt[1] + offset[1]) / zoom)
 
+
+def recalculate_predictions():
+    global corner_points, corners
+
+    manual_img_points = np.array([pt[:2] for pt in corner_points if pt[2] == 1], dtype=np.float32)
+    manual_grid_points = np.array([corners[i] for i, pt in enumerate(corner_points) if pt[2] == 1], dtype=np.float32)
+
+    if len(manual_img_points) < 4: # Need at least 4 points
+        return
+
+    H, _ = cv2.findHomography(manual_grid_points, manual_img_points)
+
+    to_predict = [corners[i] for i, pt in enumerate(corner_points) if pt[2] == 0]
+    if not to_predict:
+        return
+
+    grid_img_points = cv2.perspectiveTransform(
+        np.array(to_predict, dtype=np.float32).reshape(-1, 1, 2), H
+    )
+    new_img_points = grid_img_points.reshape(-1, 2)
+
+    j = 0
+    for i, pt in enumerate(corner_points):
+        if pt[2] == 0:
+            corner_points[i][0] = new_img_points[j][0]
+            corner_points[i][1] = new_img_points[j][1]
+            j += 1
 
 def redraw():
     global orig_image, corner_points, zoom, offset
@@ -113,6 +140,7 @@ def mouse_callback(event, x, y, flags, param):
         dragging = False
         selected_point_idx = None
         selected_type = None
+        recalculate_predictions()
 
     elif event == cv2.EVENT_RBUTTONDOWN:
         for i, pt in enumerate(corner_points):
@@ -184,6 +212,13 @@ else:
 
     corners = [[point["x_grid"], point["y_grid"]] for point in input]
     corner_points = [[point["x_img"], point["y_img"], 1] for point in input]
+
+    for i in range(-GRID_SIZE // 2 + 1, GRID_SIZE // 2 + 1):
+        for j in range(-GRID_SIZE // 2 + 1, GRID_SIZE // 2 + 1):
+            if not([i, j] in corners):
+                corners.append([i, j])
+                corner_points.append([0, 0, 0])
+    recalculate_predictions()
 
 redraw()
 
