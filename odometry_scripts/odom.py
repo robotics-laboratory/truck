@@ -6,8 +6,6 @@ import numpy as np
 
 
 def frame_to_ray(point, matrix):
-    # https://github.com/ros-perception/vision_opencv/blob/noetic/image_geometry
-    # /src/image_geometry/cameramodels.py#L128
     x, y = point
     cx, cy = matrix[0, 2], matrix[1, 2]
     fx, fy = matrix[0, 0], matrix[1, 1]
@@ -37,6 +35,19 @@ def frame_to_world(point, position, rotation, matrix, z: float = 0.0):
     return tuple(psi)
 
 
+def select_correct_markers(frame):
+    front_marker = None
+    back_marker = None
+
+    for center in frame["centers"]:
+        if center["marker_id"] == 0:
+            front_marker = center
+        elif center["marker_id"] == 1:
+            back_marker = center
+
+    return front_marker, back_marker
+
+
 parser = argparse.ArgumentParser(description="Calculate car odometry")
 parser.add_argument(
     "-p",
@@ -51,6 +62,10 @@ args = parser.parse_args()
 with open(args.path + "/params.json", "r") as params_file:
     params = json.load(params_file)
     tvec = np.asarray(params["tvecs"])
+
+    if (tvec[2] < 0): # TODO Debug case when Z tvec is negative
+        tvec *= -1
+
     rvec = np.asarray(params["rvecs"])
     distortion_coeffs = np.asarray(params["grid_camera_dist"], dtype=np.float32)
     camera_matrix = np.asarray(params["grid_camera_matrix"], dtype=np.float32)
@@ -66,46 +81,35 @@ mtx, _ = cv2.getOptimalNewCameraMatrix(
     camera_matrix, distortion_coeffs, (width, height), ALPHA
 )
 
+prev_car_center = None
 for frame in input_markers:
     frame_num = frame["frame_num"]
     car_center = (None, None)
-    if len(frame["centers"]) == 2:
-        front_marker = frame["centers"][0]
-        back_marker = frame["centers"][1]
-        car_center = (None, None)
-        if (front_marker["marker_id"] == 1) and (back_marker["marker_id"] == 0):
-            front_marker, back_marker = back_marker, front_marker
+    velocity = 0.0
 
-        undist_front = cv2.undistortPoints(
-            np.asarray(
+    front_marker, back_marker = select_correct_markers(frame)
+    if front_marker and back_marker:
+        car_center = (None, None)
+
+        undist_front = np.asarray(
                 [[front_marker["x_px"], front_marker["y_px"]]],
                 dtype=np.float32,
-            ),
-            camera_matrix,
-            distortion_coeffs,
-            None,
-            mtx,
-        )
-        undist_back = cv2.undistortPoints(
-            np.asarray(
+            )
+
+        undist_back = np.asarray(
                 [[back_marker["x_px"], back_marker["y_px"]]],
                 dtype=np.float32,
-            ),
-            camera_matrix,
-            distortion_coeffs,
-            None,
-            mtx,
-        )
+            )
 
         front_pose = frame_to_world(
-            undist_front[0][0],
+            undist_front[0],
             tvec,
             rvec,
             mtx,
             0.15,
         )
         back_pose = frame_to_world(
-            undist_back[0][0],
+            undist_back[0],
             tvec,
             rvec,
             mtx,
@@ -113,11 +117,22 @@ for frame in input_markers:
         )
         car_center = ((np.array(front_pose) + np.array(back_pose)) / 2).tolist()
 
+        if prev_car_center:
+            velocity = float(np.linalg.norm(np.asarray(car_center) - np.asarray(prev_car_center)) * 30)
+
+        prev_car_center = car_center.copy()
+        orientation_vector = np.array(front_pose) - np.array(back_pose)
+        car_orientation = np.arctan2(orientation_vector[1], orientation_vector[0])
+    else:
+        prev_car_center = None
+
     output.append(
         {
             "frame_num": frame_num,
             "x_pos": car_center[0],
             "y_pos": car_center[1],
+            "velocity": velocity,
+            "orientation": float(car_orientation),
         }
     )
 

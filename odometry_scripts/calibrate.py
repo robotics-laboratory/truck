@@ -115,4 +115,4 @@ with open(args.path + "/params.json", "w+") as params_file:
     params["charuco_camera_matrix"] = matrix.tolist()
     params["charuco_camera_dist"] = dist_coefs.ravel().tolist()
 
-    json.dump(params, params_file)
+    json.dump(params, params_file, indent=4)

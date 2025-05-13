@@ -48,7 +48,7 @@ if ("charuco_camera_matrix" in params.keys()) and (
         (4000, 3000),
         np.asarray(params["charuco_camera_matrix"], dtype=np.float32),
         np.asarray(params["charuco_camera_dist"], dtype=np.float32),
-        flags=cv2.CALIB_USE_INTRINSIC_GUESS,
+        flags=cv2.CALIB_USE_INTRINSIC_GUESS | cv2.CALIB_FIX_K1 | cv2.CALIB_FIX_K2 | cv2.CALIB_FIX_K3 | cv2.CALIB_FIX_TANGENT_DIST,
     )
 else:
     ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(
@@ -74,4 +74,4 @@ with open(args.path + "/params.json", "w+") as params_file:
     params["grid_size"] = grid_size
     params["grid_camera_matrix"] = camera_matrix.tolist()
     params["grid_camera_dist"] = dist_coeffs.flatten().tolist()
-    json.dump(params, params_file)
+    json.dump(params, params_file, indent=4)
