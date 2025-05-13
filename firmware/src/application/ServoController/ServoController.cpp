@@ -2,10 +2,9 @@
 #include "ServoController.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "board.h"
+#include "system_clock.h"
 #include <vector>
 #include <tuple>
-#include "board.h"
 
 ServoController& ServoController::getInstance() {
     static ServoController _instance;
@@ -28,7 +27,7 @@ void ServoController::process_servo(ServoType type) {
                       low_pass_speed_filter_coef * (current_angle - servo_ctx.prev_position) / 0.005f;
     servo_ctx.prev_position = current_angle;
 
-    if (board_get_tick() > servo_ctx.last_correction_timeout) { // timeout because servo has high latency
+    if (system_clock_get_tick() > servo_ctx.last_correction_timeout) { // timeout because servo has high latency
         if (std::abs(servo_ctx.speed) < 5.0f) { // if servo still moving fastly, dont try to correct it's position
             if (((servo_ctx.correction > 0) && ((servo_ctx.target_angle - current_angle) > 0.2)) || // undershooting when angle increasing
                 ((servo_ctx.correction < 0) && ((current_angle - servo_ctx.target_angle) > 0.2))) { // undershooting when angle decreasing
@@ -40,13 +39,13 @@ void ServoController::process_servo(ServoType type) {
                 // printf("\n\novershoot -%s\n", (type == ServoType::SERVO_LEFT) ? "L" : "R");
             }
             servo_ctx.servo.set_angle(servo_ctx.target_angle + servo_ctx.correction);
-            servo_ctx.last_correction_timeout = board_get_tick() + 40; // 20 ms pause to wait for correction
+            servo_ctx.last_correction_timeout = system_clock_get_tick() + 40; // 20 ms pause to wait for correction
         }
     }
     // printf("%d-%s-%s-%04d-%04d-%04d-%02d--",
-    //         board_get_tick(),
+    //         system_clock_get_tick(),
     //         (type == ServoType::SERVO_LEFT) ? "L" : "R",
-    //         (board_get_tick() > servo_ctx.last_correction_timeout) ? "work" : "skip",
+    //         (system_clock_get_tick() > servo_ctx.last_correction_timeout) ? "work" : "skip",
     //         (int) std::abs(servo_ctx.speed * 10),
     //         (int) (current_angle * 10),
     //         (int) (servo_ctx.target_angle * 10),
@@ -107,7 +106,7 @@ void ServoController::update_target_angle(ServoType type, float target_angle) {
         }
         servo_ctx.target_angle = target_angle;
         servo_ctx.servo.set_angle(servo_ctx.target_angle + servo_ctx.correction);
-        servo_ctx.last_correction_timeout = board_get_tick() + 60;
+        servo_ctx.last_correction_timeout = system_clock_get_tick() + 60;
         servo_ctx.speed = 0.0f;
     }
 }

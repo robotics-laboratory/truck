@@ -1,6 +1,6 @@
 #include "wheel_encoder.h"
 
-#include "board.h"
+#include "system_clock.h"
 
 WheelEncoder& WheelEncoder::get_instance(WheelType id) {
     static std::unordered_map<WheelType, WheelEncoder *> instances;
@@ -35,7 +35,7 @@ void WheelEncoder::low_pas_filter_apply(float raw_speed) {
 float WheelEncoder::get_ticks_per_sec(void) {
     if (is_initialized) {
         encoder_timer_handle.get_data(encoder_ticks);
-        if (encoder_ticks.empty() && ((board_get_tick() - last_tick_ts) > idle_timeout_ms)) {
+        if (encoder_ticks.empty() && ((system_clock_get_tick() - last_tick_ts) > idle_timeout_ms)) {
             current_speed = 0.0f;
         } else if (encoder_ticks.empty() == false){
             for (auto val : encoder_ticks) {
@@ -43,7 +43,7 @@ float WheelEncoder::get_ticks_per_sec(void) {
                     low_pas_filter_apply(1000000.0f / val / encoder_timer_handle.get_tick_len_micros());
                 }
             }
-            last_tick_ts = board_get_tick();
+            last_tick_ts = system_clock_get_tick();
         }
     } else {
         current_speed = 0.0f;
