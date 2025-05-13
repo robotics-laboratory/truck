@@ -40,15 +40,17 @@ class Servo {
       }
   }
 
-  Servo(ServoType type) : pwm(get_pwm_instance(type)), adc(get_adc_instance(type)) {
-      type_ = type;
-  };
+  explicit Servo(ServoType type) : pwm(get_pwm_instance(type)), adc(get_adc_instance(type)), type_(type) {};
 
-  ~Servo() {};
   Servo(const Servo &obj) = delete;
   Servo &operator=(const Servo &obj) = delete;
 
  public:
+  Servo(Servo &&obj) noexcept = default;
+  Servo &operator=(Servo &&obj) noexcept = default;
+
+  ~Servo() = default;
+
   static Servo &get_instance(ServoType type);
 
   uint32_t init();

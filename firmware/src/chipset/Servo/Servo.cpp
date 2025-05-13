@@ -1,14 +1,21 @@
 #include "Servo.h"
 
+#include <array>
+#include <memory>
+
 #include "system_clock.h"
 
 Servo& Servo::get_instance(ServoType type) {
-    static std::unordered_map<ServoType, Servo *> instances;
-    auto it = instances.find(type);
-    if (it == instances.end()) {
-        instances[type] = new Servo(type);
+    static std::array<std::pair<ServoType, std::unique_ptr<Servo>>, 2> instances{
+        std::make_pair(ServoType::SERVO_LEFT,  std::make_unique<Servo>(Servo(ServoType::SERVO_LEFT))),
+        std::make_pair(ServoType::SERVO_RIGHT, std::make_unique<Servo>(Servo(ServoType::SERVO_RIGHT)))
+    };
+
+    for (auto& p : instances) {
+        if (p.first == type) {
+            return *p.second;
+        }
     }
-    return *instances[type];
 }
 
 uint32_t Servo::init() {

@@ -1,7 +1,6 @@
 #ifndef TRUCK_HW_PERIPHERY_PWM_SERVO_INCLUDE_PWM_SERVO_H_
 #define TRUCK_HW_PERIPHERY_PWM_SERVO_INCLUDE_PWM_SERVO_H_
 
-#include <unordered_map>
 #include "stm32g4xx_ll_tim.h"
 
 enum class PWMServoType : uint8_t {
@@ -19,12 +18,17 @@ class PWMServo {
   static constexpr uint32_t TIM_AUTORELOAD = 20000;
   uint32_t timer_channel;
 
-  PWMServo(PWMServoType init_type);
-  ~PWMServo() {};
+  explicit PWMServo(PWMServoType init_type);
+
   PWMServo(const PWMServo &obj) = delete;
   PWMServo &operator=(const PWMServo &obj) = delete;
 
  public:
+  PWMServo(PWMServo &&obj) noexcept = default;
+  PWMServo &operator=(PWMServo &&obj) noexcept = default;
+
+  ~PWMServo() = default;
+
   static PWMServo &get_instance(PWMServoType type);
 
   uint32_t init();

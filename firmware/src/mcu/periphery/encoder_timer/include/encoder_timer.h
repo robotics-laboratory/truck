@@ -2,7 +2,6 @@
 #define TRUCK_HW_PERIPHERY_ENCODER_TIMER_INCLUDE_ENCODER_TIMER_H_
 
 #include <cstdint>
-#include <unordered_map>
 #include <array>
 #include <vector>
 #include <limits>
@@ -34,14 +33,19 @@ class EncoderTimer {
   uint32_t timer_channel;
   uint32_t dma_channel;
 
-  EncoderTimer(EncoderType id);
-  ~EncoderTimer() {};
+  uint32_t get_data_size();
+
+  explicit EncoderTimer(EncoderType id);
+
   EncoderTimer(const EncoderTimer &obj) = delete;
   EncoderTimer &operator=(const EncoderTimer &obj) = delete;
 
-  uint32_t get_data_size();
-
  public:
+  EncoderTimer(EncoderTimer &&obj) noexcept = default;
+  EncoderTimer &operator=(EncoderTimer &&obj) noexcept = default;
+
+  ~EncoderTimer() = default;
+
   static EncoderTimer &get_instance(EncoderType id);
 
   uint32_t init();

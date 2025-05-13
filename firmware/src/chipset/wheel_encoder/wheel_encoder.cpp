@@ -1,14 +1,23 @@
 #include "wheel_encoder.h"
 
+#include <array>
+#include <memory>
+
 #include "system_clock.h"
 
-WheelEncoder& WheelEncoder::get_instance(WheelType id) {
-    static std::unordered_map<WheelType, WheelEncoder *> instances;
-    auto it = instances.find(id);
-    if (it == instances.end()) {
-        instances[id] = new WheelEncoder(id);
+WheelEncoder& WheelEncoder::get_instance(WheelType type) {
+    static std::array<std::pair<WheelType, std::unique_ptr<WheelEncoder>>, 4> instances{
+        std::make_pair(WheelType::LEFT_FRONT,  std::make_unique<WheelEncoder>(WheelEncoder(WheelType::LEFT_FRONT))),
+        std::make_pair(WheelType::RIGHT_FRONT, std::make_unique<WheelEncoder>(WheelEncoder(WheelType::RIGHT_FRONT))),
+        std::make_pair(WheelType::LEFT_REAR,   std::make_unique<WheelEncoder>(WheelEncoder(WheelType::LEFT_REAR))),
+        std::make_pair(WheelType::RIGHT_REAR,  std::make_unique<WheelEncoder>(WheelEncoder(WheelType::RIGHT_REAR))),
+    };
+
+    for (auto& p : instances) {
+        if (p.first == type) {
+            return *p.second;
+        }
     }
-    return *instances[id];
 }
 
 uint32_t WheelEncoder::init(void) {

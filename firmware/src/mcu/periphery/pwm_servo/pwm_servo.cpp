@@ -1,5 +1,8 @@
 #include "pwm_servo.h"
 
+#include <array>
+#include <memory>
+
 #include "stm32g4xx_ll_gpio.h"
 #include "stm32g4xx_ll_bus.h"
 
@@ -20,12 +23,16 @@ PWMServo::PWMServo(PWMServoType id) {
 }
 
 PWMServo& PWMServo::get_instance(PWMServoType type) {
-    static std::unordered_map<PWMServoType, PWMServo *> instances;
-    auto it = instances.find(type);
-    if (it == instances.end()) {
-        instances[type] = new PWMServo(type);
+    static std::array<std::pair<PWMServoType, std::unique_ptr<PWMServo>>, 2> instances{
+        std::make_pair(PWMServoType::PWM_SERVO_1, std::make_unique<PWMServo>(PWMServo(PWMServoType::PWM_SERVO_1))),
+        std::make_pair(PWMServoType::PWM_SERVO_2, std::make_unique<PWMServo>(PWMServo(PWMServoType::PWM_SERVO_2)))
+    };
+
+    for (auto& p : instances) {
+        if (p.first == type) {
+            return *p.second;
+        }
     }
-    return *instances[type];
 }
 
 uint32_t PWMServo::init() {
