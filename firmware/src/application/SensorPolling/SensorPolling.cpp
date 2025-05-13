@@ -7,7 +7,7 @@
 #include "task.h"
 #include "COBS.h"
 
-#include "board.h"
+#include "system_clock.h"
 #include "usart2.h"
 #include "mag3110.h"
 #include "hal_gpio.h"
@@ -49,7 +49,7 @@ void SensorPolling::task() {
     enc_right_front.init();
 
     static ServoController& SC = ServoController::getInstance();
-    volatile uint32_t last_msg_send = board_get_tick();
+    volatile uint32_t last_msg_send = system_clock_get_tick();
     uint16_t magn_x = 0;
     uint16_t magn_y = 0;
     uint16_t magn_z = 0;
@@ -59,12 +59,12 @@ void SensorPolling::task() {
     usart_2_set_memory_for_rx_data(rx_cmd_buffer, 64);
 
     while (true) {
-        if ((disable_pin != 0) && (board_get_tick() > disable_pin)) {
+        if ((disable_pin != 0) && (system_clock_get_tick() > disable_pin)) {
             hal_gpio_reset_pin(GPIO_PORT_A, GPIO_PIN_7);
             disable_pin = 0;
         }
 
-        if ((board_get_tick() - last_msg_send) > 9) {
+        if ((system_clock_get_tick() - last_msg_send) > 9) {
             uint16_t left_angle = 0;
             uint16_t right_angle = 0;
             SC.get_angle(left_angle, right_angle);
@@ -87,7 +87,7 @@ void SensorPolling::task() {
             memcpy(&(msg_buff[5]), &magn_z, sizeof(magn_z));
             send_cobs_buffer(7);
 
-            last_msg_send = board_get_tick();
+            last_msg_send = system_clock_get_tick();
         }
 
         if (rx_data_available == true) {
@@ -121,7 +121,7 @@ void SensorPolling::task() {
                         // printf("ang %d %d\n", left_servo_angle, right_servo_angle);
                     } else if ((cmd_data[0] == 5) && (cmd_size == 1)) {
                         hal_gpio_set_pin(GPIO_PORT_A, GPIO_PIN_7);
-                        disable_pin = board_get_tick() + 500;
+                        disable_pin = system_clock_get_tick() + 500;
                     } else {
                         // printf("Incorrect request\n");
                     }

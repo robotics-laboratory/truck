@@ -7,7 +7,7 @@
 #include "Protocol.h"
 #include "ServoController.h"
 
-#include "board.h"
+#include "system_clock.h"
 
 extern "C" void __aeabi_atexit() {};     // for virtual destructors
 extern "C" void __cxa_pure_virtual();   // for abstract base class
@@ -19,7 +19,7 @@ extern "C" void __cxa_pure_virtual();   // for abstract base class
 #pragma weak __cxa_guard_release = __aeabi_atexit
 
 int main() {
-    board_init();
+    system_clock_init();
     printf("Start\n");
 
     static SensorPolling& SP = SensorPolling::getInstance();

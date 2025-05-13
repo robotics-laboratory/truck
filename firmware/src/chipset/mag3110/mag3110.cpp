@@ -1,6 +1,6 @@
 #include "mag3110.h"
 
-#include "board.h"
+#include "system_clock.h"
 
 // MAG3110 Register Addresses
 #define MAG3110_DR_STATUS (0x00)
@@ -52,7 +52,7 @@ int32_t MAG3110::init() {
             status = 2;
             break;
         }
-        board_delay_ms(10);
+        system_clock_delay_ticks(10);
 
         if (read_data_from_sensor(MAG3110_WHO_AM_I, &reg_data, 1) != 0) {
             status = 3;

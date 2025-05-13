@@ -1,6 +1,6 @@
 #include "Servo.h"
 
-#include "board.h"
+#include "system_clock.h"
 
 Servo& Servo::get_instance(ServoType type) {
     static std::unordered_map<ServoType, Servo *> instances;

@@ -1,4 +1,4 @@
-#include "board.h"
+#include "system_clock.h"
 
 #include "stm32g4xx_ll_rcc.h"
 #include "stm32g4xx_ll_utils.h"
@@ -23,16 +23,16 @@ void SysTick_Handler(void) {
 }
 }
 
-uint32_t board_get_tick(void) {
+uint32_t system_clock_get_tick(void) {
     return system_tick_counter;
 }
 
-void board_delay_ms(uint32_t delay_ms) {
-    uint32_t timeout_delay_ms = board_get_tick() + delay_ms;
-    while (board_get_tick() < timeout_delay_ms);
+void system_clock_delay_ticks(uint32_t delay_ticks) {
+    uint32_t timeout_delay_ticks = system_clock_get_tick() + delay_ticks;
+    while (system_clock_get_tick() < timeout_delay_ticks);
 }
 
-void rtos_tick_timer_init() {
+static void rtos_timer_init() {
     LL_TIM_InitTypeDef TIM_InitStruct = {0};
 
     /* Peripheral clock enable */
@@ -51,7 +51,7 @@ void rtos_tick_timer_init() {
     LL_TIM_DisableMasterSlaveMode(TIM6);
 }
 
-void board_start_rtos_timer() {
+static void rtos_timer_start() {
     LL_TIM_ClearFlag_UPDATE(TIM6);
     LL_TIM_EnableIT_UPDATE(TIM6);
     LL_TIM_EnableCounter(TIM6);
@@ -59,11 +59,11 @@ void board_start_rtos_timer() {
 
 extern "C" {
 void vPortSetupTimerInterrupt( void ) {
-    board_start_rtos_timer();
+    rtos_timer_start();
 }
 }
 
-static void system_clock_init() {
+static void init_RCC() {
     LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
     while(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_4) {};
     LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
@@ -105,7 +105,7 @@ static void system_clock_init() {
     LL_SYSTICK_EnableIT();
 }
 
-void board_init() {
+void system_clock_init() {
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
 
@@ -113,8 +113,8 @@ void board_init() {
 
     LL_PWR_DisableUCPDDeadBattery();
 
-    system_clock_init();
-    rtos_tick_timer_init();
+    init_RCC();
+    rtos_timer_init();
     lpuart1_init();
     usart2_init();
     __enable_irq();

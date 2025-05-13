@@ -6,7 +6,7 @@
 #include "stm32g4xx_ll_bus.h"
 #include "stm32g4xx_ll_gpio.h"
 #include "stm32g4xx_ll_i2c.h"
-#include "board.h"
+#include "system_clock.h"
 
 I2C& I2C::getInstance() {
     static I2C _instance;
@@ -23,7 +23,7 @@ uint32_t I2C::wait_register(
     uint32_t status = 0;
 
     while (wait_register(i2c_handle) == wait_state) {
-        if (time_out_ts < board_get_tick()) {
+        if (time_out_ts < system_clock_get_tick()) {
             restart();
             status = 1;
             break;
@@ -98,7 +98,7 @@ uint32_t I2C::read_bytes(
             break;
         }
 
-        uint32_t time_out_ts = board_get_tick() + time_out;
+        uint32_t time_out_ts = system_clock_get_tick() + time_out;
         if (wait_register(LL_I2C_IsActiveFlag_BUSY, true, time_out_ts) != 0) {
             status = 3;
             break;
@@ -185,7 +185,7 @@ uint32_t I2C::write_bytes(
             break;
         }
 
-        uint32_t time_out_ts = board_get_tick();
+        uint32_t time_out_ts = system_clock_get_tick();
 
         if (wait_register(LL_I2C_IsActiveFlag_BUSY, true, time_out_ts) != 0) {
             status = 3;
@@ -207,7 +207,7 @@ uint32_t I2C::write_bytes(
 
         LL_I2C_TransmitData8(i2c_handle, register_address);
         while (LL_I2C_IsActiveFlag_STOP(i2c_handle) == false) {
-            if (time_out_ts > board_get_tick()) {
+            if (time_out_ts > system_clock_get_tick()) {
                 restart();
                 status = 3;
                 break;
