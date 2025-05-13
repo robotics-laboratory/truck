@@ -1,21 +1,31 @@
 #include "encoder_timer.h"
+
+#include <cstdio>
+#include <vector>
+#include <array>
+#include <memory>
+
 #include "stm32g4xx_ll_bus.h"
 #include "stm32g4xx_ll_tim.h"
 #include "stm32g4xx_ll_gpio.h"
-#include <vector>
-#include <cstdio>
 
 bool EncoderTimer::is_common_tim_initialized = false;
 
 static volatile bool dma_complete_irq[4] = {false};
 
-EncoderTimer& EncoderTimer::get_instance(EncoderType id) {
-    static std::unordered_map<EncoderType, EncoderTimer *> instances;
-    auto it = instances.find(id);
-    if (it == instances.end()) {
-        instances[id] = new EncoderTimer(id);
+EncoderTimer& EncoderTimer::get_instance(EncoderType type) {
+    static std::array<std::pair<EncoderType, std::unique_ptr<EncoderTimer>>, 4> instances{
+        std::make_pair(EncoderType::ID_0, std::make_unique<EncoderTimer>(EncoderTimer(EncoderType::ID_0))),
+        std::make_pair(EncoderType::ID_1, std::make_unique<EncoderTimer>(EncoderTimer(EncoderType::ID_1))),
+        std::make_pair(EncoderType::ID_2, std::make_unique<EncoderTimer>(EncoderTimer(EncoderType::ID_2))),
+        std::make_pair(EncoderType::ID_3, std::make_unique<EncoderTimer>(EncoderTimer(EncoderType::ID_3))),
+    };
+
+    for (auto& p : instances) {
+        if (p.first == type) {
+            return *p.second;
+        }
     }
-    return *instances[id];
 }
 
 uint32_t EncoderTimer::init() {

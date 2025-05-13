@@ -3,7 +3,6 @@
 #define TRUCK_HW_CHIPSET_WHEEL_ENCODER_INCLUDE_WHEEL_ECNODER_H_
 
 #include <cstdint>
-#include <unordered_map>
 
 #include "encoder_timer.h"
 
@@ -21,7 +20,7 @@ class WheelEncoder {
   static constexpr float low_pass_coef = 0.1f;
 
   bool is_initialized = false;
-  enum WheelType type;
+  enum WheelType type_;
   EncoderTimer& encoder_timer_handle;
   static constexpr uint32_t max_data_size = 50;
   std::vector<int> encoder_ticks;
@@ -29,9 +28,7 @@ class WheelEncoder {
   float current_speed = 0.0f;
   uint32_t last_tick_ts = 0;
 
-  ~WheelEncoder() {};
-  WheelEncoder(const WheelEncoder &obj) = delete;
-  WheelEncoder &operator=(const WheelEncoder &obj) = delete;
+  void low_pas_filter_apply(float raw_speed);
 
   static EncoderTimer &get_timer_instance(WheelType wheel_type_) {
       switch (wheel_type_) {
@@ -46,11 +43,17 @@ class WheelEncoder {
       }
   }
 
-  WheelEncoder(WheelType id) : encoder_timer_handle(get_timer_instance(id)), type(id) {};
+  explicit WheelEncoder(WheelType type) : encoder_timer_handle(get_timer_instance(type)), type_(type) {};
 
-  void low_pas_filter_apply(float raw_speed);
+  WheelEncoder(const WheelEncoder &obj) = delete;
+  WheelEncoder &operator=(const WheelEncoder &obj) = delete;
 
  public:
+  WheelEncoder(WheelEncoder &&obj) noexcept = default;
+  WheelEncoder &operator=(WheelEncoder &&obj) noexcept = default;
+
+  ~WheelEncoder() = default;
+
   static WheelEncoder &get_instance(WheelType id);
 
   uint32_t init(void);
