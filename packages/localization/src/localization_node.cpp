@@ -29,9 +29,7 @@ void LocalizationNode::initializeParams() {
 
         .bbox_filter =
             {.enable = this->declare_parameter<bool>("bbox_filter.enable"),
-             .radius = this->declare_parameter<double>("bbox_filter.radius"),
-             .z_min = this->declare_parameter<double>("bbox_filter.z_min"),
-             .z_max = this->declare_parameter<double>("bbox_filter.z_max")},
+             .radius = this->declare_parameter<double>("bbox_filter.radius")},
 
         .local_scan =
             {.rendering =
@@ -75,7 +73,7 @@ void LocalizationNode::initializeTopicHandlers() {
 
     slots_ = Slots{
         .local_scan = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-            "/lidar/scan",
+            "/livox/lidar",
             rclcpp::QoS(1).reliability(qos),
             std::bind(&LocalizationNode::onLocalScan, this, _1)),
 

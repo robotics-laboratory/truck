@@ -26,8 +26,6 @@ struct LocalizationParams {
     struct BBoxFilter {
         bool enable;
         double radius;
-        double z_min;
-        double z_max;
     } bbox_filter;
 
     struct LocalScan {
