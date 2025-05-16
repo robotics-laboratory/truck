@@ -27,6 +27,10 @@ uint32_t system_clock_get_tick(void) {
     return system_tick_counter;
 }
 
+uint32_t HAL_GetTick(void) {
+    return system_clock_get_tick();
+}
+
 void system_clock_delay_ticks(uint32_t delay_ticks) {
     uint32_t timeout_delay_ticks = system_clock_get_tick() + delay_ticks;
     while (system_clock_get_tick() < timeout_delay_ticks);

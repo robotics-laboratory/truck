@@ -57,6 +57,6 @@ class ServoController {
   uint32_t set_angle(float left_servo_angle, float right_servo_angle);
   uint32_t enable(bool is_enable);
 
-  uint32_t get_angle(uint16_t &left_servo_angle, uint16_t &right_servo_angle);
+  uint32_t get_angle(float &left_servo_angle, float &right_servo_angle);
 };
 #endif //TRUCK_HW_APPLICATION_SERVOCONTROLLER_INCLUDE_SERVOCONTROLLER_H_
