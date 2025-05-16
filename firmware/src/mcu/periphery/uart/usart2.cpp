@@ -6,6 +6,8 @@
 #include "stm32g4xx_ll_rcc.h"
 #include "stm32g4xx_ll_dma.h"
 
+#include "stddef.h"
+
 static uint32_t rx_bytes = 0;
 static uint8_t *ptr_rx_memory = NULL;
 static uint32_t size_of_rx_memory = 0;
@@ -24,7 +26,7 @@ void USART2_IRQHandler(void) {
         LL_DMA_DisableChannel(DMA2, LL_DMA_CHANNEL_1);
         LL_DMA_SetDataLength(DMA2, LL_DMA_CHANNEL_1, size_of_rx_memory);
         LL_DMA_EnableChannel(DMA2, LL_DMA_CHANNEL_1);
-        rx_data_available = true;
+        // rx_data_available = true;
     }
 
     if (((LL_USART_IsEnabledIT_IDLE(USART2) == true)

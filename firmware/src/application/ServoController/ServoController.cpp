@@ -137,7 +137,7 @@ uint32_t ServoController::enable(bool enable_servo) {
     return status;
 }
 
-uint32_t ServoController::get_angle(uint16_t &left_servo_angle, uint16_t &right_servo_angle) {
+uint32_t ServoController::get_angle(float &left_servo_angle, float &right_servo_angle) {
     uint32_t status = 0;
 
     if (is_initialized) {
