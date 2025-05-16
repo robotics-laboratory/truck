@@ -3,6 +3,7 @@
 #include "geom/msg.h"
 #include "localization/conversion.h"
 
+#include <chrono>
 #include <fstream>
 #include <rosbag2_cpp/reader.hpp>
 
@@ -227,16 +228,23 @@ void LocalizationNode::makeLocalizationTick() {
     }
 
     try {
+        const auto start_time = std::chrono::steady_clock::now();
+
         const auto tf_icp_matrix = icp_(local_scan_tf, global_scan_tf);
+
+        const auto end_time = std::chrono::steady_clock::now();
+        const auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
         const geom::Pose tf_icp_pose = toPose(tf_icp_matrix);
 
         if (params_.verbose) {
             RCLCPP_INFO(
                 this->get_logger(),
-                "Localization correction: (%.3f, %.3f, %.3f)",
+                "Localization correction: (%.3f, %.3f, %.3f), ICP time: %ld ms",
                 tf_icp_pose.pos.x,
                 tf_icp_pose.pos.y,
-                tf_icp_pose.dir.angle().radians());
+                tf_icp_pose.dir.angle().radians(),
+                duration_ms);
         }
 
         geometry_msgs::msg::Pose tf_world_ekf_geom_msg;
