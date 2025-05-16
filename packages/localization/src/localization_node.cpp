@@ -213,8 +213,8 @@ void LocalizationNode::makeLocalizationTick() {
             {"yMin", std::to_string(ego.y - params_.bbox_filter.radius)},
             {"yMax", std::to_string(ego.y + params_.bbox_filter.radius)},
 
-            {"zMin", std::to_string(-std::numeric_limits<double>::max())},
-            {"zMax", std::to_string(std::numeric_limits<double>::max())},
+            {"zMin", std::to_string(-1e9)},
+            {"zMax", std::to_string(1e9)},
 
             {"removeInside", std::to_string(false)}};
 
@@ -247,8 +247,17 @@ void LocalizationNode::makeLocalizationTick() {
         tf_world_ekf_geom.dir += tf_icp_pose.dir;
 
         tf2::fromMsg(geom::msg::toPose(tf_world_ekf_geom), tf_world_ekf_);
+
     } catch (const std::exception& e) {
-        RCLCPP_ERROR(this->get_logger(), "Localization error, update pose estimate!");
+        RCLCPP_INFO(
+            this->get_logger(),
+            "ICP input: local_scan_tf size = %zu, global_scan_tf size = %zu",
+            local_scan_tf.features.cols(),
+            global_scan_tf.features.cols());
+        RCLCPP_ERROR(
+            this->get_logger(),
+            "Localization error: %s — ICP failed. Update pose estimate!",
+            e.what());
     }
 
     publishTf();
