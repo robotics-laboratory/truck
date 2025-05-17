@@ -272,7 +272,7 @@ void LocalizationNode::makeLocalizationTick() {
         const double dy = std::abs(tf_icp_pose.pos.y);
         const double dxy = std::hypot(dx, dy);
 
-        if (dxy > 1.0) {
+        if (dxy > 2.0) {
             RCLCPP_WARN(
                 this->get_logger(),
                 "ICP correction too large: Δx = %.3f, Δy = %.3f (total %.3f m) — ignoring update.",
