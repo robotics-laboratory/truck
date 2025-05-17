@@ -207,6 +207,12 @@ void LocalizationNode::makeLocalizationTick() {
 
     if (params_.bbox_filter.enable) {
         const geom::Vec2 ego = geom::Transform(tf_world_ekf_ * tf_ekf_base.value()).t();
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Сenter (EGO): x = %.3f, y = %.3f, radius = %.2f",
+            ego.x,
+            ego.y,
+            params_.bbox_filter.radius);
 
         PointMatcherSupport::Parametrizable::Parameters bbox_filter_params = {
             {"xMin", std::to_string(ego.x - params_.bbox_filter.radius)},
@@ -227,13 +233,23 @@ void LocalizationNode::makeLocalizationTick() {
         global_scan_tf = bbox_filter->filter(global_scan_tf);
     }
 
+    if (local_scan_tf.features.cols() == 0) {
+        RCLCPP_WARN(this->get_logger(), "local_scan_tf is empty after filtering — skipping ICP.");
+        return;
+    }
+    if (global_scan_tf.features.cols() == 0) {
+        RCLCPP_WARN(this->get_logger(), "global_scan_tf is empty after filtering — skipping ICP.");
+        return;
+    }
+
     try {
         const auto start_time = std::chrono::steady_clock::now();
 
         const auto tf_icp_matrix = icp_(local_scan_tf, global_scan_tf);
 
         const auto end_time = std::chrono::steady_clock::now();
-        const auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+        const auto duration_ms =
+            std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
         const geom::Pose tf_icp_pose = toPose(tf_icp_matrix);
 
@@ -251,21 +267,33 @@ void LocalizationNode::makeLocalizationTick() {
         tf2::toMsg(tf_world_ekf_, tf_world_ekf_geom_msg);
 
         geom::Pose tf_world_ekf_geom = geom::toPose(tf_world_ekf_geom_msg);
+
+        const double dx = std::abs(tf_icp_pose.pos.x);
+        const double dy = std::abs(tf_icp_pose.pos.y);
+        const double dxy = std::hypot(dx, dy);
+
+        if (dxy > 1.0) {
+            RCLCPP_WARN(
+                this->get_logger(),
+                "ICP correction too large: Δx = %.3f, Δy = %.3f (total %.3f m) — ignoring update.",
+                tf_icp_pose.pos.x,
+                tf_icp_pose.pos.y,
+                dxy);
+            return;
+        }
+
         tf_world_ekf_geom.pos += tf_icp_pose.pos;
         tf_world_ekf_geom.dir += tf_icp_pose.dir;
 
         tf2::fromMsg(geom::msg::toPose(tf_world_ekf_geom), tf_world_ekf_);
 
     } catch (const std::exception& e) {
+        RCLCPP_ERROR(this->get_logger(), "ICP exception caught: %s", e.what());
         RCLCPP_INFO(
             this->get_logger(),
-            "ICP input: local_scan_tf size = %zu, global_scan_tf size = %zu",
+            "ICP input sizes — local: %zu, global: %zu",
             local_scan_tf.features.cols(),
             global_scan_tf.features.cols());
-        RCLCPP_ERROR(
-            this->get_logger(),
-            "Localization error: %s — ICP failed. Update pose estimate!",
-            e.what());
     }
 
     publishTf();
