@@ -144,6 +144,7 @@ void ControlProxyNode::watchdog() {
             return true;
         }
         auto duration_ns = (now() - msg->header.stamp).nanoseconds();
+        // RCLCPP_INFO(this->get_logger(), "control latency: %0.3f", duration_ns / 1e9);
         return std::chrono::nanoseconds(duration_ns) > timeout;
     };
 

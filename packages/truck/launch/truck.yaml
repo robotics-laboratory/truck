@@ -1,6 +1,6 @@
 launch:
 - include:
-   file: $(find-pkg-share truck)/launch/lidar3d.yaml
+    file: $(find-pkg-share truck)/launch/lidar3d.yaml
 
 - include:
     file: $(find-pkg-share truck)/launch/camera.yaml
@@ -14,8 +14,13 @@ launch:
     - { name: "simulation", value: "false" }
     - { name: "qos", value: "0" }
 
-- include:
-    file: $(find-pkg-share perf)/launch/perf_stat.yaml
+# - include:
+#     file: $(find-pkg-share perf)/launch/perf_stat.yaml
 
 - include:
     file: $(find-pkg-share video_streaming)/launch/video_streaming.yaml
+
+# - include:
+#     file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml
+#     arg:
+#     - { name: "simulation", value: "false" }

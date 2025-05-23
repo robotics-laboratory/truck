@@ -14,11 +14,11 @@ launch:
     - { name: "simulation", value: "$(var simulation)" }
     - { name: "qos", value: "$(var qos)" }
 
-- include:
-    file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml
-    arg:
-    - { name: "simulation", value: "$(var simulation)" }
-    - { name: "qos", value: "$(var qos)" }
+#- include:
+#    file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml
+#    arg:
+#    - { name: "simulation", value: "$(var simulation)" }
+#    - { name: "qos", value: "$(var qos)" }
 
 - include:
     file: $(find-pkg-share visualization)/launch/visualization.yaml
@@ -33,11 +33,11 @@ launch:
     - { name: "simulation", value: "$(var simulation)" }
     - { name: "qos", value: "$(var qos)" }
 
-- include:
-    file: $(find-pkg-share occupancy_grid)/launch/occupancy_grid.yaml
-    arg:
-    - { name: "simulation", value: "$(var simulation)" }
-    - { name: "qos", value: "$(var qos)" }
+#- include:
+#    file: $(find-pkg-share occupancy_grid)/launch/occupancy_grid.yaml
+#    arg:
+#    - { name: "simulation", value: "$(var simulation)" }
+#    - { name: "qos", value: "$(var qos)" }
 
-- include:
-    file: $(find-pkg-share truck)/launch/bridge.yaml
+# - include:
+#     file: $(find-pkg-share truck)/launch/bridge.yaml

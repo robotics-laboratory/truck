@@ -1,4 +1,6 @@
-# Use together with main docker-compose.yaml file:
+#
+
+# [Option 1] Use together with main docker-compose.yaml file:
 # docker compose -f docker-compose.yaml -f lidar-net.yaml up -d
 
 services:

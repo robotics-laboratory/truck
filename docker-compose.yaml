@@ -19,11 +19,25 @@ services:
           # - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64
     ports:
       - "${FOXGLOVE_PORT:-8765}:8765"
-      - "${VIDEO_STREAMING_PORT:-8889}:8889"
+      - "${MEDIAMTX_HTTP_PORT:-8889}:8889"
+      - "${MEDIAMTX_WEBRTC_PORT:-8189}:${MEDIAMTX_WEBRTC_PORT:-8189}/udp"
     volumes:
       - "${PWD}:/truck"
       - "/dev:/dev"
+    # networks:
+    #   default:
+    #   z-lidar-net:
 
 networks:
   default:
     name: "${CONTAINER_NAME:-truck-${USER}}"
+  # z-lidar-net:
+  #   name: z-lidar-net
+  #   driver: macvlan
+  #   driver_opts:
+  #     parent: eth0
+  #   ipam:
+  #     config:
+  #       - subnet: 192.168.3.0/24
+  #         gateway: 192.168.3.1
+  #         ip_range: 192.168.3.2/32

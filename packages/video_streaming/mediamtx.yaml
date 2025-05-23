@@ -1,10 +1,17 @@
 logLevel: info
 logDestinations: [stdout]
 
-rtmpDisable: yes
-hlsDisable: yes
+rtmp: no
+hls: no
+srt: no
+rtsp: yes
+webrtc: yes
+
 rtspAddress: :8554
 webrtcAddress: :8889
+webrtcLocalUDPAddress: :8102
+webrtcIPsFromInterfaces: no
+webrtcAdditionalHosts: ['100.64.0.14', '192.168.2.158', '192.168.1.110']
 
 paths:
   cam:
@@ -15,5 +22,5 @@ paths:
       gst-launch-1.0
       nvv4l2camerasrc device=/dev/video4
       ! 'video/x-raw(memory:NVMM), format=YUY2, width=640, height=480, framerate=30/1'
-      ! nvvidconv ! nvv4l2vp9enc bitrate=400000 maxperf-enable=true
+      ! nvvidconv ! nvv4l2h264enc bitrate=500000 maxperf-enable=true ! queue
       ! rtspclientsink location=rtsp://localhost:$RTSP_PORT/$RTSP_PATH

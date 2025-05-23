@@ -24,13 +24,13 @@ limits:
   steering: { inner: 40.0, outer: 40.0 } # deg
   max_abs_curvature: 2.0                 # 1/m
   steering_velocity: 2.0                 # rad/s
-  velocity: { min: -0.5, max: +0.8 }     # m/s
-  max_acceleration: 1.0                  # m/s^2
-  max_deceleration: 2.0                  # m/s^2
+  velocity: { min: -0.3, max: +0.5 }     # m/s
+  max_acceleration: 0.5                  # m/s^2
+  max_deceleration: 0.5                  # m/s^2
 
 # Motor to differential ratio. See docs/gearbox.md for more info.
 gear_ratio: 0.08421
-servo_home_angles: { left: 89, right: 96 }  # deg
+servo_home_angles: { left: 99, right: 164 }  # deg
 
 tf_static:
   - frame_id: "base"

@@ -9,8 +9,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 LAUNCH_PARAMS = {
-    "lidar_ip": "192.168.2.10",
-    "host_iface": "eth1",
+    "lidar_ip": "192.168.3.100",
     "frame_id": "livox",
     "publish_freq": "10",
     "scan_pattern_mode": "0",
@@ -79,20 +78,23 @@ LIVOX_CONFIG = {
 
 
 # https://stackoverflow.com/a/73559817
-def get_ip_address(interface: str) -> str:
-    interface_addrs = psutil.net_if_addrs().get(interface) or []
-    for snicaddr in interface_addrs:
-        if snicaddr.family == socket.AF_INET:
-            return snicaddr.address
+def get_ip_address(lidar_ip: str) -> str:
+    for iface, iface_addrs in psutil.net_if_addrs().items():
+        for snicaddr in iface_addrs:
+            if (
+                snicaddr.family == socket.AF_INET
+                # Naive */24 mask comparison, may be improved if needed
+                and snicaddr.address.split(".")[:3] == lidar_ip.split(".")[:3]
+            ):
+                return iface, snicaddr.address
 
 
 # https://robotics.stackexchange.com/a/104402
 def launch_setup(context):
     launch_params = {x: LaunchConfiguration(x).perform(context) for x in LAUNCH_PARAMS}
     lidar_ip = launch_params["lidar_ip"]
-    host_iface = launch_params["host_iface"]
-    host_ip = get_ip_address("eth1")
-    assert host_ip is not None, f"Failed to get host IP for interface {host_iface}"
+    host_iface, host_ip = get_ip_address(lidar_ip)
+    assert host_ip is not None, "Failed to get host ip matching lidar subnet"
 
     config = copy.deepcopy(LIVOX_CONFIG)
     config["MID360"]["host_net_info"]["host_ip"] = host_ip
