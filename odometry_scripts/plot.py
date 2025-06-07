@@ -9,10 +9,12 @@ from matplotlib import cm
 import numpy as np
 from matplotlib.animation import FuncAnimation
 from mcap.reader import make_reader
+from mcap.writer import Writer
 from mcap_ros2.decoder import DecoderFactory
 from scipy.ndimage import gaussian_filter1d
 from scipy.signal import savgol_filter
 from matplotlib.widgets import Slider
+import subprocess as sp
 
 WHEEL_RADIUS_M = 0.04913
 HALF_WHEEL_BASE_WIDTH = 0.265 / 2.0
@@ -28,7 +30,7 @@ args = parser.parse_args()
 
 with open(args.path + "/params.json", "r") as params_file:
     params = json.load(params_file)
-    fps = params["fps"]
+    fps = params["fps"] = 29.974271
     grid_size = params["grid_size"]
     blink_frame_num = params["blink_frame_num"]
 
@@ -43,6 +45,9 @@ def read_json_poses(path, blink_frame):
         ts = 1 / fps * int(item["frame_num"]) - blink_offset
         result.append((ts, x, y, velocity, orientation))
     return result
+
+# MCAP mode switch timestamp [s], synced with blink_frame_num
+mcap_start_ts: float = None
 
 def read_mcap_poses(path):
     mcap = []
@@ -97,6 +102,9 @@ def read_mcap_poses(path):
         ):
             back_wheel_speed.append((message.publish_time / 10**9 - ts0, ros_msg.twist.twist.linear.x))
 
+    global mcap_start_ts
+    mcap_start_ts = ts0
+
     return mcap, magn_data, front_wheel_data, back_wheel_speed, targ_curv, rear_wheel_data
 
 def sync_mcap_poses(gt_poses, mcap_poses):
@@ -129,6 +137,9 @@ def compute_curvature_from_orientation(gt_poses, smooth_sigma=2):
     x = gaussian_filter1d(gt_poses[:,1], sigma=smooth_sigma)
     y = gaussian_filter1d(gt_poses[:,2], sigma=smooth_sigma)
     orient = gaussian_filter1d(np.unwrap(gt_poses[:,4]), sigma=smooth_sigma)
+    # x = gt_poses[:,1]
+    # y = gt_poses[:,2]
+    # orient = np.unwrap(gt_poses[:,4])
 
     ds = np.sqrt(np.diff(x)**2 + np.diff(y)**2)
     s = np.concatenate([[0], np.cumsum(ds)])
@@ -252,15 +263,15 @@ back_wheels_speed = sync_wheel_speed(front_wheels_speed, back_wheels_speed)
 
 gt_poses = np.asarray(gt_poses)
 gt_curv = compute_curvature_from_orientation(gt_poses)
-gt_curv = savgol_filter(gt_curv, window_length=10, polyorder=3)
+# gt_curv = savgol_filter(gt_curv, window_length=10, polyorder=3)
 # gt_curv_rad[gt_curv_rad > 5] = 100000
 
 gt_poses = np.column_stack((gt_poses, gt_curv)) # GT Trajectory [ts, x, y, speed, orientation, curvate]
 
 front_wheels_speed = np.asarray(front_wheels_speed)  # Front wheel speed [ts, left, right]
 back_wheels_speed = np.asarray(back_wheels_speed) # Motor speed [ts, speed]
-# rear_wheel_speed = np.asarray(rear_wheel_speed)
-rear_wheel_speed = apply_new_filter(np.asarray(rear_wheel_speed))
+rear_wheel_speed = np.asarray(rear_wheel_speed)
+# rear_wheel_speed = apply_new_filter(np.asarray(rear_wheel_speed))
 
 front_wheels_speed[:, 1:3] *= (2 * np.pi / ENCODERS_RPS * WHEEL_RADIUS_M)
 rear_wheel_speed[:, 1:3] *= (2 * np.pi / ENCODERS_RPS * WHEEL_RADIUS_M)  # Rear wheel speed [ts, left, right]
@@ -307,6 +318,71 @@ V_x_r[is_turning & (V_l < V_r)] = V_r[is_turning & (V_l < V_r)] * R[:, 0][is_tur
 V_x_r[is_turning & (V_l > V_r)] = V_r[is_turning & (V_l > V_r)] * R[:, 1][is_turning & (V_l > V_r)] / np.sqrt((R[:, 0][is_turning & (V_l > V_r)] - HALF_WHEEL_BASE_WIDTH) ** 2 + WHEEL_BASE_LENGTH**2)
 
 V_x = np.column_stack((front_wheels_speed[:, 0], V_x_l, V_x_r)) # Linear speed calculated from front wheel (ts, speed_frm_left, spped_from_right)
+
+
+def mcap_write_structarr(writer: Writer, arr: np.recarray, topic: str):
+    struct_index = getattr(mcap_write_structarr, "__struct_index_counter", 0)
+    setattr(mcap_write_structarr, "__struct_index_counter", struct_index + 1)
+
+    fields = dict(arr.dtype.fields)
+    fields.pop("ts")
+    schema = {
+        "type": "object",
+        "properties": {x: {"type": "number"} for x in fields},
+    }
+    schema_id = writer.register_schema(
+        name=f"struct{struct_index}",
+        encoding="jsonschema",
+        data=json.dumps(schema).encode(),
+    )
+    channel_id = writer.register_channel(
+        schema_id=schema_id,
+        topic=topic,
+        message_encoding="json",
+    )
+    for item in arr:
+        item = dict(zip(arr.dtype.names, item.item()))
+        ts = item.pop("ts")
+        writer.add_message(
+            channel_id=channel_id,
+            log_time=int((ts + mcap_start_ts) * 10**9),
+            publish_time=int((ts + mcap_start_ts) * 10**9),
+            data=json.dumps(item).encode()
+        )
+
+
+def save_to_mcap():
+    rear_ws = rear_wheel_speed  # Скорость задних колес [ts, left, right]
+    front_ws = front_wheels_speed  # Скорость передних колес [ts, left, right]
+    rear_curv = curv_back_wheels  # Кривизна по задним колесам для ЦЗО [curv] !! без ts
+    front_curv = curvate_odom   # Кривизна по передним колесам для ЦЗО [curv] !! без ts
+    gt_poses  # GT одометрия, кривизна для ЦЕНТРА [ts, x, y, speed, orientation, curv]
+    ts = rear_wheel_speed[:, 0]  # Чисто таймстепмы из mcap
+
+    df1 = np.rec.fromarrays(
+        [ts, -0.945 * rear_curv, front_curv],
+        dtype=[("ts", "f4"), ("rear_curv", "f4"), ("front_curv", "f4")],
+    )
+    df2 = np.rec.fromarrays(
+        [gt_poses[:, 0], gt_poses[:, 3], gt_poses[:, 5]],
+        dtype=[("ts", "f4"), ("gt_speed", "f4"), ("gt_curv", "f4")],
+    )
+
+    with open(args.path + "/odom_computed.mcap", "wb") as file:
+        writer = Writer(output=file)
+        writer.start()
+        mcap_write_structarr(writer, df1, "/odom/computed")
+        mcap_write_structarr(writer, df2, "/odom/gt")
+        writer.finish()
+    
+
+    cmd = (
+        f"mcap merge {args.path}/odom_live.mcap "
+        f"{args.path}/odom_computed.mcap "
+        f"-o {args.path}/odom_merged.mcap"
+    )
+    sp.check_call(cmd, shell=True)
+
 
 def plot_all():
     def update(val):
@@ -573,8 +649,9 @@ def compare_speed_curvate():
     plt.show()
 
 # plot_animation_with_orientation()
-plot_all()
+# plot_all()
 # plot_magn()
 # plot_sequential()
 # plot_animation()
 # compare_speed_curvate()
+save_to_mcap()
