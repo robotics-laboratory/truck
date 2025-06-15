@@ -41,12 +41,16 @@ SensorPolling& SensorPolling::getInstance() {
 void SensorPolling::task() {
     static WheelEncoder& enc_left_front = WheelEncoder::get_instance(WheelType::LEFT_FRONT);
     static WheelEncoder& enc_right_front = WheelEncoder::get_instance(WheelType::RIGHT_FRONT);
+    static WheelEncoder& enc_left_rear = WheelEncoder::get_instance(WheelType::LEFT_REAR);
+    static WheelEncoder& enc_right_rear = WheelEncoder::get_instance(WheelType::RIGHT_REAR);
     static MAG3110& magnitometr = MAG3110::getInstance();
 
     magnitometr.init();
     hal_gpio_init(GPIO_PORT_A, GPIO_PIN_7);
     enc_left_front.init();
     enc_right_front.init();
+    enc_left_rear.init();
+    enc_right_rear.init();
 
     static ServoController& SC = ServoController::getInstance();
     volatile uint32_t last_msg_send = board_get_tick();
@@ -73,12 +77,17 @@ void SensorPolling::task() {
             memcpy(&(msg_buff[3]), &right_angle, sizeof(right_angle));
             send_cobs_buffer(5);
 
-            float left_speed = enc_left_front.get_ticks_per_sec();
-            float right_speed = enc_right_front.get_ticks_per_sec();
+            float left_fr_speed = enc_left_front.get_ticks_per_sec();
+            float right_fr_speed = enc_right_front.get_ticks_per_sec();
+            float left_rear_speed = enc_left_rear.get_ticks_per_sec();
+            float right_rear_speed = enc_right_rear.get_ticks_per_sec();
+
             msg_buff[0] = ENCODERS_SPEED_MSG_TAG;
-            memcpy(&(msg_buff[1]), &left_speed, sizeof(left_speed));
-            memcpy(&(msg_buff[5]), &right_speed, sizeof(right_speed));
-            send_cobs_buffer(9);
+            memcpy(&(msg_buff[1]), &left_fr_speed, sizeof(left_fr_speed));
+            memcpy(&(msg_buff[5]), &right_fr_speed, sizeof(right_fr_speed));
+            memcpy(&(msg_buff[9]), &left_rear_speed, sizeof(left_rear_speed));
+            memcpy(&(msg_buff[13]), &right_rear_speed, sizeof(right_rear_speed));
+            send_cobs_buffer(17);
 
             magnitometr.get_magn_z(magn_x, magn_y, magn_z);
             msg_buff[0] = MAGN_Z_MSG_TAG;
