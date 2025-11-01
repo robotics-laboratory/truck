@@ -12,17 +12,15 @@ launch:
     - { name: "publish_tf", value: False }
 
     - { name: "enable_color", value: False }
-    - { name: "rgb_camera.profile", value: "848x480x30" }
-
-    - { name: "enable_depth", value: False }
-    - { name: "depth_module.profile", value: "424x240x15" }
+    - { name: "rgb_camera.profile", value: "848x480x5" }
+    - { name: "enable_depth", value: True }
+    - { name: "depth_module.profile", value: "848x480x5" }
+    - { name: "align_depth.enable", value: True }
 
     - { name: "enable_accel", value: True }
     - { name: "accel_fps", value: 200 }
-
     - { name: "enable_gyro", value: True }
     - { name: "gyro_fps", value: 200 }
-
     - { name: "unite_imu_method", value: 1 }
     - { name: "hold_back_imu_for_frames", value: False }
 

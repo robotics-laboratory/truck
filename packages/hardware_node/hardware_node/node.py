@@ -1,13 +1,12 @@
 from functools import cached_property
 
-import numpy as np
 import odrive
 import pymodel
 import rclpy
 from geometry_msgs.msg import Vector3
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
-from std_msgs.msg import Bool, Header, Int32
+from std_msgs.msg import Header, Int32
 from truck_msgs.msg import Control, ControlMode, HardwareStatus, HardwareTelemetry
 
 from hardware_node.teensy import TeensyBridge
@@ -82,12 +81,6 @@ class HardwareNode(Node):
             "/imu/mag",
             qos_profile=1,
         )
-        self._tmp_blink_sub = self.create_subscription(
-            Bool,
-            "/hardware/blink",
-            self._tmp_blink,
-            qos_profile=1,
-        )
         self._left_wheel_ticks = self.create_publisher(
             Int32,
             "/hardware/left_wheel_ticks",
@@ -98,10 +91,6 @@ class HardwareNode(Node):
             "/hardware/right_wheel_ticks",
             qos_profile=1,
         )
-
-    def _tmp_blink(self, activate: Bool):
-        self._log.info(f"BLINK - {activate.data}")
-        self._teensy.blink(activate.data)
 
     def _init_ros_timers(self):
         self._status_timer = self.create_timer(
@@ -144,7 +133,6 @@ class HardwareNode(Node):
             return
         if self._prev_mode == ControlMode.OFF and msg.mode != ControlMode.OFF:
             self._log.info("Mode change: OFF -> ANY - Enabling motor")
-            self._teensy.blink(True)
             self._enable_motor()
         if self._prev_mode != ControlMode.OFF and msg.mode == ControlMode.OFF:
             self._log.info("Mode change: ANY -> OFF - Disabling motor")
@@ -154,6 +142,7 @@ class HardwareNode(Node):
         self._push_status()
 
     def _enable_motor(self):
+        self._teensy.blink()
         self._odrive.clear_errors()
         self._axis.controller.input_vel = 0
         self._axis.requested_state = odrive.enums.AXIS_STATE_CLOSED_LOOP_CONTROL
@@ -259,16 +248,16 @@ class HardwareNode(Node):
         # # self._log.info(f"raw adc: {left_adc_raw} | {right_adc_raw}")
         # # self._log.info(f"target: {steering.left.degrees} | {steering.right.degrees}")
 
-        curr_left_steering = np.interp(
-            np.deg2rad(self._teensy._odom_wheels_values["left"]),
-            self._teensy._map[:, 1],
-            self._teensy._map[:, 0],
-        )
-        curr_right_steering = -np.interp(
-            -np.deg2rad(self._teensy._odom_wheels_values["right"]),
-            self._teensy._map[:, 1],
-            self._teensy._map[:, 0],
-        )
+        # curr_left_steering = np.interp(
+        #    np.deg2rad(self._teensy._odom_wheels_values["left"]),
+        #    self._teensy._map[:, 1],
+        #    self._teensy._map[:, 0],
+        # )
+        # curr_right_steering = -np.interp(
+        #    -np.deg2rad(self._teensy._odom_wheels_values["right"]),
+        #    self._teensy._map[:, 1],
+        #    self._teensy._map[:, 0],
+        # )
 
         # self._log.info(f"curr left: {curr_left_steering:.2f}")
 
@@ -284,14 +273,14 @@ class HardwareNode(Node):
             # target_left_steering=float(self._teensy._target_servo_values["left"]),
             # current_left_steering=curr_left_steering,
             target_left_steering=steering.left.radians,
-            current_left_steering=curr_left_steering,
+            current_left_steering=steering.left.radians,
             target_right_steering=steering.right.radians,
-            current_right_steering=curr_right_steering,
+            current_right_steering=steering.right.radians,
             # current_left_steering=steering.left.radians,
             # target_right_steering=steering.right.radians,
             # current_right_steering=steering.right.radians,
-            rear_left_wheel_velocity=0.0,
-            rear_right_wheel_velocity=0.0,
+            # rear_left_wheel_velocity=0.0,
+            # rear_right_wheel_velocity=0.0,
             # front_left_wheel_velocity=wheel_velocity.front_left,
             # front_right_wheel_velocity=wheel_velocity.front_right,
             # target_left_steering=-1,
@@ -301,8 +290,18 @@ class HardwareNode(Node):
             # current_right_steering=float(self._teensy._odom_servo_values["right"]),
             # rear_left_wheel_velocity=-1,
             # rear_right_wheel_velocity=-1,
-            front_left_wheel_velocity=float(self._teensy._odom_wheels_values["left"]),
-            front_right_wheel_velocity=float(self._teensy._odom_wheels_values["right"]),
+            front_left_wheel_velocity=float(
+                self._teensy._odom_wheels_values["front_left"]
+            ),
+            front_right_wheel_velocity=float(
+                self._teensy._odom_wheels_values["front_right"]
+            ),
+            rear_left_wheel_velocity=float(
+                self._teensy._odom_wheels_values["rear_left"]
+            ),
+            rear_right_wheel_velocity=float(
+                self._teensy._odom_wheels_values["rear_right"]
+            ),
         )
 
         self._telemetry_pub.publish(telemetry)

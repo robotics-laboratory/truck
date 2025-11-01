@@ -46,7 +46,12 @@ class TeensyBridge:
         self._odom_servo_ts = 0
         self._odom_servo_values = {"left": 0, "right": 0}
         self._odom_wheels_ts = 0
-        self._odom_wheels_values = {"left": 0, "right": 0}
+        self._odom_wheels_values = {
+            "front_left": 0,
+            "front_right": 0,
+            "rear_left": 0,
+            "rear_right": 0,
+        }
         self._target_servo_values = {"left": 0, "right": 0}
         self._magnitometer_values = {"x_axis": 0, "y_axis": 0, "z_axis": 0}
         self._left_wheel_values = []
@@ -59,15 +64,21 @@ class TeensyBridge:
         msgid, data = data[0], data[1:]
         # self._log.info(f"{msgid}, {data}")
         if msgid == 1:
-            l, r = struct.unpack("<ff", data)
+            front_left, front_right, rear_left, rear_right = struct.unpack(
+                "<ffff", data
+            )
             self._odom_wheels_ts = time.perf_counter()
-            self._odom_wheels_values = {"left": l, "right": r}
+            self._odom_wheels_values = {
+                "front_left": front_left,
+                "front_right": front_right,
+                "rear_left": rear_left,
+                "rear_right": rear_right,
+            }
             # self._log.debug(f"wheel: {self._odom_wheels_values}")
         elif msgid == 2:
             l, r = struct.unpack("<ff", data)
             self._odom_servo_ts = time.perf_counter()
             self._odom_servo_values = {"left": l, "right": r}
-            # self._log.debug(f"servo: {self._odom_servo_values}")
         elif msgid == 4:
             magn_x, magn_y, magn_z = struct.unpack("<HHH", data)
             self._magnitometer_ts = time.perf_counter()
@@ -89,6 +100,7 @@ class TeensyBridge:
                 return
             self._parse_one(chunk)
 
+    @noexcept
     def push(self, left_wheel_angle: float, right_wheel_angle: float):
         self._log.debug(
             f"Input angles: "
@@ -114,7 +126,7 @@ class TeensyBridge:
         packet = cobs.encode(packet) + b"\x00"
         self._serial.write(packet)
 
-    def blink(self, activate: bool):
+    def blink(self, activate: bool = True):
         self._log.info(f"Teensy BLINK - {activate}")
         packet = struct.pack("BB", 5, 1 if (activate) else 0)
         packet = cobs.encode(packet) + b"\x00"
