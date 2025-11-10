@@ -1,4 +1,5 @@
 #include "geom/distance.h"
+#include "geom/intersection.h"
 
 #include "common/math.h"
 
@@ -41,5 +42,24 @@ double distance(const Line& l, const Vec2& p) noexcept {
 }
 
 double distance(const Vec2& p, const Line& l) noexcept { return distance(l, p); }
+
+double distanceSq(const MotionState& a, const MotionState& b) noexcept {
+    return distanceSq(a.pos, b.pos);
+}
+
+double distance(const MotionState& a, const MotionState& b) noexcept {
+    return distance(a.pos, b.pos);
+}
+
+double distance(const Segment& a, const Segment& b) noexcept {
+    if (intersect(a, b)) {
+        return 0.0;
+    }
+    return std::min(
+        {distance(a.begin, projection(a.begin, b)),
+         distance(a.end, projection(a.end, b)),
+         distance(b.begin, projection(b.begin, a)),
+         distance(b.end, projection(b.end, a))});
+}
 
 }  // namespace truck::geom

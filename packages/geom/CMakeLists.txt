@@ -24,6 +24,7 @@ add_library(
   src/distance.cpp
   src/intersection.cpp
   src/line.cpp
+  src/motion_state.cpp
   src/msg.cpp
   src/polygon.cpp
   src/polyline.cpp

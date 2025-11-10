@@ -71,11 +71,11 @@ class Angle {
 
 namespace literals {
 
-constexpr Angle operator"" _rad(unsigned long long radians) { return Angle::fromRadians(radians); }
-constexpr Angle operator"" _rad(long double radians) { return Angle::fromRadians(radians); }
+constexpr Angle operator""_rad(unsigned long long radians) { return Angle::fromRadians(radians); }
+constexpr Angle operator""_rad(long double radians) { return Angle::fromRadians(radians); }
 
-constexpr Angle operator"" _deg(unsigned long long degrees) { return Angle::fromDegrees(degrees); }
-constexpr Angle operator"" _deg(long double degrees) { return Angle::fromDegrees(degrees); }
+constexpr Angle operator""_deg(unsigned long long degrees) { return Angle::fromDegrees(degrees); }
+constexpr Angle operator""_deg(long double degrees) { return Angle::fromDegrees(degrees); }
 
 }  // namespace literals
 

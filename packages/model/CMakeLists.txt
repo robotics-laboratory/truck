@@ -1,19 +1,17 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.22)
+
 project(model)
 
 find_package(ament_cmake REQUIRED)
 find_package(common REQUIRED)
 find_package(geom REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(pybind11 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 find_package(Boost REQUIRED)
-
-set(CMAKE_CXX_STANDARD 20)
 
 add_library(model SHARED src/params.cpp src/shape.cpp src/model.cpp)
 ament_target_dependencies(
@@ -75,10 +73,12 @@ if(BUILD_TESTING)
   target_link_libraries(model_test model)
 endif()
 
-set(PYBIND11_PYTHON_VERSION "3.8")
+set(PYBIND11_PYTHON_VERSION "3.10")
+find_package(pybind11 REQUIRED)
+find_package(Python3 COMPONENTS Development REQUIRED)
 pybind11_add_module(pymodel ${CMAKE_SOURCE_DIR}/src/pybind.cpp)
 target_link_libraries(pymodel PRIVATE model)
 
-install(TARGETS pymodel LIBRARY DESTINATION lib/python3.8/site-packages)
+install(TARGETS pymodel LIBRARY DESTINATION lib/python3.10/site-packages)
 
 ament_package()

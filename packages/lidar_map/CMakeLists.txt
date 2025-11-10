@@ -9,10 +9,10 @@ find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 find_package(libpointmatcher REQUIRED)
-find_package(map REQUIRED)
 find_package(G2O REQUIRED)
+find_package(PCL REQUIRED)
+find_package(pcl_conversions REQUIRED)
 find_package(ament_index_cpp REQUIRED)
-find_package(visualization REQUIRED)
 find_package(
   Boost
   COMPONENTS thread
@@ -43,11 +43,13 @@ ament_target_dependencies(
   rosbag2_cpp
   libpointmatcher
   G2O
-  visualization
+  PCL
+  pcl_conversions
   Boost
 )
 
 target_link_libraries(${PROJECT_NAME} ${G2O_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES})
 
 target_include_directories(
   ${PROJECT_NAME}
@@ -66,7 +68,7 @@ ament_export_dependencies(
   rosbag2_cpp
   libpointmatcher
   G2O
-  visualization
+  PCL
   Boost
 )
 
@@ -85,13 +87,7 @@ install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 add_executable(${PROJECT_NAME}_executable src/main.cpp)
 
 ament_target_dependencies(
-  ${PROJECT_NAME}_executable
-  map
-  geom
-  nav_msgs
-  sensor_msgs
-  ament_index_cpp
-  Boost
+  ${PROJECT_NAME}_executable geom nav_msgs sensor_msgs ament_index_cpp Boost
 )
 
 target_link_libraries(${PROJECT_NAME}_executable ${PROJECT_NAME})
