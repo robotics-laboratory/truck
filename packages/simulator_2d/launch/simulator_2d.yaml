@@ -53,16 +53,16 @@ launch:
               param:
                 - { name: "enable", value: true }
                 - { name: "mean", value: 0.0 }
-                - { name: "variance", value: 0.1 }
+                - { name: "variance", value: 0.01 }
 
             - name: "gyro"
               param:
                 - { name: "enable", value: true }
                 - { name: "mean", value: 0.0 }
-                - { name: "variance", value: 0.1 }
+                - { name: "variance", value: 0.01 }
 
             - name: "accel"
               param:
                 - { name: "enable", value: true }
                 - { name: "mean", value: 0.0 }
-                - { name: "variance", value: 0.1 }
+                - { name: "variance", value: 0.01 }

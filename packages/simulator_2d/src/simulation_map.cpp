@@ -106,7 +106,7 @@ std::vector<float> getLidarRanges(
     const double angle_max_rad = lidar.angle_max.radians();
     const auto lidar_angle_increment = lidar.angle_increment;
     const auto increment_rad = lidar_angle_increment.radians();
-    const int lidar_rays_number = (angle_max_rad - angle_min_rad) / increment_rad;
+    const int lidar_rays_number = (angle_max_rad - angle_min_rad) / increment_rad + 1;
     const auto lidar_angle_min = geom::AngleVec2(lidar.angle_min);
     const auto dir = (lidar_pose.dir + lidar_angle_min);
     const auto dir_vector = dir.vec();

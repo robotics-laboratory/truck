@@ -1,0 +1,8 @@
+launch:
+  - arg: { name: "simulation", default: "true" }
+  
+  - include:
+      file: $(find-pkg-share slam_toolbox)/launch/online_async_launch.py
+      arg:
+      - { name: use_sim_time, value: "$(var simulation)" }
+      - { name: slam_params_file, value: "$(find-pkg-share nav2_test)/config/nav2_config.yaml" }
