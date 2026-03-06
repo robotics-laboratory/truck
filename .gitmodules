@@ -1,0 +1,3 @@
+[submodule "packages/livox_driver"]
+	path = packages/livox_driver
+	url = https://github.com/robotics-laboratory/livox_ros_driver2
