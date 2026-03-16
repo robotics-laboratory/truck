@@ -3,31 +3,16 @@
 <package format="3">
   <name>simulator_2d</name>
   <version>0.0.1</version>
-  <description>The 2D physics simulator based on Ackerman kinematics.</description>
-  <maintainer email="olek.olegovich@gmail.com">root</maintainer>
+  <description>Adapter between simulator2d_core and truck ecosystem.</description>
+  <maintainer email="aitsyganok@yandex.ru">root</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
-  <depend>model</depend>
-  <depend>nav_msgs</depend>
   <depend>truck_msgs</depend>
   <depend>geom</depend>
-  <depend>tf2_msgs</depend>
-  <depend>tf2_ros</depend>
-  <depend>rosgraph_msgs</depend>
-  <depend>control_proxy</depend>
-  <depend>visualization</depend>
-  <depend>nlohmann_json</depend>
-  <depend>map</depend>
-  <depend>sensor_msgs</depend>
-  <depend>Boost</depend>
-
-  <test_depend>ament_cmake_gtest</test_depend>
-  <test_depend>rosbag2_cpp</test_depend>
-  <test_depend>rosbag2_storage</test_depend>
-  <test_depend>truck_msgs</test_depend>
+  <depend>simulator2d_core</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
