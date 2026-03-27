@@ -19,7 +19,7 @@ NODE_PARAMS = {
     "frame_id": ...,  # from launch params
     "publish_freq": ...,  # from launch params
     "user_config_path": ...,  # generated in runtime
-    "xfer_format": 0,  # 0: Pointcloud2(PointXYZRTL), 1: Custom format
+    "xfer_format": 1,  # 0: Pointcloud2(PointXYZRTL), 1: Custom format
     "multi_topic": 0,  # 0: all lidars same topic, 1: one lidar one topic
     "data_src": 0,  # keep default
     "output_data_type": 0,  # keep default
@@ -87,6 +87,7 @@ def get_ip_address(lidar_ip: str) -> str:
                 and snicaddr.address.split(".")[:3] == lidar_ip.split(".")[:3]
             ):
                 return iface, snicaddr.address
+    return None, None
 
 
 # https://robotics.stackexchange.com/a/104402
@@ -94,7 +95,7 @@ def launch_setup(context):
     launch_params = {x: LaunchConfiguration(x).perform(context) for x in LAUNCH_PARAMS}
     lidar_ip = launch_params["lidar_ip"]
     host_iface, host_ip = get_ip_address(lidar_ip)
-    assert host_ip is not None, "Failed to get host ip matching lidar subnet"
+    assert host_ip is not None, f"Failed to get host ip matching lidar subnet: {lidar_ip}"
 
     config = copy.deepcopy(LIVOX_CONFIG)
     config["MID360"]["host_net_info"]["host_ip"] = host_ip
