@@ -16,10 +16,13 @@ launch:
         - { name: "initial_y", value: "$(var initial_y)" }
         - { name: "initial_yaw", value: "$(var initial_yaw)" }
 
-  - include:
-      file: $(find-pkg-share foxglove_bridge)/launch/foxglove_bridge_launch.xml
-      arg:
-      - { name: "use_sim_time", value: "true" }
+  - node:
+      pkg: "foxglove_bridge"
+      exec: "foxglove_bridge"
+      name: "foxglove_bridge"
+      args: "--ros-args --log-level FATAL"
+      output: "log"
+
 
   - include:
       file: $(find-pkg-share model)/launch/model_tf.yaml
@@ -48,3 +51,18 @@ launch:
       file: $(find-pkg-share nav2_test)/launch/bringup_launch.py
       arg:
       - { name: use_sim_time, value: "$(var simulation)" }
+
+  - include:
+      file: $(find-pkg-share nav2_test)/launch/slam.yaml
+
+  - node:
+      pkg: "nav2_test"
+      exec: "proxy.py"
+      output: "screen"
+      # name: "lidar"
+      # namespace: "lidar"
+
+      param:
+      - { name: use_sim_time, value: "$(var simulation)" }
+    
+

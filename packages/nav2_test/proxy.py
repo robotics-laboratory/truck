@@ -50,8 +50,8 @@ class ProxyNode(Node):
         control_msg.header.stamp = self.get_clock().now().to_msg()
         control_msg.header.frame_id = 'base'
 
-        if abs(msg.angular.z) > 0.001 and abs(msg.linear.x) < 0.001:
-            msg.linear.x = 0.1
+        # if abs(msg.angular.z) > 0.001 and abs(msg.linear.x) < 0.001:
+        #     msg.linear.x = 0.1
 
         linear_x = msg.linear.x
         angular_z = msg.angular.z
@@ -60,7 +60,7 @@ class ProxyNode(Node):
         if abs(linear_x) < 1e-6:
             control_msg.curvature = 0.0
         else:
-            control_msg.curvature = angular_z / linear_x
+            control_msg.curvature = angular_z / abs(linear_x)
 
         self.publisher.publish(control_msg)
         self.get_logger().debug(

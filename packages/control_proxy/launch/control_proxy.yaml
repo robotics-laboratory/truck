@@ -14,8 +14,8 @@ launch:
     - { name: "model_config", value: "$(find-pkg-share model)/config/model.yaml" }
     # timers period (milliseconds)
     - { name: "mode_period", value: 200 }
-    - { name: "watchdog_period", value: 20 }
+    - { name: "watchdog_period", value: 5 }
     # set mode to `off` if no commands from remote during this time (milliseconds)
-    - { name: "remote_timeout", value: 200 }
+    - { name: "remote_timeout", value: 1000 }
     # set mode to `remote` if no commands from planner during this time (milliseconds)
-    - { name: "control_timeout", value: 150 }
+    - { name: "control_timeout", value: 500 }

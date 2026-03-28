@@ -1,0 +1,87 @@
+{
+    "type": "FeatureCollection",
+    "name": "map_tunnel",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "urn:ogc:def:crs:EPSG::26986"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            0,
+                            40
+                        ],
+                        [
+                            0,
+                            0
+                        ],
+                        [
+                            60,
+                            0
+                        ],
+                        [
+                            60,
+                            40
+                        ],
+                        [
+                            0,
+                            40
+                        ]
+                    ],
+                    [
+                        [
+                            10,
+                            40
+                        ],
+                        [
+                            10,
+                            25
+                        ],
+                        [
+                            50,
+                            25
+                        ],
+                        [
+                            50,
+                            40
+                        ],
+                        [
+                            10,
+                            40
+                        ]
+                    ],
+                    [
+                        [
+                            10,
+                            15
+                        ],
+                        [
+                            10,
+                            0
+                        ],
+                        [
+                            50,
+                            0
+                        ],
+                        [
+                            50,
+                            15
+                        ],
+                        [
+                            10,
+                            15
+                        ]
+                    ]
+                ]
+            }
+        }
+    ]
+}

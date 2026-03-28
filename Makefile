@@ -33,11 +33,11 @@ build:
 	source ${ROS_ROOT}/setup.sh
 	colcon --log-base /dev/null build \
 		--base-paths packages \
-		--executor parallel \
-		--parallel-workers $$(nproc) \
 		--symlink-install \
 		--cmake-args ${CMAKE_ARGS} \
 		--packages-up-to $(packages)
+# --executor parallel \
+# --parallel-workers $$(nproc) \
 
 .PHONY: build-all
 build-all:
