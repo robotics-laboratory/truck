@@ -23,14 +23,14 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     initializeParameters();
     initializeTopicHandlers();
     initializeEngine();
-    // initializeCostMap();
+    initializeCostMap();
 
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
         std::bind(&SimulatorNode::makeSimulationTick, this));
 
-    // cost_map_timer_ = create_wall_timer(
-    //     std::chrono::duration<double>(1.0), std::bind(&SimulatorNode::publishCostMap, this));
+    cost_map_timer_ = create_wall_timer(
+        std::chrono::duration<double>(1.0), std::bind(&SimulatorNode::publishCostMap, this));
 }
 
 void SimulatorNode::initializeCostMap() {
@@ -42,8 +42,8 @@ void SimulatorNode::initializeCostMap() {
     hack::CostMapParam cm_param = {
         .origin = geom::Pose(),
         .resolution = 0.1,
-        .width = 1000,
-        .height = 1000,
+        .width = 500,
+        .height = 500,
     };
 
     nav_msgs::msg::OccupancyGrid cost_map = hack::makeCostMap(map, dummy, cm_param);
@@ -101,7 +101,7 @@ void SimulatorNode::initializeTopicHandlers() {
         "/hardware/wheel/odometry", rclcpp::QoS(1).reliability(qos));
 
     signals_.cost_map = Node::create_publisher<nav_msgs::msg::OccupancyGrid>(
-        "/map", rclcpp::QoS(1).reliability(qos));
+        "/map", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local());
 
     signals_.tf_publisher =
         Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf", rclcpp::QoS(1).reliability(qos));

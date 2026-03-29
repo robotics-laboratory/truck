@@ -210,7 +210,7 @@ controller_server:
       cost_scaling_dist: 0.3
       cost_scaling_gain: 1.0
 
-      use_rotate_to_heading: true
+      use_rotate_to_heading: false
       rotate_to_heading_min_angle: 0.3
       rotate_to_heading_angular_vel: 0.5
       max_angular_accel: 2.0
