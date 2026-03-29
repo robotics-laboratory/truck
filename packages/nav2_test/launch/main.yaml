@@ -52,8 +52,8 @@ launch:
       arg:
       - { name: use_sim_time, value: "$(var simulation)" }
 
-  - include:
-      file: $(find-pkg-share nav2_test)/launch/slam.yaml
+#   - include:
+#       file: $(find-pkg-share nav2_test)/launch/slam.yaml
 
   - node:
       pkg: "nav2_test"

@@ -208,6 +208,11 @@ geom::Vec3 SimulatorEngine::getImuLinearAcceleration(const model::Twist& rear_tw
     return applyRotation(cache_.base_to_hyro_rotation, la);
 }
 
+const SimulationMap& SimulatorEngine::getMap() const {
+    // TODO: remove
+    return map_;
+}
+
 TruckState SimulatorEngine::getTruckState() const {
     const double x = rear_ax_state_[StateIndex::kX];
     const double y = rear_ax_state_[StateIndex::kY];

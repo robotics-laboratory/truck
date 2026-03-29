@@ -7,6 +7,7 @@
 #include "truck_msgs/msg/simulation_state.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
+#include <nav_msgs/msg/occupancy_grid.hpp> // hack
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_msgs/msg/tf_message.hpp>
@@ -29,9 +30,11 @@ class SimulatorNode : public rclcpp::Node {
     void initializeTopicHandlers();
     void initializeCache(const std::unique_ptr<model::Model>& model);
     void initializeEngine();
+    void initializeCostMap();
 
     void handleControl(const truck_msgs::msg::Control::ConstSharedPtr control);
 
+    void publishCostMap();
     void publishTime(const TruckState& truck_state);
     void publishSimulatorLocalizationMessage(const TruckState& truck_state);
     void publishHardwareOdometryMessage(const TruckState& truck_state);
@@ -50,6 +53,7 @@ class SimulatorNode : public rclcpp::Node {
     std::unique_ptr<SimulatorEngine> engine_ = nullptr;
 
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
+    rclcpp::TimerBase::SharedPtr cost_map_timer_ = nullptr;
 
     struct Parameters {
         double update_period;
@@ -70,6 +74,8 @@ class SimulatorNode : public rclcpp::Node {
             float range_min;
             float range_max;
         } lidar_config;
+
+        nav_msgs::msg::OccupancyGrid cost_map;
     } cache_;
 
     struct Transforms {
@@ -84,11 +90,13 @@ class SimulatorNode : public rclcpp::Node {
         rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr time = nullptr;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr localization = nullptr;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr hardware_odometry = nullptr;
+        rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr cost_map = nullptr;
         rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr tf_publisher = nullptr;
         rclcpp::Publisher<truck_msgs::msg::HardwareTelemetry>::SharedPtr telemetry = nullptr;
         rclcpp::Publisher<truck_msgs::msg::SimulationState>::SharedPtr state = nullptr;
         rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan = nullptr;
         rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu = nullptr;
+
     } signals_;
 
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;

@@ -23,10 +23,31 @@ SimulatorNode::SimulatorNode() : Node("simulator") {
     initializeParameters();
     initializeTopicHandlers();
     initializeEngine();
+    // initializeCostMap();
 
     timer_ = create_wall_timer(
         std::chrono::duration<double>(params_.update_period),
         std::bind(&SimulatorNode::makeSimulationTick, this));
+
+    // cost_map_timer_ = create_wall_timer(
+    //     std::chrono::duration<double>(1.0), std::bind(&SimulatorNode::publishCostMap, this));
+}
+
+void SimulatorNode::initializeCostMap() {
+    // nav_msgs::msg::OccupancyGrid
+    // const SimulationMap& map, const std_msgs::msg::Header& header, const CostMapParam& param
+    const SimulationMap& map = engine_->getMap();
+    std_msgs::msg::Header dummy;
+
+    hack::CostMapParam cm_param = {
+        .origin = geom::Pose(),
+        .resolution = 0.1,
+        .width = 1000,
+        .height = 1000,
+    };
+
+    nav_msgs::msg::OccupancyGrid cost_map = hack::makeCostMap(map, dummy, cm_param);
+    cache_.cost_map = cost_map;
 }
 
 void SimulatorNode::initializeParameters() {
@@ -78,6 +99,9 @@ void SimulatorNode::initializeTopicHandlers() {
 
     signals_.hardware_odometry = Node::create_publisher<nav_msgs::msg::Odometry>(
         "/hardware/wheel/odometry", rclcpp::QoS(1).reliability(qos));
+
+    signals_.cost_map = Node::create_publisher<nav_msgs::msg::OccupancyGrid>(
+        "/map", rclcpp::QoS(1).reliability(qos));
 
     signals_.tf_publisher =
         Node::create_publisher<tf2_msgs::msg::TFMessage>("/tf", rclcpp::QoS(1).reliability(qos));
@@ -151,6 +175,15 @@ void SimulatorNode::publishTime(const TruckState& truck_state) {
     rosgraph_msgs::msg::Clock clock_msg;
     clock_msg.clock = truck_state.time();
     signals_.time->publish(clock_msg);
+}
+
+void SimulatorNode::publishCostMap() {
+    std_msgs::msg::Header header;
+    header.frame_id = "world";
+    header.stamp = engine_->getTruckState().time();
+
+    cache_.cost_map.header = header;
+    signals_.cost_map->publish(cache_.cost_map);
 }
 
 void SimulatorNode::publishSimulatorLocalizationMessage(const TruckState& truck_state) {

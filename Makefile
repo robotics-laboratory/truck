@@ -39,6 +39,16 @@ build:
 # --executor parallel \
 # --parallel-workers $$(nproc) \
 
+build-only:
+	source ${ROS_ROOT}/setup.sh
+	colcon --log-base /dev/null build \
+		--base-paths packages \
+		--symlink-install \
+		--cmake-args ${CMAKE_ARGS} \
+		--packages-select $(packages) \
+		--executor parallel \
+		--parallel-workers $$(nproc)
+
 .PHONY: build-all
 build-all:
 	source ${ROS_ROOT}/setup.sh

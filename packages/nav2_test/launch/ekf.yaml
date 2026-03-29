@@ -1,5 +1,5 @@
 launch:
-- arg: { name: "simulation", default: "false" }
+- arg: { name: "simulation", default: "true" }
 - arg: { name: "qos", default: "0" }
 
 ### HACK: comment the next few lines out if serious lags occur

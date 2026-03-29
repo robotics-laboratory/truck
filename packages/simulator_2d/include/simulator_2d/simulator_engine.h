@@ -69,6 +69,7 @@ class SimulatorEngine {
     void eraseMap();
 
     TruckState getTruckState() const;
+    const SimulationMap& getMap() const;
 
     void setBaseControl(double velocity, double acceleration, double curvature);
     void setBaseControl(double velocity, double curvature);

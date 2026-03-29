@@ -11,6 +11,10 @@
 #include <string>
 #include <vector>
 
+// map -> occupancy grid hack
+#include <nav_msgs/msg/occupancy_grid.hpp>
+#include "geom/msg.h"
+
 namespace truck::simulator {
 
 namespace bg = boost::geometry;
@@ -33,6 +37,18 @@ class SimulationMap {
     geom::Segments obstacles_;
     RTree rtree_;
 };
+
+namespace hack {
+struct CostMapParam {
+    geom::Pose origin;
+    double resolution;
+    uint32_t width;
+    uint32_t height;
+};
+
+nav_msgs::msg::OccupancyGrid makeCostMap(
+    const SimulationMap& map, const std_msgs::msg::Header& header, const CostMapParam& param);
+}  // namespace hack
 
 bool hasCollision(const SimulationMap& map, const geom::Polygon& shape_polygon, double precision);
 std::vector<float> getLidarRanges(

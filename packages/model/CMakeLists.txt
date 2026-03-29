@@ -73,12 +73,12 @@ if(BUILD_TESTING)
   target_link_libraries(model_test model)
 endif()
 
-set(PYBIND11_PYTHON_VERSION "3.10")
-find_package(pybind11 REQUIRED)
-find_package(Python3 COMPONENTS Development REQUIRED)
-pybind11_add_module(pymodel ${CMAKE_SOURCE_DIR}/src/pybind.cpp)
-target_link_libraries(pymodel PRIVATE model)
+# set(PYBIND11_PYTHON_VERSION "3.10")
+# find_package(pybind11 REQUIRED)
+# find_package(Python3 COMPONENTS Development REQUIRED)
+# pybind11_add_module(pymodel ${CMAKE_SOURCE_DIR}/src/pybind.cpp)
+# target_link_libraries(pymodel PRIVATE model)
 
-install(TARGETS pymodel LIBRARY DESTINATION lib/python3.10/site-packages)
+# install(TARGETS pymodel LIBRARY DESTINATION lib/python3.10/site-packages)
 
 ament_package()

@@ -67,6 +67,51 @@ bool hasCollision(const SimulationMap& map, const geom::Polygon& shape_polygon, 
     return false;
 }
 
+namespace hack {
+// bool hasCollision(const SimulationMap& map, const geom::Polygon& shape_polygon, double precision)
+// {
+nav_msgs::msg::OccupancyGrid makeCostMap(
+    const SimulationMap& map, const std_msgs::msg::Header& header, const CostMapParam& param) {
+    nav_msgs::msg::OccupancyGrid msg;
+
+    msg.header = header;
+    msg.info.resolution = param.resolution;
+    msg.info.width = param.width;
+    msg.info.height = param.height;
+    msg.info.origin = geom::msg::toPose(param.origin);
+
+    msg.data = std::vector<int8_t>(param.width * param.height);
+
+    for (uint32_t i = 0; i < param.height; i++) {
+        for (uint32_t j = 0; j < param.width; j++) {
+            // const double cost = 1 - Limits(0., 1.).clamp(data.at<float>(i, j) / max);
+            // msg.data.at(i * width + j) = 100 * cost;
+
+            // check for obstacle at (j, i)
+            geom::Vec2 position =
+                geom::Vec2{static_cast<double>(j), static_cast<double>(i)} * param.resolution;
+            const auto bounding_box =
+                geom::BoundingBox{position, position + geom::Vec2{1, 1} * param.resolution};
+            const geom::BoundingBox rtree_box = {
+                geom::Vec2(bounding_box.min.x, bounding_box.min.y),
+                geom::Vec2(bounding_box.max.x, bounding_box.max.y)};
+
+            IndexSegments result;
+            map.rtree().query(bgi::intersects(rtree_box), std::back_inserter(result));
+
+            // bool occupied = result.empty();
+
+            geom::Polygon pixel = {
+                rtree_box.min, {rtree_box.min.x, rtree_box.max.y}, rtree_box.max};
+
+            bool occupied = hasCollision(map, pixel, 1e-3);
+            msg.data.at(i * param.width + j) = occupied * 100;
+        }
+    }
+
+    return msg;
+}
+}  // namespace hack
 namespace {
 
 geom::Angle getOrientedAngle(const geom::Vec2& origin_to_point, const geom::Vec2& dir) {
