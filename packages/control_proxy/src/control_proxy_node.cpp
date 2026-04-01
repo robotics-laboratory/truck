@@ -182,10 +182,22 @@ void ControlProxyNode::watchdog() {
         return;
     }
 
-    if (state_.mode == Mode::kAuto
-        && timeout_failed(state_.prev_command, params_.control_timeout, true)) {
-        RCLCPP_ERROR(this->get_logger(), "lost control, stop!");
-        reset();
+    // if (state_.mode == Mode::kAuto
+    //     && timeout_failed(state_.prev_command, params_.control_timeout, true)) {
+    //     RCLCPP_ERROR(this->get_logger(), "lost control, stop!");
+    //     reset();
+    //     return;
+    // }
+
+    if (state_.mode == Mode::kAuto) {
+        if (state_.prev_command) {
+            if (timeout_failed(state_.prev_command, params_.control_timeout, true)) {
+                RCLCPP_ERROR(this->get_logger(), "lost control, stop!");
+                reset();
+            }
+        } else {
+            publishStop();
+        }
         return;
     }
 }

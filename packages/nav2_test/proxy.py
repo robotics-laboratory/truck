@@ -36,7 +36,7 @@ class ProxyNode(Node):
         angular = msg.angular.z
 
         control.velocity = linear
-        control.curvature = angular / abs(linear) if abs(linear) > 1e-6 else 0.0
+        control.curvature = angular / linear if abs(linear) > 1e-6 else 0.0
 
         self.cmd_pub.publish(control)
 
