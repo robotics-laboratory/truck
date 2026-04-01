@@ -18,7 +18,7 @@ launch:
 #     file: $(find-pkg-share perf)/launch/perf_stat.yaml
 
 - include:
-    file: $(find-pkg-share video_streaming)/launch/video_streaming.yaml
+    file: $(find-pkg-share video_streaming)/launch/video_streaming.py
 
 #- include:
 #    file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml

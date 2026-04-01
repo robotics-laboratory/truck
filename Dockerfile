@@ -527,6 +527,20 @@ RUN wget -qO - https://github.com/borglab/gtsam/archive/refs/tags/${GTSAM_VERSIO
     && make -j$(nproc) install \
     && rm -rf /tmp/*
 
+### INSTALL SOPHUS
+
+ARG SOPHUS_VERSION="1.22.10"
+
+RUN git clone https://github.com/strasdat/Sophus.git \
+    && cd Sophus \
+    && git checkout ${SOPHUS_VERSION} \
+    && mkdir -p build && cd build \
+    && cmake .. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DSOPHUS_USE_BASIC_LOGGING=ON \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
 ### INSTALL LIVOX SDK2
 
 ARG LIVOX_VERSION="1.2.5"
