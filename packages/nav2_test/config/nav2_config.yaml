@@ -1,81 +1,81 @@
-slam_toolbox:
-  ros__parameters:
+# slam_toolbox:
+#   ros__parameters:
 
-    # Plugin params
-    solver_plugin: solver_plugins::CeresSolver
-    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
-    ceres_preconditioner: SCHUR_JACOBI
-    ceres_trust_strategy: LEVENBERG_MARQUARDT
-    ceres_dogleg_type: TRADITIONAL_DOGLEG
-    ceres_loss_function: None
+#     # Plugin params
+#     solver_plugin: solver_plugins::CeresSolver
+#     ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+#     ceres_preconditioner: SCHUR_JACOBI
+#     ceres_trust_strategy: LEVENBERG_MARQUARDT
+#     ceres_dogleg_type: TRADITIONAL_DOGLEG
+#     ceres_loss_function: None
 
-    # ROS Parameters
-    odom_frame: odom_ekf
-    map_frame: world
-    base_frame: base
-    scan_topic: /lidar/scan
-    use_map_saver: true
-    mode: mapping #localization
+#     # ROS Parameters
+#     odom_frame: odom_ekf
+#     map_frame: world
+#     base_frame: base
+#     scan_topic: /lidar/scan
+#     use_map_saver: true
+#     mode: mapping #localization
 
-    # if you'd like to immediately start continuing a map at a given pose
-    # or at the dock, but they are mutually exclusive, if pose is given
-    # will use pose
-    #map_file_name: test_steve
-    # map_start_pose: [0.0, 0.0, 0.0]
-    #map_start_at_dock: true
+#     # if you'd like to immediately start continuing a map at a given pose
+#     # or at the dock, but they are mutually exclusive, if pose is given
+#     # will use pose
+#     #map_file_name: test_steve
+#     # map_start_pose: [0.0, 0.0, 0.0]
+#     #map_start_at_dock: true
 
-    debug_logging: false
-    throttle_scans: 1
-    transform_publish_period: 0.0 # 0.02 #if 0 never publishes odometry
-    map_update_interval: 5.0
-    resolution: 0.05
-    restamp_tf: false
-    min_laser_range: 0.0 #for rastering images
-    max_laser_range: 12.0 #for rastering images
-    minimum_time_interval: 0.5
-    transform_timeout: 0.5
-    tf_buffer_duration: 30.0
-    stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
-    enable_interactive_mode: false
+#     debug_logging: false
+#     throttle_scans: 1
+#     transform_publish_period: 0.0 # 0.02 #if 0 never publishes odometry
+#     map_update_interval: 5.0
+#     resolution: 0.05
+#     restamp_tf: false
+#     min_laser_range: 0.0 #for rastering images
+#     max_laser_range: 12.0 #for rastering images
+#     minimum_time_interval: 0.5
+#     transform_timeout: 0.5
+#     tf_buffer_duration: 30.0
+#     stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
+#     enable_interactive_mode: false
 
-    # General Parameters
-    use_scan_matching: false # true
-    use_scan_barycenter: false # true
-    minimum_travel_distance: 0.1
-    minimum_travel_heading: 0.1
-    scan_buffer_size: 10
-    scan_buffer_maximum_scan_distance: 10.0
-    link_match_minimum_response_fine: 0.1  
-    link_scan_maximum_distance: 1.5
-    loop_search_maximum_distance: 3.0
-    do_loop_closing: true 
-    loop_match_minimum_chain_size: 10           
-    loop_match_maximum_variance_coarse: 3.0  
-    loop_match_minimum_response_coarse: 0.35    
-    loop_match_minimum_response_fine: 0.45
+#     # General Parameters
+#     use_scan_matching: false # true
+#     use_scan_barycenter: false # true
+#     minimum_travel_distance: 0.1
+#     minimum_travel_heading: 0.1
+#     scan_buffer_size: 10
+#     scan_buffer_maximum_scan_distance: 10.0
+#     link_match_minimum_response_fine: 0.1  
+#     link_scan_maximum_distance: 1.5
+#     loop_search_maximum_distance: 3.0
+#     do_loop_closing: true 
+#     loop_match_minimum_chain_size: 10           
+#     loop_match_maximum_variance_coarse: 3.0  
+#     loop_match_minimum_response_coarse: 0.35    
+#     loop_match_minimum_response_fine: 0.45
 
-    # Correlation Parameters - Correlation Parameters
-    correlation_search_space_dimension: 0.5
-    correlation_search_space_resolution: 0.01
-    correlation_search_space_smear_deviation: 0.1 
+#     # Correlation Parameters - Correlation Parameters
+#     correlation_search_space_dimension: 0.5
+#     correlation_search_space_resolution: 0.01
+#     correlation_search_space_smear_deviation: 0.1 
 
-    # Correlation Parameters - Loop Closure Parameters
-    loop_search_space_dimension: 8.0
-    loop_search_space_resolution: 0.05
-    loop_search_space_smear_deviation: 0.03
+#     # Correlation Parameters - Loop Closure Parameters
+#     loop_search_space_dimension: 8.0
+#     loop_search_space_resolution: 0.05
+#     loop_search_space_smear_deviation: 0.03
 
-    # Scan Matcher Parameters
-    distance_variance_penalty: 0.5
-    angle_variance_penalty: 1.0    
+#     # Scan Matcher Parameters
+#     distance_variance_penalty: 0.5
+#     angle_variance_penalty: 1.0    
 
-    fine_search_angle_offset: 0.00349     
-    coarse_search_angle_offset: 0.349   
-    coarse_angle_resolution: 0.0349        
-    minimum_angle_penalty: 0.9
-    minimum_distance_penalty: 0.5
-    use_response_expansion: true
-    min_pass_through: 2
-    occupancy_threshold: 0.1
+#     fine_search_angle_offset: 0.00349     
+#     coarse_search_angle_offset: 0.349   
+#     coarse_angle_resolution: 0.0349        
+#     minimum_angle_penalty: 0.9
+#     minimum_distance_penalty: 0.5
+#     use_response_expansion: true
+#     min_pass_through: 2
+#     occupancy_threshold: 0.1
 
 bt_navigator:
   ros__parameters:
@@ -189,8 +189,8 @@ controller_server:
 
       desired_linear_vel: 0.4
       use_fixed_curvature_lookahead: true
-      curvature_lookahead_dist: 0.2
-      lookahead_dist: 0.3
+      curvature_lookahead_dist: 0.9
+      lookahead_dist: 0.9
 
       use_velocity_scaled_lookahead_dist: false
       lookahead_time: 1.0
@@ -229,6 +229,7 @@ local_costmap:
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: odom_ekf
+      # global_frame: world
       robot_base_frame: base
       rolling_window: true
       width: 3
@@ -257,9 +258,9 @@ local_costmap:
           marking: True
           data_type: "LaserScan"
           raytrace_max_range: 3.0
-          raytrace_min_range: 0.0
+          raytrace_min_range: 0.5
           obstacle_max_range: 2.5
-          obstacle_min_range: 0.0
+          obstacle_min_range: 0.5
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -273,7 +274,7 @@ global_costmap:
       global_frame: world
       robot_base_frame: base
       robot_radius: 0.22
-      resolution: 0.1
+      resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
@@ -287,9 +288,9 @@ global_costmap:
           marking: True
           data_type: "LaserScan"
           raytrace_max_range: 10.0
-          raytrace_min_range: 0.0
+          raytrace_min_range: 0.5
           obstacle_max_range: 8.0
-          obstacle_min_range: 0.0
+          obstacle_min_range: 0.5
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -313,7 +314,7 @@ map_saver:
 #     GridBased:
 #       plugin: "nav2_navfn_planner/NavfnPlanner"
 #       tolerance: 0.5
-#       use_astar: false
+#       use_astar: true
 #       allow_unknown: true
 
 planner_server:
@@ -335,7 +336,7 @@ planner_server:
       angle_quantization_bins: 64         # For Hybrid nodes: Number of angle bins for search, must be 1 for 2D node (no angle search)
       analytic_expansion_ratio: 3.5       # For Hybrid/Lattice nodes: The ratio to attempt analytic expansions during search for final approach.
       analytic_expansion_max_length: 4.0    # For Hybrid/Lattice nodes: The maximum length of the analytic expansion to be considered valid to prevent unsafe shortcutting (in meters). This should be scaled with minimum turning radius and be no less than 4-5x the minimum radius
-      minimum_turning_radius: 0.8        # For Hybrid/Lattice nodes: minimum turning radius in m of path / vehicle
+      minimum_turning_radius: 0.8        # (Actual min raduis for our model is 0.5) For Hybrid/Lattice nodes: minimum turning radius in m of path / vehicle 
       reverse_penalty: 2.1                # For Reeds-Shepp model: penalty to apply if motion is reversing, must be => 1
       change_penalty: 0.0                 # For Hybrid nodes: penalty to apply if motion is changing directions, must be >= 0
       non_straight_penalty: 1.20          # For Hybrid nodes: penalty to apply if motion is non-straight, must be => 1
@@ -346,14 +347,13 @@ planner_server:
       cache_obstacle_heuristic: True      # For Hybrid nodes: Cache the obstacle map dynamic programming distance expansion heuristic between subsiquent replannings of the same goal location. Dramatically speeds up replanning performance (40x) if costmap is largely static.  
       allow_reverse_expansion: False      # For Lattice nodes: Whether to expand state lattice graph in forward primitives or reverse as well, will double the branching factor at each step.   
       smooth_path: False                  # For Lattice/Hybrid nodes: Whether or not to smooth the path, always true for 2D nodes.
-      debug_visualizations: True                # For Hybrid nodes: Whether to publish expansions on the /expansions topic as an array of poses (the orientation has no meaning) and the path's footprints on the /planned_footprints topic. WARNING: heavy to compute and to display, for debug only as it degrades the performance. 
+      debug_visualizations: True                # For Hybrid nodes: Whether to publish expansions on the /expansions topic as an array of poses (the orientation has no meaning) and the path's footprints on the /planned_footprints topic. WARNING: heavy to compute and to display, for debug only as it degrades the performance.  
       smoother:
         max_iterations: 1000
         w_smooth: 0.3
         w_data: 0.2
         tolerance: 1.0e-10
-        do_refinement: true               # Whether to recursively run the smoother 3 times on the results from prior runs to refine the results further
-
+        do_refinement: true # Whether to recursively run the smoother 3 times on the results from prior runs to refine the results further
 
 behavior_server:
   ros__parameters:

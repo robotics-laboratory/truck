@@ -139,12 +139,36 @@ void ControlProxyNode::reset() {
 }
 
 void ControlProxyNode::watchdog() {
-    auto timeout_failed = [this](const auto& msg, const auto& timeout) {
+    auto timeout_failed = [this](const auto& msg, const auto& timeout, bool debug = false) {
         if (!msg) {
+            if (debug) {
+                RCLCPP_ERROR(
+                    this->get_logger(), "CONTROL_PROXY DEBUG: msg not set; timeout not checked");
+            }
             return true;
+        } else {
+            if (debug) {
+                RCLCPP_DEBUG(this->get_logger(), "CONTROL_PROXY DEBUG: msg checked");
+            }
         }
-        auto duration_ns = (now() - msg->header.stamp).nanoseconds();
-        return std::chrono::nanoseconds(duration_ns) > timeout;
+
+        auto duration = std::chrono::nanoseconds((now() - msg->header.stamp).nanoseconds());
+        bool timeout_failed = duration > timeout;
+
+        if (debug) {
+            auto duration_ms =
+                std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+            if (timeout_failed) {
+                RCLCPP_ERROR(
+                    this->get_logger(), "CONTROL_PROXY DEBUG: timeout failed: %ld", duration_ms);
+            } else {
+                RCLCPP_DEBUG(
+                    this->get_logger(), "CONTROL_PROXY DEBUG: timestamp ok: %ld", duration_ms);
+            }
+        }
+
+        return timeout_failed;
     };
 
     if (state_.mode == Mode::kOff) {
@@ -157,15 +181,13 @@ void ControlProxyNode::watchdog() {
         reset();
         return;
     }
-   
+
     if (state_.mode == Mode::kAuto
-        && timeout_failed(state_.prev_command, params_.control_timeout)) {
+        && timeout_failed(state_.prev_command, params_.control_timeout, true)) {
         RCLCPP_ERROR(this->get_logger(), "lost control, stop!");
         reset();
         return;
     }
-
-    RCLCPP_DEBUG(this->get_logger(), "watchdog OK");
 }
 
 void ControlProxyNode::publishCommand(const truck_msgs::msg::Control& command) {

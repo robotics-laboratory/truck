@@ -41,9 +41,9 @@ void SimulatorNode::initializeCostMap() {
 
     hack::CostMapParam cm_param = {
         .origin = geom::Pose(),
-        .resolution = 0.1,
-        .width = 500,
-        .height = 500,
+        .resolution = 0.05,
+        .width = 1000,
+        .height = 1000,
     };
 
     nav_msgs::msg::OccupancyGrid cost_map = hack::makeCostMap(map, dummy, cm_param);
