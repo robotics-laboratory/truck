@@ -29,12 +29,9 @@ motion::Trajectory makeTrajectory(It begin, It end, const geom::Transform& tf) {
 
     motion::Trajectory trajectory;
 
-    for (auto curr = begin + 1; curr != end; ++curr) {
-        const auto prev = curr - 1;
-        const geom::Pose world_pose{
-            .pos = geom::toVec2(*prev),
-            .dir = geom::AngleVec2::fromVector(geom::toVec2(*curr) - geom::toVec2(*prev))};
 
+    for (auto curr = begin + 1; curr != end; ++curr) {
+        const geom::Pose world_pose = geom::toPose(curr->pose);
         trajectory.states.push_back(motion::State{.pose = tf.apply(world_pose)});
     }
 
@@ -52,8 +49,8 @@ motion::Trajectory makeTrajectory(It begin, It end, const geom::Transform& tf) {
 Nav2PlanFollowerNode::Nav2PlanFollowerNode() : Node("nav2_plan_follower") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
-    slot_.route = this->create_subscription<truck_msgs::msg::NavigationRoute>(
-        "/navigation/route",
+    slot_.route = this->create_subscription<nav_msgs::msg::Path>(
+        "/path_fix",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&Nav2PlanFollowerNode::onRoute, this, _1));
 
@@ -127,7 +124,7 @@ void Nav2PlanFollowerNode::publishFullState() {
 
 void Nav2PlanFollowerNode::publishTrajectory() {
     if (!state_.distance_transform) {
-        RCLCPP_WARN(this->get_logger(), "publishTrajectory: No distant transform");
+        RCLCPP_WARN(this->get_logger(), "publishTrajectory: No distace transform");
         return;
     }
 
@@ -184,7 +181,7 @@ void Nav2PlanFollowerNode::publishGridCostMap() {
     signal_.distance_transform->publish(msg);
 }
 
-void Nav2PlanFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg) {
+void Nav2PlanFollowerNode::onRoute(const nav_msgs::msg::Path::SharedPtr msg) {
     if (!state_.odometry || !state_.distance_transform) {
         if (!state_.odometry) {
             RCLCPP_WARN(this->get_logger(), "No odometry");
@@ -208,7 +205,7 @@ void Nav2PlanFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::Share
         return;
     }
 
-    state_.trajectory = makeTrajectory(msg->data.begin(), msg->data.end(), *tf_opt);
+    state_.trajectory = makeTrajectory(msg->poses.begin(), msg->poses.end(), *tf_opt);
 }
 
 void Nav2PlanFollowerNode::onReset(

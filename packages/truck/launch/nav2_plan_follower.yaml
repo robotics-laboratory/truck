@@ -13,8 +13,3 @@ launch:
     file: $(find-pkg-share nav2_plan_follower)/launch/nav2_plan_follower.yaml
     arg:
     - { name: "simulation", value: $(var simulation) }
-
-- include:
-    file: $(find-pkg-share routing)/launch/routing.yaml
-    arg:
-      - { name: "map_config", value: "$(var map_config)" }

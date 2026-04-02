@@ -16,6 +16,9 @@ launch:
         - { name: "initial_y", value: "$(var initial_y)" }
         - { name: "initial_yaw", value: "$(var initial_yaw)" }
 
+  - include:
+      file: $(find-pkg-share nav2_plan_follower)/launch/nav2_plan_follower.yaml
+
   - node:
       pkg: "foxglove_bridge"
       exec: "foxglove_bridge"

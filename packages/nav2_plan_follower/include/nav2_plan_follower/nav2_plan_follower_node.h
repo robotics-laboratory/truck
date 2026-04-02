@@ -6,7 +6,7 @@
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include "truck_msgs/msg/navigation_route.hpp"
+#include "nav_msgs/msg/path.hpp"
 #include "motion/trajectory.h"
 #include "speed/greedy_planner.h"
 #include "collision/collision_checker.h"
@@ -30,7 +30,7 @@ class Nav2PlanFollowerNode : public rclcpp::Node {
     Nav2PlanFollowerNode();
 
   private:
-    void onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg);
+    void onRoute(const nav_msgs::msg::Path::SharedPtr msg);
     void onOdometry(nav_msgs::msg::Odometry::SharedPtr odometry);
     void onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg);
     void onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is_static);
@@ -61,7 +61,7 @@ class Nav2PlanFollowerNode : public rclcpp::Node {
     } service_;
 
     struct Slots {
-        rclcpp::Subscription<truck_msgs::msg::NavigationRoute>::SharedPtr route = nullptr;
+        rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr route = nullptr;
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
         rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr grid = nullptr;
         rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
