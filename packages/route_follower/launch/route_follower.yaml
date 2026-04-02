@@ -4,7 +4,7 @@ launch:
     default: "$(find-pkg-share model)/config/model.yaml"
 - arg:
     name: "simulation"
-    default: "false"
+    default: "true"
 - node:
     pkg: "route_follower"
     exec: "route_follower_node"

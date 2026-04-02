@@ -126,6 +126,11 @@ void RouteFollowerNode::publishFullState() {
 }
 
 void RouteFollowerNode::publishTrajectory() {
+    if (!state_.distance_transform) {
+        RCLCPP_WARN(this->get_logger(), "publishTrajectory: No distant transform");
+        return;
+    }
+
     checker_->reset(*state_.distance_transform);
 
     bool collision = false;
@@ -181,6 +186,12 @@ void RouteFollowerNode::publishGridCostMap() {
 
 void RouteFollowerNode::onRoute(const truck_msgs::msg::NavigationRoute::SharedPtr msg) {
     if (!state_.odometry || !state_.distance_transform) {
+        if (!state_.odometry) {
+            RCLCPP_WARN(this->get_logger(), "No odometry");
+        }
+        if (!state_.distance_transform) {
+            RCLCPP_WARN(this->get_logger(), "No distant transform");
+        }
         return;
     }
 
