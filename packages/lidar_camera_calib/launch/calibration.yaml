@@ -1,0 +1,68 @@
+launch:
+
+# --- Camera node (with depth + color enabled) ---
+- node:
+    pkg: "realsense2_camera"
+    exec: "realsense2_camera_node"
+    name: "camera"
+    namespace: "camera"
+    output: "screen"
+
+    param:
+    - { name: "initial_reset", value: True }
+    - { name: "enable_sync", value: True }
+    - { name: "publish_tf", value: False }
+
+    - { name: "enable_color", value: False }
+    - { name: "enable_depth", value: True }
+    - { name: "depth_module.profile", value: "424x240x15" }
+
+    - { name: "enable_accel", value: False }
+    - { name: "enable_gyro", value: False }
+    - { name: "enable_fisheye", value: False }
+    - { name: "enable_infra", value: False }
+    - { name: "enable_infra1", value: False }
+    - { name: "enable_infra2", value: False }
+
+# --- LiDAR node ---
+- node:
+    pkg: "sllidar_ros2"
+    exec: "sllidar_node"
+    name: "lidar"
+    namespace: "lidar"
+    output: "screen"
+
+    param:
+    - { name: "serial_port", value: "/dev/ttyUSB0" }
+    - { name: "serial_baudrate", value: 1000000 }
+    - { name: "frame_id", value: "lidar_link" }
+    - { name: "inverted", value: False }
+    - { name: "angle_compensate", value: True }
+    - { name: "scan_mode", value: "DenseBoost" }
+    - { name: "scan_frequency", value: 10.0 }
+    - { name: "rpm_speed", value: 600 }
+
+# --- Calibration node ---
+- node:
+    pkg: "lidar_camera_calib"
+    exec: "calibration_node"
+    name: "lidar_camera_calib"
+    output: "screen"
+
+    param:
+    - { name: "lidar_scan_topic", value: "/lidar/scan" }
+    - { name: "depth_image_topic", value: "/camera/depth/image_rect_raw" }
+    - { name: "camera_info_topic", value: "/camera/depth/camera_info" }
+
+    # Initial guess (from model.yaml: base -> camera_link)
+    - { name: "init_tx", value: 0.25 }
+    - { name: "init_ty", value: 0.05 }
+    - { name: "init_tz", value: -0.04 }
+    - { name: "init_yaw", value: 0.0 }
+
+    # Calibration parameters
+    - { name: "num_samples", value: 30 }
+    - { name: "depth_range_min", value: 0.3 }
+    - { name: "depth_range_max", value: 6.0 }
+    - { name: "depth_scale", value: 0.001 }
+    - { name: "max_depth_error", value: 0.3 }

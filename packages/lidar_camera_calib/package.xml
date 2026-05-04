@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>lidar_camera_calib</name>
+  <version>0.0.1</version>
+  <description>Automatic extrinsic calibration of 2D LiDAR (RPLidar S2) and camera (RealSense D455) using depth-based alignment</description>
+  <maintainer email="truck@robotics-lab.ru">Truck Team</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>message_filters</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
