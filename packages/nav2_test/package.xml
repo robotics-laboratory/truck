@@ -13,6 +13,7 @@
   <depend>model</depend>
   <depend>visualization</depend>
   <depend>control_proxy</depend>
+  <depend>nav2_plan_follower</depend>
   <depend>occupancy_grid</depend>
   <depend>pure_pursuit</depend>
   <exec_depend>nav2_bt_navigator</exec_depend>
