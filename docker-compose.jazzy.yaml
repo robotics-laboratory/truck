@@ -1,0 +1,20 @@
+services:
+  truck:
+    container_name: "${CONTAINER_NAME:-truck-${USER}}"
+    image: "${IMAGE_NAME:-truck-nav2-jazzy2:latest}"
+    privileged: true
+    runtime: "${DOCKER_RUNTIME:-runc}"
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - "${FOXGLOVE_PORT:-8765}:8765"
+    environment:
+      RMW_IMPLEMENTATION: "rmw_cyclonedds_cpp"
+      TRUCK_SIMULATION: "true"
+    volumes:
+      - "${PWD}:/truck"
+
+networks:
+  default:
+    name: "${CONTAINER_NAME:-truck-${USER}}"

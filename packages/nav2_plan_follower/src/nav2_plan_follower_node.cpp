@@ -29,16 +29,12 @@ motion::Trajectory makeTrajectory(It begin, It end, const geom::Transform& tf) {
 
     motion::Trajectory trajectory;
 
-
+    // Upon review - the loop still includes end - 1, only the first path pose is skipped.
     for (auto curr = begin + 1; curr != end; ++curr) {
         const geom::Pose world_pose = geom::toPose(curr->pose);
         trajectory.states.push_back(motion::State{.pose = tf.apply(world_pose)});
     }
 
-    const geom::Pose world_pose{
-        .pos = geom::toVec2(*(end - 1)), .dir = trajectory.states.back().pose.dir};
-
-    trajectory.states.push_back(motion::State{.pose = tf.apply(world_pose)});
     trajectory.fillDistance();
 
     return trajectory;
@@ -50,7 +46,7 @@ Nav2PlanFollowerNode::Nav2PlanFollowerNode() : Node("nav2_plan_follower") {
     const auto qos = static_cast<rmw_qos_reliability_policy_t>(
         this->declare_parameter<int>("qos", RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT));
     slot_.route = this->create_subscription<nav_msgs::msg::Path>(
-        "/path_fix",
+        "/plan_fix",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&Nav2PlanFollowerNode::onRoute, this, _1));
 

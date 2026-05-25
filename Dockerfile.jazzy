@@ -1,0 +1,81 @@
+FROM ros:jazzy-ros-base-noble
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV SHELL=/bin/bash
+ENV ROS_DISTRO=jazzy
+ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ENV RCUTILS_LOGGING_BUFFERED_STREAM=1
+ENV RCUTILS_CONSOLE_OUTPUT_FORMAT="[{severity}:{time}] {message}"
+ENV TRUCK_SIMULATION=true
+ENV CXXFLAGS="-O3 -Wall -std=c++20"
+
+SHELL ["/bin/bash", "-c"]
+WORKDIR /truck
+
+RUN apt-get update -q && apt-get install -yq --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    less \
+    libboost-dev \
+    libcgal-dev \
+    libeigen3-dev \
+    libopencv-dev \
+    make \
+    nlohmann-json3-dev \
+    python3-colcon-common-extensions \
+    python3-rosdep \
+    ros-jazzy-launch-yaml \
+    ros-jazzy-nav2-behaviors \
+    ros-jazzy-nav2-bt-navigator \
+    ros-jazzy-nav2-common \
+    ros-jazzy-nav2-controller \
+    ros-jazzy-nav2-costmap-2d \
+    ros-jazzy-nav2-lifecycle-manager \
+    ros-jazzy-nav2-navfn-planner \
+    ros-jazzy-nav2-planner \
+    ros-jazzy-nav2-regulated-pure-pursuit-controller \
+    ros-jazzy-nav2-smac-planner \
+    ros-jazzy-rmw-cyclonedds-cpp \
+    ros-jazzy-robot-localization \
+    ros-jazzy-rosbag2-cpp \
+    ros-jazzy-rosbag2-storage \
+    ros-jazzy-rosidl-default-generators \
+    ros-jazzy-tf-transformations \
+    ros-jazzy-tf2-geometry-msgs \
+    ros-jazzy-yaml-cpp-vendor \
+    && (rosdep init || true) \
+    && rosdep update \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Install foxglove bridge v0.8.5
+RUN . $ROS_ROOT/setup.sh \
+    && mkdir /tmp/foxglove-build \
+    && cd /tmp/foxglove-build \
+    && mkdir src \
+    && printf "\
+    - git:\n\
+        local-name: foxglove-sdk/foxglove_bridge\n\
+        uri: https://github.com/ros2-gbp/foxglove_bridge-release.git\n\
+        version: release/$ROS_DISTRO/foxglove_bridge/0.8.5-1\n\
+    " | vcs import src \
+    && rosdep update \
+    && apt update \
+    && rosdep install --from-paths src --ignore-src -y \
+    && cp $ROS_ROOT/setup.* $ROS_ROOT/local_setup.* . \
+    && colcon build --merge-install --install-base /opt/ros/$ROS_DISTRO \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+    && cp setup.* local_setup.* $ROS_ROOT \
+    && rm -rf /tmp/foxglove-build \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN printf "source ${ROS_ROOT}/setup.bash\n" >> /root/.bashrc \
+    && printf "export ROS_ROOT=${ROS_ROOT}\n" >> /root/.bashrc \
+    && printf "export ROS_DISTRO=${ROS_DISTRO}\n" >> /root/.bashrc \
+    && printf "export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}\n" >> /root/.bashrc \
+    && printf "export TRUCK_SIMULATION=${TRUCK_SIMULATION}\n" >> /root/.bashrc
+
+ENTRYPOINT ["/bin/bash", "-lc"]
+CMD ["trap : TERM INT; sleep infinity & wait"]

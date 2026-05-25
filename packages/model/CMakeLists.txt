@@ -11,6 +11,7 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
+find_package(yaml-cpp REQUIRED)
 find_package(Boost REQUIRED)
 
 add_library(model SHARED src/params.cpp src/shape.cpp src/model.cpp)
@@ -29,6 +30,8 @@ target_include_directories(
   model PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
+
+target_link_libraries(model yaml-cpp)
 
 ament_export_targets(modelTargets HAS_LIBRARY_TARGET)
 ament_export_dependencies(

@@ -38,7 +38,7 @@ class ProxyNode(Node):
         control.velocity = linear
         control.curvature = angular / linear if abs(linear) > 1e-6 else 0.0
 
-        self.cmd_pub.publish(control)
+        # self.cmd_pub.publish(control)
 
     def goal_pose_raw_callback(self, msg: PoseStamped):
         goal = PoseStamped()

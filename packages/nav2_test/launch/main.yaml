@@ -8,58 +8,57 @@ launch:
   - arg: { name: "initial_yaw", default: "0.3" }
 
   - include:
-      file: $(find-pkg-share simulator_2d)/launch/simulator_2d.yaml
-      arg:
-        - { name: "model_config", value: "$(var model_config)" }
-        - { name: "map_config", value: "$(var map_config)" }
-        - { name: "initial_x", value: "$(var initial_x)" }
-        - { name: "initial_y", value: "$(var initial_y)" }
-        - { name: "initial_yaw", value: "$(var initial_yaw)" }
-
-  # - include:
-  #     file: $(find-pkg-share nav2_plan_follower)/launch/nav2_plan_follower.yaml
+        file: $(find-pkg-share simulator_2d)/launch/simulator_2d.yaml
+        arg:
+          - { name: "model_config", value: "$(var model_config)" }
+          - { name: "map_config", value: "$(var map_config)" }
+          - { name: "initial_x", value: "$(var initial_x)" }
+          - { name: "initial_y", value: "$(var initial_y)" }
+          - { name: "initial_yaw", value: "$(var initial_yaw)" }
 
   - include:
-      file: $(find-pkg-share truck)/launch/nav2_plan_follower.yaml
+        file: $(find-pkg-share nav2_plan_follower)/launch/nav2_plan_follower.yaml
+        arg:
+          - { name: "simulation", value: "$(var simulation)" }
+          - { name: "model_config", value: "$(var model_config)" }
 
   - node:
-      pkg: "foxglove_bridge"
-      exec: "foxglove_bridge"
-      name: "foxglove_bridge"
-      args: "--ros-args --log-level FATAL"
-      output: "log"
-
-
-  - include:
-      file: $(find-pkg-share model)/launch/model_tf.yaml
-      arg:
-      - { name: "simulation", value: "$(var simulation)" }
+        pkg: "foxglove_bridge"
+        exec: "foxglove_bridge"
+        name: "foxglove_bridge"
+        args: "--ros-args --log-level FATAL"
+        output: "log"
 
   - include:
-      file: $(find-pkg-share visualization)/launch/visualization.yaml
-      arg:
-      - { name: "simulation", value: "$(var simulation)" }
-      - { name: "qos", value: "$(var qos)" }
-      - { name: "map_config", value: "$(var map_config)" }
+        file: $(find-pkg-share model)/launch/model_tf.yaml
+        arg:
+          - { name: "simulation", value: "$(var simulation)" }
 
   - include:
-      file: $(find-pkg-share nav2_test)/launch/ekf.yaml
-      arg:
-      - { name: "simulation", value: "$(var simulation)" }
-      - { name: "qos", value: "$(var qos)" }
-  
-  - include:
-      file: $(find-pkg-share control_proxy)/launch/control_proxy.yaml
-      arg:
-      - { name: "simulation", value: $(var simulation) }
+        file: $(find-pkg-share visualization)/launch/visualization.yaml
+        arg:
+          - { name: "simulation", value: "$(var simulation)" }
+          - { name: "qos", value: "$(var qos)" }
+          - { name: "map_config", value: "$(var map_config)" }
 
   - include:
-      file: $(find-pkg-share nav2_test)/launch/bringup_launch.py
-      arg:
-      - { name: use_sim_time, value: "$(var simulation)" }
+        file: $(find-pkg-share nav2_test)/launch/ekf.yaml
+        arg:
+          - { name: "simulation", value: "$(var simulation)" }
+          - { name: "qos", value: "$(var qos)" }
 
-#   - include:
-#       file: $(find-pkg-share nav2_test)/launch/slam.yaml
+  - include:
+        file: $(find-pkg-share control_proxy)/launch/control_proxy.yaml
+        arg:
+          - { name: "simulation", value: $(var simulation) }
+
+  - include:
+        file: $(find-pkg-share nav2_test)/launch/bringup_launch.py
+        arg:
+          - { name: use_sim_time, value: "$(var simulation)" }
+
+  #   - include:
+  #       file: $(find-pkg-share nav2_test)/launch/slam.yaml
 
   # - include:
   #     file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml
@@ -67,28 +66,27 @@ launch:
   #     - { name: "simulation", value: $(var simulation) }
 
 
-  # - include:
-  #     file: $(find-pkg-share occupancy_grid)/launch/occupancy_grid.yaml
-  #     arg:
-  #     - { name: "simulation", value: "$(var simulation)" }
-  #     - { name: "qos", value: "$(var qos)" }
+  - include:
+        file: $(find-pkg-share occupancy_grid)/launch/occupancy_grid.yaml
+        arg:
+          - { name: "simulation", value: "$(var simulation)" }
+          - { name: "qos", value: "$(var qos)" }
 
-  # - include:
-  #     file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml
-  #     arg:
-  #     - { name: "simulation", value: "$(var simulation)" }
-  #     - { name: "qos", value: "$(var qos)" }
+  - include:
+        file: $(find-pkg-share pure_pursuit)/launch/pure_pursuit.yaml
+        arg:
+          - { name: "simulation", value: "$(var simulation)" }
+          - { name: "qos", value: "$(var qos)" }
 
   - node:
-      pkg: "nav2_test"
-      exec: "proxy.py"
-      output: "screen"
-      # name: "lidar"
-      # namespace: "lidar"
+        pkg: "nav2_test"
+        exec: "proxy.py"
+        output: "screen"
+        # name: "lidar"
+        # namespace: "lidar"
 
-      param:
-      - { name: use_sim_time, value: "$(var simulation)" }
-    
+        param:
+          - { name: use_sim_time, value: "$(var simulation)" }
   # - node:
   #     pkg: "nav2_test"
   #     exec: "proxy.py"

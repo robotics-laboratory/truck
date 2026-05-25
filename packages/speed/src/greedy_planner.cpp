@@ -11,6 +11,19 @@ namespace {
 
 constexpr double kEps = 1e-6;
 
+double findVelocity(double dist, double v, double a) {
+    VERIFY(dist >= 0);
+    VERIFY(v >= 0);
+
+    double d = v * v + 2 * a * dist;
+    if (-kEps <= d && d <= 0) {
+        d = 0.0;
+    }
+
+    VERIFY_FMT(d >= 0.0, "%.10f: dist=%f v=%f a=%f", d, dist, v, a);
+    return std::sqrt(d);
+}
+
 double findTime(double dist, double v, double a) {
     VERIFY(dist >= 0);
     VERIFY(v >= 0);
@@ -19,13 +32,7 @@ double findTime(double dist, double v, double a) {
         return dist / v;
     }
 
-    double d = v * v + 2 * a * dist;
-    if (-kEps <= d && d <= 0) {
-        d = 0.0;
-    }
-
-    VERIFY_FMT(d >= 0.0, "%.10f: dist=%f v=%f a=%f", d, dist, v, a);
-    return (-v + std::sqrt(d)) / a;
+    return (findVelocity(dist, v, a) - v) / a;
 }
 
 double findAcceleration(double dist, double v_start, double v_finish) {
@@ -75,7 +82,7 @@ It fillAcceleration(
         VERIFY(it->reachable());
 
         it->acceleration = desired_acceleration;
-        next->velocity = it->velocity + it->acceleration * dt;
+        next->velocity = findVelocity(distance, it->velocity, it->acceleration);
         next->time = it->getTime() + dt;
 
         // reach max velocity
@@ -149,7 +156,7 @@ bool fillBraking(const model::Model& model, It begin, It end) {
         const double dt = findTime(distance, it->velocity, a);
 
         it->acceleration = a;
-        next->velocity = it->velocity + a * dt;
+        next->velocity = findVelocity(distance, it->velocity, a);
         next->time = it->getTime() + dt;
 
         it = next;
