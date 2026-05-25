@@ -5,7 +5,7 @@ services:
     privileged: true
     runtime: "${DOCKER_RUNTIME:-runc}"
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.jazzy
       context: .
     ports:
       - "${FOXGLOVE_PORT:-8765}:8765"
