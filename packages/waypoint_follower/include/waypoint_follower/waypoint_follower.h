@@ -4,6 +4,7 @@
 #include "geom/pose.h"
 #include "geom/vector.h"
 
+#include <cstdint>
 #include <deque>
 #include <optional>
 

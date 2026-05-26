@@ -31,10 +31,10 @@ ament_target_dependencies(
   model
   rclcpp
   speed
+  std_srvs
   truck_msgs
   tf2
   tf2_ros
-  std_srvs
   visualization_msgs
 )
 

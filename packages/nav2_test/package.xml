@@ -16,6 +16,7 @@
   <depend>nav2_plan_follower</depend>
   <depend>occupancy_grid</depend>
   <depend>pure_pursuit</depend>
+  <depend>waypoint_follower</depend>
   <exec_depend>nav2_bt_navigator</exec_depend>
   <exec_depend>nav2_common</exec_depend>
   <exec_depend>nav2_controller</exec_depend>

@@ -12,6 +12,7 @@
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include <std_msgs/msg/header.hpp>
 #include <std_srvs/srv/empty.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
@@ -46,10 +47,14 @@ class WaypointFollowerNode : public rclcpp::Node {
 
     std::optional<geom::Transform> getLatestTranform(
         const std::string& source, const std::string& target);
+    std::optional<geom::Pose> getEgoPose() const;
+    std_msgs::msg::Header makePathHeader() const;
+    void publishResetPath();
 
     struct Parameters {
         std::chrono::duration<double> period = 0.1s;
         double safety_margin = 0.3;
+        std::string target_frame = "odom_ekf";
     } params_{};
 
     speed::GreedyPlanner::Params speed_params_{};
