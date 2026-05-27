@@ -16,6 +16,7 @@ install(DIRECTORY
 install(PROGRAMS
   scripts/update_laser_transform.py
   scripts/dynamic_tf_s2.py
+  scripts/laser_transform_control.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
