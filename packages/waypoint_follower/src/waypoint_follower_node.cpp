@@ -71,6 +71,9 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
     slot_.grid = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/grid", 1, std::bind(&WaypointFollowerNode::onGrid, this, _1));
 
+    slot_.reset = this->create_subscription<std_msgs::msg::Empty>(
+        "/reset_path/request", 1, std::bind(&WaypointFollowerNode::onResetRequest, this, _1));
+
     using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
 
     const TfCallback tf_call = std::bind(&WaypointFollowerNode::onTf, this, _1, false);
@@ -108,6 +111,14 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
 void WaypointFollowerNode::onReset(
     const std::shared_ptr<std_srvs::srv::Empty::Request>,
     std::shared_ptr<std_srvs::srv::Empty::Response>) {
+    resetPath();
+}
+
+void WaypointFollowerNode::onResetRequest(std_msgs::msg::Empty::SharedPtr) {
+    resetPath();
+}
+
+void WaypointFollowerNode::resetPath() {
     RCLCPP_INFO(this->get_logger(), "Reset path!");
     follower_->reset();
     state_.scheduled_velocity = 0.0;
