@@ -210,9 +210,16 @@ void VisualizationNode::publishTrajectory() const {
     visualization_msgs::msg::Marker msg;
     msg.header = state_.trajectory->header;
     msg.type = visualization_msgs::msg::Marker::LINE_STRIP;
-    msg.action = visualization_msgs::msg::Marker::ADD;
     msg.frame_locked = true;
     msg.lifetime = params_.ttl;
+
+    if (state_.trajectory->states.empty()) {
+        msg.action = visualization_msgs::msg::Marker::DELETE;
+        signal_.trajectory->publish(msg);
+        return;
+    }
+
+    msg.action = visualization_msgs::msg::Marker::ADD;
 
     msg.scale.x = params_.trajectory_width;
     msg.pose.position.z = params_.trajectory_z_lev;
@@ -457,10 +464,17 @@ void VisualizationNode::publishWaypoints() const {
     visualization_msgs::msg::Marker marker;
 
     marker.header = state_.waypoints->header;
-    marker.action = visualization_msgs::msg::Marker::ADD;
     marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
     marker.frame_locked = true;
     marker.lifetime = params_.ttl;
+
+    if (state_.waypoints->waypoints.empty()) {
+        marker.action = visualization_msgs::msg::Marker::DELETE;
+        signal_.waypoints->publish(marker);
+        return;
+    }
+
+    marker.action = visualization_msgs::msg::Marker::ADD;
 
     marker.points.resize(state_.waypoints->waypoints.size());
     for (size_t i = 0; i < state_.waypoints->waypoints.size(); ++i) {

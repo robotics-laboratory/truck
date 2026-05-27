@@ -8,9 +8,9 @@ find_package(geom REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(model REQUIRED)
 find_package(motion REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(speed REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
@@ -32,11 +32,10 @@ ament_target_dependencies(
   model
   rclcpp
   speed
-  std_msgs
-  std_srvs
   truck_msgs
   tf2
   tf2_ros
+  std_srvs
   visualization_msgs
 )
 

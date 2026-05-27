@@ -45,6 +45,7 @@ RUN apt-get update -q && apt-get install -yq --no-install-recommends \
     ros-jazzy-rosbag2-cpp \
     ros-jazzy-rosbag2-storage \
     ros-jazzy-rosidl-default-generators \
+    ros-jazzy-pointcloud-to-laserscan \
     ros-jazzy-tf-transformations \
     ros-jazzy-tf2-geometry-msgs \
     ros-jazzy-yaml-cpp-vendor \

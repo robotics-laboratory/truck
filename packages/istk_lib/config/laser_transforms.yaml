@@ -1,0 +1,12 @@
+left_to_right:
+  parent_frame: laser_left
+  child_frame: laser_right
+  translation:
+    x: -0.747036
+    y: -0.279595
+    z: 0.0
+  rotation_rpy:
+    roll: 0.0
+    pitch: 0.0
+    yaw: -1.08916
+base_frame: base_link
