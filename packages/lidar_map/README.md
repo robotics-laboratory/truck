@@ -1,4 +1,4 @@
-# 2D LiDAR Map Builder
+# 3D LiDAR Map Builder
 
 This package allows to build 3D LiDAR map of environment by providing bag file of `.mcap` format with recorded odometry and LiDAR topics.
 
@@ -45,4 +45,38 @@ ros2 run lidar_map lidar_map_executable
   --mcap-output data/clouds/cloud_atrium_XX_YY_ZZ
   --mcap-log data/logs/mcap/cloud_atrium_XX_YY_ZZ_log
   --json-log data/logs/json/cloud_atrium_XX_YY_ZZ_log.json
+```
+### Debug
+
+Calculate and visualize normals for `reference_cloud`:
+
+```c++
+CloudWithAttributes reference_cloud_with_attr = {
+  .cloud = reference_cloud,
+  .normals = builder.calculateNormalsForReferenceCloud(reference_cloud),
+};
+
+serialization::writer::MCAPWriter::writeCloudWithAttributes(
+    "data/logs/reference_cloud_with_attr",        // path to save mcap file
+    reference_cloud_with_attr,                    // cloud
+    "/cloud",                                     // topic name
+    "world",                                      // frame name
+    70                                            // ratio of normals to be visualized
+);
+```
+
+Calculate and visualize outliers weights for `reading_cloud`:
+
+```c++
+CloudWithAttributes reading_cloud_with_attr = {
+  .cloud = reading_cloud,
+  .weights = builder.calculateWeightsForReadingCloud(clouds[0], clouds[1])
+};
+
+serialization::writer::MCAPWriter::writeCloudWithAttributes(
+    "data/logs/reading_cloud_with_attr",          // path to save mcap file
+    reading_cloud_with_attr,                      // cloud
+    "/cloud",                                     // topic name
+    "world"                                       // frame
+);
 ```

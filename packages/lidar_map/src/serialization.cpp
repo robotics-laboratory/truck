@@ -1,6 +1,7 @@
 #include "lidar_map/serialization.h"
 
 #include "common/exception.h"
+#include "geom/distance.h"
 #include "geom/msg.h"
 #include "lidar_map/conversion.h"
 
@@ -13,7 +14,7 @@
 
 #include <optional>
 
-namespace truck::lidar_map {
+namespace truck::lidar_map::serialization {
 
 namespace {
 
@@ -91,6 +92,15 @@ Cloud readPCD(const std::string& pcd_path) {
 namespace {
 
 template<typename T>
+T deserializeMessage(rosbag2_storage::SerializedBagMessageSharedPtr msg) {
+    rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
+    typename T::SharedPtr ros_msg = std::make_shared<T>();
+    rclcpp::Serialization<T> serialization;
+    serialization.deserialize_message(&serialized_msg, ros_msg.get());
+    return *ros_msg;
+}
+
+template<typename T>
 std::optional<T> readNextMessage(
     std::unique_ptr<rosbag2_cpp::Reader>& reader, const std::string& topic_name) {
     while (reader->has_next()) {
@@ -100,13 +110,7 @@ std::optional<T> readNextMessage(
             continue;
         }
 
-        rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
-        typename T::SharedPtr ros_msg = std::make_shared<T>();
-
-        rclcpp::Serialization<T> serialization;
-        serialization.deserialize_message(&serialized_msg, ros_msg.get());
-
-        return *ros_msg;
+        return deserializeMessage<T>(msg);
     }
 
     return std::nullopt;
@@ -152,6 +156,50 @@ std::vector<sensor_msgs::msg::PointCloud2> readPointCloudTopic(
     }
 
     return data;
+}
+
+std::pair<OdometryMsgArray, PointCloudMsgArray> readAndSyncOdomWithPointCloud(
+    const std::string& mcap_path, const std::string& odom_topic,
+    const std::string& point_cloud_topic, double min_odom_dist) {
+    std::unique_ptr<rosbag2_cpp::Reader> reader = std::make_unique<rosbag2_cpp::Reader>();
+    reader->open(mcap_path);
+
+    OdometryMsgArray odom_msg_array;
+    PointCloudMsgArray point_cloud_msg_array;
+
+    std::optional<OdometryMsg> odom_msg = std::nullopt;
+    std::optional<PointCloudMsg> point_cloud_msg = std::nullopt;
+
+    while (reader->has_next()) {
+        rosbag2_storage::SerializedBagMessageSharedPtr msg = reader->read_next();
+
+        if (msg->topic_name == odom_topic) {
+            odom_msg = deserializeMessage<OdometryMsg>(msg);
+
+            if (point_cloud_msg.has_value()) {
+                if (odom_msg_array.empty()) {
+                    odom_msg_array.push_back(*odom_msg);
+                    point_cloud_msg_array.push_back(*point_cloud_msg);
+                    point_cloud_msg = std::nullopt;
+                } else {
+                    const double cur_odom_dist = geom::distance(
+                        geom::toVec2(*odom_msg), geom::toVec2(odom_msg_array.back()));
+
+                    if (cur_odom_dist > min_odom_dist) {
+                        odom_msg_array.push_back(*odom_msg);
+                        point_cloud_msg_array.push_back(*point_cloud_msg);
+                        point_cloud_msg = std::nullopt;
+                    } else {
+                        point_cloud_msg = std::nullopt;
+                    }
+                }
+            }
+        } else if (msg->topic_name == point_cloud_topic) {
+            point_cloud_msg = deserializeMessage<PointCloudMsg>(msg);
+        }
+    }
+
+    return {odom_msg_array, point_cloud_msg_array};
 }
 
 }  // namespace reader
@@ -261,7 +309,7 @@ geometry_msgs::msg::Vector3 toVector3(double x, double y, double z) {
 
 void MCAPWriter::writeCloud(const Cloud& cloud) {
     writer_.write(
-        msg::toPointCloud2(cloud),
+        msg::toPointCloud2(cloud, params_.frame_name),
         params_.cloud_topic_name,
         getTime(msg_id_ * params_.topic_frequency));
 }
@@ -297,6 +345,54 @@ void MCAPWriter::writeCloud(
     writer.write(msg::toPointCloud2(cloud, frame_name), topic_name, getTime());
 }
 
+void MCAPWriter::writeCloudWithAttributes(
+    const std::string& mcap_path, const CloudWithAttributes& cloud_with_attributes,
+    const std::string& topic_name, std::string frame_name, double normals_ratio) {
+    rosbag2_cpp::Writer writer;
+    writer.open(mcap_path);
+
+    if (cloud_with_attributes.normals.has_value()) {
+        writer.write(
+            msg::toPointCloud2(cloud_with_attributes.cloud, frame_name), topic_name, getTime());
+
+        const Eigen::Matrix3Xf normals = cloud_with_attributes.normals.value();
+        visualization_msgs::msg::MarkerArray msg_array;
+        size_t points_count = cloud_with_attributes.cloud.cols();
+        size_t step =
+            static_cast<size_t>(points_count / (points_count * (1 - (normals_ratio / 100))));
+        for (size_t i = 0; i < points_count; i += step) {
+            visualization_msgs::msg::Marker msg_;
+            msg_.header.frame_id = frame_name;
+            msg_.id = i;
+            msg_.type = visualization_msgs::msg::Marker::ARROW;
+            msg_.action = visualization_msgs::msg::Marker::ADD;
+            msg_.color = toColorRGBA(0.5, 1, 0, 0);
+
+            msg_.pose.position.x = cloud_with_attributes.cloud(0, i);
+            msg_.pose.position.y = cloud_with_attributes.cloud(1, i);
+            msg_.pose.position.z = cloud_with_attributes.cloud(2, i);
+
+            // Get direction vector components for the normal direction
+            double dir_x = normals(0, i) - cloud_with_attributes.cloud(0, i);
+            double dir_y = normals(1, i) - cloud_with_attributes.cloud(1, i);
+            msg_.scale = toVector3(0.6, 0.06, 0.06);
+            // Get yaw angle from the direction vector using atan2
+            double yaw = std::atan2(dir_y, dir_x);
+            msg_.pose.orientation = geom::msg::toQuaternion(truck::geom::Angle(yaw));
+
+            msg_array.markers.push_back(msg_);
+        }
+
+        writer.write(msg_array, topic_name + "/normals", getTime());
+    }
+
+    if (cloud_with_attributes.weights.has_value()) {
+        Cloud cloud = cloud_with_attributes.cloud;
+        const Eigen::VectorXf& weights = cloud_with_attributes.weights.value();
+        writer.write(msg::toPointCloud2(cloud, weights), topic_name + "/weights", getTime());
+    }
+}
+
 }  // namespace writer
 
-}  // namespace truck::lidar_map
+}  // namespace truck::lidar_map::serialization

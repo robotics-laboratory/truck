@@ -14,6 +14,7 @@ ament_add_gtest(
   uniform_stepper_tests.cpp
   vector_tests.cpp
   vector3_tests.cpp
+  polyline_index_tests.cpp
 )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 

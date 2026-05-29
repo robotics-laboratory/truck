@@ -7,6 +7,7 @@
 #include "geom/distance.h"
 
 #include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
@@ -17,6 +18,7 @@
 namespace truck::lidar_map {
 
 namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 using IndexPoint = std::pair<geom::Vec2, size_t>;
 using IndexPoints = std::vector<IndexPoint>;
@@ -24,6 +26,8 @@ using RTree = bg::index::rtree<IndexPoint, bg::index::rstar<16>>;
 
 using BlockSolverType = g2o::BlockSolver<g2o::BlockSolverTraits<3, 3>>;
 using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>;
+
+using SegmentValue = std::pair<geom::BoundingBox, geom::Segment>;
 
 namespace {
 
@@ -173,6 +177,20 @@ std::pair<geom::Poses, Clouds> Builder::sliceDataByPosesProximity(
 }
 
 /**
+ * Computes the bounding box for a given segment.
+ *
+ * @param segment The input line segment.
+ * @return BoundingBox object that encloses the segment.
+ */
+geom::BoundingBox Builder::computeBoundingBox(const geom::Segment& segment) {
+    return geom::BoundingBox(
+        geom::Vec2(
+            std::min(segment.begin.x, segment.end.x), std::min(segment.begin.y, segment.end.y)),
+        geom::Vec2(
+            std::max(segment.begin.x, segment.end.x), std::max(segment.begin.y, segment.end.y)));
+}
+
+/**
  * Initialize pose graph
  *
  * Input:
@@ -214,11 +232,40 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
     }
 
     auto data_points_clouds = toDataPoints(clouds);
-
     // Add ICP edges
     for (size_t i = 0; i < poses.size(); i++) {
         for (size_t j = i + 1; j < poses.size(); j++) {
-            if (geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist) {
+            // Distance between two poses exceeds the maximum allowed ICP edge distance
+            bool is_distance_unused =
+                geom::distance(poses[i], poses[j]) > params_.icp_edge_max_dist;
+            // Indices of the poses are close enough based on the minimum pose distance
+            double min_indices_dist = params_.icp_edge_max_dist / params_.min_poses_dist;
+            bool are_indices_close =
+                std::abs(static_cast<int>(i) - static_cast<int>(j)) <= min_indices_dist;
+
+            if (is_distance_unused || are_indices_close) {
+                continue;
+            }
+
+            geom::Vec2 start(poses[i].pos.x, poses[i].pos.y);
+            geom::Vec2 end(poses[j].pos.x, poses[j].pos.y);
+            geom::Segment segment(start, end);
+            geom::BoundingBox bbox = computeBoundingBox(segment);
+
+            std::vector<SegmentValue> nearest_segments;
+            icp_edges_rtree_.query(bgi::nearest(bbox, 1), std::back_inserter(nearest_segments));
+
+            bool can_add = true;
+            if (!nearest_segments.empty()) {
+                const auto& [existing_bbox, existing_segment] = nearest_segments.front();
+                // If the distance between segments is less than the minimum allowed value or they
+                // intersect, the new ICP edge is not added.
+                if (geom::distance(segment, existing_segment) < params_.icp_edge_min_dist) {
+                    can_add = false;
+                }
+            }
+
+            if (!can_add) {
                 continue;
             }
 
@@ -239,6 +286,7 @@ void Builder::initPoseGraph(const geom::Poses& poses, const Clouds& clouds) {
             edge->setUserData(userData);
 
             optimizer_.addEdge(edge);
+            icp_edges_rtree_.insert(std::make_pair(bbox, segment));
         }
     }
 
@@ -312,7 +360,7 @@ PoseGraphInfo Builder::calculatePoseGraphInfo() const {
             .id = vertex_se2->id(),
             .pose = {
                 .pos = geom::Vec2{estimate[0], estimate[1]},
-                .dir = truck::geom::Angle::fromRadians(estimate[2])}});
+                .dir = geom::Angle::fromRadians(estimate[2])}});
     }
     return pose_graph_info;
 }
@@ -352,7 +400,7 @@ Clouds Builder::transformClouds(
 /**
  * Merge clouds column-wise
  */
-Cloud Builder::mergeClouds(const Clouds& clouds) const {
+Cloud Builder::mergeClouds(const Clouds& clouds) {
     VERIFY(!clouds.empty());
     size_t points_count = 0;
 
@@ -369,6 +417,37 @@ Cloud Builder::mergeClouds(const Clouds& clouds) const {
     }
 
     return merged_cloud;
+}
+
+/**
+ * Calculate outliers weights for cloud
+ */
+Eigen::VectorXf Builder::calculateWeightsForReadingCloud(
+    const Cloud& reading_cloud, const Cloud& reference_cloud) {
+    DataPoints reference_dp = toDataPoints(reference_cloud);
+    DataPoints reading_dp = toDataPoints(reading_cloud);
+
+    icp_.referenceDataPointsFilters.apply(reference_dp);
+    icp_.matcher->init(reference_dp);
+    Matcher::Matches matches = icp_.matcher->findClosests(reading_dp);
+    Matcher::OutlierWeights outlierWeights =
+        icp_.outlierFilters.compute(reading_dp, reference_dp, matches);
+
+    Eigen::VectorXf weights(outlierWeights.cols());
+    for (size_t i = 0; i < outlierWeights.cols(); i++) {
+        weights(i) = outlierWeights(0, i);
+    }
+
+    return weights;
+}
+
+/**
+ * Calculate normals for cloud
+ */
+Eigen::Matrix3Xf Builder::calculateNormalsForReferenceCloud(const Cloud& reference_cloud) {
+    DataPoints reference_dp = toDataPoints(reference_cloud);
+    icp_.referenceDataPointsFilters.apply(reference_dp);
+    return reference_dp.getDescriptorViewByName("normals");
 }
 
 namespace {
@@ -525,29 +604,79 @@ Clouds Builder::applyDynamicFilter(
 }
 
 /**
- * Down-sample clouds by taking a spatial average of clouds's points
+ * Down-sample a single cloud by applying a voxel grid filter.
  *
- * As we work in 2D case, we divide the plane into a regular grid of rectangles,
- * sampling rate is adjusted by setting the grid cell size along each dimension
+ * In the 3D case, the space is divided into a regular grid of cubic voxels,
+ * and points within each voxel are combined into a single representative point.
+ * The resolution of the down-sampling is controlled by the cell_size parameter,
+ * which sets the size of the voxels along each dimension (X, Y, Z).
  *
- * The set of points which lie within the bounds of a grid cell are combined into one output point
+ * @param cloud The input point cloud to be filtered.
+ * @param cell_size The size of each voxel in the grid.
+ * @return A down-sampled point cloud.
  */
-Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
+Cloud Builder::applyGridFilter(const Cloud& cloud, double cell_size) const {
     const std::string cell_size_str = std::to_string(cell_size);
     PointMatcherSupport::Parametrizable::Parameters grid_filter_params = {
         {"vSizeX", cell_size_str},
         {"vSizeY", cell_size_str},
         {"vSizeZ", cell_size_str},
     };
-
     std::shared_ptr<Matcher::DataPointsFilter> grid_filter =
         Matcher::get().DataPointsFilterRegistrar.create(
             "VoxelGridDataPointsFilter", grid_filter_params);
 
+    return grid_filter->filter(toDataPoints(cloud)).features;
+}
+
+/**
+ * Down-sample a set of point clouds using a voxel grid filter.
+ *
+ * @param clouds The input set of point clouds to be filtered.
+ * @param cell_size The size of each voxel in the grid.
+ * @return A set of down-sampled point clouds.
+ */
+Clouds Builder::applyGridFilter(const Clouds& clouds, double cell_size) const {
+    Clouds clouds_filtered;
+    for (const auto& cloud : clouds) {
+        clouds_filtered.push_back(applyGridFilter(cloud, cell_size));
+    }
+    return clouds_filtered;
+}
+
+/**
+ * Apply a bounding box filter to a set of point clouds.
+ *
+ * This function filters out points that fall outside a specified bounding box in the XY plane.
+ * The bounding box is defined symmetrically around the origin, with limits [-value, value]
+ * along the X and Y axes.
+ *
+ * @param clouds The input set of point clouds to be filtered.
+ * @param value The half-width of the bounding box along the X and Y axes.
+ * @return A set of point clouds with points outside the bounding box removed.
+ */
+Clouds Builder::applyBoundingBoxFilter(const Clouds& clouds, double value) const {
+    const std::string value_str = std::to_string(value);
+    const std::string neg_value_str = std::to_string(-value);
+
+    PointMatcherSupport::Parametrizable::Parameters bbox_filter_params = {
+        {"xMin", neg_value_str},
+        {"xMax", value_str},
+        {"yMin", neg_value_str},
+        {"yMax", value_str},
+        {"zMin", "-inf"},
+        {"zMax", "inf"},
+        {"removeInside", "0"},
+    };
+
+    std::shared_ptr<Matcher::DataPointsFilter> bbox_filter =
+        Matcher::get().DataPointsFilterRegistrar.create(
+            "BoundingBoxDataPointsFilter", bbox_filter_params);
+
     Clouds clouds_filtered;
 
     for (const auto& cloud : clouds) {
-        clouds_filtered.push_back(grid_filter->filter(toDataPoints(cloud)).features);
+        clouds_filtered.push_back(bbox_filter->filter(toDataPoints(cloud)).features);
     }
 
     return clouds_filtered;
