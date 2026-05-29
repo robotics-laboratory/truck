@@ -12,10 +12,6 @@ enum class ADCServoType : uint8_t {
 
 class ADS1115 {
  private:
-  ADS1115(ADCServoType id);
-  ~ADS1115() {};
-  ADS1115(const ADS1115 &obj);
-  ADS1115 &operator=(const ADS1115 &obj);
 
   I2C &i2c_handle = I2C::getInstance();
   uint8_t i2c_address = 0x00;
@@ -24,7 +20,16 @@ class ADS1115 {
 
   uint32_t config(void);
 
+  explicit ADS1115(ADCServoType id);
+
+  ADS1115(const ADS1115 &obj) = delete;
+  ADS1115 &operator=(const ADS1115 &obj) = delete;
  public:
+  ADS1115(ADS1115 &&obj) noexcept = default;
+  ADS1115 &operator=(ADS1115 &&obj) noexcept = default;
+
+  ~ADS1115() = default;
+
   uint32_t init();
   static ADS1115 &get_instance(ADCServoType type);
   uint32_t read_value(uint16_t& value);

@@ -1,6 +1,7 @@
 #include "ads1115.h"
 
-#include <unordered_map>
+#include <array>
+#include <memory>
 
 #include "ads1115_registers.h"
 
@@ -18,12 +19,16 @@ ADS1115::ADS1115(ADCServoType id) {
 }
 
 ADS1115& ADS1115::get_instance(ADCServoType type) {
-    static std::unordered_map<ADCServoType, ADS1115 *> instances;
-    auto it = instances.find(type);
-    if (it == instances.end()) {
-        instances[type] = new ADS1115(type);
+    static std::array<std::pair<ADCServoType, std::unique_ptr<ADS1115>>, 2> instances{
+        std::make_pair(ADCServoType::ADC_SERVO_1, std::make_unique<ADS1115>(ADS1115(ADCServoType::ADC_SERVO_1))),
+        std::make_pair(ADCServoType::ADC_SERVO_2, std::make_unique<ADS1115>(ADS1115(ADCServoType::ADC_SERVO_2)))
+    };
+
+    for (auto& p : instances) {
+        if (p.first == type) {
+            return *p.second;
+        }
     }
-    return *instances[type];
 }
 
 uint32_t ADS1115::init(void) {

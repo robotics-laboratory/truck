@@ -1,14 +1,21 @@
 #include "Servo.h"
 
-#include "board.h"
+#include <array>
+#include <memory>
+
+#include "system_clock.h"
 
 Servo& Servo::get_instance(ServoType type) {
-    static std::unordered_map<ServoType, Servo *> instances;
-    auto it = instances.find(type);
-    if (it == instances.end()) {
-        instances[type] = new Servo(type);
+    static std::array<std::pair<ServoType, std::unique_ptr<Servo>>, 2> instances{
+        std::make_pair(ServoType::SERVO_LEFT,  std::make_unique<Servo>(Servo(ServoType::SERVO_LEFT))),
+        std::make_pair(ServoType::SERVO_RIGHT, std::make_unique<Servo>(Servo(ServoType::SERVO_RIGHT)))
+    };
+
+    for (auto& p : instances) {
+        if (p.first == type) {
+            return *p.second;
+        }
     }
-    return *instances[type];
 }
 
 uint32_t Servo::init() {
@@ -16,14 +23,18 @@ uint32_t Servo::init() {
 
     switch (type_) {
         case ServoType::SERVO_LEFT:
-            max_angle = 270.0f; //135.0f + 48.0f + 1.0f;
-            home_angle = 98.0f;
-            min_angle = 0.0f; //135.0f - 62.0f - 1.0f;
+            max_angle = 270.0f;//99.0f + 45.0f; //98.0f + 48.0f; //135.0f + 48.0f + 1.0f;
+            home_angle = 99.0f; // 98.0f - 2.0f;
+            min_angle = 0.0f;//99.0f - 42.0f; //98.0f - 39.0f; //135.0f - 62.0f - 1.0f;
+            adc_to_ang_poly1 = -0.01793f;
+            adc_to_ang_poly0 = 293.7f;
             break;
         case ServoType::SERVO_RIGHT:
             max_angle = 270.0f; //135.0f + 62.0f + 1.0f;
-            home_angle = 172.0f;
+            home_angle = 172.0f - 5.0f; //172.0f - 4.0f;
             min_angle = 0.0f; // 135.0f - 48.0f - 1.0f;
+            adc_to_ang_poly1 = -0.01802f;
+            adc_to_ang_poly0 = 294.2f;
             break;
     }
 
@@ -64,14 +75,23 @@ uint32_t Servo::set_angle(float angle) {
     return status;
 }
 
-uint16_t Servo::get_angle() {
+float Servo::get_angle() {
+    float angle = 0.0f;
     uint16_t raw_value = 0;
 
-    if (adc.read_value(raw_value) != 0) {
-        raw_value = 0;
+    if (adc.read_value(raw_value) == 0) {
+        angle = raw_value * adc_to_ang_poly1 + adc_to_ang_poly0;
+
+        if ((angle < -10.0f) || (angle > 280.0f)) {
+            angle = 0.0f;
+        }
     }
 
-    return raw_value;
+    return angle;
+}
+
+void Servo::get_home_angles(float &ret_home_angle) {
+    ret_home_angle = home_angle;
 }
 
 uint32_t Servo::stop() {
