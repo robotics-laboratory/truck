@@ -1,32 +1,32 @@
 shape:
-  length: 0.505           # m
-  width: 0.313            # m
-  base_to_rear: 0.2525    # m
-  circles_count: 5        # qnt
+  length: 1.760           # m, overall length l1
+  width: 0.775            # m, overall width b1
+  base_to_rear: 0.880     # m, if base is near geometric center
+  circles_count: 9        # qnt, long body approximation
 
 wheel_base:
-  length: 0.405           # m
-  width: 0.213            # m
-  base_to_rear: 0.2025    # m
+  length: 1.261           # m, wheelbase y
+  width: 0.001            # m, virtual single steering wheel; avoid exact zero
+  base_to_rear: 0.6305    # m, if base is at wheelbase center
 
 wheel:
-  radius: 0.0525          # m
-  width: 0.058            # m
+  radius: 0.125           # m, drive wheel diameter 250 mm / 2
+  width: 0.070            # m, drive wheel width 70 mm
 
 lidar:
   angle_min: 0.0          # deg
   angle_max: 360.0        # deg
   angle_increment: 0.1125 # deg
-  range_min: 0.0          # m
-  range_max: 25.0         # m
+  range_min: 0.05         # m
+  range_max: 30.0         # m
 
 limits:
-  steering: { inner: 40.0, outer: 40.0 } # deg
-  max_abs_curvature: 2.0                 # 1/m
-  steering_velocity: 2.0                 # rad/s
-  velocity: { min: -0.5, max: +0.8 }     # m/s
-  max_acceleration: 1.0                  # m/s^2
-  max_deceleration: 2.0                  # m/s^2
+  steering: { inner: 38.2, outer: 38.2 } # deg, bicycle-equivalent
+  max_abs_curvature: 0.625               # 1/m, 1 / 1.6 m min turning radius
+  steering_velocity: 2.0                 # rad/s, leave conservative
+  velocity: { min: -0.5, max: +1.9 }     # m/s, 7 km/h ~= 1.94 m/s
+  max_acceleration: 0.5                  # m/s^2, conservative
+  max_deceleration: 1.0                  # m/s^2, conservative
 
 # Motor to differential ratio. See docs/gearbox.md for more info.
 gear_ratio: 0.08421

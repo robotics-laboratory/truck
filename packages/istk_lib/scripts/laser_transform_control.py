@@ -119,6 +119,12 @@ class LaserTransformControl(Node):
         self.create_subscription(Empty, "/calibration/save", self.on_save, 10)
         self.create_subscription(Empty, "/calibration/reload", self.on_reload, 10)
         self.create_subscription(Empty, "/calibration/reset", self.on_reset, 10)
+        self.create_subscription(
+            TransformStamped,
+            "/calibration/icp_transform",
+            self.on_icp_transform,
+            10,
+        )
 
         self.create_timer(1.0 / self.publish_rate_hz, self.publish)
 
@@ -212,6 +218,14 @@ class LaserTransformControl(Node):
         self.current_pub.publish(left_to_right)
 
     def on_set_transform(self, msg: TransformStamped) -> None:
+        self.apply_transform_msg(msg)
+        self.publish_status("Set transform from /calibration/set_transform")
+
+    def on_icp_transform(self, msg: TransformStamped) -> None:
+        self.apply_transform_msg(msg)
+        self.publish_status("Applied ICP transform live. Use /calibration/save to persist.")
+
+    def apply_transform_msg(self, msg: TransformStamped) -> None:
         roll, pitch, yaw = euler_from_quaternion(
             msg.transform.rotation.x,
             msg.transform.rotation.y,
@@ -231,7 +245,6 @@ class LaserTransformControl(Node):
             tf["parent_frame"] = msg.header.frame_id
         if msg.child_frame_id:
             tf["child_frame"] = msg.child_frame_id
-        self.publish_status("Set transform from /calibration/set_transform")
 
     def on_adjust_transform(self, msg: Vector3) -> None:
         x, y, z = self.get_translation()
