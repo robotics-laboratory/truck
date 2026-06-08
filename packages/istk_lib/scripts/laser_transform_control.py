@@ -68,7 +68,7 @@ def load_yaml(path: str) -> Dict[str, Any]:
     tf.setdefault("child_frame", "laser_right")
     tf.setdefault("translation", {})
     tf.setdefault("rotation_rpy", {})
-    data.setdefault("base_frame", "base_link")
+    data.setdefault("base_frame", "base")
     return data
 
 
@@ -199,7 +199,7 @@ class LaserTransformControl(Node):
 
         msg = TransformStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = self.current_data.get("base_frame", "base_link")
+        msg.header.frame_id = self.current_data.get("base_frame", "base")
         msg.child_frame_id = tf.get("parent_frame", "laser_left")
         msg.transform.translation.x = -0.5 * x
         msg.transform.translation.y = -0.5 * y

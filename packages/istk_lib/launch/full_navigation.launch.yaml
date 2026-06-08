@@ -32,7 +32,7 @@ launch:
       args: "--Reg/Strategy 1 --Reg/Force3DoF true --Icp/CorrespondenceRatio 0.2"
       param:
         - name: "frame_id"
-          value: "base_link"
+          value: "base"
         - name: "Oom/ResetCountdown"
           value: "1"
         - name: "odom_frame_id"

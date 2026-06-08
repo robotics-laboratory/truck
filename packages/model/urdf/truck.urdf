@@ -1,0 +1,236 @@
+<?xml version="1.0"?>
+<robot name="truck">
+  <material name="body_gray">
+    <color rgba="0.35 0.38 0.42 1.0"/>
+  </material>
+  <material name="wheel_black">
+    <color rgba="0.02 0.02 0.02 1.0"/>
+  </material>
+  <material name="sensor_blue">
+    <color rgba="0.05 0.20 0.85 1.0"/>
+  </material>
+
+  <link name="base"/>
+
+  <link name="body">
+    <visual>
+      <origin xyz="-0.575 0 0.35" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.610 0.775 0.700"/>
+      </geometry>
+      <material name="body_gray"/>
+    </visual>
+    <visual>
+      <origin xyz="0.305 -0.275 0.082" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.150 0.180 0.053"/>
+      </geometry>
+      <material name="body_gray"/>
+    </visual>
+    <visual>
+      <origin xyz="0.305 0.275 0.082" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.150 0.180 0.053"/>
+      </geometry>
+      <material name="body_gray"/>
+    </visual>
+    <visual>
+      <origin xyz="-0.655 0 0.180" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.450 0.650 0.060"/>
+      </geometry>
+      <material name="body_gray"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.760 0.775 0.200"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="base_to_body" type="fixed">
+    <parent link="base"/>
+    <child link="body"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="lidar_link">
+    <visual>
+      <origin xyz="0 0 0.03" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.045" length="0.06"/>
+      </geometry>
+      <material name="sensor_blue"/>
+    </visual>
+  </link>
+  <joint name="base_to_lidar_link" type="fixed">
+    <parent link="base"/>
+    <child link="lidar_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_link"/>
+  <joint name="base_to_camera_link" type="fixed">
+    <parent link="base"/>
+    <child link="camera_link"/>
+    <origin xyz="0.25 0.05 -0.04" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rear_axle"/>
+  <joint name="base_to_rear_axle" type="fixed">
+    <parent link="base"/>
+    <child link="rear_axle"/>
+    <origin xyz="-0.6305 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rear_axle_fix"/>
+  <joint name="base_to_rear_axle_fix" type="fixed">
+    <parent link="base"/>
+    <child link="rear_axle_fix"/>
+    <origin xyz="0.6305 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="fork_pivot_link"/>
+  <joint name="base_to_fork_pivot_link" type="fixed">
+    <parent link="base"/>
+    <child link="fork_pivot_link"/>
+    <origin xyz="0.6305 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="drive_wheel_steer_link"/>
+  <joint name="base_to_drive_wheel_steer_link" type="fixed">
+    <parent link="base"/>
+    <child link="drive_wheel_steer_link"/>
+    <origin xyz="-0.6305 0 0.125" rpy="0 0 0"/>
+  </joint>
+
+  <link name="drive_wheel_link"/>
+  <joint name="drive_wheel_steer_to_drive_wheel_link" type="fixed">
+    <parent link="drive_wheel_steer_link"/>
+    <child link="drive_wheel_link"/>
+    <origin xyz="0 0 -0.125" rpy="0 1.5707963267948966 0"/>
+  </joint>
+
+  <link name="camera_gyro_frame"/>
+  <joint name="camera_link_to_camera_gyro_frame" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_gyro_frame"/>
+    <origin xyz="-0.01602 -0.03022 0.0074" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_gyro_optical_frame"/>
+  <joint name="camera_gyro_frame_to_camera_gyro_optical_frame" type="fixed">
+    <parent link="camera_gyro_frame"/>
+    <child link="camera_gyro_optical_frame"/>
+    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966"/>
+  </joint>
+
+  <link name="camera_imu_optical_frame"/>
+  <joint name="camera_gyro_optical_frame_to_camera_imu_optical_frame" type="fixed">
+    <parent link="camera_gyro_optical_frame"/>
+    <child link="camera_imu_optical_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_depth_frame"/>
+  <joint name="camera_link_to_camera_depth_frame" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_depth_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_depth_optical_frame"/>
+  <joint name="camera_depth_frame_to_camera_depth_optical_frame" type="fixed">
+    <parent link="camera_depth_frame"/>
+    <child link="camera_depth_optical_frame"/>
+    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966"/>
+  </joint>
+
+  <link name="rplidar_s2::lidar_link"/>
+  <joint name="base_to_rplidar_s2_lidar_link" type="fixed">
+    <parent link="base"/>
+    <child link="rplidar_s2::lidar_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="d455::camera_imu_optical_frame"/>
+  <joint name="camera_gyro_optical_frame_to_d455_camera_imu_optical_frame" type="fixed">
+    <parent link="camera_gyro_optical_frame"/>
+    <child link="d455::camera_imu_optical_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="front_left_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5707963267948966 0 0"/>
+      <geometry>
+        <cylinder radius="0.125" length="0.070"/>
+      </geometry>
+      <material name="wheel_black"/>
+    </visual>
+  </link>
+  <joint name="base_to_front_left_wheel" type="fixed">
+    <parent link="base"/>
+    <child link="front_left_wheel"/>
+    <origin xyz="0.6305 -0.185 0.0635" rpy="0 0 0"/>
+  </joint>
+
+  <link name="left_fork_wheel_link"/>
+  <joint name="base_to_left_fork_wheel_link" type="fixed">
+    <parent link="base"/>
+    <child link="left_fork_wheel_link"/>
+    <origin xyz="0.6305 0.185 0.041" rpy="0 1.5707963267948966 0"/>
+  </joint>
+
+  <link name="front_right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5707963267948966 0 0"/>
+      <geometry>
+        <cylinder radius="0.125" length="0.070"/>
+      </geometry>
+      <material name="wheel_black"/>
+    </visual>
+  </link>
+  <joint name="base_to_front_right_wheel" type="fixed">
+    <parent link="base"/>
+    <child link="front_right_wheel"/>
+    <origin xyz="0.6305 0.185 0.0635" rpy="0 0 3.141592653589793"/>
+  </joint>
+
+  <link name="right_fork_wheel_link"/>
+  <joint name="base_to_right_fork_wheel_link" type="fixed">
+    <parent link="base"/>
+    <child link="right_fork_wheel_link"/>
+    <origin xyz="0.6305 -0.185 0.041" rpy="0 1.5707963267948966 0"/>
+  </joint>
+
+  <link name="rear_left_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5707963267948966 0 0"/>
+      <geometry>
+        <cylinder radius="0.125" length="0.070"/>
+      </geometry>
+      <material name="wheel_black"/>
+    </visual>
+  </link>
+  <joint name="base_to_rear_left_wheel" type="fixed">
+    <parent link="base"/>
+    <child link="rear_left_wheel"/>
+    <origin xyz="-0.6305 -0.0005 0.125" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rear_right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5707963267948966 0 0"/>
+      <geometry>
+        <cylinder radius="0.125" length="0.070"/>
+      </geometry>
+      <material name="wheel_black"/>
+    </visual>
+  </link>
+  <joint name="base_to_rear_right_wheel" type="fixed">
+    <parent link="base"/>
+    <child link="rear_right_wheel"/>
+    <origin xyz="-0.6305 0.0005 0.125" rpy="0 0 3.141592653589793"/>
+  </joint>
+</robot>

@@ -57,10 +57,10 @@ def generate_launch_description():
         # /truck/packages/istk_lib/config/laser_transforms.yaml
         #
         # Publishes:
-        # base_link -> laser_left
+        # base -> laser_left
         # laser_left -> laser_right
         #
-        # base_link is computed as the midpoint between lidars.
+        # base is computed as the midpoint between lidars.
         # =========================
         Node(
             package='istk_lib',
@@ -111,8 +111,8 @@ def generate_launch_description():
         # /left/scan_filtered + /right/scan_filtered -> /merged/scan
         # Also publishes /merged/cloud.
         #
-        # target_frame = base_link
-        # base_link is the midpoint between left and right lidar.
+        # target_frame = base
+        # base is the midpoint between left and right lidar.
         # =========================
         ComposableNodeContainer(
             name='dual_laser_merger_container',
@@ -132,7 +132,7 @@ def generate_launch_description():
                         'merged_scan_topic': '/merged/scan',
                         'merged_cloud_topic': '/merged/cloud',
 
-                        'target_frame': 'base_link',
+                        'target_frame': 'base',
 
                         'tolerance': 0.05,
                         'queue_size': 10,
@@ -148,7 +148,7 @@ def generate_launch_description():
                         'range_min': 0.05,
                         'range_max': 30.0,
 
-                        # Dynamic TF puts base_link at lidar height,
+                        # Dynamic TF puts base at lidar height,
                         # so both scans should be around z = 0.
                         'min_height': -0.2,
                         'max_height': 0.2,

@@ -305,7 +305,7 @@ std_msgs::msg::Header mergeHeader(
 }  // namespace
 
 void OccupancyGridNode::publishOccupancyGrid() {
-    const std::string from_id = "base_link";
+    const std::string from_id = "base";
     const auto& to_id = params_.frame_id;
 
     const auto tf_opt = getLatestTranform(from_id, to_id);

@@ -39,7 +39,7 @@ def load_yaml(path: str) -> Dict[str, Any]:
         data["left_to_right"]["child_frame"] = "laser_right"
 
     if "base_frame" not in data:
-        data["base_frame"] = "base_link"
+        data["base_frame"] = "base"
 
     return data
 
@@ -130,7 +130,7 @@ def main():
 
     parser.add_argument(
         "--base-frame",
-        help="Base frame, usually base_link",
+        help="Base frame, usually base",
     )
 
     parser.add_argument(

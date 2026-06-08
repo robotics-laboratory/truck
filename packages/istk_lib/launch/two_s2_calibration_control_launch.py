@@ -141,7 +141,7 @@ def generate_launch_description():
                                 "laser_2_topic": "/right/scan",
                                 "merged_scan_topic": "/merged/scan",
                                 "merged_cloud_topic": "/merged/cloud",
-                                "target_frame": "base_link",
+                                "target_frame": "base",
                                 "tolerance": 0.05,
                                 "queue_size": 10,
                                 "angle_min": -3.14159,

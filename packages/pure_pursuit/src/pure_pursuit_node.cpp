@@ -10,7 +10,7 @@ truck_msgs::msg::PurePursuitStatus toOkStatus(const std_msgs::msg::Header& heade
     truck_msgs::msg::PurePursuitStatus status;
 
     status.header.stamp = header.stamp;
-    status.header.frame_id = "base_link";
+    status.header.frame_id = "base";
     status.status = truck_msgs::msg::PurePursuitStatus::OK;
 
     return status;
@@ -20,7 +20,7 @@ truck_msgs::msg::PurePursuitStatus toErrorStatus(const std_msgs::msg::Header& he
     truck_msgs::msg::PurePursuitStatus status;
 
     status.header.stamp = header.stamp;
-    status.header.frame_id = "base_link";
+    status.header.frame_id = "base";
     status.status = truck_msgs::msg::PurePursuitStatus::ERROR;
     status.error = static_cast<uint8_t>(error);
 
@@ -31,7 +31,7 @@ truck_msgs::msg::PurePursuitStatus toNoLocalizationStatus(const rclcpp::Time& t)
     truck_msgs::msg::PurePursuitStatus status;
 
     status.header.stamp = t;
-    status.header.frame_id = "base_link";
+    status.header.frame_id = "base";
     status.status = truck_msgs::msg::PurePursuitStatus::NO_LOCALIZATION;
 
     return status;
@@ -95,7 +95,7 @@ void PurePursuitNode::publishCommand() {
     auto to_msg = [this](const Command& cmd) {
         truck_msgs::msg::Control msg;
 
-        msg.header.frame_id = "base_link";
+        msg.header.frame_id = "base";
         msg.header.stamp = now();
 
         msg.curvature = cmd.curvature;

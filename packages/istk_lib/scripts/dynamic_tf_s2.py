@@ -114,7 +114,7 @@ class DynamicTfFromYaml(Node):
         try:
             data = self.load_yaml()
 
-            base_frame = data.get("base_frame", "base_link")
+            base_frame = data.get("base_frame", "base")
 
             left_to_right = data["left_to_right"]
             left_frame = left_to_right.get("parent_frame", "laser_left")
@@ -133,13 +133,13 @@ class DynamicTfFromYaml(Node):
 
             # У двух почти противоположно направленных лидаров есть две
             # средние ориентации: вперед и назад. Если красная ось X у
-            # base_link смотрит назад, поставь base_yaw_offset: pi в YAML.
+            # base смотрит назад, поставь base_yaw_offset: pi в YAML.
             base_yaw_offset = normalize_angle(
                 float(data.get("base_yaw_offset", 0.0))
             )
 
-            # Хотим, чтобы ориентации лидаров в системе base_link были
-            # симметричны относительно красной оси X base_link:
+            # Хотим, чтобы ориентации лидаров в системе base были
+            # симметричны относительно красной оси X base:
             #
             # yaw(base -> left)  = -lr_yaw / 2 + offset
             # yaw(base -> right) = +lr_yaw / 2 + offset
@@ -153,7 +153,7 @@ class DynamicTfFromYaml(Node):
                 -0.5 * lr_yaw + base_yaw_offset
             )
 
-            # Ставим base_link ровно в середину между origins лидаров.
+            # Ставим base ровно в середину между origins лидаров.
             #
             # Известно:
             #     t_lr — положение right в системе left.
@@ -162,7 +162,7 @@ class DynamicTfFromYaml(Node):
             # Тогда:
             #     t_bl = -0.5 * R_bl * t_lr
             #
-            # Вращение делаем в плоскости XY, потому что base_link
+            # Вращение делаем в плоскости XY, потому что base
             # усредняется по yaw.
             rotated_lr_x, rotated_lr_y = rotate_xy(
                 lr_x,

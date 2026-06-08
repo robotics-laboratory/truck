@@ -16,3 +16,6 @@ steering:
   max_curvature_ticks: 3628.5
   max_curvature_1pm: 0.625
   min_turning_radius_m: 1.6
+  curvature_offset_real_1pm: -0.032
+  positive_curvature_1pm_per_tick: 0.0001703
+  negative_curvature_1pm_per_tick: 0.0001869

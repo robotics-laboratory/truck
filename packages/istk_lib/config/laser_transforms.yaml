@@ -1,4 +1,4 @@
-base_frame: base_link
+base_frame: base
 base_yaw_offset: 3.14159265358979
 left_to_right:
   parent_frame: laser_left

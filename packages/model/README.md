@@ -5,21 +5,32 @@
 
 ![This is an image](../../doc/svg/ackermann_vehicle.svg)
 
-# Model TF
+# Robot Description
 ## Overview
-Publishes static transformation of models (listed in yaml file). This is the simplest analogue of `static_transform_publisher` and `joint_state_publisher`, but for our own purpouses (use sdf model format).
+Publishes the robot static transform tree through `robot_state_publisher`.
+
+`config/model.yaml` is still the source for kinematic limits, shape, lidar
+parameters and simulator/model calculations. It is no longer the primary source
+for `/tf_static` in normal launch files.
+
+The current frame tree uses `base` as the robot body frame:
+
+```
+odom/world -> base
+base -> body
+base -> rear_axle
+base -> rear_axle_fix
+base -> lidar_link
+base -> camera_link -> camera_* frames
+base -> *_wheel
+base -> laser_left -> laser_right
+```
+
+The two S2 lidar calibration pipeline owns `base -> laser_left` and
+`laser_left -> laser_right` while it is running.
 
 ## Parameters
-- `model_path` — path to yaml file with model config (including transform).
-- `period` — period of transforms publishing (milliseconds).
+- `model_path` — path to URDF file. Defaults to `urdf/truck.urdf`.
 
-## Yaml format
-```
-- frame_id: "from"
-  child_frame_id: "to"
-  translation: {x: 0.0, y: 0.0, z: 0.0}
-  rotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
-```
-
-### Output:
-- `/tf` [[tf2_msgs/TFMessage]](http://docs.ros.org/en/api/tf2_msgs/html/msg/TFMessage.html) - transforms
+### Output
+- `/tf_static`

@@ -18,3 +18,5 @@ packages/navigation/test/data
 packages/simulator_2d/test/data
 packages/svg_debug_drawer/test/data/im*_out.svg
 packages/lidar_map/data
+
+workspace/ros2_ws.bak/*
