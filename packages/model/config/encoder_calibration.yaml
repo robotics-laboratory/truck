@@ -1,0 +1,18 @@
+# MCAP-derived encoder calibration for the real platform.
+
+drive:
+  velocity_mps_per_tick_per_s: -0.00124468
+  tick_per_s_per_mps: -803.42
+  intercept_mps: -0.00687
+  max_velocity_mps: 1.35
+  encoder_tick_rate_at_max_velocity: -1049
+  encoder_tick_rate_at_max_velocity_abs: 1049.0
+
+steering:
+  default_idle_ticks: -26.75
+  straight_fast_ticks: -41.75
+  min_ticks: -3386.5
+  max_ticks: 3643.25
+  max_curvature_ticks: 3628.5
+  max_curvature_1pm: 0.625
+  min_turning_radius_m: 1.6

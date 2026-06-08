@@ -49,7 +49,7 @@ class PurePursuitNode : public rclcpp::Node {
         rclcpp::Publisher<truck_msgs::msg::PurePursuitStatus>::SharedPtr status = nullptr;
     } signal_;
 
-    std::chrono::duration<double> timeout_{0.20};
+    std::chrono::duration<double> timeout_{0.50};
     std::unique_ptr<PurePursuit> controller_ = nullptr;
 };
 

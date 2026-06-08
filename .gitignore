@@ -10,6 +10,9 @@ build
 install
 log
 
+# PlatformIO
+.pio
+
 # Test data
 packages/navigation/test/data
 packages/simulator_2d/test/data

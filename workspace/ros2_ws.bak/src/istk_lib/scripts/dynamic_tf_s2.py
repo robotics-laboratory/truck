@@ -2,7 +2,7 @@
 
 import math
 import os
-from typing import Any, Dict
+from typing import Dict, Any
 
 import yaml
 
@@ -29,17 +29,6 @@ def quaternion_from_euler(roll: float, pitch: float, yaw: float):
     qz = cr * cp * sy - sr * sp * cy
 
     return qx, qy, qz, qw
-
-
-def normalize_angle(angle: float) -> float:
-    return math.atan2(math.sin(angle), math.cos(angle))
-
-
-def rotate_xy(x: float, y: float, yaw: float):
-    c = math.cos(yaw)
-    s = math.sin(yaw)
-
-    return c * x - s * y, s * x + c * y
 
 
 class DynamicTfFromYaml(Node):
@@ -99,8 +88,8 @@ class DynamicTfFromYaml(Node):
         if not os.path.exists(self.config_path):
             raise FileNotFoundError(f"Config file not found: {self.config_path}")
 
-        with open(self.config_path, "r", encoding="utf-8") as file:
-            data = yaml.safe_load(file)
+        with open(self.config_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
 
         if data is None:
             raise ValueError("Config YAML is empty")
@@ -129,54 +118,21 @@ class DynamicTfFromYaml(Node):
 
             lr_roll = float(rotation_rpy.get("roll", 0.0))
             lr_pitch = float(rotation_rpy.get("pitch", 0.0))
-            lr_yaw = normalize_angle(float(rotation_rpy.get("yaw", 0.0)))
+            lr_yaw = float(rotation_rpy.get("yaw", 0.0))
 
-            # У двух почти противоположно направленных лидаров есть две
-            # средние ориентации: вперед и назад. Если красная ось X у
-            # base_link смотрит назад, поставь base_yaw_offset: pi в YAML.
-            base_yaw_offset = normalize_angle(
-                float(data.get("base_yaw_offset", 0.0))
-            )
-
-            # Хотим, чтобы ориентации лидаров в системе base_link были
-            # симметричны относительно красной оси X base_link:
+            # Храним только laser_left -> laser_right.
+            # base_link ставим в середину между origins лидаров.
             #
-            # yaw(base -> left)  = -lr_yaw / 2 + offset
-            # yaw(base -> right) = +lr_yaw / 2 + offset
+            # В системе laser_left:
+            # left  = (0, 0, 0)
+            # right = (lr_x, lr_y, lr_z)
+            # mid   = (lr_x / 2, lr_y / 2, lr_z / 2)
             #
-            # Усредняем именно yaw, так как для навигации нужен поворот
-            # вокруг вертикальной оси Z. Калиброванные roll и pitch между
-            # лидарами сохраняются в transform left_to_right.
-            base_to_left_roll = 0.0
-            base_to_left_pitch = 0.0
-            base_to_left_yaw = normalize_angle(
-                -0.5 * lr_yaw + base_yaw_offset
-            )
-
-            # Ставим base_link ровно в середину между origins лидаров.
-            #
-            # Известно:
-            #     t_lr — положение right в системе left.
-            #     R_bl — поворот left в системе base.
-            #
-            # Тогда:
-            #     t_bl = -0.5 * R_bl * t_lr
-            #
-            # Вращение делаем в плоскости XY, потому что base_link
-            # усредняется по yaw.
-            rotated_lr_x, rotated_lr_y = rotate_xy(
-                lr_x,
-                lr_y,
-                base_to_left_yaw,
-            )
-
-            base_to_left_x = -0.5 * rotated_lr_x
-            base_to_left_y = -0.5 * rotated_lr_y
+            # Значит в base_link:
+            # laser_left = -mid
+            base_to_left_x = -0.5 * lr_x
+            base_to_left_y = -0.5 * lr_y
             base_to_left_z = -0.5 * lr_z
-
-            right_yaw_in_base = normalize_angle(
-                base_to_left_yaw + lr_yaw
-            )
 
             self.transforms_params = {
                 "base_to_left": {
@@ -185,9 +141,9 @@ class DynamicTfFromYaml(Node):
                     "x": base_to_left_x,
                     "y": base_to_left_y,
                     "z": base_to_left_z,
-                    "roll": base_to_left_roll,
-                    "pitch": base_to_left_pitch,
-                    "yaw": base_to_left_yaw,
+                    "roll": 0.0,
+                    "pitch": 0.0,
+                    "yaw": 0.0,
                 },
                 "left_to_right": {
                     "parent": left_frame,
@@ -205,33 +161,18 @@ class DynamicTfFromYaml(Node):
 
             self.get_logger().info(
                 f"{base_frame} -> {left_frame}: "
-                f"x={base_to_left_x:.6f}, "
-                f"y={base_to_left_y:.6f}, "
-                f"z={base_to_left_z:.6f}, "
-                f"r={base_to_left_roll:.6f}, "
-                f"p={base_to_left_pitch:.6f}, "
-                f"yaw={base_to_left_yaw:.6f}"
+                f"x={base_to_left_x:.6f}, y={base_to_left_y:.6f}, z={base_to_left_z:.6f}, "
+                f"r=0.000000, p=0.000000, yaw=0.000000"
             )
 
             self.get_logger().info(
                 f"{left_frame} -> {right_frame}: "
-                f"x={lr_x:.6f}, "
-                f"y={lr_y:.6f}, "
-                f"z={lr_z:.6f}, "
-                f"r={lr_roll:.6f}, "
-                f"p={lr_pitch:.6f}, "
-                f"yaw={lr_yaw:.6f}"
+                f"x={lr_x:.6f}, y={lr_y:.6f}, z={lr_z:.6f}, "
+                f"r={lr_roll:.6f}, p={lr_pitch:.6f}, yaw={lr_yaw:.6f}"
             )
 
-            self.get_logger().info(
-                f"Headings in {base_frame}: "
-                f"{left_frame}_yaw={base_to_left_yaw:.6f}, "
-                f"{right_frame}_yaw={right_yaw_in_base:.6f}, "
-                f"base_yaw_offset={base_yaw_offset:.6f}"
-            )
-
-        except Exception as error:
-            self.get_logger().error(f"Failed to load config: {repr(error)}")
+        except Exception as e:
+            self.get_logger().error(f"Failed to load config: {repr(e)}")
 
     def make_tf(self, params: Dict[str, Any]) -> TransformStamped:
         qx, qy, qz, qw = quaternion_from_euler(
@@ -271,14 +212,9 @@ class DynamicTfFromYaml(Node):
 def main():
     rclpy.init()
     node = DynamicTfFromYaml()
-
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
 
 
 if __name__ == "__main__":

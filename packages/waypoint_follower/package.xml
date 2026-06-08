@@ -17,11 +17,9 @@
   <depend>nav_msgs</depend>
   <depend>rclcpp</depend>
   <depend>speed</depend>
-  <depend>std_msgs</depend>
-  <depend>std_srvs</depend>
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
-  <depend>truck_msgs</depend>
+  <depend>truck_interfaces</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
 

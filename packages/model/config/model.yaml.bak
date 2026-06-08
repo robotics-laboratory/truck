@@ -21,12 +21,12 @@ lidar:
   range_max: 30.0         # m
 
 limits:
-  steering: { inner: 40.62, outer: 40.62 } # deg, rear steering needed for base curvature 0.625 1/m
-  max_abs_curvature: 0.625                 # 1/m, median turn radius ~= 1.6 m
-  steering_velocity: 0.5                   # rad/s, large steering transitions ~= 0.49..0.53 rad/s
-  velocity: { min: -1.35, max: +1.35 }     # m/s, p99 measured speed ~= 1.35 m/s
-  max_acceleration: 0.7                    # m/s^2, 297..298 s full-throttle slope ~= 0.69
-  max_deceleration: 0.6                    # m/s^2, observed stop slopes ~= 0.41..0.59
+  steering: { inner: 38.2, outer: 38.2 } # deg, bicycle-equivalent rear steering
+  max_abs_curvature: 0.625               # 1/m, 1 / 1.6 m min turning radius
+  steering_velocity: 2.0                 # rad/s, conservative
+  velocity: { min: -1.0, max: +1.0 }     # m/s, 7 km/h ~= 1.94 m/s
+  max_acceleration: 0.5                  # m/s^2, conservative
+  max_deceleration: 1.0                  # m/s^2, conservative
 
 # Motor to differential ratio. See docs/gearbox.md for more info.
 gear_ratio: 0.08421

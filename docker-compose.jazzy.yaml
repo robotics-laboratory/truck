@@ -14,6 +14,7 @@ services:
       TRUCK_SIMULATION: "true"
     volumes:
       - "${PWD}:/truck"
+      - "/dev:/dev"
 
 networks:
   default:

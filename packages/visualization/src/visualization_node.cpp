@@ -147,12 +147,12 @@ void VisualizationNode::initializeTopicHandlers() {
 }
 
 void VisualizationNode::initializeCacheBodyBaseTf() {
-    cache_.body_base_tf = model_->getLatestTranform("base", "body");
+    cache_.body_base_tf = model_->getLatestTranform("base_link", "body");
 }
 
 void VisualizationNode::initializeCacheWheelBaseTfs() {
     for (auto wheel : kAllWheels) {
-        cache_.wheel_base_tfs[wheel] = model_->getLatestTranform("base", kWheelFrames[wheel]);
+        cache_.wheel_base_tfs[wheel] = model_->getLatestTranform("base_link", kWheelFrames[wheel]);
     }
 }
 
@@ -442,10 +442,10 @@ void VisualizationNode::publishArc() const {
 }
 
 void VisualizationNode::handleControl(truck_msgs::msg::Control::ConstSharedPtr msg) {
-    if (msg->header.frame_id != "base") {
+    if (msg->header.frame_id != "base_link") {
         RCLCPP_WARN(
             get_logger(),
-            "Expected 'base' frame for cotrol, but got %s. Ignore message!",
+            "Expected 'base_link' frame for cotrol, but got %s. Ignore message!",
             state_.control->header.frame_id.c_str());
         return;
     }

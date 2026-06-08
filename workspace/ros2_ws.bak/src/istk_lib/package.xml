@@ -9,16 +9,12 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>rclcpp</depend>
-  <depend>geometry_msgs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>yaml-cpp</depend>
-
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 
   <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+
   <exec_depend>sllidar_ros2</exec_depend>
   <exec_depend>dual_laser_merger</exec_depend>
   <exec_depend>multi_lidar_calibration</exec_depend>

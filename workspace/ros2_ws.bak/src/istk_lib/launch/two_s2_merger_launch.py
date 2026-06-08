@@ -4,9 +4,6 @@ from launch import LaunchDescription
 from launch_ros.actions import Node, ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
-LEFT_FILTER_CONFIG = '/truck/packages/istk_lib/config/laser_filter_left.yaml'
-RIGHT_FILTER_CONFIG = '/truck/packages/istk_lib/config/laser_filter_right.yaml'
-
 
 def generate_launch_description():
     return LaunchDescription([
@@ -54,7 +51,7 @@ def generate_launch_description():
         # Dynamic TF publisher from YAML
         #
         # Reads:
-        # /truck/packages/istk_lib/config/laser_transforms.yaml
+        # /truck/workspace/ros2_ws/src/istk_lib/config/laser_transforms.yaml
         #
         # Publishes:
         # base_link -> laser_left
@@ -68,47 +65,16 @@ def generate_launch_description():
             name='dynamic_tf_from_yaml',
             output='screen',
             parameters=[{
-                'config_path': '/truck/packages/istk_lib/config/laser_transforms.yaml',
+                'config_path': '/truck/workspace/ros2_ws/src/istk_lib/config/laser_transforms.yaml',
                 'reload_period_sec': 0.2,
                 'publish_rate_hz': 30.0,
             }],
         ),
 
         # =========================
-        # Per-lidar sector filtering
-        #
-        # Removes the robot body sector from each lidar before merge.
-        # left/right YAMLs are mirrored and can be tuned independently.
-        # =========================
-        Node(
-            package='istk_lib',
-            executable='rear_sector_filter_node',
-            name='left_scan_sector_filter',
-            output='screen',
-            parameters=[{
-                'input_scan': '/left/scan',
-                'output_scan': '/left/scan_filtered',
-                'config_path': LEFT_FILTER_CONFIG,
-                'control_prefix': '/left/filter',
-            }],
-        ),
-        Node(
-            package='istk_lib',
-            executable='rear_sector_filter_node',
-            name='right_scan_sector_filter',
-            output='screen',
-            parameters=[{
-                'input_scan': '/right/scan',
-                'output_scan': '/right/scan_filtered',
-                'config_path': RIGHT_FILTER_CONFIG,
-                'control_prefix': '/right/filter',
-            }],
-        ),
-
-        # =========================
         # dual_laser_merger
         #
-        # /left/scan_filtered + /right/scan_filtered -> /merged/scan
+        # /left/scan + /right/scan -> /merged/scan
         # Also publishes /merged/cloud.
         #
         # target_frame = base_link
@@ -126,8 +92,8 @@ def generate_launch_description():
                     plugin='merger_node::MergerNode',
                     name='dual_laser_merger',
                     parameters=[{
-                        'laser_1_topic': '/left/scan_filtered',
-                        'laser_2_topic': '/right/scan_filtered',
+                        'laser_1_topic': '/left/scan',
+                        'laser_2_topic': '/right/scan',
 
                         'merged_scan_topic': '/merged/scan',
                         'merged_cloud_topic': '/merged/cloud',

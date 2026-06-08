@@ -1,0 +1,6 @@
+rear_sector_filter:
+  center_angle_deg: -80
+  width_deg: 100
+  range_min: 0.050000000000000003
+  range_max: 400
+  invert: false

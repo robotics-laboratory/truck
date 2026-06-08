@@ -12,8 +12,6 @@
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
-#include <std_msgs/msg/empty.hpp>
-#include <std_msgs/msg/header.hpp>
 #include <std_srvs/srv/empty.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
@@ -40,8 +38,6 @@ class WaypointFollowerNode : public rclcpp::Node {
 
     void onReset(
         const std_srvs::srv::Empty::Request::SharedPtr, std_srvs::srv::Empty::Response::SharedPtr);
-    void onResetRequest(std_msgs::msg::Empty::SharedPtr msg);
-    void resetPath();
 
     void publishTrajectory();
     void publishGridCostMap();
@@ -50,14 +46,10 @@ class WaypointFollowerNode : public rclcpp::Node {
 
     std::optional<geom::Transform> getLatestTranform(
         const std::string& source, const std::string& target);
-    std::optional<geom::Pose> getEgoPose() const;
-    std_msgs::msg::Header makePathHeader() const;
-    void publishResetPath();
 
     struct Parameters {
         std::chrono::duration<double> period = 0.1s;
         double safety_margin = 0.3;
-        std::string target_frame = "odom_ekf";
     } params_{};
 
     speed::GreedyPlanner::Params speed_params_{};
@@ -74,7 +66,6 @@ class WaypointFollowerNode : public rclcpp::Node {
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry = nullptr;
         rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr waypoint = nullptr;
         rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr grid = nullptr;
-        rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr reset = nullptr;
         rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf = nullptr;
         rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr tf_static = nullptr;
     } slot_;

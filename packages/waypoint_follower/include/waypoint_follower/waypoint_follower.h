@@ -4,9 +4,10 @@
 #include "geom/pose.h"
 #include "geom/vector.h"
 
-#include <cstdint>
-#include <deque>
+#include <deque>    `
 #include <optional>
+
+#include <cstdint>
 
 namespace truck::waypoint_follower {
 

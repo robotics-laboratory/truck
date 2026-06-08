@@ -34,12 +34,10 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
     params_ = {
         .period = std::chrono::duration<double>(this->declare_parameter("period", 0.1)),
         .safety_margin = this->declare_parameter("safety_margin", 0.3),
-        .target_frame = this->declare_parameter("target_frame", std::string{"odom_ekf"}),
     };
 
     RCLCPP_INFO(this->get_logger(), "period: %.2fs", params_.period.count());
     RCLCPP_INFO(this->get_logger(), "safety_margin: %.2fm", params_.safety_margin);
-    RCLCPP_INFO(this->get_logger(), "target_frame: %s", params_.target_frame.c_str());
 
     speed_params_ = {
         Limits<double>{
@@ -63,16 +61,13 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
         "/reset_path", std::bind(&WaypointFollowerNode::onReset, this, _1, _2));
 
     slot_.odometry = this->create_subscription<nav_msgs::msg::Odometry>(
-        "/ekf/odometry/filtered", 1, std::bind(&WaypointFollowerNode::onOdometry, this, _1));
+        "/odom", 1, std::bind(&WaypointFollowerNode::onOdometry, this, _1));
 
     slot_.waypoint = this->create_subscription<geometry_msgs::msg::PointStamped>(
         "/clicked_point", 10, std::bind(&WaypointFollowerNode::onWaypoint, this, _1));
 
     slot_.grid = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/grid", 1, std::bind(&WaypointFollowerNode::onGrid, this, _1));
-
-    slot_.reset = this->create_subscription<std_msgs::msg::Empty>(
-        "/reset_path/request", 1, std::bind(&WaypointFollowerNode::onResetRequest, this, _1));
 
     using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
 
@@ -111,23 +106,18 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
 void WaypointFollowerNode::onReset(
     const std::shared_ptr<std_srvs::srv::Empty::Request>,
     std::shared_ptr<std_srvs::srv::Empty::Response>) {
-    resetPath();
-}
-
-void WaypointFollowerNode::onResetRequest(std_msgs::msg::Empty::SharedPtr) {
-    resetPath();
-}
-
-void WaypointFollowerNode::resetPath() {
     RCLCPP_INFO(this->get_logger(), "Reset path!");
     follower_->reset();
-    state_.scheduled_velocity = 0.0;
-    publishResetPath();
+    publishFullState();
 }
 
 void WaypointFollowerNode::publishWaypoints() {
+    if (!state_.odometry) {
+        return;
+    }
+
     truck_msgs::msg::Waypoints waypoints_msg;
-    waypoints_msg.header = makePathHeader();
+    waypoints_msg.header = state_.odometry->header;
 
     for (const auto& waypoint : follower_->waypoints()) {
         waypoints_msg.waypoints.push_back(geom::msg::toPoint(waypoint.pos));
@@ -178,13 +168,10 @@ void WaypointFollowerNode::publishTrajectory() {
         return;
     }
 
-    const auto ego_pose = getEgoPose();
-    if (!ego_pose) {
-        return;
-    }
-    follower_->update(*ego_pose);
+    const auto ego_pose = geom::toPose(*state_.odometry);
+    follower_->update(ego_pose);
 
-    if (follower_->isReadyToFinish(*ego_pose) && isStanding(*state_.odometry)) {
+    if (follower_->isReadyToFinish(ego_pose) && isStanding(*state_.odometry)) {
         RCLCPP_INFO(this->get_logger(), "Path finished!");
         follower_->reset();
     }
@@ -225,7 +212,7 @@ void WaypointFollowerNode::publishTrajectory() {
         state_.scheduled_velocity = 0.0;
     }
 
-    signal_.trajectory->publish(motion::msg::toTrajectory(makePathHeader(), trajectory));
+    signal_.trajectory->publish(motion::msg::toTrajectory(state_.odometry->header, trajectory));
 }
 
 void WaypointFollowerNode::publishFullState() {
@@ -241,59 +228,11 @@ void WaypointFollowerNode::onOdometry(nav_msgs::msg::Odometry::SharedPtr odometr
 
 std::optional<geom::Transform> WaypointFollowerNode::getLatestTranform(
     const std::string& source, const std::string& target) {
-    if (source == target) {
-        return geom::Transform{};
-    }
-
     try {
         return geom::toTransform(tf_buffer_->lookupTransform(target, source, rclcpp::Time(0)));
     } catch (const tf2::TransformException& ex) {
         return std::nullopt;
     }
-}
-
-std::optional<geom::Pose> WaypointFollowerNode::getEgoPose() const {
-    if (!state_.odometry) {
-        return std::nullopt;
-    }
-
-    const auto source = state_.odometry->header.frame_id;
-    const auto target = params_.target_frame;
-    if (source == target) {
-        return geom::toPose(*state_.odometry);
-    }
-
-    try {
-        const auto tf =
-            geom::toTransform(tf_buffer_->lookupTransform(target, source, rclcpp::Time(0)));
-        return tf.apply(geom::toPose(*state_.odometry));
-    } catch (const tf2::TransformException& ex) {
-        RCLCPP_WARN(
-            this->get_logger(),
-            "Can't lookup transform from '%s' to '%s', ignore ego pose!",
-            source.c_str(),
-            target.c_str());
-        return std::nullopt;
-    }
-}
-
-std_msgs::msg::Header WaypointFollowerNode::makePathHeader() const {
-    std_msgs::msg::Header header;
-    header.frame_id = params_.target_frame;
-    if (state_.odometry) {
-        header.stamp = state_.odometry->header.stamp;
-    } else {
-        header.stamp = now();
-    }
-    return header;
-}
-
-void WaypointFollowerNode::publishResetPath() {
-    truck_msgs::msg::Waypoints waypoints;
-    waypoints.header = makePathHeader();
-    signal_.waypoints->publish(waypoints);
-
-    signal_.trajectory->publish(motion::msg::toTrajectory(makePathHeader(), motion::Trajectory{}));
 }
 
 void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPtr msg) {
@@ -302,26 +241,22 @@ void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPt
         return;
     }
 
-    const auto tf_opt = getLatestTranform(msg->header.frame_id, params_.target_frame);
+    const auto tf_opt = getLatestTranform(msg->header.frame_id, state_.odometry->header.frame_id);
     if (!tf_opt) {
         RCLCPP_WARN(
             this->get_logger(),
             "Can't lookup transform from '%s' to '%s', ignore waypoint!",
             msg->header.frame_id.c_str(),
-            params_.target_frame.c_str());
+            state_.odometry->header.frame_id.c_str());
 
         return;
     }
 
-    const auto ego = getEgoPose();
-    if (!ego) {
-        return;
-    }
-
+    const auto ego = geom::toPose(*state_.odometry);
     if (!follower_->hasWaypoints()) {
         // always start from current position
-        RCLCPP_INFO(this->get_logger(), "Add ego waypoint (%f, %f)", ego->pos.x, ego->pos.y);
-        follower_->addEgoWaypoint(*ego);
+        RCLCPP_INFO(this->get_logger(), "Add ego waypoint (%f, %f)", ego.pos.x, ego.pos.y);
+        follower_->addEgoWaypoint(ego);
     }
 
     const auto waypoint = tf_opt->apply(geom::toVec2(*msg));
@@ -331,7 +266,7 @@ void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPt
         RCLCPP_INFO(this->get_logger(), "Waypoint (%f, %f) ignored!", waypoint.x, waypoint.y);
     }
 
-    follower_->update(*ego);
+    follower_->update(ego);
     publishFullState();
 }
 
@@ -341,7 +276,7 @@ void WaypointFollowerNode::onGrid(nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     }
 
     const auto source = msg->header.frame_id;
-    const auto target = params_.target_frame;
+    const auto target = state_.odometry->header.frame_id;
 
     const auto tf_opt = getLatestTranform(source, target);
     if (!tf_opt) {

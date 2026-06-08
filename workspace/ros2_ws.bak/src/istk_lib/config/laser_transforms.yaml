@@ -1,13 +1,12 @@
-base_frame: base_link
-base_yaw_offset: 3.14159265358979
 left_to_right:
   parent_frame: laser_left
   child_frame: laser_right
   translation:
-    x: -0.4761975407600403
-    y: -0.7284964919090271
+    x: -0.7914579
+    y: -0.33968899999999996
     z: 0.0
   rotation_rpy:
     roll: 0.0
     pitch: 0.0
-    yaw: -1.151668863012183
+    yaw: -1.0794503999999996
+base_frame: base_link

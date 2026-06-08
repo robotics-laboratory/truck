@@ -10,7 +10,7 @@ truck_msgs::msg::PurePursuitStatus toOkStatus(const std_msgs::msg::Header& heade
     truck_msgs::msg::PurePursuitStatus status;
 
     status.header.stamp = header.stamp;
-    status.header.frame_id = "base";
+    status.header.frame_id = "base_link";
     status.status = truck_msgs::msg::PurePursuitStatus::OK;
 
     return status;
@@ -20,7 +20,7 @@ truck_msgs::msg::PurePursuitStatus toErrorStatus(const std_msgs::msg::Header& he
     truck_msgs::msg::PurePursuitStatus status;
 
     status.header.stamp = header.stamp;
-    status.header.frame_id = "base";
+    status.header.frame_id = "base_link";
     status.status = truck_msgs::msg::PurePursuitStatus::ERROR;
     status.error = static_cast<uint8_t>(error);
 
@@ -31,7 +31,7 @@ truck_msgs::msg::PurePursuitStatus toNoLocalizationStatus(const rclcpp::Time& t)
     truck_msgs::msg::PurePursuitStatus status;
 
     status.header.stamp = t;
-    status.header.frame_id = "base";
+    status.header.frame_id = "base_link";
     status.status = truck_msgs::msg::PurePursuitStatus::NO_LOCALIZATION;
 
     return status;
@@ -95,7 +95,7 @@ void PurePursuitNode::publishCommand() {
     auto to_msg = [this](const Command& cmd) {
         truck_msgs::msg::Control msg;
 
-        msg.header.frame_id = "base";
+        msg.header.frame_id = "base_link";
         msg.header.stamp = now();
 
         msg.curvature = cmd.curvature;
@@ -161,8 +161,22 @@ void PurePursuitNode::handleTrajectory(truck_msgs::msg::Trajectory::SharedPtr tr
 }
 
 void PurePursuitNode::handleOdometry(nav_msgs::msg::Odometry::SharedPtr odometry) {
-    state_.localization_msg = (odometry);
+    state_.localization_msg = odometry;
     state_.localization = geom::toLocalization(*state_.localization_msg);
+
+    const auto stamp = rclcpp::Time(state_.localization_msg->header.stamp);
+    const auto current_time = this->now();
+    const double age = (current_time - stamp).seconds();
+
+    RCLCPP_INFO_THROTTLE(
+        this->get_logger(),
+        *this->get_clock(),
+        1000,
+        "received odom: stamp=%.3f, now=%.3f, age=%.3f sec, frame=%s",
+        stamp.seconds(),
+        current_time.seconds(),
+        age,
+        state_.localization_msg->header.frame_id.c_str());
 }
 
 }  // namespace truck::pure_pursuit

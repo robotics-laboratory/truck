@@ -1,0 +1,110 @@
+%YAML 1.2
+---
+launch:
+  # Удобно вынести основные топики и путь к модели в аргументы:
+  # их можно будет переопределить из командной строки.
+  - arg:
+      name: "scan_topic"
+      default: "/merged/scan"
+
+  - arg:
+      name: "odom_topic"
+      default: "/odom"
+
+  - arg:
+      name: "model_config"
+      default: "/truck/install/model/share/model/config/model.yaml"
+
+  # Два лидара + merger -> /merged/scan
+  - include:
+      file: "$(find-pkg-share istk_lib)/launch/two_s2_merger_launch.py"
+
+  # ICP-одометрия RTAB-Map
+  #
+  # В твоей команде Reg/... и Icp/... передавались ДО --ros-args,
+  # поэтому здесь они остаются обычными args исполняемого файла,
+  # а frame_id, odom_frame_id, publish_tf и remap задаются как ROS-параметры.
+  - node:
+      pkg: "rtabmap_odom"
+      exec: "icp_odometry"
+      name: "icp_odometry"
+      output: "screen"
+      args: "--Reg/Strategy 1 --Reg/Force3DoF true --Icp/CorrespondenceRatio 0.2"
+      param:
+        - name: "frame_id"
+          value: "base_link"
+        - name: "Oom/ResetCountdown"
+          value: "1"
+        - name: "odom_frame_id"
+          value: "odom"
+        - name: "publish_tf"
+          value: true
+      remap:
+        - from: "scan"
+          to: "$(var scan_topic)"
+        - from: "odom"
+          to: "$(var odom_topic)"
+
+  # Локальная occupancy grid по лидару в системе odom
+  - node:
+      pkg: "occupancy_grid"
+      exec: "occupancy_grid_node"
+      name: "occupancy_grid_node"
+      output: "screen"
+      param:
+        - name: "qos"
+          value: 2
+        - name: "frame_id"
+          value: "odom"
+        - name: "resolution"
+          value: 0.05
+        - name: "radius"
+          value: 6.0
+        - name: "enable_lidar_grid"
+          value: true
+        - name: "enable_camera_grid"
+          value: false
+        - name: "enable_camera_cloud"
+          value: false
+      remap:
+        - from: "/lidar/scan"
+          to: "$(var scan_topic)"
+
+  # Получение waypoint'ов
+  - include:
+      file: "$(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml"
+
+  # Pure Pursuit controller
+  - node:
+      pkg: "pure_pursuit"
+      exec: "pure_pursuit_node"
+      name: "pure_pursuit_node"
+      output: "screen"
+      param:
+        - name: "qos"
+          value: 1
+        - name: "model_config"
+          value: "$(var model_config)"
+        - name: "period"
+          value: 0.05
+        - name: "radius/min"
+          value: 0.30
+        - name: "radius/max"
+          value: 2.0
+        - name: "velocity_factor"
+          value: 2.0
+        - name: "tolerance"
+          value: 0.05
+        - name: "max_distance"
+          value: 0.3
+      remap:
+        - from: "/ekf/odometry/filtered"
+          to: "$(var odom_topic)"
+
+  # Передача команд на контроллер робота
+  - include:
+      file: "$(find-pkg-share control_proxy)/launch/control_proxy.yaml"
+
+  # Визуализация
+  - include:
+      file: "$(find-pkg-share visualization)/launch/visualization.yaml"
