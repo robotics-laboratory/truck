@@ -1,0 +1,6 @@
+[submodule "packages/livox_ros_driver2"]
+	path = packages/livox_ros_driver2
+	url = https://github.com/robotics-laboratory/livox_ros_driver2.git
+[submodule "packages/fast-lio2"]
+	path = packages/fast-lio2
+	url = https://github.com/robotics-laboratory/fast-lio2.git

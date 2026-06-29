@@ -2,12 +2,14 @@ launch:
 - arg: { name: "simulation", default: "false" }
 - arg: { name: "qos", default: "0" }
 
-### HACK: comment the next few lines out if serious lags occur
-- include:
-   file: $(find-pkg-share icp_odometry)/launch/icp_odometry.yaml
-   arg:
-   - { name: "use_sim_time", value: "$(var simulation)" }
-   - { name: "qos", value: "$(var qos)" }
+- node:
+    pkg: "fastlio2"
+    exec: "lio_node"
+    name: "lio_node"
+    namespace: "fastlio2"
+    output: "log"
+    param:
+    - { name: "config_path", value: "$(find-pkg-share fastlio2)/config/lio.yaml" }
 
 - node:
     pkg: "robot_localization"
@@ -30,7 +32,7 @@ launch:
     - { name: "predict_to_current_time", value: True }
     - { name: "dynamic_process_noise_covariance", value: True }
 
-    - { name: "imu0", value: "/camera/imu" }
+    - { name: "imu0", value: "/camera/camera/imu" }
     - { name: "imu0_queue_size", value: 30 }
     - { name: "imu0_remove_gravitational_acceleration", value: False }
     - { name: "imu0_config", value: [
@@ -42,22 +44,22 @@ launch:
         ]
     }
 
-    - { name: "odom0", value: "/icp/odometry" }
+    - { name: "odom0", value: "/fastlio2/lio_odom" }
     - { name: "odom0_differential", value: False }
     - { name: "odom0_queue_size", value: 30 }
     - { name: "odom0_config", value: [
-            False, False, False,   # pos
-            False, False, False,   # rot
-            True, False, False,    # pos`
-            False, False, True,    # rot`
-            False, False, False,   # pos``
+            True, True, True,       # pos
+            False, False, True,     # rot
+            True, True, True,       # pos`
+            False, False, True,     # rot`
+            False, False, False,    # pos``
         ]
     }
 
-    - { name: "odom0", value: "/hardware/wheel/odometry" }
-    - { name: "odom0_differential", value: False }
-    - { name: "odom0_queue_size", value: 30 }
-    - { name: "odom0_config", value: [
+    - { name: "odom1", value: "/hardware/wheel/odometry" }
+    - { name: "odom1_differential", value: False }
+    - { name: "odom1_queue_size", value: 30 }
+    - { name: "odom1_config", value: [
             False, False, False,   # pos
             False, False, False,   # rot
             True, False, False,    # pos`

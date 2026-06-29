@@ -1,6 +1,6 @@
 launch:
 - include:
-   file: $(find-pkg-share truck)/launch/lidar.yaml
+    file: $(find-pkg-share truck)/launch/lidar3d.yaml
 
 - include:
     file: $(find-pkg-share truck)/launch/camera.yaml
@@ -18,4 +18,24 @@ launch:
     file: $(find-pkg-share perf)/launch/perf_stat.yaml
 
 - include:
-    file: $(find-pkg-share video_streaming)/launch/video_streaming.yaml
+    file: $(find-pkg-share video_streaming)/launch/video_streaming.py
+
+- include:
+    file: $(find-pkg-share localizer)/launch/localizer_launch.py
+    arg:
+    - { name: "use_sim_time", value: "false" }
+    - { name: "use_rviz", value: "false" }
+    - { name: "start_fastlio", value: "false" }
+    - { name: "start_foxglove_proxy", value: "true" }
+    - { name: "pcd_path", value: "/truck/data/maps/atrium-v1.pcd" }
+    - { name: "map_pcd_path", value: "/truck/data/maps/atrium-v1.pcd" }
+    - { name: "map_downsample_leaf_size", value: "0.3" }
+
+- include:
+    file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml
+    arg:
+    - { name: "simulation", value: "false" }
+    - { name: "graph_planner", value: "true" }
+
+- include:
+    file: $(find-pkg-share planner)/launch/planner.yaml

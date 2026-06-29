@@ -1,7 +1,7 @@
 services:
   truck:
     container_name: "${CONTAINER_NAME:-truck-${USER}}"
-    image: "registry.robotics-lab.ru/truck:1.0.0"
+    image: "registry.robotics-lab.ru/truck:1.1.0"
     privileged: true
     runtime: "${DOCKER_RUNTIME:-runc}"
     build:
@@ -19,7 +19,8 @@ services:
           # - type=registry,ref=registry.robotics-lab.ru/truck:cache-amd64
     ports:
       - "${FOXGLOVE_PORT:-8765}:8765"
-      - "${VIDEO_STREAMING_PORT:-8889}:8889"
+      - "${MEDIAMTX_HTTP_PORT:-8889}:8889"
+      - "${MEDIAMTX_WEBRTC_PORT:-8189}:${MEDIAMTX_WEBRTC_PORT:-8189}/udp"
     volumes:
       - "${PWD}:/truck"
       - "/dev:/dev"

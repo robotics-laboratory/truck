@@ -11,3 +11,4 @@ pyserial==3.5
 dvc[s3]==3.31.2
 pre-commit==3.5.0
 importlib-metadata==8.2.0
+platformio==6.1.16

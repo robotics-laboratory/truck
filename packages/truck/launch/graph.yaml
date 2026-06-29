@@ -9,3 +9,11 @@ launch:
 
 - include:
     file: $(find-pkg-share planner)/launch/planner.yaml
+    if: "$(var simulation)"
+
+- include:
+    file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml
+    if: "$(var simulation)"
+    arg:
+    - { name: "simulation", value: $(var simulation) }
+    - { name: "graph_planner", value: "true" }

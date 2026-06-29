@@ -6,6 +6,8 @@
 #include "model/model.h"
 #include "collision/collision_checker.h"
 
+#include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/color_rgba.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/occupancy_grid.h>
 #include <tf2_msgs/msg/tf_message.hpp>
@@ -15,6 +17,10 @@
 #include <rclcpp/rclcpp.hpp>
 #include <tf2_ros/qos.hpp>
 #include <tf2_ros/buffer.h>
+
+#include <memory>
+#include <optional>
+#include <string>
 
 namespace truck::planner::visualization {
 
@@ -30,7 +36,13 @@ class PlannerNode : public rclcpp::Node {
 
     std_msgs::msg::ColorRGBA getNodeColor(size_t node_index) const;
 
+    void reset() const;
+
+    void publish() const;
     void publishGrid() const;
+    void publishPath() const;
+    void publishFinish() const;
+    void publishStatus() const;
 
     std::optional<geom::Transform> getLatestTranform(
         const std::string& source, const std::string& target);
@@ -47,29 +59,37 @@ class PlannerNode : public rclcpp::Node {
 
     struct Signal {
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr graph = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr path = nullptr;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr finish = nullptr;
+        rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr status = nullptr;
     } signal_;
 
     struct State {
         std::shared_ptr<search::Grid> grid = nullptr;
+
         std::shared_ptr<collision::Map> distance_transform = nullptr;
 
         nav_msgs::msg::Odometry::SharedPtr odom = nullptr;
         nav_msgs::msg::OccupancyGrid::SharedPtr occupancy_grid = nullptr;
 
         std::optional<geom::Pose> ego_pose = std::nullopt;
-        std::optional<geom::Circle> finish_area = std::nullopt;
+        std::optional<geom::Square> finish_area = std::nullopt;
+
+        bool status = false;
     } state_;
 
     struct Parameters {
         search::GridParams grid;
+        search::EdgeParams edge;
+        search::SearcherParams searcher;
 
         struct NodeParams {
             double z_lev;
             double scale;
             std_msgs::msg::ColorRGBA base_color;
             std_msgs::msg::ColorRGBA ego_color;
-            std_msgs::msg::ColorRGBA finish_color;
-            std_msgs::msg::ColorRGBA finish_area_color;
+            std_msgs::msg::ColorRGBA finish_base_color;
+            std_msgs::msg::ColorRGBA finish_accent_color;
             std_msgs::msg::ColorRGBA collision_color;
         } node;
     } params_;
@@ -77,7 +97,10 @@ class PlannerNode : public rclcpp::Node {
     std::unique_ptr<model::Model> model_ = nullptr;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
     std::shared_ptr<collision::StaticCollisionChecker> checker_ = nullptr;
+    std::shared_ptr<search::EdgeCache> edge_cache_ = nullptr;
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
+
+    search::Searcher searcher_;
 };
 
 }  // namespace truck::planner::visualization

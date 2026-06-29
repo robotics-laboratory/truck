@@ -36,44 +36,64 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
         this->declare_parameter("resolution", 0.1),
         this->declare_parameter("radius", 20.0),
         this->declare_parameter("enable_lidar_grid", false),
+        this->declare_parameter("enable_lidar_cloud", false),
         this->declare_parameter("enable_camera_grid", false),
         this->declare_parameter("enable_camera_cloud", false),
         Limits<double>{
             this->declare_parameter("camera_view_hmin", -0.05),
             this->declare_parameter("camera_view_hmax", 0.01)},
-        this->declare_parameter("camera_view_distance", 2.0)};
+        this->declare_parameter("camera_view_distance", 2.0),
+        Limits<double>{
+            this->declare_parameter("lidar_view_hmin", -0.15),
+            this->declare_parameter("lidar_view_hmax", 0.05)}};
 
     RCLCPP_INFO(this->get_logger(), "frame_id: %s", params_.frame_id.c_str());
     RCLCPP_INFO(this->get_logger(), "resolution: %.2fm", params_.resolution);
     RCLCPP_INFO(this->get_logger(), "radius: %.2fm", params_.radius);
-    RCLCPP_INFO(this->get_logger(), "enable_camera_cloud: %d", params_.enable_camera_cloud);
     RCLCPP_INFO(this->get_logger(), "enable_lidar_grid: %d", params_.enable_lidar_grid);
+    RCLCPP_INFO(this->get_logger(), "enable_lidar_cloud: %d", params_.enable_lidar_cloud);
     RCLCPP_INFO(this->get_logger(), "enable_camera_grid: %d", params_.enable_camera_grid);
-    RCLCPP_INFO(this->get_logger(), "camera_view_distance: %.2f", params_.camera_view_distance);
+    RCLCPP_INFO(this->get_logger(), "enable_camera_cloud: %d", params_.enable_camera_cloud);
     RCLCPP_INFO(
         this->get_logger(),
         "camera_view_height: [%.3f, %.3f]m",
         params_.camera_view_height.min,
         params_.camera_view_height.max);
+    RCLCPP_INFO(this->get_logger(), "camera_view_distance: %.2f", params_.camera_view_distance);
+    RCLCPP_INFO(
+        this->get_logger(),
+        "lidar_view_height: [%.3f, %.3f]m",
+        params_.lidar_view_height.min,
+        params_.lidar_view_height.max);
 
     slot_.camera_info = this->create_subscription<sensor_msgs::msg::CameraInfo>(
-        "/camera/depth/camera_info",
+        "/camera/camera/depth/camera_info",
         10,
         std::bind(&OccupancyGridNode::handleCameraInfo, this, std::placeholders::_1));
 
     slot_.camera = this->create_subscription<sensor_msgs::msg::Image>(
-        "/camera/depth/image_rect_raw",
+        "/camera/camera/depth/image_rect_raw",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&OccupancyGridNode::handleCameraDepth, this, std::placeholders::_1));
 
-    slot_.lidar = create_subscription<sensor_msgs::msg::LaserScan>(
+    slot_.lidar_scan = create_subscription<sensor_msgs::msg::LaserScan>(
         "/lidar/scan",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&OccupancyGridNode::handleLaserScan, this, std::placeholders::_1));
 
+    slot_.lidar_cloud = create_subscription<sensor_msgs::msg::PointCloud2>(
+        "/livox/lidar",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&OccupancyGridNode::handlePointCloud, this, std::placeholders::_1));
+
     if (params_.enable_camera_cloud) {
         signal_.camera_cloud =
             this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera/pointcloud", 10);
+    }
+
+    if (params_.enable_lidar_cloud) {
+        signal_.lidar_cloud =
+            this->create_publisher<sensor_msgs::msg::PointCloud2>("/livox/lidar/trimmed", 10);
     }
 
     signal_.grid = create_publisher<nav_msgs::msg::OccupancyGrid>("/grid", 10);
@@ -143,7 +163,6 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
 
     sensor_msgs::PointCloud2Iterator<float> x(*odom_cloud, "x");
     sensor_msgs::PointCloud2Iterator<float> y(*odom_cloud, "y");
-    // it's also possible to add z coordinate for visualization
 
     const Limits limit{scan->range_min, scan->range_max};
 
@@ -173,6 +192,86 @@ void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstShared
 
     state_.odom_lidar_points = std::move(odom_cloud);
     publishOccupancyGrid();
+}
+
+void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_base) {
+    if (!params_.enable_lidar_grid) {
+        return;
+    }
+
+    const auto& from_id = cloud_base->header.frame_id;
+    const auto& to_id = params_.frame_id;
+
+    const auto tf_opt = getLatestTranform(from_id, to_id);
+    if (!tf_opt) {
+        RCLCPP_ERROR_THROTTLE(
+            get_logger(),
+            *get_clock(),
+            5000,
+            "No transform from '%s' to '%s'!",
+            from_id.c_str(),
+            to_id.c_str());
+        return;
+    }
+
+    const auto& tf = *tf_opt;
+
+    auto odom_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
+
+    odom_cloud->header.frame_id = to_id;
+    odom_cloud->header.stamp = cloud_base->header.stamp;
+
+    odom_cloud->is_dense = false;
+    odom_cloud->is_bigendian = false;
+
+    sensor_msgs::PointCloud2Modifier modifier(*odom_cloud);
+    modifier.setPointCloud2FieldsByString(1, "xyz");
+
+    const size_t cloud_points_count = cloud_base->width * cloud_base->height;
+    modifier.resize(cloud_points_count);
+
+    sensor_msgs::PointCloud2Iterator<float> odom_cloud_x(*odom_cloud, "x");
+    sensor_msgs::PointCloud2Iterator<float> odom_cloud_y(*odom_cloud, "y");
+    sensor_msgs::PointCloud2Iterator<float> odom_cloud_z(*odom_cloud, "z");
+
+    sensor_msgs::PointCloud2ConstIterator<float> cloud_base_x(*cloud_base, "x");
+    sensor_msgs::PointCloud2ConstIterator<float> cloud_base_y(*cloud_base, "y");
+    sensor_msgs::PointCloud2ConstIterator<float> cloud_base_z(*cloud_base, "z");
+
+    size_t point_n = 0;
+    for (size_t k = 0; k < cloud_points_count; ++k) {
+        const auto point_base = tf2::Vector3{*cloud_base_x, *cloud_base_y, *cloud_base_z};
+
+        ++cloud_base_x;
+        ++cloud_base_y;
+        ++cloud_base_z;
+
+        if (!params_.lidar_view_height.isMet(point_base.z())) {
+            continue;
+        }
+
+        const auto point_odom = tf(point_base);
+
+        *odom_cloud_x = point_odom.x();
+        *odom_cloud_y = point_odom.y();
+        *odom_cloud_z = point_odom.z();
+
+        ++point_n;
+        ++odom_cloud_x;
+        ++odom_cloud_y;
+        ++odom_cloud_z;
+    }
+
+    modifier.resize(point_n);
+    odom_cloud->height = 1;
+    odom_cloud->width = point_n;
+
+    state_.odom_lidar_points = std::move(odom_cloud);
+    publishOccupancyGrid();
+
+    if (params_.enable_lidar_cloud) {
+        signal_.lidar_cloud->publish(*state_.odom_lidar_points);
+    }
 }
 
 void OccupancyGridNode::handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPtr image) {

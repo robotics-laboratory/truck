@@ -32,9 +32,9 @@ class HardwareNode(Node):
         self.declare_parameter("odrive_axis", "axis1")
         self.declare_parameter("odrive_timeout", 250)
         self.declare_parameter("teensy_serial_port", "/dev/ttyTHS0")
-        self.declare_parameter("teensy_serial_speed", 500000)
+        self.declare_parameter("teensy_serial_speed", 921600)
         self.declare_parameter("status_report_rate", 1.0)
-        self.declare_parameter("telemetry_report_rate", 20.0)
+        self.declare_parameter("telemetry_report_rate", 100.0)
         self._model_config = self._get_param("model_config", str)
         self._steering_config = self._get_param("steering_config", str)
         self._odrive_axis = self._get_param("odrive_axis", str)
@@ -100,7 +100,8 @@ class HardwareNode(Node):
         )
 
     def _init_odrive(self):
-        self._odrive = odrive.find_any()
+        self._odrive = odrive.find_any(timeout=5)
+        self._log.info("odrive found!")
         self._axis = getattr(self._odrive, self._odrive_axis)
         self._axis.config.enable_watchdog = True
         self._axis.config.watchdog_timeout = self._odrive_timeout / 1000
@@ -149,39 +150,47 @@ class HardwareNode(Node):
 
     def _push_status(self):
         armed = self._axis.current_state != odrive.enums.AXIS_STATE_IDLE
-        errors = []
-        if self._odrive.error or self._axis.error:
-            errors = self._parse_odrive_errors()
+        errors = self._parse_odrive_errors()
         status = HardwareStatus(armed=armed, errors=errors)
         status.header.stamp = self.get_clock().now().to_msg()
         self._status_pub.publish(status)
 
     def _parse_odrive_errors(self):
-        root = {}
-        root_stack = []
-        curr_root = root
-        last_child = None
-        curr_level = 0
-        lines = repr(odrive.utils.format_errors(self._odrive)).split("\n")
-        for line in lines:
-            level = len(line) - len(line.lstrip())
-            name = line.split(":")[0].strip().split(".")[-1]
-            if level > curr_level:
-                curr_level = level
-                root_stack.append(curr_root)
-                curr_root = last_child
-            elif level < curr_level:
-                curr_level = level
-                curr_root = root_stack.pop(-1)
-            last_child = curr_root[name] = {}
-        errors = [f"system.{x}" for x in root["system"]]
-        axis_group = root[self._odrive_axis]
-        errors += [f"axis.{x}" for x in axis_group["axis"]]
-        errors += [f"motor.{x}" for x in axis_group["motor"]]
-        errors += [f"drv.{x}" for x in axis_group["DRV fault"]]
-        errors += [f"estimator.{x}" for x in axis_group["sensorless_estimator"]]
-        errors += [f"encoder.{x}" for x in axis_group["encoder"]]
-        errors += [f"controller.{x}" for x in axis_group["controller"]]
+        errors = []
+
+        def add_errors(prefix, value, enum_type):
+            try:
+                value = int(value or 0)
+            except (TypeError, ValueError):
+                return
+            if value == 0:
+                return
+
+            for item in enum_type:
+                item_value = int(item.value)
+                if item_value and value & item_value:
+                    errors.append(f"{prefix}.{item.name}")
+                    value &= ~item_value
+            if value:
+                errors.append(f"{prefix}.UNKNOWN_0x{value:08X}")
+
+        add_errors("system", getattr(self._odrive, "error", 0), odrive.enums.ODriveError)
+        add_errors("axis", getattr(self._axis, "error", 0), odrive.enums.AxisError)
+        add_errors(
+            "axis.active",
+            getattr(self._axis, "active_errors", 0),
+            odrive.enums.ODriveError,
+        )
+        add_errors(
+            "axis.disarm",
+            getattr(self._axis, "disarm_reason", 0),
+            odrive.enums.ODriveError,
+        )
+
+        last_drv_fault = int(getattr(self._axis, "last_drv_fault", 0) or 0)
+        if last_drv_fault:
+            errors.append(f"axis.drv_fault.0x{last_drv_fault:08X}")
+
         return errors
 
     def _push_telemetry(self):
@@ -190,7 +199,7 @@ class HardwareNode(Node):
         rps = self._axis.encoder.vel_estimate
         vel = self._model.motor_rps_to_linear_velocity(rps)
         curv = self._target_curvature
-        twist = pymodel.Twist(vel, curv)
+        twist = pymodel.Twist(curv, vel)
         twist = self._model.base_to_rear_twist(twist)
         steering = self._model.rear_twist_to_steering(twist)
         wheel_velocity = self._model.rear_twist_to_wheel_velocity(twist)

@@ -342,7 +342,6 @@ ENV ROS_PYTHON_VERSION=3
 
 RUN wget -q https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O /usr/share/keyrings/ros-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
-
     ENV RMW_IMPLEMENTATION="rmw_cyclonedds_cpp"
 
 RUN apt-get update -q \
@@ -526,6 +525,39 @@ RUN wget -qO - https://github.com/borglab/gtsam/archive/refs/tags/${GTSAM_VERSIO
     -DGTSAM_BUILD_TESTS=OFF \
     -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
     && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
+### INSTALL SOPHUS
+
+ARG SOPHUS_VERSION="1.22.10"
+
+RUN git clone https://github.com/strasdat/Sophus.git \
+    && cd Sophus \
+    && git checkout ${SOPHUS_VERSION} \
+    && mkdir -p build && cd build \
+    && cmake .. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DSOPHUS_USE_BASIC_LOGGING=ON \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/*
+
+### INSTALL LIVOX SDK2
+
+ARG LIVOX_VERSION="1.2.5"
+
+RUN wget -qO - https://github.com/Livox-SDK/Livox-SDK2/archive/refs/tags/v${LIVOX_VERSION}.tar.gz | tar -xz \
+    && cd Livox-SDK2-${LIVOX_VERSION} && mkdir build && cd build \
+    && cmake .. && make -j$(nproc) && make install \
+    && rm -rf /tmp/*
+
+### INSTALL RAPIDJSON
+
+ARG RAPIDJSON_VERSION="1.1.0"
+
+RUN wget -qO - https://github.com/Tencent/rapidjson/archive/refs/tags/v${RAPIDJSON_VERSION}.tar.gz | tar -xz \
+    && cd rapidjson-${RAPIDJSON_VERSION} && mkdir build && cd build \
+    && cmake .. -DRAPIDJSON_BUILD_DOC=OFF -DRAPIDJSON_BUILD_EXAMPLES=OFF -DRAPIDJSON_BUILD_TESTS=OFF \
+    && make -j$(nproc) && make install \
     && rm -rf /tmp/*
 
 ### INSTALL DEV PKGS
