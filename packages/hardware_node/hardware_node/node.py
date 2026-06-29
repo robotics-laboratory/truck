@@ -6,7 +6,7 @@ import rclpy
 from geometry_msgs.msg import Vector3
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
-from std_msgs.msg import Header, Int32
+from std_msgs.msg import Header
 from truck_msgs.msg import Control, ControlMode, HardwareStatus, HardwareTelemetry
 
 from hardware_node.teensy import TeensyBridge
@@ -76,21 +76,6 @@ class HardwareNode(Node):
             "/hardware/wheel/odometry",
             qos_profile=1,
         )
-        self._magnitometer_pub = self.create_publisher(
-            Vector3,
-            "/imu/mag",
-            qos_profile=1,
-        )
-        self._left_wheel_ticks = self.create_publisher(
-            Int32,
-            "/hardware/left_wheel_ticks",
-            qos_profile=1,
-        )
-        self._right_wheel_ticks = self.create_publisher(
-            Int32,
-            "/hardware/right_wheel_ticks",
-            qos_profile=1,
-        )
 
     def _init_ros_timers(self):
         self._status_timer = self.create_timer(
@@ -142,7 +127,6 @@ class HardwareNode(Node):
         self._push_status()
 
     def _enable_motor(self):
-        self._teensy.blink()
         self._odrive.clear_errors()
         self._axis.controller.input_vel = 0
         self._axis.requested_state = odrive.enums.AXIS_STATE_CLOSED_LOOP_CONTROL
@@ -166,45 +150,50 @@ class HardwareNode(Node):
 
     def _push_status(self):
         armed = self._axis.current_state != odrive.enums.AXIS_STATE_IDLE
-        errors = []
-        if self._odrive.error or self._axis.error:
-            errors = self._parse_odrive_errors()
+        errors = self._parse_odrive_errors()
         status = HardwareStatus(armed=armed, errors=errors)
         status.header.stamp = self.get_clock().now().to_msg()
         self._status_pub.publish(status)
 
     def _parse_odrive_errors(self):
-        root = {}
-        root_stack = []
-        curr_root = root
-        last_child = None
-        curr_level = 0
-        lines = repr(odrive.utils.format_errors(self._odrive)).split("\n")
-        for line in lines:
-            level = len(line) - len(line.lstrip())
-            name = line.split(":")[0].strip().split(".")[-1]
-            if level > curr_level:
-                curr_level = level
-                root_stack.append(curr_root)
-                curr_root = last_child
-            elif level < curr_level:
-                curr_level = level
-                curr_root = root_stack.pop(-1)
-            last_child = curr_root[name] = {}
-        errors = [f"system.{x}" for x in root["system"]]
-        axis_group = root[self._odrive_axis]
-        print("ERRORS:", axis_group)
-        # errors += [f"axis.{x}" for x in axis_group["axis"]]
-        # errors += [f"motor.{x}" for x in axis_group["motor"]]
-        # errors += [f"drv.{x}" for x in axis_group["DRV fault"]]
-        # errors += [f"estimator.{x}" for x in axis_group["sensorless_estimator"]]
-        # errors += [f"encoder.{x}" for x in axis_group["encoder"]]
-        # errors += [f"controller.{x}" for x in axis_group["controller"]]
+        errors = []
+
+        def add_errors(prefix, value, enum_type):
+            try:
+                value = int(value or 0)
+            except (TypeError, ValueError):
+                return
+            if value == 0:
+                return
+
+            for item in enum_type:
+                item_value = int(item.value)
+                if item_value and value & item_value:
+                    errors.append(f"{prefix}.{item.name}")
+                    value &= ~item_value
+            if value:
+                errors.append(f"{prefix}.UNKNOWN_0x{value:08X}")
+
+        add_errors("system", getattr(self._odrive, "error", 0), odrive.enums.ODriveError)
+        add_errors("axis", getattr(self._axis, "error", 0), odrive.enums.AxisError)
+        add_errors(
+            "axis.active",
+            getattr(self._axis, "active_errors", 0),
+            odrive.enums.ODriveError,
+        )
+        add_errors(
+            "axis.disarm",
+            getattr(self._axis, "disarm_reason", 0),
+            odrive.enums.ODriveError,
+        )
+
+        last_drv_fault = int(getattr(self._axis, "last_drv_fault", 0) or 0)
+        if last_drv_fault:
+            errors.append(f"axis.drv_fault.0x{last_drv_fault:08X}")
+
         return errors
 
     def _push_telemetry(self):
-        self._teensy.pull()
-        # self._log.info(f"{self._teensy._odom_servo_values}")
         header = Header(stamp=self.get_clock().now().to_msg(), frame_id="base")
 
         rps = self._axis.encoder.vel_estimate
@@ -215,118 +204,28 @@ class HardwareNode(Node):
         steering = self._model.rear_twist_to_steering(twist)
         wheel_velocity = self._model.rear_twist_to_wheel_velocity(twist)
 
-        # ENC_CPR = 50
-        # TIMEOUT = 0.5
-        # front_left_speed = -1
-        # front_right_speed = -1
-        # if time.perf_counter() - self._teensy._odom_wheels_ts < TIMEOUT:
-        #    # const = 1 / ENC_CPR * 2 * math.pi
-        #    front_left_speed = self._teensy._odom_wheels_values["left"]  # * const
-        #    front_right_speed = self._teensy._odom_wheels_values["right"]  # * const
-        # left_servo_angle = -1
-        # right_servo_angle = -1
-        # if time.perf_counter() - self._teensy._odom_servo_ts < TIMEOUT:
-        #    left_servo_angle = float(self._teensy._odom_servo_values["left"])
-        #    right_servo_angle = float(self._teensy._odom_servo_values["right"])
-        # print(front_left_speed, front_right_speed)
-
-        # servo_ang_min = -40.5
-        # servo_ang_max = 54.6
-        # left_adc_min = 7918
-        # left_adc_max = 13198
-        # right_adc_min = 4530
-        # right_adc_max = 9780
-
-        # left_adc_raw = self._teensy._odom_servo_values["left"]
-        # right_adc_raw = self._teensy._odom_servo_values["right"]
-
-        # left_adc_coef = (servo_ang_max - servo_ang_min) / (left_adc_max - left_adc_min)
-        # right_adc_coef = (servo_ang_max - servo_ang_min) / (right_adc_max - right_adc_min)
-
-        # curr_left_steering = servo_ang_max - (left_adc_raw - left_adc_min) * left_adc_coef
-        # curr_right_steering = -servo_ang_min - (right_adc_raw - right_adc_min) * right_adc_coef
-        # # self._log.info(f"raw adc: {left_adc_raw} | {right_adc_raw}")
-        # # self._log.info(f"target: {steering.left.degrees} | {steering.right.degrees}")
-
-        # curr_left_steering = np.interp(
-        #    np.deg2rad(self._teensy._odom_wheels_values["left"]),
-        #    self._teensy._map[:, 1],
-        #    self._teensy._map[:, 0],
-        # )
-        # curr_right_steering = -np.interp(
-        #    -np.deg2rad(self._teensy._odom_wheels_values["right"]),
-        #    self._teensy._map[:, 1],
-        #    self._teensy._map[:, 0],
-        # )
-
-        # self._log.info(f"curr left: {curr_left_steering:.2f}")
-
-        # curr_left_steering = left_adc_zero - self._teensy._odom_servo_values["left"]
-        # curr_left_steering *= left_adc_coef
-
         telemetry = HardwareTelemetry(
             header=header,
             current_rps=rps,
             target_rps=self._axis.controller.input_vel,
             battery_voltage=self._odrive.vbus_voltage,
             battery_current=self._odrive.ibus,
-            # target_left_steering=float(self._teensy._target_servo_values["left"]),
-            # current_left_steering=curr_left_steering,
             target_left_steering=steering.left.radians,
             current_left_steering=steering.left.radians,
             target_right_steering=steering.right.radians,
             current_right_steering=steering.right.radians,
-            # current_left_steering=steering.left.radians,
-            # target_right_steering=steering.right.radians,
-            # current_right_steering=steering.right.radians,
-            # rear_left_wheel_velocity=0.0,
-            # rear_right_wheel_velocity=0.0,
-            # front_left_wheel_velocity=wheel_velocity.front_left,
-            # front_right_wheel_velocity=wheel_velocity.front_right,
-            # target_left_steering=-1,
-            # current_left_steering=float(self._teensy._odom_servo_values["left"]),
-            # current_right_steering=float(self._teensy._odom_servo_values["left"]),
-            # target_right_steering=-1,
-            # current_right_steering=float(self._teensy._odom_servo_values["right"]),
-            # rear_left_wheel_velocity=-1,
-            # rear_right_wheel_velocity=-1,
-            front_left_wheel_velocity=float(
-                self._teensy._odom_wheels_values["front_left"]
-            ),
-            front_right_wheel_velocity=float(
-                self._teensy._odom_wheels_values["front_right"]
-            ),
-            rear_left_wheel_velocity=float(
-                self._teensy._odom_wheels_values["rear_left"]
-            ),
-            rear_right_wheel_velocity=float(
-                self._teensy._odom_wheels_values["rear_right"]
-            ),
+            rear_left_wheel_velocity=wheel_velocity.rear_left,
+            rear_right_wheel_velocity=wheel_velocity.rear_right,
+            front_left_wheel_velocity=wheel_velocity.front_left,
+            front_right_wheel_velocity=wheel_velocity.front_right,
         )
 
         self._telemetry_pub.publish(telemetry)
-        self._magnitometer_pub.publish(
-            Vector3(
-                x=float(self._teensy._magnitometer_values["x_axis"]),
-                y=float(self._teensy._magnitometer_values["y_axis"]),
-                z=float(self._teensy._magnitometer_values["z_axis"]),
-            )
-        )
 
         odom = Odometry(header=header)
         odom.twist.twist.linear = Vector3(x=float(vel), y=0.0, z=0.0)
         odom.twist.covariance = self._odom_covariance
         self._odom_pub.publish(odom)
-
-        for l_val in self._teensy._left_wheel_values:
-            self._left_wheel_ticks.publish(Int32(data=l_val))
-
-        self._teensy._left_wheel_values.clear()
-
-        for r_val in self._teensy._right_wheel_values:
-            self._right_wheel_ticks.publish(Int32(data=r_val))
-
-        self._teensy._right_wheel_values.clear()
 
     @cached_property
     def _odom_covariance(self):

@@ -8,6 +8,7 @@
 
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
@@ -30,6 +31,8 @@ class OccupancyGridNode : public rclcpp::Node {
 
   private:
     void handleCameraDepth(sensor_msgs::msg::Image::ConstSharedPtr image);
+
+    void handleLaserScan(sensor_msgs::msg::LaserScan::ConstSharedPtr scan);
 
     void handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud);
 
@@ -54,7 +57,8 @@ class OccupancyGridNode : public rclcpp::Node {
     } params_{};
 
     struct Slots {
-        rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr lidar = nullptr;
+        rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar_scan = nullptr;
+        rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr lidar_cloud = nullptr;
         rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr camera = nullptr;
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info = nullptr;
     } slot_;

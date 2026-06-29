@@ -76,7 +76,12 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
         rclcpp::QoS(1).reliability(qos),
         std::bind(&OccupancyGridNode::handleCameraDepth, this, std::placeholders::_1));
 
-    slot_.lidar = create_subscription<sensor_msgs::msg::PointCloud2>(
+    slot_.lidar_scan = create_subscription<sensor_msgs::msg::LaserScan>(
+        "/lidar/scan",
+        rclcpp::QoS(1).reliability(qos),
+        std::bind(&OccupancyGridNode::handleLaserScan, this, std::placeholders::_1));
+
+    slot_.lidar_cloud = create_subscription<sensor_msgs::msg::PointCloud2>(
         "/livox/lidar",
         rclcpp::QoS(1).reliability(qos),
         std::bind(&OccupancyGridNode::handlePointCloud, this, std::placeholders::_1));
@@ -113,6 +118,80 @@ std::optional<tf2::Transform> OccupancyGridNode::getLatestTranform(
     } catch (const tf2::TransformException& ex) {
         return std::nullopt;
     }
+}
+
+void OccupancyGridNode::handleLaserScan(sensor_msgs::msg::LaserScan::ConstSharedPtr scan) {
+    if (!params_.enable_lidar_grid) {
+        return;
+    }
+
+    const auto& from_id = scan->header.frame_id;
+    const auto& to_id = params_.frame_id;
+
+    const auto tf_opt = getLatestTranform(from_id, to_id);
+    if (!tf_opt) {
+        RCLCPP_ERROR_THROTTLE(
+            get_logger(),
+            *get_clock(),
+            5000,
+            "No transform from '%s' to '%s'!",
+            from_id.c_str(),
+            to_id.c_str());
+        return;
+    }
+
+    const geom::Transform tf(*tf_opt);
+
+    auto odom_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
+
+    odom_cloud->header.frame_id = to_id;
+    odom_cloud->header.stamp = scan->header.stamp;
+
+    odom_cloud->is_dense = false;
+    odom_cloud->is_bigendian = false;
+
+    sensor_msgs::PointCloud2Modifier modifier(*odom_cloud);
+    modifier.setPointCloud2Fields(
+        2,
+        "x",
+        1,
+        sensor_msgs::msg::PointField::FLOAT32,
+        "y",
+        1,
+        sensor_msgs::msg::PointField::FLOAT32);
+    modifier.resize(scan->ranges.size());
+
+    sensor_msgs::PointCloud2Iterator<float> x(*odom_cloud, "x");
+    sensor_msgs::PointCloud2Iterator<float> y(*odom_cloud, "y");
+
+    const Limits limit{scan->range_min, scan->range_max};
+
+    size_t point_n = 0;
+    for (size_t k = 0; k < scan->ranges.size(); ++k) {
+        const double range = scan->ranges[k];
+        const bool valid = std::isnormal(range) && limit.isMet(range);
+
+        if (!valid) {
+            continue;
+        }
+
+        const geom::Angle angle(scan->angle_min + k * scan->angle_increment);
+        const geom::Vec2 base_point = range * geom::Vec2::fromAngle(angle);
+        const geom::Vec2 odom_point = tf.apply(base_point);
+        *x = odom_point.x;
+        *y = odom_point.y;
+
+        ++point_n;
+        ++x;
+        ++y;
+    }
+
+    modifier.resize(point_n);
+    odom_cloud->height = 1;
+    odom_cloud->width = point_n;
+
+    state_.odom_lidar_points = std::move(odom_cloud);
+    publishOccupancyGrid();
 }
 
 void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_base) {

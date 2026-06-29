@@ -54,8 +54,6 @@ class TeensyBridge:
         }
         self._target_servo_values = {"left": 0, "right": 0}
         self._magnitometer_values = {"x_axis": 0, "y_axis": 0, "z_axis": 0}
-        self._left_wheel_values = []
-        self._right_wheel_values = []
 
     @noexcept
     def _parse_one(self, chunk):
@@ -85,12 +83,6 @@ class TeensyBridge:
             self._magnitometer_values["x_axis"] = magn_x
             self._magnitometer_values["y_axis"] = magn_y
             self._magnitometer_values["z_axis"] = magn_z
-        elif msgid == 5:
-            wheel_tick = struct.unpack("<i", data)
-            self._left_wheel_values.append(wheel_tick[0])
-        elif msgid == 6:
-            wheel_tick = struct.unpack("<i", data)
-            self._right_wheel_values.append(wheel_tick[0])
 
     def pull(self):
         while self._serial.in_waiting:
@@ -131,46 +123,3 @@ class TeensyBridge:
         packet = struct.pack("BB", 5, 1 if (activate) else 0)
         packet = cobs.encode(packet) + b"\x00"
         self._serial.write(packet)
-
-
-if __name__ == "__main__":
-    import logging
-
-    logging.basicConfig(level="INFO")
-    logger = logging.getLogger("teensy")
-    mcu = TeensyBridge(
-        logger=logger,
-        serial_port="/dev/ttyTHS0",
-        serial_speed=921600,
-        steering_csv_path="../resource/steering.csv",
-        servo_home_angles={"left": np.deg2rad(98), "right": np.deg2rad(172)},
-    )
-
-    import time
-
-    def read_loop():
-        while True:
-            mcu.pull()
-
-    read_loop()
-    # t = Thread(target=read_loop)
-    # t.start()
-
-    # flag = False
-    # while True:
-    #     l, r = 0, 0
-    #     if flag: r = np.deg2rad(20)
-    #     mcu.push(l, r)
-    #     flag = not flag
-    #     time.sleep(3)
-
-    # input("enter to send 0, 0")
-    # mcu.push(0, 0)
-
-    # input("enter to send 20deg, 0")
-    # mcu.push(0, 0.349066)
-
-    # input("enter to send 0, 0")
-    # mcu.push(0, 0)
-
-    # t.join()

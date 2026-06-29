@@ -38,6 +38,3 @@ launch:
     arg:
     - { name: "simulation", value: "$(var simulation)" }
     - { name: "qos", value: "$(var qos)" }
-
-# - include:
-#     file: $(find-pkg-share truck)/launch/bridge.yaml
