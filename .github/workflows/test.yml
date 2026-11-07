@@ -52,6 +52,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with: { submodules: recursive }
 
       - name: Build ROS2 packages
         run: make build-all
