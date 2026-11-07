@@ -53,7 +53,7 @@ class OccupancyGridNode : public rclcpp::Node {
         bool enable_camera_cloud = false;
         Limits<double> camera_view_height = {-0.165, 0.15};
         double camera_view_distance = 2;
-        Limits<double> lidar_view_height = {-0.15, 0.05};
+        Limits<double> lidar_view_height = {-0.15, 0.1};
     } params_{};
 
     struct Slots {

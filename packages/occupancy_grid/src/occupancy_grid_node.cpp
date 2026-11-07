@@ -45,7 +45,7 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
         this->declare_parameter("camera_view_distance", 2.0),
         Limits<double>{
             this->declare_parameter("lidar_view_hmin", -0.15),
-            this->declare_parameter("lidar_view_hmax", 0.05)}};
+            this->declare_parameter("lidar_view_hmax", 0.1)}};
 
     RCLCPP_INFO(this->get_logger(), "frame_id: %s", params_.frame_id.c_str());
     RCLCPP_INFO(this->get_logger(), "resolution: %.2fm", params_.resolution);
