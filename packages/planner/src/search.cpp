@@ -360,20 +360,23 @@ geom::Poses Searcher::State::constructPath(const geom::Pose& ego) const {
 void Searcher::buildState() {
     current_state_.clear();
 
-    Vertex& current_vertex = vertices_[current_vertex_index_];
-    bool prev_vertex_exist = current_vertex.state.prev_vertex_index.has_value();
+    // Walk back from the finish vertex to the start one by indices.
+    // Note: do not keep a reference to vertices_ and assign to it, it would overwrite vertices.
+    size_t vertex_index = current_vertex_index_;
 
-    while (prev_vertex_exist) {
-        const Vertex& prev_vertex = vertices_[current_vertex.state.prev_vertex_index.value()];
-        geom::Vec2 prev_vertex_pos = grid_->getNodeByIndex(prev_vertex.node_index).point;
+    while (vertices_[vertex_index].state.prev_vertex_index.has_value()) {
+        const Vertex& vertex = vertices_[vertex_index];
+        const size_t prev_vertex_index = vertex.state.prev_vertex_index.value();
+        const Vertex& prev_vertex = vertices_[prev_vertex_index];
 
-        geom::Poses edge_poses =
-            edge_cache_->getPosesByEdgeIndex(current_vertex.state.prev_edge_index.value());
+        const geom::Vec2 prev_vertex_pos = grid_->getNodeByIndex(prev_vertex.node_index).point;
+
+        const geom::Poses edge_poses =
+            edge_cache_->getPosesByEdgeIndex(vertex.state.prev_edge_index.value());
 
         current_state_.addEdge(edge_poses, prev_vertex_pos);
 
-        current_vertex = prev_vertex;
-        prev_vertex_exist = current_vertex.state.prev_vertex_index.has_value();
+        vertex_index = prev_vertex_index;
     }
 
     current_state_.reverse();
