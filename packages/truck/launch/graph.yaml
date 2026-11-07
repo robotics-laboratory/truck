@@ -1,5 +1,8 @@
 launch:
 - arg: { name: "simulation", default: "$(env TRUCK_SIMULATION)" }
+# path planner: "graph" or "waypoints", see truck.yaml
+- arg: { name: "planner", default: "graph" }
+- let: { name: "graph_planner", value: "$(equals $(var planner) graph)" }
 
 - let: { name: "env", value: "simulator", if: "$(var simulation)" }
 - let: { name: "env", value: "truck", unless: "$(var simulation)" }
@@ -7,13 +10,16 @@ launch:
 - include:
     file: $(find-pkg-share truck)/launch/$(var env).yaml
 
-- include:
-    file: $(find-pkg-share planner)/launch/planner.yaml
+# on the real truck planner and follower are started by truck.yaml
+- group:
     if: "$(var simulation)"
+    children:
+    - include:
+        file: $(find-pkg-share planner)/launch/planner.yaml
+        if: "$(var graph_planner)"
 
-- include:
-    file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml
-    if: "$(var simulation)"
-    arg:
-    - { name: "simulation", value: $(var simulation) }
-    - { name: "graph_planner", value: "true" }
+    - include:
+        file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml
+        arg:
+        - { name: "simulation", value: $(var simulation) }
+        - { name: "graph_planner", value: "$(var graph_planner)" }
