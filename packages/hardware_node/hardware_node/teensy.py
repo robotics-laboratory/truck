@@ -74,9 +74,9 @@ class TeensyBridge:
             }
             # self._log.debug(f"wheel: {self._odom_wheels_values}")
         elif msgid == 2:
-            l, r = struct.unpack("<ff", data)
+            left, right = struct.unpack("<ff", data)
             self._odom_servo_ts = time.perf_counter()
-            self._odom_servo_values = {"left": l, "right": r}
+            self._odom_servo_values = {"left": left, "right": right}
         elif msgid == 4:
             magn_x, magn_y, magn_z = struct.unpack("<HHH", data)
             self._magnitometer_ts = time.perf_counter()

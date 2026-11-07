@@ -11,7 +11,7 @@ rtspAddress: :8554
 webrtcAddress: :8889
 webrtcLocalUDPAddress: :8150
 webrtcIPsFromInterfaces: no
-webrtcAdditionalHosts: ['100.64.0.14', '192.168.2.158', '192.168.1.110']
+webrtcAdditionalHosts: ["100.64.0.14", "192.168.2.158", "192.168.1.110"]
 
 paths:
   cam:

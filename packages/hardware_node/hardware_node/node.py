@@ -174,7 +174,9 @@ class HardwareNode(Node):
             if value:
                 errors.append(f"{prefix}.UNKNOWN_0x{value:08X}")
 
-        add_errors("system", getattr(self._odrive, "error", 0), odrive.enums.ODriveError)
+        add_errors(
+            "system", getattr(self._odrive, "error", 0), odrive.enums.ODriveError
+        )
         add_errors("axis", getattr(self._axis, "error", 0), odrive.enums.AxisError)
         add_errors(
             "axis.active",

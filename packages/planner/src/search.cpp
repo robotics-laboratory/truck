@@ -67,10 +67,7 @@ void Grid::calculateNodesIndices() {
 
     Box finish_area_box(Point(p1.x, p1.y), Point(p2.x, p2.y));
 
-    cache_.rtree.query(
-        bg::index::intersects(finish_area_box),
-        std::back_inserter(indexed_points)
-    );
+    cache_.rtree.query(bg::index::intersects(finish_area_box), std::back_inserter(indexed_points));
 
     for (const auto& indexed_point : indexed_points) {
         cache_.finish_area_indices.insert(indexed_point.second);
@@ -113,11 +110,7 @@ bool Grid::build() {
     return true;
 }
 
-
-double Vertex::SearchState::getTotalCost() const {
-    return start_cost + heuristic_cost;
-}
-
+double Vertex::SearchState::getTotalCost() const { return start_cost + heuristic_cost; }
 
 size_t EdgeCache::getYawsCount() const { return edge_params_.yaws_count; }
 
@@ -145,7 +138,6 @@ const geom::Poses& EdgeCache::getPosesByEdgeIndex(size_t index) const {
     return edges_[index].poses;
 }
 
-
 PrimitiveCache::PrimitiveCache(const EdgeParams& edge_params) {
     edge_params_ = edge_params;
     parseJSON();
@@ -157,14 +149,11 @@ EdgesInfo PrimitiveCache::getEdgesInfoByYawIndex(size_t yaw_index) const {
     for (size_t edge_index : edges_indices_[yaw_index]) {
         const Edge& edge = edges_[edge_index];
 
-        edges_info.push_back(
-            EdgeInfo{
-                .index = edge_index,
-                .finish_point = edge.poses.back().pos,
-                .finish_yaw_index = edge.finish_yaw_index,
-                .len = edge.len
-            }
-        );
+        edges_info.push_back(EdgeInfo{
+            .index = edge_index,
+            .finish_point = edge.poses.back().pos,
+            .finish_yaw_index = edge.finish_yaw_index,
+            .len = edge.len});
     }
 
     return edges_info;
@@ -174,9 +163,8 @@ void PrimitiveCache::parseJSON() {
     std::ifstream file(edge_params_.primitive.json_path);
     json data = json::parse(file);
 
-    const auto& indices =
-        data.contains("primitives_indices") ? data["primitives_indices"]
-                                            : data["yaw_to_primitives_indexing"];
+    const auto& indices = data.contains("primitives_indices") ? data["primitives_indices"]
+                                                              : data["yaw_to_primitives_indexing"];
     edges_indices_ = indices.get<std::vector<std::vector<size_t>>>();
 
     for (json::iterator it = data["primitives"].begin(); it != data["primitives"].end(); it++) {
@@ -190,31 +178,20 @@ void PrimitiveCache::parseJSON() {
             poses.push_back({geom::Vec2(x[i], y[i]), geom::AngleVec2(geom::Angle(theta[i]))});
         }
 
-        edges_.push_back(
-            Edge{
-                .poses = poses,
-                .finish_yaw_index = getYawIndexFromAngle(theta.back()),
-                .len = len
-            }
-        );
+        edges_.push_back(Edge{
+            .poses = poses, .finish_yaw_index = getYawIndexFromAngle(theta.back()), .len = len});
     }
 
     RCLCPP_INFO_STREAM(
         rclcpp::get_logger(""),
-        "JSON was successfully parsed. Total primitives count: " + std::to_string(edges_.size())
-    );
+        "JSON was successfully parsed. Total primitives count: " + std::to_string(edges_.size()));
 }
-
 
 Searcher::Searcher() {}
 
-void Searcher::setParams(const SearcherParams& params) {
-    params_ = params;
-}
+void Searcher::setParams(const SearcherParams& params) { params_ = params; }
 
-void Searcher::setGrid(std::shared_ptr<const Grid> grid) {
-    grid_ = std::move(grid);
-}
+void Searcher::setGrid(std::shared_ptr<const Grid> grid) { grid_ = std::move(grid); }
 
 void Searcher::setEdgeCache(std::shared_ptr<const EdgeCache> edge_cache) {
     edge_cache_ = std::move(edge_cache);
@@ -257,7 +234,7 @@ size_t Searcher::getVertexIndexFromOpenSet() const {
 }
 
 bool Searcher::collisionFree(const EdgeInfo& edge) const {
-    const geom::Vec2& origin = \
+    const geom::Vec2& origin =
         grid_->getNodeByIndex(vertices_[current_vertex_index_].node_index).point;
 
     for (const geom::Pose& pose : edge_cache_->getPosesByEdgeIndex(edge.index)) {
@@ -270,7 +247,7 @@ bool Searcher::collisionFree(const EdgeInfo& edge) const {
 }
 
 bool Searcher::insideBorders(const EdgeInfo& edge) const {
-    const geom::Vec2& origin = \
+    const geom::Vec2& origin =
         grid_->getNodeByIndex(vertices_[current_vertex_index_].node_index).point;
 
     geom::Vec2 edge_global_finish_pos = origin + edge.finish_point;
@@ -292,10 +269,7 @@ std::optional<size_t> Searcher::getVertexIndex(size_t yaw_index, size_t node_ind
     return index;
 }
 
-
-bool Searcher::State::empty() const {
-    return edges.size() == 0;
-}
+bool Searcher::State::empty() const { return edges.size() == 0; }
 
 void Searcher::State::clear() {
     edges.clear();
@@ -343,11 +317,7 @@ size_t Searcher::State::getNearestEdgeIndexByEgo(const geom::Pose& ego) const {
     std::vector<IndexedPoint> indexed_points;
 
     rtree_poses.query(
-        bg::index::nearest(
-            Point(ego.pos.x, ego.pos.y), 1
-        ),
-        std::back_inserter(indexed_points)
-    );
+        bg::index::nearest(Point(ego.pos.x, ego.pos.y), 1), std::back_inserter(indexed_points));
 
     return indexed_points.back().second;
 }
@@ -363,7 +333,9 @@ geom::Poses Searcher::State::constructPath(const geom::Pose& ego) const {
     for (size_t i = 0; i < edges.size(); i++) {
         bool next_edge_exist = (i + 1) < edges.size();
         size_t max_j = edges[i].size();
-        if (next_edge_exist) { max_j -= 1; }
+        if (next_edge_exist) {
+            max_j -= 1;
+        }
 
         for (size_t j = 0; j < max_j; j++) {
             rtree_path.insert(
@@ -376,8 +348,7 @@ geom::Poses Searcher::State::constructPath(const geom::Pose& ego) const {
         std::vector<IndexedPoint> indexed_points;
 
         rtree_path.query(
-            bg::index::nearest(Point(ego.pos.x, ego.pos.y), 1), std::back_inserter(indexed_points)
-        );
+            bg::index::nearest(Point(ego.pos.x, ego.pos.y), 1), std::back_inserter(indexed_points));
 
         size_t index = indexed_points.back().second;
         path.erase(path.begin(), path.begin() + index);
@@ -415,9 +386,7 @@ void Searcher::buildState() {
     prev_state_ = current_state_;
 }
 
-void Searcher::reset() {
-    prev_state_.clear();
-}
+void Searcher::reset() { prev_state_.clear(); }
 
 void Searcher::resetVertices() {
     open_set_.clear();
@@ -457,17 +426,15 @@ bool Searcher::findPath() {
     size_t start_yaw_index = edge_cache_->getYawIndexFromAngle(start_theta);
     size_t start_node_index = grid_->getNodeIndexByPoint(start_pose.pos);
 
-    Vertex start_vertex {
+    Vertex start_vertex{
         .yaw_index = start_yaw_index,
         .node_index = start_node_index,
 
-        .state = Vertex::SearchState {
+        .state = Vertex::SearchState{
             .start_cost = 0.0,
             .heuristic_cost = calculateHeuristic(start_node_index),
             .prev_vertex_index = std::nullopt,
-            .prev_edge_index = std::nullopt
-        }
-    };
+            .prev_edge_index = std::nullopt}};
 
     addVertex(start_vertex);
 
@@ -493,40 +460,36 @@ bool Searcher::findPath() {
                 size_t neighbor_vertex_yaw_index = edge.finish_yaw_index;
 
                 size_t neighbor_vertex_node_index = grid_->getNodeIndexByPoint(
-                    edge.finish_point + grid_->getNodeByIndex(node_index).point
-                );
+                    edge.finish_point + grid_->getNodeByIndex(node_index).point);
 
-                std::optional<size_t> neighbor_vertex_index = \
+                std::optional<size_t> neighbor_vertex_index =
                     getVertexIndex(neighbor_vertex_yaw_index, neighbor_vertex_node_index);
 
                 if (!neighbor_vertex_index.has_value()) {
-                    Vertex neighbor_vertex {
+                    Vertex neighbor_vertex{
                         .yaw_index = neighbor_vertex_yaw_index,
                         .node_index = neighbor_vertex_node_index,
 
-                        .state = Vertex::SearchState {
+                        .state = Vertex::SearchState{
                             .start_cost =
                                 vertices_[current_vertex_index_].state.start_cost + edge.len,
                             .heuristic_cost = calculateHeuristic(neighbor_vertex_node_index),
                             .prev_vertex_index = current_vertex_index_,
-                            .prev_edge_index = edge.index
-                        }
-                    };
+                            .prev_edge_index = edge.index}};
 
                     addVertex(neighbor_vertex);
                 } else {
                     Vertex& neighbor_vertex = vertices_[neighbor_vertex_index.value()];
 
-                    double new_start_cost = \
+                    double new_start_cost =
                         vertices_[current_vertex_index_].state.start_cost + edge.len;
 
                     if (new_start_cost < neighbor_vertex.state.start_cost) {
-                        neighbor_vertex.state = Vertex::SearchState {
+                        neighbor_vertex.state = Vertex::SearchState{
                             .start_cost = new_start_cost,
                             .heuristic_cost = calculateHeuristic(neighbor_vertex.node_index),
                             .prev_vertex_index = current_vertex_index_,
-                            .prev_edge_index = edge.index
-                        };
+                            .prev_edge_index = edge.index};
                     }
                 }
             }

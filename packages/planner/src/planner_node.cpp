@@ -61,17 +61,14 @@ PlannerNode::PlannerNode() : Node("planner") {
     search::GridParams grid_params{
         .width = static_cast<size_t>(this->declare_parameter<int>("grid.width")),
         .height = static_cast<size_t>(this->declare_parameter<int>("grid.height")),
-        .resolution = this->declare_parameter<double>("grid.resolution")
-    };
+        .resolution = this->declare_parameter<double>("grid.resolution")};
 
     search::EdgeParams edge_params{
         .yaws_count = static_cast<size_t>(this->declare_parameter<int>("edge.yaws_count")),
         .type = this->declare_parameter<std::string>("edge.type"),
 
-        .primitive = search::EdgeParams::PrimitiveParams {
-            .json_path = this->declare_parameter<std::string>("edge.primitive.json_path")
-        }
-    };
+        .primitive = search::EdgeParams::PrimitiveParams{
+            .json_path = this->declare_parameter<std::string>("edge.primitive.json_path")}};
 
     search::SearcherParams searcher_params{
         .max_vertices_count =
@@ -79,8 +76,7 @@ PlannerNode::PlannerNode() : Node("planner") {
         .finish_area_size = this->declare_parameter<double>("searcher.finish_area_size"),
         .min_obstacle_distance = this->declare_parameter<double>("searcher.min_obstacle_distance"),
         .max_node_position_error =
-            this->declare_parameter<double>("searcher.max_node_position_error")
-    };
+            this->declare_parameter<double>("searcher.max_node_position_error")};
 
     params_ = Parameters{
         .grid = grid_params,
@@ -93,11 +89,11 @@ PlannerNode::PlannerNode() : Node("planner") {
             .z_lev = this->declare_parameter<double>("node.z_lev"),
             .scale = this->declare_parameter<double>("node.scale"),
 
-            .base_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node.color_rgba.base")),
+            .base_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node.color_rgba.base")),
 
-            .ego_color = toColorRGBA(
-                this->declare_parameter<std::vector<double>>("node.color_rgba.ego")),
+            .ego_color =
+                toColorRGBA(this->declare_parameter<std::vector<double>>("node.color_rgba.ego")),
 
             .finish_base_color = toColorRGBA(
                 this->declare_parameter<std::vector<double>>("node.color_rgba.finish_base")),
@@ -107,8 +103,7 @@ PlannerNode::PlannerNode() : Node("planner") {
 
             .collision_color = toColorRGBA(
                 this->declare_parameter<std::vector<double>>("node.color_rgba.collision")),
-        }
-    };
+        }};
 
     model_ = std::make_unique<model::Model>(
         model::load(this->get_logger(), this->declare_parameter("model_config", "")));
@@ -188,8 +183,7 @@ void PlannerNode::onFinishPoint(const geometry_msgs::msg::PointStamped::SharedPt
         point = tf_opt->apply(geom::toVec2(*msg));
     }
 
-    state_.finish_area =
-        geom::Square{.center = point, .size = params_.searcher.finish_area_size};
+    state_.finish_area = geom::Square{.center = point, .size = params_.searcher.finish_area_size};
 
     searcher_.reset();
 }
@@ -206,8 +200,8 @@ std_msgs::msg::ColorRGBA PlannerNode::getNodeColor(size_t node_index) const {
 
     std_msgs::msg::ColorRGBA node_color = params_.node.base_color;
 
-    if (state_.grid->getFinishAreaNodesIndices().find(node_index) !=
-        state_.grid->getFinishAreaNodesIndices().end()) {
+    if (state_.grid->getFinishAreaNodesIndices().find(node_index)
+        != state_.grid->getFinishAreaNodesIndices().end()) {
         node_color = params_.node.finish_base_color;
 
         if (node_index == state_.grid->getFinishNodeIndex()) {
@@ -334,12 +328,10 @@ void PlannerNode::doPlanningLoop() {
         return;
     }
 
-    state_.grid = std::make_shared<search::Grid>(
-        search::Grid(params_.grid, model_->shape())
-            .setEgoPose(state_.ego_pose.value())
-            .setFinishArea(state_.finish_area.value())
-            .setCollisionChecker(checker_)
-    );
+    state_.grid = std::make_shared<search::Grid>(search::Grid(params_.grid, model_->shape())
+                                                     .setEgoPose(state_.ego_pose.value())
+                                                     .setFinishArea(state_.finish_area.value())
+                                                     .setCollisionChecker(checker_));
 
     if (!state_.grid->build()) {
         RCLCPP_WARN(this->get_logger(), "Finish point is out of grid bounds!");

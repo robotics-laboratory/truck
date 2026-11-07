@@ -6,4 +6,4 @@ launch:
     output: "log"
 
     param:
-    - {name: "use_compression", value: false}
+    - { name: "use_compression", value: false }
