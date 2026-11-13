@@ -47,9 +47,14 @@ jobs:
           docker pull "$IMAGE"
           df -h /
 
-      # The image entrypoint is `zsh -lc`, so the command is passed as one string
+      # The image entrypoint is `zsh -lc`, so the command is passed as one string.
+      # setuptools in the image is newer than colcon's ament_python symlink-install
+      # path expects (it calls `setup.py develop --editable`, which newer setuptools
+      # rejects) - pin it down before building, same as make build-all on a fresh checkout.
       - name: Build ROS2 packages
-        run: docker run --rm -v "$PWD:/truck" -w /truck "$IMAGE" "make build-all"
+        run: |
+          docker run --rm -v "$PWD:/truck" -w /truck "$IMAGE" \
+            "pip3 install --no-cache-dir 'setuptools==65.5.1' && make build-all"
 
       - name: Test ROS2 packages
         run: docker run --rm -v "$PWD:/truck" -w /truck "$IMAGE" "make test-all"
