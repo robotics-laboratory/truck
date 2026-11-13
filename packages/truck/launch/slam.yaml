@@ -44,14 +44,17 @@ launch:
         ]
     }
 
+    # fast-lio2 publishes lio_odom in odom_ekf (lio.yaml: world_frame), so its pose needs
+    # no TF lookup; with a pose in another frame robot_localization drops it silently.
+    # Covariances come from lio.yaml (odom_*_cov).
     - { name: "odom0", value: "/fastlio2/lio_odom" }
     - { name: "odom0_differential", value: False }
     - { name: "odom0_queue_size", value: 30 }
     - { name: "odom0_config", value: [
             True, True, True,       # pos
-            False, False, True,     # rot
+            True, True, True,       # rot
             True, True, True,       # pos`
-            False, False, True,     # rot`
+            True, True, True,       # rot`
             False, False, False,    # pos``
         ]
     }
