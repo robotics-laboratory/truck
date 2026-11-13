@@ -20,42 +20,36 @@ jobs:
         with: { python-version: "3.10" }
       - uses: pre-commit/action@v3.0.1
 
-  extract-image:
-    name: Get image version
-    runs-on: ubuntu-latest
-    outputs:
-      image-url: ${{ steps.extractor.outputs.image_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.10" }
-
-      - name: Install dependencies
-        run: |
-          sudo pip install yq
-          sudo apt-get install -y jq
-
-      - name: Extract image URL
-        id: extractor
-        run: |
-          IMAGE_URL=$(cat docker-compose.yaml | yq ".services.${{ github.event.repository.name }}.image")
-          echo "image_url=$IMAGE_URL" | tee -a $GITHUB_OUTPUT
-
   build-and-check:
     name: Build, test
-    needs: extract-image
-    runs-on: self-hosted
-    container:
-      image: ${{ needs.extract-image.outputs.image-url }}
+    # arm64 image (same as on the Jetson), ~23 GB unpacked
+    runs-on: ubuntu-24.04-arm
+    env:
+      IMAGE: ghcr.io/diiikach/truck:1.1.0
     defaults:
       run: { shell: bash }
 
     steps:
+      # The image does not fit on the runner without freeing disk space first,
+      # so it is pulled explicitly instead of using `container:`.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/local/share/boost
+          sudo docker system prune -af
+          df -h /
+
       - uses: actions/checkout@v4
         with: { submodules: recursive }
 
+      - name: Pull image
+        run: |
+          docker pull "$IMAGE"
+          df -h /
+
+      # The image entrypoint is `zsh -lc`, so the command is passed as one string
       - name: Build ROS2 packages
-        run: make build-all
+        run: docker run --rm -v "$PWD:/truck" -w /truck "$IMAGE" "make build-all"
 
       - name: Test ROS2 packages
-        run: make test-all
+        run: docker run --rm -v "$PWD:/truck" -w /truck "$IMAGE" "make test-all"
