@@ -4,6 +4,13 @@ launch:
 - arg: { name: "planner", default: "graph" }
 - let: { name: "graph_planner", value: "$(equals $(var planner) graph)" }
 
+# "localization" - localizer aligns scans to a prebuilt pcd map (map -> odom_ekf),
+# "mapping" - pgo builds a new map, save it with /pgo/save_maps;
+# both nodes publish map -> odom_ekf, so only one of them runs
+- arg: { name: "mode", default: "localization" }
+- let: { name: "mapping", value: "$(equals $(var mode) mapping)" }
+- arg: { name: "map", default: "/truck/data/maps/atrium-v1.pcd" }
+
 - include:
     file: $(find-pkg-share truck)/launch/lidar3d.yaml
 
@@ -27,14 +34,26 @@ launch:
 
 - include:
     file: $(find-pkg-share localizer)/launch/localizer_launch.py
+    unless: "$(var mapping)"
     arg:
     - { name: "use_sim_time", value: "false" }
     - { name: "use_rviz", value: "false" }
     - { name: "start_fastlio", value: "false" }
     - { name: "start_foxglove_proxy", value: "true" }
-    - { name: "pcd_path", value: "/truck/data/maps/atrium-v1.pcd" }
-    - { name: "map_pcd_path", value: "/truck/data/maps/atrium-v1.pcd" }
+    - { name: "pcd_path", value: "$(var map)" }
+    - { name: "map_pcd_path", value: "$(var map)" }
     - { name: "map_downsample_leaf_size", value: "0.3" }
+
+# fast-lio2 itself is started by slam.yaml
+- node:
+    pkg: "pgo"
+    exec: "pgo_node"
+    name: "pgo_node"
+    namespace: "pgo"
+    output: "log"
+    if: "$(var mapping)"
+    param:
+    - { name: "config_path", value: "$(find-pkg-share pgo)/config/pgo.yaml" }
 
 - include:
     file: $(find-pkg-share waypoint_follower)/launch/waypoint_follower.yaml
