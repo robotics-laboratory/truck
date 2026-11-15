@@ -36,4 +36,4 @@ launch:
     - { name: "camera_view_distance", value: 2.0 }
     - { name: "lidar_view_hmin", value: -0.15 }
     - { name: "lidar_view_hmax", value: 0.1 }
-    - { name: "min_available_length", value: 0.01 } # m (1 cm)
+    - { name: "lidar_min_distance", value: 0.01 }  # m (1 cm)

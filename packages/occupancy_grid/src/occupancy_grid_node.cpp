@@ -46,7 +46,7 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
         Limits<double>{
             this->declare_parameter("lidar_view_hmin", -0.15),
             this->declare_parameter("lidar_view_hmax", 0.1)},
-        this->declare_parameter("min_available_length", 0.01)};
+        this->declare_parameter("lidar_min_distance", 0.01)};
 
     RCLCPP_INFO(this->get_logger(), "frame_id: %s", params_.frame_id.c_str());
     RCLCPP_INFO(this->get_logger(), "resolution: %.2fm", params_.resolution);
@@ -239,7 +239,8 @@ void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSha
     sensor_msgs::PointCloud2ConstIterator<float> cloud_base_y(*cloud_base, "y");
     sensor_msgs::PointCloud2ConstIterator<float> cloud_base_z(*cloud_base, "z");
 
-    const double min_available_length_squared = squared(params_.min_available_length);
+    const double lidar_min_distance_squared =
+        params_.lidar_min_distance * params_.lidar_min_distance;
     size_t point_n = 0;
     for (size_t k = 0; k < cloud_points_count; ++k) {
         const auto point_base = tf2::Vector3{*cloud_base_x, *cloud_base_y, *cloud_base_z};
@@ -249,7 +250,7 @@ void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSha
         ++cloud_base_z;
 
         if (!params_.lidar_view_height.isMet(point_base.z())
-         || point_base.length2() < min_available_length_squared) {
+            || point_base.length2() < lidar_min_distance_squared) {
             continue;
         }
 
