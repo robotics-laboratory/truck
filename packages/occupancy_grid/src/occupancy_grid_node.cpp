@@ -246,7 +246,11 @@ void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSha
         ++cloud_base_y;
         ++cloud_base_z;
 
-        if (!params_.lidar_view_height.isMet(point_base.z())) {
+        // Livox clouds can contain many (0, 0, 0) returns. A valid TF maps all
+        // of them to the LiDAR position and marks the cell at the robot occupied.
+        if (!std::isfinite(point_base.x()) || !std::isfinite(point_base.y())
+            || !std::isfinite(point_base.z()) || point_base.length2() == 0.0
+            || !params_.lidar_view_height.isMet(point_base.z())) {
             continue;
         }
 
@@ -453,6 +457,10 @@ void OccupancyGridNode::publishOccupancyGrid() {
         sensor_msgs::PointCloud2ConstIterator<float> y(cloud, "y");
 
         for (; x != x.end(); ++x, ++y) {
+            if (!std::isfinite(*x) || !std::isfinite(*y)) {
+                continue;
+            }
+
             const geom::Vec2 point = {*x, *y};
             const geom::Vec2 grid_point = (point - origin) / params_.resolution;
 
