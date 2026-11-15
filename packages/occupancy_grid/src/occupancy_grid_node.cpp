@@ -45,7 +45,8 @@ OccupancyGridNode::OccupancyGridNode() : Node("occupancy_grid") {
         this->declare_parameter("camera_view_distance", 2.0),
         Limits<double>{
             this->declare_parameter("lidar_view_hmin", -0.15),
-            this->declare_parameter("lidar_view_hmax", 0.1)}};
+            this->declare_parameter("lidar_view_hmax", 0.1)},
+        this->declare_parameter("min_available_length", 0.01)};
 
     RCLCPP_INFO(this->get_logger(), "frame_id: %s", params_.frame_id.c_str());
     RCLCPP_INFO(this->get_logger(), "resolution: %.2fm", params_.resolution);
@@ -238,6 +239,7 @@ void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSha
     sensor_msgs::PointCloud2ConstIterator<float> cloud_base_y(*cloud_base, "y");
     sensor_msgs::PointCloud2ConstIterator<float> cloud_base_z(*cloud_base, "z");
 
+    const double min_available_length_squared = squared(params_.min_available_length);
     size_t point_n = 0;
     for (size_t k = 0; k < cloud_points_count; ++k) {
         const auto point_base = tf2::Vector3{*cloud_base_x, *cloud_base_y, *cloud_base_z};
@@ -246,11 +248,8 @@ void OccupancyGridNode::handlePointCloud(sensor_msgs::msg::PointCloud2::ConstSha
         ++cloud_base_y;
         ++cloud_base_z;
 
-        // Livox clouds can contain many (0, 0, 0) returns. A valid TF maps all
-        // of them to the LiDAR position and marks the cell at the robot occupied.
-        if (!std::isfinite(point_base.x()) || !std::isfinite(point_base.y())
-            || !std::isfinite(point_base.z()) || point_base.length2() == 0.0
-            || !params_.lidar_view_height.isMet(point_base.z())) {
+        if (!params_.lidar_view_height.isMet(point_base.z())
+         || point_base.length2() < min_available_length_squared) {
             continue;
         }
 
@@ -457,10 +456,6 @@ void OccupancyGridNode::publishOccupancyGrid() {
         sensor_msgs::PointCloud2ConstIterator<float> y(cloud, "y");
 
         for (; x != x.end(); ++x, ++y) {
-            if (!std::isfinite(*x) || !std::isfinite(*y)) {
-                continue;
-            }
-
             const geom::Vec2 point = {*x, *y};
             const geom::Vec2 grid_point = (point - origin) / params_.resolution;
 
