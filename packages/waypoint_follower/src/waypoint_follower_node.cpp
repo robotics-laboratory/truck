@@ -60,6 +60,9 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
     service_.reset = this->create_service<std_srvs::srv::Empty>(
         "/reset_path", std::bind(&WaypointFollowerNode::onReset, this, _1, _2));
 
+    slot_.reset_path = this->create_subscription<std_msgs::msg::String>(
+        "/path_reset", 1, std::bind(&WaypointFollowerNode::onRemovePath, this, _1));
+
     slot_.odometry = this->create_subscription<nav_msgs::msg::Odometry>(
         "/ekf/odometry/filtered", 1, std::bind(&WaypointFollowerNode::onOdometry, this, _1));
 
@@ -68,6 +71,9 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
 
     slot_.grid = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/grid", 1, std::bind(&WaypointFollowerNode::onGrid, this, _1));
+
+    slot_.path = this->create_subscription<visualization_msgs::msg::Marker>(
+        "/path", 1, std::bind(&WaypointFollowerNode::onPath, this, _1));
 
     using TfCallback = std::function<void(tf2_msgs::msg::TFMessage::SharedPtr)>;
 
@@ -101,6 +107,8 @@ WaypointFollowerNode::WaypointFollowerNode() : Node("waypoint_follower") {
 
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_buffer_->setUsingDedicatedThread(true);
+
+    graph_planner_ = this->declare_parameter("graph_planner", false);
 }
 
 void WaypointFollowerNode::onReset(
@@ -147,6 +155,19 @@ motion::Trajectory makeTrajectory(const std::deque<LinkedPose>& path) {
     return trajectory;
 }
 
+motion::Trajectory makeTrajectory(const geom::Poses& path) {
+    motion::Trajectory trajectory;
+
+    for (const auto& pose : path) {
+        const motion::State state{pose};
+        trajectory.states.push_back(state);
+    }
+
+    trajectory.fillDistance();
+
+    return trajectory;
+}
+
 }  // namespace
 
 void WaypointFollowerNode::publishGridCostMap() {
@@ -178,7 +199,8 @@ void WaypointFollowerNode::publishTrajectory() {
 
     checker_->reset(*state_.distance_transform);
 
-    motion::Trajectory trajectory = makeTrajectory(follower_->path());
+    motion::Trajectory trajectory =
+        graph_planner_ ? makeTrajectory(state_.path_poses) : makeTrajectory(follower_->path());
     bool collision = false;
     for (auto& state : trajectory.states) {
         const double margin = checker_->distance(state.pose);
@@ -226,6 +248,13 @@ void WaypointFollowerNode::onOdometry(nav_msgs::msg::Odometry::SharedPtr odometr
     state_.odometry = odometry;
 }
 
+void WaypointFollowerNode::onRemovePath(std_msgs::msg::String::SharedPtr msg) {
+    RCLCPP_INFO(this->get_logger(), "Reset path: %s", msg->data.c_str());
+    state_.path_poses.clear();
+    follower_->reset();
+    publishFullState();
+}
+
 std::optional<geom::Transform> WaypointFollowerNode::getLatestTranform(
     const std::string& source, const std::string& target) {
     try {
@@ -236,6 +265,12 @@ std::optional<geom::Transform> WaypointFollowerNode::getLatestTranform(
 }
 
 void WaypointFollowerNode::onWaypoint(geometry_msgs::msg::PointStamped::SharedPtr msg) {
+    if (graph_planner_) {
+        RCLCPP_INFO(
+            this->get_logger(), "Finish point (%f, %f) received", msg->point.x, msg->point.y);
+        return;
+    }
+
     if (!state_.odometry) {
         RCLCPP_WARN(this->get_logger(), "Has no odometry, ignore waypoint!");
         return;
@@ -303,6 +338,33 @@ void WaypointFollowerNode::onTf(tf2_msgs::msg::TFMessage::SharedPtr msg, bool is
     static const std::string authority;
     for (const auto& transform : msg->transforms) {
         tf_buffer_->setTransform(transform, authority, is_static);
+    }
+}
+
+void WaypointFollowerNode::onPath(visualization_msgs::msg::Marker::SharedPtr msg) {
+    if (!graph_planner_) {
+        return;
+    }
+
+    state_.path_poses.clear();
+    state_.path_poses.reserve(msg->points.size());
+
+    for (size_t i = 0; i < msg->points.size(); ++i) {
+        const auto& point = msg->points[i];
+        const geom::Vec2 pos(point.x, point.y);
+        geom::AngleVec2 dir = geom::AngleVec2::axisX();
+
+        if (msg->points.size() > 1) {
+            const auto& prev_point = msg->points[i == 0 ? i : i - 1];
+            const auto& next_point = msg->points[i + 1 < msg->points.size() ? i + 1 : i];
+            const geom::Vec2 delta(next_point.x - prev_point.x, next_point.y - prev_point.y);
+
+            if (delta.lenSq() > 1e-12) {
+                dir = geom::AngleVec2::fromVector(delta);
+            }
+        }
+
+        state_.path_poses.push_back({pos, dir});
     }
 }
 

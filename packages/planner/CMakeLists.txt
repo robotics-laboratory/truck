@@ -6,11 +6,14 @@ find_package(rclcpp REQUIRED)
 find_package(geom REQUIRED)
 find_package(model REQUIRED)
 find_package(collision REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(Boost REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 add_executable(
   ${PROJECT_NAME}_node src/main.cpp src/planner_node.cpp src/search.cpp
@@ -22,11 +25,14 @@ ament_target_dependencies(
   geom
   model
   collision
+  geometry_msgs
+  std_msgs
   nav_msgs
   visualization_msgs
   tf2
   tf2_ros
   Boost
+  nlohmann_json
 )
 
 install(TARGETS ${PROJECT_NAME}_node DESTINATION lib/${PROJECT_NAME})
@@ -39,5 +45,6 @@ target_include_directories(
 )
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY data DESTINATION share/${PROJECT_NAME})
 
 ament_package()

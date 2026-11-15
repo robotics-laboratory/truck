@@ -13,9 +13,11 @@
   <depend>ros_environment</depend>
 
   <depend>control_proxy</depend>
-  <depend>icp_odometry</depend>
+  <depend>fastlio2</depend>
   <depend>hardware_node</depend>
+  <depend>localizer</depend>
   <depend>occupancy_grid</depend>
+  <depend>planner</depend>
   <depend>pure_pursuit</depend>
   <depend>visualization</depend>
   <depend>perf</depend>

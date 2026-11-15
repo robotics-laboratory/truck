@@ -16,6 +16,6 @@ launch:
     - { name: "mode_period", value: 200 }
     - { name: "watchdog_period", value: 20 }
     # set mode to `off` if no commands from remote during this time (milliseconds)
-    - { name: "remote_timeout", value: 200 }
+    - { name: "remote_timeout", value: 300 }
     # set mode to `remote` if no commands from planner during this time (milliseconds)
-    - { name: "control_timeout", value: 150 }
+    - { name: "control_timeout", value: 300 }
